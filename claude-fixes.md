@@ -1,5 +1,45 @@
 # Dreamlink Deployment Fixes and Lessons
 
+## Authentication Logging and Error Handling Improvements (2025-03-05)
+
+### Problems
+1. Authentication session inconsistencies:
+   - Home page showing "No user found" in logs while still loading user data
+   - Dream submission failing with auth errors despite user being logged in
+   - Inconsistent session state between different parts of the application
+
+2. Lack of detailed error information:
+   - Dream submission errors not providing enough details for debugging
+   - Auth errors not showing enough context about session state
+
+### Solutions
+1. Enhanced authentication logging:
+   - Added extensive logging in MainPage component to track session state
+   - Added session checks alongside user checks to detect inconsistencies
+   - Added user ID logging to track specific user sessions
+
+2. Improved error handling:
+   - Enhanced dream submission component with better error reporting
+   - Added better parsing of API responses to catch malformed responses
+   - Added more specific error messages for authentication failures
+   - Improved API authentication checks with more detailed logging
+
+### Lessons
+1. Authentication State Management:
+   - Auth state can be inconsistent between different parts of an application
+   - Important to check both user and session objects for complete state
+   - Consider using delays when checking auth state to allow for cookie propagation
+
+2. Error Handling Best Practices:
+   - Parse response text before trying to parse as JSON to catch formatting errors
+   - Include detailed error information in alert messages for better debugging
+   - Log context like user IDs and session state alongside error messages
+
+3. API Authentication Patterns:
+   - Include authentication checks in each API route independently
+   - Log both success and failure paths for authentication
+   - Return specific error information in API responses
+
 ## Authentication and UI Improvements (2025-03-04)
 
 ### Problems
