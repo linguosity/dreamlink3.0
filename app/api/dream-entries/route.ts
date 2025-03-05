@@ -1,6 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
+
+// Import the handler directly
+import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
 
 // Schema for validating dream analysis response
 const DreamAnalysisSchema = z.object({
@@ -20,48 +23,93 @@ type DreamAnalysis = z.infer<typeof DreamAnalysisSchema>;
 // Function to analyze dream with OpenAI using our Edge Function
 async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
   try {
-    // Always use an absolute URL to ensure it works in all environments
+    // In Vercel production environment, we need to use internal routing
+    // Rather than external URLs which can cause issues with authentication
+    // and CORS
     let apiUrl;
-    // Check for Vercel URL first (production)
-    if (process.env.VERCEL_URL) {
-      apiUrl = `https://${process.env.VERCEL_URL}/api/openai-analysis`;
-    } 
-    // Then check for custom URL override
-    else if (process.env.NEXT_PUBLIC_URL) {
-      apiUrl = new URL('/api/openai-analysis', process.env.NEXT_PUBLIC_URL).toString();
-    } 
-    // Finally fall back to localhost for development
-    else {
-      apiUrl = 'http://localhost:3000/api/openai-analysis';
-    }
     
-    console.log(`🔍 VERCEL_URL: ${process.env.VERCEL_URL || 'not set'}`);
-    console.log(`🔍 NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || 'not set'}`);
-    console.log(`🔍 NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    // In production, just use the API route path directly
+    // This should work in Vercel's serverless environment
+    // as all functions share the same runtime
+    apiUrl = '/api/openai-analysis';
+    
+    // Log all environment variables to help debug
+    console.log('🔎 Environment variables:');
+    console.log(`  VERCEL: ${process.env.VERCEL || 'not set'}`);
+    console.log(`  VERCEL_ENV: ${process.env.VERCEL_ENV || 'not set'}`);
+    console.log(`  VERCEL_URL: ${process.env.VERCEL_URL || 'not set'}`);
+    console.log(`  VERCEL_REGION: ${process.env.VERCEL_REGION || 'not set'}`);
+    console.log(`  NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    console.log(`  NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || 'not set'}`);
     
     console.log(`🔍 Calling OpenAI Edge Function at: ${apiUrl}`);
     
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    try {
+      console.log(`🔍 Making fetch request to: ${apiUrl}`);
+      console.log(`🔍 Request payload: ${JSON.stringify({
+        dream: dreamText.substring(0, 50) + '...',
+        topic: 'dream interpretation'
+      })}`);
+      
+      // Create a NextRequest object to pass to the handler directly
+      // This completely bypasses the network and directly calls the handler function
+      // No URL required, since we're directly calling the function
+      const requestBody = JSON.stringify({
         dream: dreamText,
         topic: 'dream interpretation'
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI Edge Function error:", errorData);
-      throw new Error("Failed to analyze dream");
+      });
+      
+      // Create a NextRequest object
+      // We're using internal API routing here, bypassing external calls entirely
+      const nextRequest = new NextRequest('http://internal-routing/api/openai-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: requestBody
+      });
+      
+      console.log(`🔍 Calling openAiHandler directly with NextRequest`);
+      
+      // Call the handler directly
+      const response = await openAiHandler(nextRequest);
+      
+      console.log(`🔍 Response status: ${response.status}`);
+      console.log(`🔍 Response headers: ${JSON.stringify(Object.fromEntries([...response.headers]))}`);
+      
+      const rawResponseText = await response.text();
+      console.log(`🔍 Raw response (first 500 chars): ${rawResponseText.substring(0, 500)}`);
+      
+      if (!response.ok) {
+        console.error(`❌ OpenAI Edge Function error: Status ${response.status}, Raw response: ${rawResponseText}`);
+        throw new Error(`Failed to analyze dream: ${response.status} - ${rawResponseText.substring(0, 100)}`);
+      }
+      
+      let analysisResponse;
+      try {
+        analysisResponse = JSON.parse(rawResponseText);
+        console.log(`✅ Successfully parsed JSON response`);
+      } catch (parseError) {
+        console.error(`❌ Failed to parse response as JSON: ${parseError.message}`);
+        console.error(`❌ Raw response that failed parsing: ${rawResponseText}`);
+        throw new Error(`Failed to parse analysis response: ${parseError.message}`);
+      }
+    } catch (fetchError) {
+      console.error(`❌ Fetch error:`, fetchError);
+      throw fetchError;
     }
-
-    const analysisResponse = await response.json();
     
     // Edge function gives us:
     // analysis, topicSentence, supportingPoints, conclusionSentence
+    console.log(`✅ Analysis response keys: ${Object.keys(analysisResponse).join(', ')}`);
+    
+    // Make sure all required properties exist
+    if (!analysisResponse.analysis || !analysisResponse.topicSentence || 
+        !analysisResponse.supportingPoints || !analysisResponse.conclusionSentence) {
+      console.error(`❌ Missing required properties in response:`, analysisResponse);
+      throw new Error(`Analysis response missing required properties`);
+    }
+    
     const { analysis, topicSentence, supportingPoints, conclusionSentence } = analysisResponse;
     
     // Extract biblical references from supporting points
