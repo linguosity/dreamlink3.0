@@ -44,6 +44,11 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     
     console.log(`🔍 Calling OpenAI Edge Function at: ${apiUrl}`);
     
+    // Define variables outside the try-catch block for accessibility
+    let response;
+    let rawResponseText;
+    let parsedResponse;
+    
     try {
       console.log(`🔍 Making fetch request to: ${apiUrl}`);
       console.log(`🔍 Request payload: ${JSON.stringify({
@@ -72,12 +77,12 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       console.log(`🔍 Calling openAiHandler directly with NextRequest`);
       
       // Call the handler directly
-      const response = await openAiHandler(nextRequest);
+      response = await openAiHandler(nextRequest);
       
       console.log(`🔍 Response status: ${response.status}`);
       console.log(`🔍 Response headers: ${JSON.stringify(Object.fromEntries([...response.headers]))}`);
       
-      const rawResponseText = await response.text();
+      rawResponseText = await response.text();
       console.log(`🔍 Raw response (first 500 chars): ${rawResponseText.substring(0, 500)}`);
       
       if (!response.ok) {
@@ -86,7 +91,6 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       }
       
       // Parse the JSON response
-      let parsedResponse;
       try {
         parsedResponse = JSON.parse(rawResponseText);
         console.log(`✅ Successfully parsed JSON response`);
