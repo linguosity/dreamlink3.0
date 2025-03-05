@@ -85,9 +85,10 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
         throw new Error(`Failed to analyze dream: ${response.status} - ${rawResponseText.substring(0, 100)}`);
       }
       
-      let analysisResponse;
+      // Parse the JSON response
+      let parsedResponse;
       try {
-        analysisResponse = JSON.parse(rawResponseText);
+        parsedResponse = JSON.parse(rawResponseText);
         console.log(`✅ Successfully parsed JSON response`);
       } catch (parseError) {
         console.error(`❌ Failed to parse response as JSON: ${parseError.message}`);
@@ -99,17 +100,26 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       throw fetchError;
     }
     
+    // Make sure we have a valid response object to work with
+    if (!parsedResponse) {
+      throw new Error("No valid response was parsed from the API call");
+    }
+    
     // Edge function gives us:
     // analysis, topicSentence, supportingPoints, conclusionSentence
-    console.log(`✅ Analysis response keys: ${Object.keys(analysisResponse).join(', ')}`);
+    console.log(`✅ Analysis response keys: ${Object.keys(parsedResponse).join(', ')}`);
     
     // Make sure all required properties exist
-    if (!analysisResponse.analysis || !analysisResponse.topicSentence || 
-        !analysisResponse.supportingPoints || !analysisResponse.conclusionSentence) {
-      console.error(`❌ Missing required properties in response:`, analysisResponse);
+    if (!parsedResponse.analysis || !parsedResponse.topicSentence || 
+        !parsedResponse.supportingPoints || !parsedResponse.conclusionSentence) {
+      console.error(`❌ Missing required properties in response:`, parsedResponse);
       throw new Error(`Analysis response missing required properties`);
     }
     
+    // Store the response in our local variable
+    const analysisResponse = parsedResponse;
+    
+    // Extract the properties we need
     const { analysis, topicSentence, supportingPoints, conclusionSentence } = analysisResponse;
     
     // Extract biblical references from supporting points
