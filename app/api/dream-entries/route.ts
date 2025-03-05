@@ -20,20 +20,23 @@ type DreamAnalysis = z.infer<typeof DreamAnalysisSchema>;
 // Function to analyze dream with OpenAI using our Edge Function
 async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
   try {
-    // Call our Edge Function API with relative URL when in production
-    // In Vercel production environment, we can use a relative URL
-    // This avoids hardcoded hostnames that break in production
+    // Always use an absolute URL to ensure it works in all environments
     let apiUrl;
-    if (process.env.VERCEL_ENV) {
-      // In Vercel production, use a relative URL
-      apiUrl = '/api/openai-analysis';
-    } else {
-      // In development, use the full URL with host
-      const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
-      apiUrl = new URL('/api/openai-analysis', baseUrl).toString();
+    // Check for Vercel URL first (production)
+    if (process.env.VERCEL_URL) {
+      apiUrl = `https://${process.env.VERCEL_URL}/api/openai-analysis`;
+    } 
+    // Then check for custom URL override
+    else if (process.env.NEXT_PUBLIC_URL) {
+      apiUrl = new URL('/api/openai-analysis', process.env.NEXT_PUBLIC_URL).toString();
+    } 
+    // Finally fall back to localhost for development
+    else {
+      apiUrl = 'http://localhost:3000/api/openai-analysis';
     }
     
-    console.log(`🔍 VERCEL_ENV: ${process.env.VERCEL_ENV || 'not set'}`);
+    console.log(`🔍 VERCEL_URL: ${process.env.VERCEL_URL || 'not set'}`);
+    console.log(`🔍 NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || 'not set'}`);
     console.log(`🔍 NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
     
     console.log(`🔍 Calling OpenAI Edge Function at: ${apiUrl}`);
