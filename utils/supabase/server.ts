@@ -11,7 +11,8 @@ export async function createClient() {
       cookies: {
         get(name) {
           try {
-            return cookieStore.get(name)?.value
+            const cookie = cookieStore.get(name)
+            return cookie?.value
           } catch (error) {
             console.error('Error getting cookie:', error)
             return undefined
@@ -24,6 +25,7 @@ export async function createClient() {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
+            console.error('Warning: Unable to set cookie', name, error)
           }
         },
         remove(name, options) {
@@ -33,6 +35,7 @@ export async function createClient() {
             // The `remove` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
+            console.error('Warning: Unable to remove cookie', name, error)
           }
         },
       },

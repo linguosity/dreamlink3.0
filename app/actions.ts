@@ -178,10 +178,28 @@ export const resetPasswordAction = async (formData: FormData) => {
 export const signOutAction = async () => {
   try {
     const supabase = await createClient();
+    
+    // Sign out the user
     await supabase.auth.signOut();
-    return redirect("/sign-in");
+    
+    // Add a small delay to ensure cookies are properly processed
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Try to revalidate the layout cache
+    try {
+      const { revalidatePath } = await import("next/cache");
+      revalidatePath("/", "layout");
+    } catch (e) {
+      // Revalidation error can be safely ignored in development
+    }
   } catch (error) {
-    console.error("Unexpected error during sign out:", error);
-    return redirect("/sign-in");
+    // Log real errors (not redirect errors)
+    if (!error.toString().includes('NEXT_REDIRECT')) {
+      console.error("Error during sign out:", error);
+    }
   }
+  
+  // This redirect will throw a NEXT_REDIRECT "error" which is normal
+  // Next.js uses this mechanism to handle redirects
+  return redirect("/sign-in");
 };

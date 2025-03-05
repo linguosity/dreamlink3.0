@@ -17,7 +17,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b bg-background p-4">
       {/* Left: Logo */}
       <div className="flex items-center space-x-4">
-        <Link href="/" className="text-xl font-bold">
+        <Link href="/" className="text-xl font-blanka tracking-wider">
           Dreamlink
         </Link>
       </div>

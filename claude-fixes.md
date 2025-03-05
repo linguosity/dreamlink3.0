@@ -1,5 +1,48 @@
 # Dreamlink Deployment Fixes and Lessons
 
+## Authentication and UI Improvements (2025-03-04)
+
+### Problems
+1. Authentication flow issues:
+   - "Auth session missing!" errors appearing during normal logout flow
+   - NEXT_REDIRECT being incorrectly treated as an error
+   - LogoutButton component using redundant redirects
+   - Inconsistent session handling in layout components
+
+2. UI improvement needs:
+   - Adding custom font (Blanka) for the logo in navbar and auth pages
+   - Maintaining consistent styling across auth components
+
+### Solutions
+1. Authentication flow fixes:
+   - Updated signOutAction to handle redirects properly and not log NEXT_REDIRECT as an error
+   - Added a delay to ensure cookies are processed properly during signOut
+   - Improved error handling in auth layout to gracefully handle missing sessions
+   - Updated LogoutButton to use server actions directly via form submission
+   - Added conditional logging to suppress "Auth session missing!" messages which are normal after logout
+
+2. UI improvements:
+   - Added Blanka font for the logo in navbar
+   - Added Blanka font for logo on authentication pages
+   - Created consistent styling for sign-in, sign-up, and forgot-password components
+
+### Lessons
+1. Next.js Redirect Handling:
+   - NEXT_REDIRECT is not an actual error but Next.js's internal mechanism for handling redirects
+   - Server actions that return redirect() will throw NEXT_REDIRECT
+   - Use try/catch properly to avoid treating redirects as errors
+
+2. Authentication Best Practices:
+   - Add proper delays for cookie processing in signin/signout operations
+   - Define variables outside try/catch blocks for better scope management
+   - Implement graceful fallbacks for auth errors
+   - Use server actions for auth operations instead of client-side handlers
+
+3. Session Management:
+   - "Auth session missing!" is expected after logout and not an error
+   - Implement proper conditioning for user-dependent components
+   - Handle session errors gracefully with fallback states
+
 ## GitHub Repository Structure Fix (2025-03-04)
 
 ### Problem

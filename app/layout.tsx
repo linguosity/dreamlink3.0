@@ -28,13 +28,24 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-
-  // Retrieve the user directly for better security
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  // Create Supabase client with error handling
+  let user = null;
+  let userError = null;
   
-  if (userError) {
-    console.error("Error fetching user:", userError.message);
+  try {
+    const supabase = await createClient();
+    
+    // Retrieve the user directly for better security
+    const { data, error } = await supabase.auth.getUser();
+    user = data?.user || null;
+    userError = error;
+    
+    if (error && error.message !== "Auth session missing!") {
+      // "Auth session missing!" is expected after logout, so only log other errors
+      console.error("Error fetching user:", error.message);
+    }
+  } catch (err) {
+    console.error("Unexpected error accessing auth:", err);
   }
 
   // Check if current path is an auth page
@@ -62,7 +73,7 @@ export default async function RootLayout({
                   <EnvVarWarning />
                 </div>
               </div>
-            ) : user && !isAuthPage ? (
+            ) : !isAuthPage && user ? (
               <Navbar />
             ) : null}
             
