@@ -311,12 +311,35 @@ export async function DELETE(request: Request) {
 }
 
 export async function POST(request: Request) {
+  console.log("API: Dream entry - POST request received");
+  
   const supabase = await createClient();
   
-  // Get current user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  // Get current user with more detailed logging
+  console.log("API: Dream entry - Checking authentication");
+  const { data, error: authError } = await supabase.auth.getUser();
+  const user = data?.user;
   
-  if (authError || !user) {
+  console.log("API: Dream entry - Auth result:", user ? "User authenticated" : "No user found");
+  if (user) {
+    console.log("API: Dream entry - User ID:", user.id);
+  }
+  
+  if (authError) {
+    console.error("API: Dream entry - Auth error:", authError.message);
+    return NextResponse.json(
+      { error: `Unauthorized: Authentication error (${authError.message})` },
+      { status: 401 }
+    );
+  }
+  
+  if (!user) {
+    console.error("API: Dream entry - No user in session");
+    
+    // Also check session to see if there's more info
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
+    
     return NextResponse.json(
       { error: "Unauthorized: You must be logged in to submit a dream" },
       { status: 401 }

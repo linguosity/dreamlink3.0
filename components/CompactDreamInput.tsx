@@ -43,6 +43,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting dream to API with user ID:", userId);
+      
       const response = await fetch("/api/dream-entries", {
         method: "POST",
         headers: {
@@ -54,11 +56,24 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit dream");
-      }
+      console.log("Dream submission response status:", response.status);
       
-      const result = await response.json();
+      // Get the response text first to ensure we can see the error even if it's not valid JSON
+      const responseText = await response.text();
+      
+      let result;
+      try {
+        // Try to parse as JSON
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Failed to parse API response as JSON:", responseText);
+        throw new Error("Invalid API response format");
+      }
+
+      if (!response.ok) {
+        console.error("API error details:", result);
+        throw new Error(result.error || "Failed to submit dream");
+      }
       
       // Store the loading dream ID in localStorage
       if (result.id) {
@@ -70,7 +85,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       router.refresh();
     } catch (error) {
       console.error("Error submitting dream:", error);
-      alert("Failed to submit your dream. Please try again.");
+      alert(`Failed to submit your dream: ${error.message || "Unknown error"}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }

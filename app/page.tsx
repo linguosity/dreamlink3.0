@@ -12,25 +12,52 @@ const defaultUrl = process.env.VERCEL_URL
   : "http://localhost:3000";
 
 export default async function MainPage() {
+  console.log("Home page - Initializing...");
   const supabase = await createClient();
 
   // Check if user is logged in (more secure method)
+  console.log("Home page - Fetching user from auth...");
   const { data, error: userError } = await supabase.auth.getUser();
   const user = data?.user;
   
   console.log("Home page - Auth check:", user ? "User authenticated" : "No user found");
+  if (user) {
+    console.log("Home page - User ID:", user.id);
+  }
   
-  if (userError || !user) {
-    console.error("Authentication error:", userError?.message || "No user found");
+  // Also check session for more information
+  const { data: sessionData } = await supabase.auth.getSession();
+  console.log("Home page - Session check:", sessionData?.session ? "Has session" : "No session");
+  
+  if (userError) {
+    console.error("Authentication error:", userError.message);
+    return redirect("/sign-in");
+  }
+  
+  if (!user) {
+    console.error("No user in session - redirecting to sign in");
+    
+    // Add a small delay to ensure cookies are properly processed
+    // This can help with issues related to cookie propagation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return redirect("/sign-in");
   }
 
+  console.log("Home page - Fetching dream entries for user:", user.id);
+  
   // Fetch dream entries for the logged in user
   const { data: dreams, error } = await supabase
     .from("dream_entries")
     .select("*")
     .eq("user_id", user.id)
     .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error("Error fetching dreams:", error.message);
+  } else {
+    console.log(`Home page - Retrieved ${dreams?.length || 0} dream entries`);
+  }
 
   return (
     <div className="container py-10">
