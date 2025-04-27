@@ -1,3 +1,6 @@
+// app/layout.tsx
+
+import { Metadata } from "next";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
@@ -5,19 +8,38 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 
+// Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
-export const metadata = {
+// ① Next.js Metadata API
+export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Dreamlink - Dream Journal",
+  title: "Dreamlink – Dream Journal",
   description: "Track and analyze your dreams with AI-powered insights",
+  openGraph: {
+    title: "Dreamlink – Dream Journal",
+    description: "Track and analyze your dreams with AI-powered insights",
+    url: defaultUrl,
+    siteName: "Dreamlink",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dreamlink – Dream Journal",
+    description: "Track and analyze your dreams with AI-powered insights",
+  },
 };
 
+// Load the Geist font with Latin subset
 const geistSans = Geist({
   display: "swap",
   subsets: ["latin"],
@@ -28,34 +50,41 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Create Supabase client with error handling
   let user = null;
-  let userError = null;
-  
+
   try {
     const supabase = await createClient();
-    
-    // Retrieve the user directly for better security
-    const { data, error } = await supabase.auth.getUser();
-    user = data?.user || null;
-    userError = error;
-    
-    if (error && error.message !== "Auth session missing!") {
-      // "Auth session missing!" is expected after logout, so only log other errors
-      console.error("Error fetching user:", error.message);
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        if (userError.message.includes("User from sub claim")) {
+          // kick into our sign-out handler, with a message
+          const msg = encodeURIComponent("Session expired. Please sign in again.");
+          redirect(`/api/auth/signout?redirect_to=/sign-in?error=${msg}`);
+        }
+        else if (userError.message !== "Auth session missing!") {
+          console.error("Error fetching user:", userError.message);
+        }
+      } else {
+        user = data.user;
+      }
     }
-  } catch (err) {
-    console.error("Unexpected error accessing auth:", err);
+  } catch (err: unknown) {
+    // re-throw Next.js redirects so they become real HTTP 3xxs
+    if (isRedirectError(err)) throw err;
+    console.error("Unexpected auth error in layout:", err);
   }
 
-  // Check if current path is an auth page
+  // Determine if the current path is an auth‐related page
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
-  const isAuthPage = 
-    pathname.includes('/sign-in') || 
-    pathname.includes('/sign-up') || 
-    pathname.includes('/forgot-password');
-  
+  const isAuthPage =
+    pathname.includes("/sign-in") ||
+    pathname.includes("/sign-up") ||
+    pathname.includes("/forgot-password");
+
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
@@ -66,7 +95,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <main className="min-h-screen flex flex-col">
-            {/* Show env var warning if needed, otherwise show the navbar (only if user is logged in and not on auth page) */}
+            {/* Env‐var warning or Navbar */}
             {!hasEnvVars ? (
               <div className="w-full flex justify-center border-b h-16">
                 <div className="w-full max-w-5xl flex justify-between items-center p-3 text-sm">
@@ -76,13 +105,21 @@ export default async function RootLayout({
             ) : !isAuthPage && user ? (
               <Navbar />
             ) : null}
-            
+
             {/* Main content */}
-            <div className={`flex-1 ${!user && !isAuthPage ? "flex items-center justify-center" : ""}`}>
+            <div
+              className={
+                `flex-1 ` +
+                (!user && !isAuthPage ? "flex items-center justify-center" : "")
+              }
+            >
               {children}
             </div>
-            
-            {/* Global footer only shown on auth pages */}
+
+            {/* Global toast container */}
+            <Toaster />
+
+            {/* Footer only on auth pages */}
             {isAuthPage && (
               <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
                 <p className="text-muted-foreground">
