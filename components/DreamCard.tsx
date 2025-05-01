@@ -185,7 +185,7 @@ const BIBLE_VERSES = {
   "1 Kings 6:19": "And the oracle he prepared in the house within, to set there the ark of the covenant of the LORD."
 };
 
-export default function DreamCard({ empty, loading: initialLoading, dream }: DreamEntryProps) {
+export default function DreamCard({ empty, loading: initialLoading, dream: initialDream }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
@@ -193,6 +193,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
   const [modalHeight, setModalHeight] = useState<number | null>(null);
   const analysisContentRef = useRef<HTMLDivElement>(null);
   const originalContentRef = useRef<HTMLDivElement>(null);
+  const [dream, setDream] = useState(initialDream);
   
   // Format date as MMM DD
   const dateObj = dream.created_at ? new Date(dream.created_at) : new Date();
@@ -203,50 +204,58 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
   
   // Check if this dream is the loading dream (just submitted)
   useEffect(() => {
-    // Get the loading dream ID from localStorage
     const loadingDreamId = typeof window !== 'undefined' ? 
       localStorage.getItem('loadingDreamId') : null;
     
-    // If this is the loading dream, set loading state
-    if (loadingDreamId === dream.id) {
-      console.log('This dream is loading:', dream.id);
-      setIsLoading(true);
-      
-      // Check every 2 seconds if the dream analysis is complete
-      const interval = setInterval(() => {
-        // If dream has analysis, clear interval and update state
+    // Only poll for the "loading" dream
+    if (loadingDreamId !== dream.id) return;
+    
+    console.log('This dream is loading:', dream.id);
+    setIsLoading(true);
+    
+    const interval = setInterval(async () => {
+      try {
+        // If dream already has analysis locally, stop polling
         if (dream.dream_summary || dream.analysis_summary || 
             (dream.supporting_points && dream.supporting_points.length > 0)) {
           console.log('Dream analysis complete:', dream.id);
           setIsLoading(false);
           localStorage.removeItem('loadingDreamId');
           clearInterval(interval);
-        } else {
-          // Check dream status via API instead of router.refresh() to avoid RSC loops
-          fetch(`/api/dream-entries?id=${dream.id}`, {
-            method: 'GET',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-            }
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data && data.dreams && data.dreams.length > 0) {
-              const updatedDream = data.dreams[0];
-              // If dream now has analysis, refresh the page once
-              if (updatedDream.dream_summary || updatedDream.analysis_summary || 
-                 (updatedDream.supporting_points && updatedDream.supporting_points.length > 0)) {
-                console.log('Dream analysis detected via API, refreshing page');
-                window.location.reload();
-              }
-            }
-          })
-          .catch(err => console.error('Error checking dream status:', err));
+          return;
         }
-      }, 2000);
-      
-      return () => clearInterval(interval);
-    }
+        
+        // Check dream status via API
+        const response = await fetch(`/api/dream-entries?id=${dream.id}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data && data.dreams && data.dreams.length > 0) {
+          const updatedDream = data.dreams[0];
+          
+          // When analysis arrives, update state and stop polling
+          if (updatedDream.dream_summary || updatedDream.analysis_summary || 
+             (updatedDream.supporting_points && updatedDream.supporting_points.length > 0)) {
+            console.log('Dream analysis detected via API, updating state');
+            setDream(updatedDream);
+            setIsLoading(false);
+            localStorage.removeItem('loadingDreamId');
+            clearInterval(interval);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking dream status:', err);
+        // Optionally clear interval after repeated failures
+      }
+    }, 2000);
+    
+    // Always clear on unmount
+    return () => clearInterval(interval);
   }, [dream.id, dream.dream_summary, dream.analysis_summary, dream.supporting_points]);
   
   // Calculate and store the maximum height of tab content
