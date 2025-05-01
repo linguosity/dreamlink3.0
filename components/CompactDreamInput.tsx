@@ -83,9 +83,10 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       // Refresh the page to show the new entry with loading state
       router.refresh();
-    } catch (error) {
-      console.error("Error submitting dream:", error);
-      alert(`Failed to submit your dream: ${error.message || "Unknown error"}. Please try again.`);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("Error submitting dream:", err);
+      alert(`Failed to submit your dream: ${err.message || "Unknown error"}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }

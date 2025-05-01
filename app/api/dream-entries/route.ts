@@ -94,12 +94,14 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       try {
         parsedResponse = JSON.parse(rawResponseText);
         console.log(`✅ Successfully parsed JSON response`);
-      } catch (parseError) {
+      } catch (error: unknown) {
+        const parseError = error instanceof Error ? error : new Error(String(error));
         console.error(`❌ Failed to parse response as JSON: ${parseError.message}`);
         console.error(`❌ Raw response that failed parsing: ${rawResponseText}`);
         throw new Error(`Failed to parse analysis response: ${parseError.message}`);
       }
-    } catch (fetchError) {
+    } catch (error: unknown) {
+      const fetchError = error instanceof Error ? error : new Error(String(error));
       console.error(`❌ Fetch error:`, fetchError);
       throw fetchError;
     }
@@ -128,7 +130,7 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     
     // Extract biblical references from supporting points
     const biblicalReferences = supportingPoints
-      .map(point => {
+      .map((point: string) => {
         const citation = point.match(/\(([^)]+)\)/);
         return citation ? citation[1] : null;
       })
@@ -138,14 +140,15 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     const rawTags = analysis
       .toLowerCase()
       .split(/\s+/)
-      .filter(word => 
+      .filter((word: string) => 
         word.length > 4 && 
         !['this', 'that', 'these', 'those', 'there', 'their', 'about', 'which'].includes(word)
       )
       .slice(0, 10);
     
     // Remove duplicates and limit to 5 tags
-    const tags = [...new Set(rawTags)].slice(0, 5);
+    const uniqueTags = Array.from<string>(new Set(rawTags));
+    const tags: string[] = uniqueTags.slice(0, 5);
     
     // Construct the formatted analysis
     const formattedAnalysis = `${topicSentence}. ${supportingPoints.join('. ')}. ${conclusionSentence}.`;

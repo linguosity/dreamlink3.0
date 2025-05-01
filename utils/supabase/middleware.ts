@@ -29,18 +29,9 @@ export async function updateSession(request: NextRequest) {
           })
         },
         remove(name, options) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0,
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0,
-          })
+          // NextJS cookies API
+          request.cookies.delete(name)
+          response.cookies.delete(name)
         },
       },
     }

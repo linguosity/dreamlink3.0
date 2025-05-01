@@ -26,27 +26,27 @@ export default function SocialShare({
 }: SocialShareProps & { faded?: boolean }) {
   return (
     <div className="flex items-center space-x-2">
-      <FacebookShareButton url={url} quote={title}>
+      <FacebookShareButton url={url} hashtag="#dreamlink">
         <div className={`transition-opacity duration-200 ${faded ? 'opacity-50 hover:opacity-100' : ''}`}>
-          <FacebookIcon size={size} round />
+          <FacebookIcon size={size} round={true} />
         </div>
       </FacebookShareButton>
       
       <TwitterShareButton url={url} title={title}>
         <div className={`transition-opacity duration-200 ${faded ? 'opacity-50 hover:opacity-100' : ''}`}>
-          <TwitterIcon size={size} round />
+          <TwitterIcon size={size} round={true} />
         </div>
       </TwitterShareButton>
       
       <ViberShareButton url={url} title={title}>
         <div className={`transition-opacity duration-200 ${faded ? 'opacity-50 hover:opacity-100' : ''}`}>
-          <ViberIcon size={size} round />
+          <ViberIcon size={size} round={true} />
         </div>
       </ViberShareButton>
       
       <TelegramShareButton url={url} title={title}>
         <div className={`transition-opacity duration-200 ${faded ? 'opacity-50 hover:opacity-100' : ''}`}>
-          <TelegramIcon size={size} round />
+          <TelegramIcon size={size} round={true} />
         </div>
       </TelegramShareButton>
     </div>

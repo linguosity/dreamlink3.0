@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { MessageSquareIcon } from "lucide-react";
 import dynamic from 'next/dynamic';
 
 // Import UI components with error handling
@@ -53,7 +54,7 @@ try {
   );
 }
 
-import { CalendarIcon, BookIcon, PuzzleIcon, Trash2Icon, ShareIcon } from "lucide-react";
+import { CalendarIcon, BookIcon, PuzzleIcon, Trash2Icon, ShareIcon, MessageSquare } from "lucide-react";
 
 // Import dialog components with error handling
 let Dialog: any, DialogContent: any, DialogHeader: any, DialogTitle: any, DialogTrigger: any, DialogDescription: any, DialogFooter: any;
@@ -363,10 +364,8 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
   };
   
   const getShareUrl = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.origin}/shared/dream/${dream.id}`;
-    }
-    return `${typeof window !== 'undefined' ? window.location.origin : 'https://dreamlink.app'}/shared/dream/${dream.id}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamlink.app';
+    return `${baseUrl}/shared/dream/${dream.id}`;
   };
   
   return (
@@ -430,7 +429,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
             defaultValue="analysis" 
             className="w-full"
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value)}
+            onValueChange={(value: string) => setActiveTab(value)}
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="analysis" className="flex items-center gap-1"><PuzzleIcon className="h-3 w-3" />Analysis</TabsTrigger>
@@ -441,7 +440,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
               <TabsContent value="analysis" className="space-y-4 p-1">
                 <div ref={analysisContentRef}>
                   {dream.dream_summary && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-4">
                       <h4 className="text-sm font-medium">Summary</h4>
                       <p className="text-sm text-muted-foreground">
                         {dream.dream_summary}
@@ -519,6 +518,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream }: Dre
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0088cc" className="rounded-full">
                   <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.041 16.737c-.26 0-.215-.198-.306-.396l-.762-2.512 5.859-3.671-6.659 3.939-2.833-.726c-.613-.151-.613-.586.306-.879l11.08-4.581c.504-.302.909.151.706.879l-1.867 8.823c-.151.528-.628.654-1.01.4l-2.833-2.08-1.365 1.376c-.151.152-.306.228-.316.328z"/>
                 </svg>
+              </a>
+              <a
+                href={`sms:?body=${encodeURIComponent(`${getShareableText()} ${getShareUrl()}`)}`}
+                className="opacity-50 hover:opacity-100 transition-opacity"
+                aria-label="Share via SMS"
+              >
+                <MessageSquareIcon className="h-6 w-6 text-gray-600" />
               </a>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { signOutAction } from "@/app/actions";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { createClient } from "@/utils/supabase/server";
 import AuthDropdown from "./AuthDropdown"; // Import client component
 
@@ -45,7 +46,7 @@ export default async function AuthButton() {
   }
 
   return user ? (
-    <AuthDropdown userEmail={user.email} />
+    <AuthDropdown userEmail={user.email ?? ""} />
   ) : (
     <div className="flex gap-2">
       <Button asChild size="sm" variant="outline">

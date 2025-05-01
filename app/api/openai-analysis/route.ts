@@ -152,7 +152,8 @@ Additional instruction:
       console.log(`✅ Conclusion: ${conclusionSentence}`);
       console.log(`✅ Analysis length: ${analysis?.length || 0} chars`);
       
-    } catch (fetchError) {
+    } catch (error: unknown) {
+      const fetchError = error instanceof Error ? error : new Error(String(error));
       console.error("❌ Error during OpenAI API fetch:", fetchError);
       return NextResponse.json({ 
         error: "Failed to call OpenAI API", 
@@ -175,10 +176,11 @@ Additional instruction:
     
     return NextResponse.json(response);
 
-  } catch (error) {
-    console.error('❌ OpenAI API error:', error);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('❌ OpenAI API error:', err);
     return NextResponse.json(
-      { error: 'Failed to analyze dream', details: error.message },
+      { error: 'Failed to analyze dream', details: err.message },
       { status: 500 }
     );
   }

@@ -49,7 +49,8 @@ export function OpenAITest() {
       
       setResult(data);
       console.log("✅ UI updated with analysis result");
-    } catch (err) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error('❌ Error testing OpenAI:', err);
       setError(err.message || 'Failed to analyze dream');
     } finally {

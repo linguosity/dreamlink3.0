@@ -60,14 +60,16 @@ export default async function MainPage() {
   }
 
   return (
-    <div className="container py-10">
-      <div className="max-w-4xl mx-auto space-y-10">
+    <div className="container py-10 relative">
+      {/*<div className="absolute inset-0 bg-fixed bg-cover bg-center -z-10" style={{ backgroundImage: "url('/images/background.jpg')" }}></div>*/}
+      <div className="absolute inset-0 -z-10"></div>
+      <div className="max-w-4xl mx-auto space-y-10 relative z-10">
         {/* Dream Input Section */}
         <CompactDreamInput userId={user.id} />
         
         {/* Animated Dream Grid */}
         <div className="mt-12">
-          <h2 className="text-lg font-semibold mb-4">Your Dream Journal</h2>
+          <h2 className="text-lg font-semibold mb-4">Your Dream Gallery</h2>
           <AnimatedDreamGrid dreams={dreams || []} />
         </div>
         

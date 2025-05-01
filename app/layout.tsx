@@ -13,6 +13,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
+import Image from 'next/image';
 
 // Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
@@ -88,6 +89,13 @@ export default async function RootLayout({
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
+      <Image
+          src="/images/background.jpg"
+          alt=""
+          fill
+          className="object-cover object-center -z-10"
+          priority
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
