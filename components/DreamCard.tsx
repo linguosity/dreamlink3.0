@@ -385,7 +385,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       >
         <CardHeader className="p-3 pb-1">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sm line-clamp-1">{dream.title}</CardTitle>
+            <CardTitle className="text-sm line-clamp-2">{dream.title}</CardTitle>
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
               {formattedDate}
@@ -397,7 +397,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           {/* Summary */}
           {dream.dream_summary && (
             <div>
-              <p className="text-xs text-muted-foreground line-clamp-2">
+              <p className="text-xs text-muted-foreground line-clamp-15">
                 {dream.dream_summary}
               </p>
             </div>
@@ -564,7 +564,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="max-w-[300px] text-xs">{BIBLE_VERSES[ref as keyof typeof BIBLE_VERSES] || "Verse content"}</p>
+                            <span className="max-w-[300px] text-xs">{BIBLE_VERSES[ref as keyof typeof BIBLE_VERSES] || "Verse content"}</span>
                           </TooltipContent>
                         </Tooltip>
                       ))}
