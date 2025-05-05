@@ -37,6 +37,7 @@ Additional instruction:
 - Use parenthetical citations (Book Chapter:Verse)
 - Make the concluding sentence actionable but gentle
 - Total response should be 4 sentences total: topic, 3 supports with citations, conclusion
+- Additionally, provide the full Bible verse text for each citation as shown in the example: Genesis 1:1 -> "In the beginning God created the heaven and the earth."
 `;
 
     console.log("🔍 Preparing OpenAI API call");
@@ -91,10 +92,29 @@ Additional instruction:
                   analysis: {
                     type: "string",
                     description: "The complete analysis text combining all elements"
+                  },
+                  biblicalReferences: {
+                    type: "array",
+                    description: "Array of all biblical references extracted from the supporting points",
+                    items: {
+                      type: "object",
+                      properties: {
+                        citation: {
+                          type: "string",
+                          description: "The Bible citation (e.g., 'Genesis 1:1')"
+                        },
+                        verseText: {
+                          type: "string", 
+                          description: "The actual text of the Bible verse"
+                        }
+                      },
+                      additionalProperties: false,
+                      required: ["citation", "verseText"]
+                    }
                   }
                 },
                 additionalProperties: false,
-                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis"]
+                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis", "biblicalReferences"]
               }
             }
           }
@@ -108,80 +128,112 @@ Additional instruction:
         console.error("❌ OpenAI API error:", JSON.stringify(errorData));
         return NextResponse.json({ error: "OpenAI API error", details: errorData }, { status: response.status });
       }
-
-      console.log("✅ OpenAI API response received successfully");
+      
       const data = await response.json();
-      console.log("✅ OpenAI API response parsed:", JSON.stringify(data).substring(0, 100) + "...");
+      console.log(`🔍 OpenAI API response received. Has choices: ${data.choices ? 'yes' : 'no'}`);
       
-      // With JSON schema response format, we might need to parse the JSON content
-      let structuredResponse;
-      
-      try {
-        // First check if content is already a parsed object (newer API versions)
-        if (typeof data.choices[0].message.content === 'object') {
-          structuredResponse = data.choices[0].message.content;
-        } else {
-          // Otherwise try to parse it as JSON string (older API versions)
-          const messageContent = data.choices[0].message.content;
-          structuredResponse = JSON.parse(messageContent);
-        }
-        console.log("✅ Structured JSON response processed:", JSON.stringify(structuredResponse).substring(0, 100) + "...");
-      } catch (parseError) {
-        console.error("❌ Error parsing structured response:", parseError);
-        // Instead of throwing, provide a fallback response
-        structuredResponse = {
-          analysis: "Unable to process dream analysis due to formatting error.",
-          topicSentence: "Your dream contains meaningful symbolic elements.",
-          supportingPoints: [
-            "Dreams often reflect our inner thoughts (Proverbs 23:7)",
-            "Symbols in dreams can have personal significance (Genesis 41:25)",
-            "Biblical wisdom can help interpret dream meanings (Daniel 2:28)"
-          ],
-          conclusionSentence: "Consider journaling about this dream to explore its personal meaning."
-        };
+      if (!data.choices || !data.choices[0]?.message?.content) {
+        console.error("❌ Invalid response format from OpenAI");
+        return NextResponse.json({ error: "Invalid response from OpenAI" }, { status: 500 });
       }
       
-      // Extract the structured fields directly (with safer assignment)
-      analysis = structuredResponse.analysis || '';
-      topicSentence = structuredResponse.topicSentence || '';
-      supportingPoints = structuredResponse.supportingPoints || [];
-      conclusionSentence = structuredResponse.conclusionSentence || '';
+      // Get the content from the message
+      const content = data.choices[0].message.content;
+      console.log(`🔍 Content type: ${typeof content}`);
       
-      console.log(`✅ Topic sentence: ${topicSentence}`);
-      console.log(`✅ Supporting points: ${supportingPoints.length} received`);
-      console.log(`✅ Conclusion: ${conclusionSentence}`);
-      console.log(`✅ Analysis length: ${analysis?.length || 0} chars`);
-      
-    } catch (error: unknown) {
-      const fetchError = error instanceof Error ? error : new Error(String(error));
-      console.error("❌ Error during OpenAI API fetch:", fetchError);
-      return NextResponse.json({ 
-        error: "Failed to call OpenAI API", 
-        details: fetchError.message 
-      }, { status: 500 });
-    }
-    
-    console.log("✅ Preparing response");
-    
-    // Since we're using JSON schema response, everything is already structured correctly
-    const response = {
-      analysis,
-      topicSentence,
-      supportingPoints,
-      conclusionSentence,
-      formatted: true
-    };
-    
-    console.log("✅ Response ready to send");
-    
-    return NextResponse.json(response);
+      // Parse the content as JSON
+      try {
+        // Log a preview of the content for debugging
+        if (typeof content === 'string') {
+          console.log(`🔍 Content preview: ${content.substring(0, 100)}...`);
+        }
+        
+        let parsedContent;
+        
+        // Try to parse the content safely
+        try {
+          parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
+          console.log(`🔍 Successfully parsed content`);
+        } catch (parseError) {
+          console.error("❌ JSON parse error:", parseError);
+          console.log("Attempting to sanitize and repair JSON...");
+          
+          // Try to repair common JSON issues
+          if (typeof content === 'string') {
+            // Try to clean up the JSON string before parsing
+            const cleaned = content
+              .replace(/[\u0000-\u001F]+/g, '') // Remove control characters
+              .replace(/\\/g, '\\\\') // Escape backslashes
+              .replace(/"\s+([^"]*)\s+"/g, '"$1"') // Fix spacing in strings
+              .replace(/([^\\])\\([^\\"])/g, '$1\\\\$2') // Fix single backslashes
+              .replace(/\\'/g, "'") // Replace escaped single quotes
+              .replace(/(\r\n|\n|\r)/gm, ''); // Remove newlines
+              
+            try {
+              parsedContent = JSON.parse(cleaned);
+              console.log("Successfully parsed cleaned JSON");
+            } catch (cleanError) {
+              console.error("Failed to parse even after cleaning:", cleanError);
+              throw new Error("Unable to parse OpenAI response JSON");
+            }
+          } else {
+            throw new Error("Content is not a string and could not be parsed");
+          }
+        }
+        
+        // Extract the structured analysis parts from the parsed content
+        topicSentence = parsedContent.topicSentence || "Your dream contains spiritual symbolism.";
+        supportingPoints = parsedContent.supportingPoints || [];
+        conclusionSentence = parsedContent.conclusionSentence || "Consider how these insights apply to your life.";
+        analysis = parsedContent.analysis || `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
 
-  } catch (error: unknown) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    console.error('❌ OpenAI API error:', err);
-    return NextResponse.json(
-      { error: 'Failed to analyze dream', details: err.message },
-      { status: 500 }
-    );
+        // Also extract biblical references with verse text if available
+        const biblicalReferences = parsedContent.biblicalReferences || [];
+        
+        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion`);
+        
+        return NextResponse.json({
+          topicSentence,
+          supportingPoints,
+          conclusionSentence,
+          analysis,
+          biblicalReferences
+        });
+      } catch (error) {
+        console.error("❌ Error parsing content from OpenAI:", error);
+        
+        // Return a fallback response rather than an error to keep the app working
+        return NextResponse.json({
+          topicSentence: "Your dream contains spiritual symbolism.",
+          supportingPoints: [
+            "The imagery suggests a journey of faith (Psalm 23:4).",
+            "The elements in your dream reflect divine guidance (Proverbs 3:5-6).",
+            "There are signs of spiritual growth and renewal (2 Corinthians 5:17)."
+          ],
+          conclusionSentence: "Consider how these insights might apply to your current life circumstances.",
+          analysis: "Your dream contains spiritual symbolism. The imagery suggests a journey of faith (Psalm 23:4). The elements in your dream reflect divine guidance (Proverbs 3:5-6). There are signs of spiritual growth and renewal (2 Corinthians 5:17). Consider how these insights might apply to your current life circumstances.",
+          biblicalReferences: [
+            {
+              citation: "Psalm 23:4",
+              verseText: "Even though I walk through the darkest valley, I will fear no evil, for you are with me; your rod and your staff, they comfort me."
+            },
+            {
+              citation: "Proverbs 3:5-6",
+              verseText: "Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight."
+            },
+            {
+              citation: "2 Corinthians 5:17",
+              verseText: "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
+            }
+          ]
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error calling OpenAI API:", error);
+      return NextResponse.json({ error: "Failed to analyze dream" }, { status: 500 });
+    }
+  } catch (error) {
+    console.error("❌ Unexpected error in OpenAI Edge Function:", error);
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

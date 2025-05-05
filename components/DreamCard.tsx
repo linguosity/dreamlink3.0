@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MessageSquareIcon } from "lucide-react";
 import dynamic from 'next/dynamic';
+
+// Instead of direct import, use fallback icon components
+const MessageSquareIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
 
 // Import UI components with error handling
 let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
@@ -54,7 +60,59 @@ try {
   );
 }
 
-import { CalendarIcon, BookIcon, PuzzleIcon, Trash2Icon, ShareIcon, MessageSquare } from "lucide-react";
+// Use inline SVG components instead of lucide-react imports
+const CalendarIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const BookIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+  </svg>
+);
+
+const PuzzleIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0l-1.568-1.568a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736a.997.997 0 0 0 .289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0l-1.568-1.568a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736c-.049.322.059.648.289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0L4.58 19.439a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736" />
+    <path d="M4 5v4.343" />
+    <path d="M9.343 0H5" />
+    <path d="M4 14v1a5 5 0 0 0 5 5h1" />
+    <path d="M14 19h1a5 5 0 0 0 5-5v-1" />
+    <path d="M19 9h-1a5 5 0 0 0-5-5H9" />
+  </svg>
+);
+
+const Trash2Icon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 6h18" />
+    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
+const ShareIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
+const MessageSquare = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
 
 // Import dialog components with error handling
 let Dialog: any, DialogContent: any, DialogHeader: any, DialogTitle: any, DialogTrigger: any, DialogDescription: any, DialogFooter: any;
@@ -194,6 +252,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const analysisContentRef = useRef<HTMLDivElement>(null);
   const originalContentRef = useRef<HTMLDivElement>(null);
   const [dream, setDream] = useState(initialDream);
+  const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
   
   // Format date as MMM DD
   const dateObj = dream.created_at ? new Date(dream.created_at) : new Date();
@@ -201,6 +260,192 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     month: 'short',
     day: 'numeric'
   });
+  
+  // Helper function to normalize a Bible reference
+  const normalizeReference = (reference: string): string => {
+    // Remove extra spaces and standardize format
+    return reference.trim().replace(/\s+/g, ' ');
+  };
+  
+  // Helper function to expand verse ranges
+  const expandVerseRange = (reference: string): string[] => {
+    // Match patterns like "Book XX:YY-ZZ" where YY and ZZ are verse numbers
+    const rangeMatch = reference.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+    
+    if (!rangeMatch) {
+      // Not a range, return as is
+      return [reference.trim()];
+    }
+    
+    const [, bookChapter, startVerse, endVerse] = rangeMatch;
+    const start = parseInt(startVerse, 10);
+    const end = parseInt(endVerse, 10);
+    
+    // Check if it's a valid range
+    if (isNaN(start) || isNaN(end) || start > end) {
+      console.log(`⚠️ Invalid verse range: ${reference}`);
+      return [reference.trim()];
+    }
+    
+    // Expand the range
+    const expandedRefs: string[] = [];
+    for (let verse = start; verse <= end; verse++) {
+      expandedRefs.push(`${bookChapter}:${verse}`);
+    }
+    
+    console.log(`Expanded verse range ${reference} into ${expandedRefs.length} individual verses`);
+    return expandedRefs;
+  };
+  
+  // Utility function to find verse text with multiple reference formats
+  const getVerseText = (reference: string): { text: string, isFallback: boolean, source: string } => {
+    // Normalize reference for consistent lookup
+    const normalizedRef = normalizeReference(reference);
+    let verseText: string | undefined;
+    let isFallback = false;
+    let source = "";
+    
+    // Check if this is a verse range
+    const isRange = reference.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+    
+    if (isRange) {
+      console.log(`Processing verse range in component: ${reference}`);
+      
+      // Step 1: Try to find the full range text directly
+      if (bibleVerses[reference]) {
+        verseText = bibleVerses[reference];
+        source = "exact-range";
+        console.log(`Found exact range match for ${reference}`);
+      }
+      else if (bibleVerses[normalizedRef]) {
+        verseText = bibleVerses[normalizedRef];
+        source = "normalized-range";
+        console.log(`Found normalized range match for ${normalizedRef}`);
+      }
+      // Step 2: Try fallback lookup
+      else if (BIBLE_VERSES[reference]) {
+        verseText = BIBLE_VERSES[reference];
+        isFallback = true;
+        source = "fallback-range";
+        console.log(`Using fallback for range ${reference}`);
+      }
+      else if (BIBLE_VERSES[normalizedRef]) {
+        verseText = BIBLE_VERSES[normalizedRef];
+        isFallback = true;
+        source = "fallback-normalized-range";
+        console.log(`Using fallback for normalized range ${normalizedRef}`);
+      }
+      // Step 3: Try to build text from individual verses
+      else {
+        const expandedRefs = expandVerseRange(reference);
+        const expandedTexts: string[] = [];
+        
+        expandedRefs.forEach(expandedRef => {
+          // Try finding text for each individual verse
+          let expandedVerse: string | undefined;
+          
+          // Check in biblesVerses
+          if (bibleVerses[expandedRef]) {
+            expandedVerse = bibleVerses[expandedRef];
+          } 
+          // Check in fallbacks
+          else if (BIBLE_VERSES[expandedRef]) {
+            expandedVerse = BIBLE_VERSES[expandedRef];
+            isFallback = true;
+          }
+          
+          if (expandedVerse) {
+            expandedTexts.push(expandedVerse);
+          }
+        });
+        
+        // If we found texts for individual verses, combine them
+        if (expandedTexts.length > 0) {
+          verseText = expandedTexts.join(" ");
+          source = isFallback ? "expanded-fallback" : "expanded";
+          console.log(`Built range ${reference} from ${expandedTexts.length}/${expandedRefs.length} individual verses`);
+        }
+      }
+      
+      // If still nothing found for range, use placeholder
+      if (!verseText) {
+        console.log(`No verse text found for range ${reference}`);
+        source = "missing-range";
+      }
+    } 
+    else {
+      // Regular single verse reference
+      
+      // Step 1: Try exact reference match first (as provided)
+      if (bibleVerses[reference]) {
+        verseText = bibleVerses[reference];
+        source = "exact";
+        console.log(`Found exact verse match for ${reference}`);
+      }
+      
+      // Step 2: Try normalized reference if exact match failed
+      else if (bibleVerses[normalizedRef]) {
+        verseText = bibleVerses[normalizedRef];
+        source = "normalized";
+        console.log(`Found normalized verse match for ${normalizedRef}`);
+      }
+      
+      // Step 3: Try alternative formats
+      else {
+        // Try without spaces between book and chapter (e.g., "Genesis1:1")
+        const noSpaceRef = reference.replace(/\s+/g, '');
+        if (bibleVerses[noSpaceRef]) {
+          verseText = bibleVerses[noSpaceRef];
+          source = "no-space";
+          console.log(`Found no-space verse match for ${noSpaceRef}`);
+        }
+        
+        // Try splitting and reformatting (book name + chapter:verse)
+        else {
+          const match = reference.match(/([a-zA-Z\s]+)\s*(\d+:\d+)/);
+          if (match) {
+            const [, book, chapterVerse] = match;
+            const reformattedRef = `${book.trim()} ${chapterVerse.trim()}`;
+            
+            if (bibleVerses[reformattedRef]) {
+              verseText = bibleVerses[reformattedRef];
+              source = "reformatted";
+              console.log(`Found reformatted verse match for ${reformattedRef}`);
+            }
+          }
+          
+          // Last resort: fallback to predefined verses
+          if (!verseText) {
+            // Try exact and normalized in the fallback list
+            if (BIBLE_VERSES[reference]) {
+              verseText = BIBLE_VERSES[reference];
+              isFallback = true; 
+              source = "fallback-exact";
+              console.log(`Using fallback verse for ${reference}`);
+            }
+            else if (BIBLE_VERSES[normalizedRef]) {
+              verseText = BIBLE_VERSES[normalizedRef];
+              isFallback = true;
+              source = "fallback-normalized";
+              console.log(`Using fallback verse for ${normalizedRef}`);
+            }
+          }
+        }
+      }
+      
+      // If still not found, use a loading placeholder
+      if (!verseText) {
+        console.log(`No verse text found for ${reference} (normalized: ${normalizedRef})`);
+        source = "missing";
+      }
+    }
+    
+    return { 
+      text: verseText || `Verse text not available for ${reference}`,
+      isFallback,
+      source
+    };
+  };
   
   // Check if this dream is the loading dream (just submitted)
   useEffect(() => {
@@ -259,6 +504,77 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   }, [dream.id, dream.dream_summary, dream.analysis_summary, dream.supporting_points]);
   
   // Calculate and store the maximum height of tab content
+  // Fetch Bible verses when the dialog opens
+  useEffect(() => {
+    if (isOpen && dream.id && dream.bible_refs && dream.bible_refs.length > 0) {
+      console.log("🔍 Fetching Bible verses for dream:", dream.id);
+      console.log("References needed:", dream.bible_refs);
+      
+      const fetchBibleVerses = async () => {
+        try {
+          console.log(`🌐 Making API call to /api/bible-verses/lookup?dreamId=${dream.id}`);
+          const response = await fetch(`/api/bible-verses/lookup?dreamId=${dream.id}`);
+          
+          console.log(`📊 API response status:`, response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log("📚 Fetched Bible verses:", data);
+            console.log("Available reference count:", Object.keys(data).length);
+            
+            // Log details about which verses we have
+            if (dream.bible_refs) {
+              console.log("Checking response for each needed reference:");
+              dream.bible_refs.forEach(ref => {
+                const normalizedRef = normalizeReference(ref);
+                const hasExact = !!data[ref];
+                const hasNormalized = !!data[normalizedRef];
+                
+                console.log(`  ${ref}: exact=${hasExact}, normalized=${hasNormalized}, value=${
+                  hasExact ? data[ref].substring(0, 20) + "..." : 
+                  (hasNormalized ? data[normalizedRef].substring(0, 20) + "..." : "not found")
+                }`);
+              });
+            }
+            
+            // Important: Create a new object to trigger re-render
+            const verseData = { ...data };
+            setBibleVerses(verseData);
+            
+            // Verify if we got verse text for all references
+            if (dream.bible_refs) {
+              const matchSummary = {
+                total: dream.bible_refs.length,
+                found: 0,
+                missing: 0
+              };
+              
+              dream.bible_refs.forEach((ref) => {
+                const found = data[ref] ? true : false;
+                console.log(`Verse text for ${ref}: ${found ? 'Found' : 'Missing'}`);
+                
+                if (found) {
+                  matchSummary.found++;
+                } else {
+                  matchSummary.missing++;
+                }
+              });
+              
+              console.log("📊 Bible verse match summary:", matchSummary);
+            }
+          } else {
+            console.error("API error response:", await response.text());
+          }
+        } catch (error) {
+          console.error("Error fetching Bible verses:", error);
+        }
+      };
+      
+      fetchBibleVerses();
+    }
+  }, [isOpen, dream.id, dream.bible_refs]);
+
+  // Calculate modal height
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -309,6 +625,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const formatBibleCitations = (text: string | undefined, refs?: string[]) => {
     if (!text || !refs || refs.length === 0) return text;
     
+    // Add debug logging
+    console.log("Formatting citations in text:", text.substring(0, 50) + "...");
+    console.log("Available references:", refs);
+    console.log("Available verse texts count:", Object.keys(bibleVerses).length);
+    console.log("Bible verses keys:", Object.keys(bibleVerses));
+    
     // Create JSX elements with formatted citations and tooltips
     return (
       <TooltipProvider>
@@ -316,19 +638,64 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           // Check if this part contains a Bible reference
           const refMatch = part.match(/\(([\w\s]+\d+:\d+)\)/);
           
-          if (refMatch && refs.includes(refMatch[1])) {
+          if (refMatch) {
             const reference = refMatch[1];
-            return (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                  <span className="cursor-help">{part}</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-[300px] text-xs">{BIBLE_VERSES[reference as keyof typeof BIBLE_VERSES] || "Verse content"}</p>
-                </TooltipContent>
-              </Tooltip>
-            );
+            const isValidRef = refs.includes(reference);
+            
+            console.log(`Found reference in text: ${reference}, is in refs: ${isValidRef}, has verse text: ${bibleVerses[reference] ? 'Yes' : 'No'}`);
+            
+            // Get the verse text using our utility function
+            const { text: verseText, isFallback, source } = getVerseText(reference);
+            console.log(`Verse for reference ${reference}: source=${source}, isFallback=${isFallback}`);
+            
+            // Only create tooltip if this is a valid reference and we found a verse
+            if (isValidRef) {
+              return (
+                <Tooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-help">{part}</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="max-w-[300px] text-xs">
+                      <div>{verseText}</div>
+                      {isFallback && (
+                        <div className="text-[10px] italic text-muted-foreground mt-1">
+                          Note: Using standard verse text
+                        </div>
+                      )}
+                      {source === "missing" && (
+                        <div className="text-[10px] italic text-red-500 mt-1">
+                          Warning: No verse text found
+                        </div>
+                      )}
+                      {source === "missing-range" && (
+                        <div className="text-[10px] italic text-red-500 mt-1">
+                          Warning: No verse text found for this range
+                        </div>
+                      )}
+                      {source.startsWith("expanded") && (
+                        <div className="text-[10px] italic text-blue-500 mt-1">
+                          Note: Combined from individual verses
+                        </div>
+                      )}
+                      {source.includes("range") && !source.includes("missing") && (
+                        <div className="text-[10px] italic text-green-500 mt-1">
+                          {reference}
+                        </div>
+                      )}
+                      {(process.env.NODE_ENV === 'development' || process.env.DEBUG) && (
+                        <div className="text-[8px] opacity-50 mt-1 border-t pt-1">
+                          Debug: src={source}, ref={reference}
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
           }
+          
+          // If no match or not a valid reference, return the part as is
           
           return <span key={index}>{part}</span>;
         })}
@@ -451,33 +818,33 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   {dream.dream_summary && (
                     <div className="space-y-2 mb-4">
                       <h4 className="text-sm font-medium">Summary</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground">
                         {dream.dream_summary}
-                      </p>
+                      </div>
                     </div>
                   )}
                   
                   {dream.formatted_analysis ? (
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Analysis</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground">
                         {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
-                      </p>
+                      </div>
                     </div>
                   ) : dream.analysis_summary ? (
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Analysis</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground">
                         {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
-                      </p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Analysis</h4>
                       {dream.topic_sentence && (
-                        <p className="text-sm text-muted-foreground font-medium">
+                        <div className="text-sm text-muted-foreground font-medium">
                           {dream.topic_sentence}
-                        </p>
+                        </div>
                       )}
                       {dream.supporting_points && dream.supporting_points.length > 0 && (
                         <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
@@ -487,9 +854,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         </ul>
                       )}
                       {dream.conclusion_sentence && (
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <div className="text-sm text-muted-foreground mt-2">
                           {dream.conclusion_sentence}
-                        </p>
+                        </div>
                       )}
                     </div>
                   )}
@@ -555,19 +922,59 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 {dream.bible_refs && dream.bible_refs.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     <TooltipProvider>
-                      {dream.bible_refs.map((ref, index) => (
-                        <Tooltip key={index}>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="text-xs flex items-center gap-1">
-                              <BookIcon className="h-2 w-2" />
-                              {ref}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <span className="max-w-[300px] text-xs">{BIBLE_VERSES[ref as keyof typeof BIBLE_VERSES] || "Verse content"}</span>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
+                      {dream.bible_refs.map((ref, index) => {
+                        // Get verse text using our utility function
+                        const { text: verseText, isFallback, source } = getVerseText(ref);
+                        console.log(`Badge verse for reference ${ref}: source=${source}, isFallback=${isFallback}`);
+                        
+                        console.log(`Badge reference: ${ref}, has verse text: ${verseText !== 'Verse content loading...' ? 'Yes' : 'No'}`);
+                        
+                        return (
+                          <Tooltip key={index}>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                <BookIcon className="h-2 w-2" />
+                                {ref}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="max-w-[300px] text-xs">
+                                <div>{verseText}</div>
+                                {isFallback && (
+                                  <div className="text-[10px] italic text-muted-foreground mt-1">
+                                    Note: Using standard verse text
+                                  </div>
+                                )}
+                                {source === "missing" && (
+                                  <div className="text-[10px] italic text-red-500 mt-1">
+                                    Warning: No verse text found
+                                  </div>
+                                )}
+                                {source === "missing-range" && (
+                                  <div className="text-[10px] italic text-red-500 mt-1">
+                                    Warning: No verse text found for this range
+                                  </div>
+                                )}
+                                {source.startsWith("expanded") && (
+                                  <div className="text-[10px] italic text-blue-500 mt-1">
+                                    Note: Combined from individual verses
+                                  </div>
+                                )}
+                                {source.includes("range") && !source.includes("missing") && (
+                                  <div className="text-[10px] italic text-green-500 mt-1">
+                                    {ref}
+                                  </div>
+                                )}
+                                {(process.env.NODE_ENV === 'development' || process.env.DEBUG) && (
+                                  <div className="text-[8px] opacity-50 mt-1 border-t pt-1">
+                                    Debug: src={source}, ref={ref}
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
                     </TooltipProvider>
                   </div>
                 )}
