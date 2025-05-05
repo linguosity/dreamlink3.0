@@ -89,13 +89,15 @@ export default async function RootLayout({
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
-      <Image
+      <div className="fixed inset-0 -z-10">
+        <Image
           src="/images/background.jpg"
           alt=""
           fill
-          className="object-cover object-center -z-10"
+          className="object-cover object-center"
           priority
         />
+      </div>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
