@@ -23,7 +23,8 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
+    --primary: 210 100% 59%; /* Updated to #4A90E2 */
+    --primary-hover: 212 69% 48%; /* Darker hover color #357ABD */
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
@@ -51,8 +52,9 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 210 100% 59%; /* Same primary in dark mode #4A90E2 */
+    --primary-hover: 212 69% 48%; /* Same hover color #357ABD */
+    --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
@@ -78,6 +80,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Style links with white variants for footer */
+  footer a:not(.no-brand-style) {
+    @apply text-gray-100 hover:text-white transition-colors;
+  }
+  /* Style buttons with hover state */
+  .btn-primary, button[type="submit"] {
+    @apply hover:bg-primary-hover transition-colors;
   }
 }
 

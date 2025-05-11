@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
+import { cn } from "@/lib/utils";
+import { highlightMatches } from "@/utils/highlight";
 
 // Instead of direct import, use fallback icon components
 const MessageSquareIcon = ({ className }: { className?: string }) => (
@@ -212,14 +214,80 @@ try {
   AlertDialogTrigger = ({ children, ...props }: any) => <div {...props}>{children}</div>;
 }
 
+// Helper function to highlight text matches for multiple keywords
+function highlightText(text: string, searchTerms: string | string[]): React.ReactNode {
+  if (!text) return text;
+  
+  // If searchTerms is a string, convert it to an array
+  const terms = Array.isArray(searchTerms) ? searchTerms : [searchTerms];
+  
+  // If no search terms, return the original text
+  if (!terms.length || (terms.length === 1 && !terms[0])) {
+    return text;
+  }
+  
+  // Create a safe pattern by escaping special regex characters
+  const escapedTerms = terms.map(term => 
+    term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+  
+  // Create a RegExp that matches any of the search terms
+  const searchPattern = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
+  
+  const parts = text.split(searchPattern);
+  
+  return (
+    <>
+      {parts.map((part, i) => {
+        // Check if this part matches any of the search terms (case insensitive)
+        const isMatch = terms.some(term => 
+          part.toLowerCase() === term.toLowerCase()
+        );
+        
+        if (isMatch) {
+          return (
+            <mark key={i} className="bg-yellow-200 dark:bg-amber-900 dark:text-white rounded-sm px-0.5">
+              {part}
+            </mark>
+          );
+        }
+        
+        return part;
+      })}
+    </>
+  );
+}
+
+// Legacy helper function to highlight a single search term
+function highlightTextLegacy(text: string, searchTerm: string): React.ReactNode {
+  if (!searchTerm || !text) return text;
+  
+  const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) => 
+        part.toLowerCase() === searchTerm.toLowerCase() ? (
+          <mark key={i} className="bg-yellow-200 dark:bg-amber-900 dark:text-white rounded-sm px-0.5">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
 type DreamEntryProps = {
   empty?: boolean;
   loading?: boolean;
+  searchTerms?: string[];
   dream: {
     id: string;
     original_text: string;
     title?: string;
     dream_summary?: string;
+    personalized_summary?: string;
     analysis_summary?: string;
     topic_sentence?: string;
     supporting_points?: string[];
@@ -243,7 +311,7 @@ const BIBLE_VERSES = {
   "1 Kings 6:19": "And the oracle he prepared in the house within, to set there the ark of the covenant of the LORD."
 };
 
-export default function DreamCard({ empty, loading: initialLoading, dream: initialDream }: DreamEntryProps) {
+export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [] }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
@@ -747,12 +815,20 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   return (
     <>
       <Card 
-        className="overflow-hidden transition-all h-full cursor-pointer hover:shadow-md will-change-transform"
+        className={cn(
+          "overflow-hidden transition-all h-full cursor-pointer hover:shadow-md will-change-transform",
+          searchTerms.length > 0 && "ring-1 ring-primary"
+        )}
         onClick={handleCardClick}
       >
         <CardHeader className="p-3 pb-1">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sm line-clamp-2">{dream.title}</CardTitle>
+            <CardTitle className="text-sm line-clamp-2">
+              {searchTerms.length > 0 
+                ? highlightMatches(dream.title || "", searchTerms) 
+                : dream.title
+              }
+            </CardTitle>
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
               {formattedDate}
@@ -762,10 +838,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         
         <CardContent className="p-3 pt-1 space-y-2">
           {/* Summary */}
-          {dream.dream_summary && (
+          {(dream.personalized_summary || dream.dream_summary) && (
             <div>
-              <p className="text-xs text-muted-foreground line-clamp-15">
-                {dream.dream_summary}
+              <p className="text-xs text-muted-foreground">
+                {searchTerms.length > 0 
+                  ? highlightMatches(dream.personalized_summary || dream.dream_summary || "", searchTerms)
+                  : (dream.personalized_summary || dream.dream_summary)
+                }
               </p>
             </div>
           )}
@@ -773,11 +852,31 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           {/* Tags */}
           {dream.tags && dream.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {dream.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
-                  {tag}
-                </Badge>
-              ))}
+              {dream.tags.map((tag, index) => {
+                // Check if tag matches any search term
+                const isTagMatch = searchTerms.some(term => 
+                  term && tag.toLowerCase().includes(term.toLowerCase())
+                );
+                
+                return (
+                  <Badge key={index} variant="secondary" className={cn(
+                    "text-xs px-1 py-0",
+                    isTagMatch && "bg-primary/10"
+                  )}>
+                    {isTagMatch
+                      ? highlightMatches(tag, searchTerms)
+                      : tag
+                    }
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
+          
+          {/* Original text preview (shown only when there's a search match and no summary) */}
+          {searchTerms.length > 0 && !dream.personalized_summary && !dream.dream_summary && (
+            <div className="text-xs text-muted-foreground line-clamp-2">
+              {highlightMatches(dream.original_text, searchTerms)}
             </div>
           )}
           
@@ -815,32 +914,18 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div style={{ minHeight: modalHeight ? `${modalHeight}px` : 'auto' }}>
               <TabsContent value="analysis" className="space-y-4 p-1">
                 <div ref={analysisContentRef}>
-                  {dream.dream_summary && (
-                    <div className="space-y-2 mb-4">
-                      <h4 className="text-sm font-medium">Summary</h4>
-                      <div className="text-sm text-muted-foreground">
-                        {dream.dream_summary}
-                      </div>
-                    </div>
-                  )}
+                  {/* Summary section removed as requested */}
                   
                   {dream.formatted_analysis ? (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Analysis</h4>
-                      <div className="text-sm text-muted-foreground">
-                        {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
-                      </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
                     </div>
                   ) : dream.analysis_summary ? (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Analysis</h4>
-                      <div className="text-sm text-muted-foreground">
-                        {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
-                      </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Analysis</h4>
                       {dream.topic_sentence && (
                         <div className="text-sm text-muted-foreground font-medium">
                           {dream.topic_sentence}
@@ -865,7 +950,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               
               <TabsContent value="original" className="space-y-4 p-1">
                 <div ref={originalContentRef} className="text-sm whitespace-pre-wrap">
-                  {dream.original_text}
+                  {searchTerms.length > 0 
+                    ? highlightMatches(dream.original_text, searchTerms)
+                    : dream.original_text
+                  }
                 </div>
               </TabsContent>
             </div>

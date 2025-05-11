@@ -13,6 +13,7 @@ export const dreamEntrySchema = z.object({
   original_text: z.string(),
   title: z.string().nullable().optional(),
   dream_summary: z.string().nullable().optional(),
+  personalized_summary: z.string().nullable().optional(), // New field for personalized one-sentence summary
   analysis_summary: z.string().nullable().optional(),
   topic_sentence: z.string().nullable().optional(),
   supporting_points: z.array(z.string()).nullable().optional(),

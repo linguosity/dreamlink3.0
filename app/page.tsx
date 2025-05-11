@@ -77,14 +77,14 @@ export default async function MainPage() {
         <footer className="border-t pt-8 mt-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-3">Dreamlink</h3>
-              <p className="text-muted-foreground text-sm">
+              <h3 className="font-bold text-lg mb-3 text-white">Dreamlink</h3>
+              <p className="text-gray-200 text-sm">
                 AI-powered dream journaling with biblical insights and dream pattern analysis.
               </p>
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3">Quick Links</h3>
+              <h3 className="font-bold text-lg mb-3 text-white">Quick Links</h3>
               <ul className="space-y-2">
                 <li><Link href="/account" className="text-sm hover:underline">Account</Link></li>
                 <li><Link href="/settings" className="text-sm hover:underline">Settings</Link></li>
@@ -95,16 +95,16 @@ export default async function MainPage() {
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3">Connect</h3>
-              <p className="text-muted-foreground text-sm mb-2">
+              <h3 className="font-bold text-lg mb-3 text-white">Connect</h3>
+              <p className="text-gray-200 text-sm mb-2">
                 Have questions or feedback?
               </p>
               <div className="space-y-4">
                 <Link href="/contact">
-                  <Button variant="outline" size="sm">Contact Us</Button>
+                  <Button variant="outline" size="sm" className="bg-white text-gray-900 hover:bg-gray-100">Contact Us</Button>
                 </Link>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Share:</h4>
+                  <h4 className="text-sm font-medium mb-2 text-gray-200">Share:</h4>
                   {/* Social share buttons rendered client-side */}
                   <div className="flex items-center space-x-2">
                     <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(defaultUrl)}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity">
@@ -133,7 +133,7 @@ export default async function MainPage() {
             </div>
           </div>
           
-          <div className="text-center text-xs text-muted-foreground mt-8 pt-4 border-t">
+          <div className="text-center text-xs text-gray-200 mt-8 pt-4 border-t">
             &copy; {new Date().getFullYear()} Dreamlink. All rights reserved.
           </div>
         </footer>

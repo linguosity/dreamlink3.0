@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { ReadingLevel } from '@/schema/profile';
+import { SearchFeatureToggle } from '@/components/SearchFeatureToggle';
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,6 +25,9 @@ export default function SettingsPage() {
     biblicalReferences: true,
     language: "en"
   });
+  const [readingLevel, setReadingLevel] = useState<string>(ReadingLevel.CELESTIAL_INSIGHT);
+  const [bibleVersion, setBibleVersion] = useState<string>("KJV");
+  const [isSaving, setIsSaving] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -44,6 +50,22 @@ export default function SettingsPage() {
               ...profileData.preferences
             });
           }
+          
+          // Fetch user profile with reading level and Bible version
+          const { data: userProfile } = await supabase
+            .from('profile')
+            .select('reading_level, bible_version')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (userProfile) {
+            if (userProfile.reading_level) {
+              setReadingLevel(userProfile.reading_level);
+            }
+            if (userProfile.bible_version) {
+              setBibleVersion(userProfile.bible_version);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -64,10 +86,51 @@ export default function SettingsPage() {
         .update({ preferences })
         .eq('id', user.id);
         
-      alert('Settings saved successfully!');
+      toast.success('Preferences saved successfully!');
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Failed to save settings. Please try again.');
+      toast.error('Failed to save preferences. Please try again.');
+    }
+  };
+  
+  const saveReadingSettings = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    
+    try {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profile')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (existingProfile) {
+        // Update existing profile
+        await supabase
+          .from('profile')
+          .update({
+            reading_level: readingLevel,
+            bible_version: bibleVersion
+          })
+          .eq('user_id', user.id);
+      } else {
+        // Create new profile
+        await supabase
+          .from('profile')
+          .insert({
+            user_id: user.id,
+            reading_level: readingLevel,
+            bible_version: bibleVersion
+          });
+      }
+      
+      toast.success('Reading settings saved successfully');
+    } catch (error) {
+      console.error('Error saving reading settings:', error);
+      toast.error('Failed to save reading settings');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -131,6 +194,15 @@ export default function SettingsPage() {
             <CardDescription>Customize your Dreamlink experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Search Feature Toggle */}
+            <div className="pb-2 border-b">
+              <h3 className="text-sm font-medium mb-2">Search Features</h3>
+              <SearchFeatureToggle />
+              <p className="text-xs text-muted-foreground mt-2">
+                Enable multi-keyword search to filter dreams by multiple terms at once
+              </p>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="emailNotifications" 
@@ -199,6 +271,71 @@ export default function SettingsPage() {
             
             <Button onClick={handleSavePreferences}>Save Settings</Button>
           </CardContent>
+        </Card>
+        
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Dream Analysis Settings</CardTitle>
+            <CardDescription>Customize your dream interpretation experience</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reading-level">Reading Level</Label>
+              <Select
+                disabled={loading}
+                value={readingLevel}
+                onValueChange={setReadingLevel}
+              >
+                <SelectTrigger id="reading-level">
+                  <SelectValue placeholder="Select reading level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ReadingLevel.RADIANT_CLARITY}>
+                    Radiant Clarity (Simple)
+                  </SelectItem>
+                  <SelectItem value={ReadingLevel.CELESTIAL_INSIGHT}>
+                    Celestial Insight (Standard)
+                  </SelectItem>
+                  <SelectItem value={ReadingLevel.PROPHETIC_WISDOM}>
+                    Prophetic Wisdom (Advanced)
+                  </SelectItem>
+                  <SelectItem value={ReadingLevel.DIVINE_REVELATION}>
+                    Divine Revelation (Scholarly)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                This setting determines the language complexity used in your dream analysis.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bible-version">Bible Version</Label>
+              <Select
+                disabled={loading}
+                value={bibleVersion}
+                onValueChange={setBibleVersion}
+              >
+                <SelectTrigger id="bible-version">
+                  <SelectValue placeholder="Select Bible version" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KJV">King James Version (KJV)</SelectItem>
+                  <SelectItem value="NIV">New International Version (NIV)</SelectItem>
+                  <SelectItem value="ESV">English Standard Version (ESV)</SelectItem>
+                  <SelectItem value="NKJV">New King James Version (NKJV)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                Biblical references in your dream analysis will use this translation.
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={saveReadingSettings} disabled={loading || isSaving}>
+              {isSaving ? "Saving..." : "Save Reading Settings"}
+            </Button>
+          </CardFooter>
         </Card>
         
         <Card className="mb-8">

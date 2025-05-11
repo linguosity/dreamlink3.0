@@ -1,19 +1,71 @@
 import { NextResponse } from "next/server";
+import { ReadingLevel } from "@/schema/profile";
 
 export const runtime = "edge"; // Use Edge Runtime
+
+// Helper function to get reading level instructions
+function getReadingLevelInstructions(readingLevel: string): string {
+  switch (readingLevel) {
+    case ReadingLevel.RADIANT_CLARITY:
+      return `
+- Use simple, clear language suitable for a young reader (3rd grade level)
+- Use short sentences with basic vocabulary
+- Explain biblical concepts in simple terms
+- Use everyday examples to illustrate spiritual concepts
+- Avoid complex theological terms`;
+
+    case ReadingLevel.CELESTIAL_INSIGHT:
+      return `
+- Use moderately sophisticated language (8th grade level)
+- Balance clarity with some spiritual terminology
+- Include some nuance in biblical interpretations
+- Use moderately complex sentence structures
+- Explain most theological concepts briefly`;
+
+    case ReadingLevel.PROPHETIC_WISDOM:
+      return `
+- Use advanced vocabulary and mature phrasing (12th grade level)
+- Include deeper theological insights and nuanced interpretation
+- Use varied sentence structures with proper flow
+- Reference biblical concepts with sophistication
+- Assume familiarity with common biblical themes`;
+
+    case ReadingLevel.DIVINE_REVELATION:
+      return `
+- Use scholarly theological language and advanced biblical terminology
+- Provide deep exegetical insights into dream symbolism
+- Reference biblical hermeneutics and interpretive frameworks
+- Include nuanced spiritual insights with theological precision
+- Use sophisticated language suitable for seminary-educated readers`;
+
+    default:
+      return `
+- Use moderately sophisticated language (8th grade level)
+- Balance clarity with some spiritual terminology
+- Include some nuance in biblical interpretations
+- Use moderately complex sentence structures
+- Explain most theological concepts briefly`;
+  }
+}
 
 export async function POST(request: Request) {
   try {
     console.log("🔍 OpenAI Edge Function: Request received");
     
-    const { dream, topic } = await request.json();
+    const { dream, topic, readingLevel } = await request.json();
     console.log(`🔍 Dream content received. Length: ${dream?.length || 0} chars`);
     console.log(`🔍 Analysis topic: ${topic || 'general spiritual meaning'}`);
+    console.log(`🔍 Reading level: ${readingLevel || ReadingLevel.CELESTIAL_INSIGHT}`);
     
     if (!dream) {
       console.log("❌ Error: Dream content is missing");
       return NextResponse.json({ error: "Dream content is required" }, { status: 400 });
     }
+    
+    // Get reading level instructions
+    const readingLevelInstructions = getReadingLevelInstructions(
+      readingLevel || ReadingLevel.CELESTIAL_INSIGHT
+    );
     
     const prompt = `
 You are a dream interpreter specializing in Christian biblical interpretation.
@@ -23,21 +75,25 @@ Analyze the following dream, connecting it to biblical themes, symbols, and scri
 
 Format your analysis using this exact structure:
 1. Start with a topic sentence that captures the main spiritual theme of the dream.
-2. Provide exactly 3 supporting points. Each point should include a direct Bible citation in parentheses.
+2. Provide 1-3 supporting points based on what best explains the dream's meaning (not always exactly 3). Each point should include a direct Bible citation in parentheses.
 3. End with a concluding sentence that provides guidance based on the dream's meaning.
+4. Create a personalized summary that addresses the dreamer directly about their dream's significance using vivid language - just one compelling sentence.
 
 Example format:
-"This dream reflects God's promise of provision in times of uncertainty. The water symbolizes God's spirit bringing renewal (Isaiah 44:3), while the mountain represents the challenges you're facing (Zechariah 4:7), and the light breaking through suggests divine intervention (John 1:5). Consider how God might be preparing you for upcoming changes that require faith and trust."
+"This dream reflects God's promise of provision in times of uncertainty. The water symbolizes God's spirit bringing renewal (Isaiah 44:3), while the mountain represents the challenges you're facing (Zechariah 4:7). Consider how God might be preparing you for upcoming changes that require faith and trust."
 
 Additional instruction:
 - Focus analysis on theme: ${topic || 'general spiritual meaning'}
 - Keep each supporting point brief but insightful
-- Include exactly 3 biblical references (one per supporting point)
+- Include biblical references (one per supporting point)
+- Avoid formulaic phrases like "This dream symbolizes" or "This dream represents"
 - Ensure each supporting point has logical connection to the dream content
 - Use parenthetical citations (Book Chapter:Verse)
 - Make the concluding sentence actionable but gentle
-- Total response should be 4 sentences total: topic, 3 supports with citations, conclusion
+- Personalize the one-sentence summary to speak directly to the dreamer about their spiritual journey
 - Additionally, provide the full Bible verse text for each citation as shown in the example: Genesis 1:1 -> "In the beginning God created the heaven and the earth."
+
+${readingLevelInstructions}
 `;
 
     console.log("🔍 Preparing OpenAI API call");
@@ -83,7 +139,7 @@ Additional instruction:
                       type: "string",
                       description: "A supporting point with a biblical citation in parentheses"
                     },
-                    description: "Exactly three supporting points with biblical citations"
+                    description: "1-3 supporting points with biblical citations"
                   },
                   conclusionSentence: {
                     type: "string",
@@ -92,6 +148,10 @@ Additional instruction:
                   analysis: {
                     type: "string",
                     description: "The complete analysis text combining all elements"
+                  },
+                  personalizedSummary: {
+                    type: "string",
+                    description: "A compelling one-sentence summary that addresses the dreamer directly about their dream's significance using vivid language"
                   },
                   biblicalReferences: {
                     type: "array",
@@ -114,7 +174,7 @@ Additional instruction:
                   }
                 },
                 additionalProperties: false,
-                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis", "biblicalReferences"]
+                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis", "personalizedSummary", "biblicalReferences"]
               }
             }
           }
@@ -145,7 +205,7 @@ Additional instruction:
       try {
         // Log a preview of the content for debugging
         if (typeof content === 'string') {
-          console.log(`🔍 Content preview: ${content.substring(0, 100)}...`);
+          console.log(`🔍 Content preview: ${content.substring(0, 100)}`);
         }
         
         let parsedContent;
@@ -185,18 +245,26 @@ Additional instruction:
         topicSentence = parsedContent.topicSentence || "Your dream contains spiritual symbolism.";
         supportingPoints = parsedContent.supportingPoints || [];
         conclusionSentence = parsedContent.conclusionSentence || "Consider how these insights apply to your life.";
+        
+        // Ensure each component already has its proper punctuation
+        topicSentence = topicSentence.endsWith('.') ? topicSentence : topicSentence + '.';
+        conclusionSentence = conclusionSentence.endsWith('.') ? conclusionSentence : conclusionSentence + '.';
+        supportingPoints = supportingPoints.map(point => point.endsWith('.') ? point : point + '.');
+        
         analysis = parsedContent.analysis || `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
+        const personalizedSummary = parsedContent.personalizedSummary || "Your dream reveals important spiritual insights for your journey.";
 
         // Also extract biblical references with verse text if available
         const biblicalReferences = parsedContent.biblicalReferences || [];
         
-        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion`);
+        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion, personalized summary`);
         
         return NextResponse.json({
           topicSentence,
           supportingPoints,
           conclusionSentence,
           analysis,
+          personalizedSummary,
           biblicalReferences
         });
       } catch (error) {

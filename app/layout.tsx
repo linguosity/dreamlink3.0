@@ -5,7 +5,6 @@ import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,6 +13,7 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 import Image from 'next/image';
+import { Providers } from './providers';
 
 // Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
@@ -94,16 +94,11 @@ export default async function RootLayout({
           src="/images/background.jpg"
           alt=""
           fill
-          className="object-cover object-center"
+          className="object-cover object-center blur-[5px]"
           priority
         />
       </div>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Providers>
           <main className="min-h-screen flex flex-col">
             {/* Env‐var warning or Navbar */}
             {!hasEnvVars ? (
@@ -132,7 +127,7 @@ export default async function RootLayout({
             {/* Footer only on auth pages */}
             {isAuthPage && (
               <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
-                <p className="text-muted-foreground">
+                <p className="text-white">
                   © {new Date().getFullYear()} Dreamlink. All rights reserved.
                 </p>
                 <div className="flex items-center gap-4">
@@ -141,7 +136,7 @@ export default async function RootLayout({
               </footer>
             )}
           </main>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

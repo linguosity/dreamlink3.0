@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useSearch } from '@/context/search-context';
+import { useDreamSearch } from '@/hooks/use-dream-search';
+import { Search } from 'lucide-react';
+
 // Import framer-motion with error handling to prevent build failures
 let motion: any = { div: 'div' };
 let AnimatePresence: any = ({ children }: { children: React.ReactNode }) => <>{children}</>;
@@ -43,6 +47,14 @@ interface AnimatedDreamGridProps {
 }
 
 export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedDreamGridProps) {
+  // Access search context
+  const { keywords, isLoading, isSearchEnabled } = useSearch();
+  
+  // Filter dreams based on keywords array (only if search is enabled and on client)
+  const filteredDreams = typeof window !== 'undefined' && isSearchEnabled
+    ? useDreamSearch(dreams, keywords)
+    : dreams;
+  
   // If no dreams, show placeholder
   if (!dreams || dreams.length === 0) {
     const placeholderDream = {
@@ -84,6 +96,39 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       setLoadingDreamId(null);
     }
   }, [dreams]);
+  
+  // Show no results state (client-side only)
+  if (typeof window !== 'undefined' && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0) {
+    return (
+      <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+        <div className="bg-muted rounded-full p-6 mb-4">
+          <Search className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-medium mb-2">No dreams found</h3>
+        <p className="text-muted-foreground max-w-md">
+          We couldn't find any dreams matching all of:{' '}
+          {keywords.map((kw, i) => (
+            <span key={i} className="font-medium">
+              "{kw}"{i < keywords.length - 1 ? ', ' : ''}
+            </span>
+          ))}
+          <br />
+          Try removing some keywords or using different terms.
+        </p>
+      </div>
+    );
+  }
+  
+  // Show loading state (client-side only)
+  if (typeof window !== 'undefined' && isSearchEnabled && isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 min-h-[300px]">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-64 w-full bg-muted animate-pulse rounded-md" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -91,7 +136,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       style={{ gridAutoFlow: 'dense' }}
     >
       <AnimatePresence initial={false}>
-        {dreams.slice(0, 12).map((dream, index) => (
+        {filteredDreams.slice(0, 12).map((dream, index) => (
           <motion.div
             key={dream.id}
             layout
@@ -108,6 +153,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             <DreamCard 
               dream={dream} 
               loading={dream.id === loadingDreamId}
+              searchTerms={typeof window !== 'undefined' && isSearchEnabled ? keywords : []}
             />
           </motion.div>
         ))}
