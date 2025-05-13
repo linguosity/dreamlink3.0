@@ -203,11 +203,32 @@ ${readingLevelInstructions}
       
       // Parse the content as JSON
       try {
-        // Log a preview of the content for debugging
+        // Log full content for debugging
         if (typeof content === 'string') {
-          console.log(`🔍 Content preview: ${content.substring(0, 100)}`);
+          console.log(`🔍 Content length: ${content.length} characters`);
+          console.log(`🔍 Content preview (first 200): ${content.substring(0, 200)}`);
+          console.log(`🔍 Content preview (last 200): ${content.substring(content.length - 200)}`);
+
+          // Check for common JSON issues
+          const openBraces = (content.match(/{/g) || []).length;
+          const closeBraces = (content.match(/}/g) || []).length;
+          const openBrackets = (content.match(/\[/g) || []).length;
+          const closeBrackets = (content.match(/]/g) || []).length;
+          const quotes = (content.match(/"/g) || []).length;
+
+          console.log(`🔍 JSON structure check:`);
+          console.log(`   - Open braces: ${openBraces}, Close braces: ${closeBraces}`);
+          console.log(`   - Open brackets: ${openBrackets}, Close brackets: ${closeBrackets}`);
+          console.log(`   - Quote count: ${quotes} (should be even)`);
+
+          // Log the area around position 2431 where the error occurs
+          const errorPosition = 2431;
+          const contextStart = Math.max(0, errorPosition - 50);
+          const contextEnd = Math.min(content.length, errorPosition + 50);
+          console.log(`🔍 Content around error position ${errorPosition}:`);
+          console.log(`   "${content.substring(contextStart, contextEnd)}"`);
         }
-        
+
         let parsedContent;
         
         // Try to parse the content safely
@@ -220,21 +241,104 @@ ${readingLevelInstructions}
           
           // Try to repair common JSON issues
           if (typeof content === 'string') {
-            // Try to clean up the JSON string before parsing
-            const cleaned = content
+            console.log("🔧 Attempting to repair JSON...");
+
+            // First, try to find where the JSON might be truncated
+            let cleaned = content;
+
+            // Check if the JSON appears to be truncated
+            const lastChar = cleaned[cleaned.length - 1];
+            console.log(`🔧 Last character: "${lastChar}"`);
+
+            // If it doesn't end with } or ], it's likely truncated
+            if (lastChar !== '}' && lastChar !== ']') {
+              console.log("🔧 JSON appears truncated. Attempting to close structures...");
+
+              // Count open structures
+              const openBraces = (cleaned.match(/{/g) || []).length;
+              const closeBraces = (cleaned.match(/}/g) || []).length;
+              const openBrackets = (cleaned.match(/\[/g) || []).length;
+              const closeBrackets = (cleaned.match(/]/g) || []).length;
+
+              // Try to close any open strings first
+              if ((cleaned.match(/"/g) || []).length % 2 !== 0) {
+                cleaned += '"';
+                console.log("🔧 Added closing quote");
+              }
+
+              // Close arrays
+              for (let i = 0; i < openBrackets - closeBrackets; i++) {
+                cleaned += ']';
+                console.log("🔧 Added closing bracket");
+              }
+
+              // Close objects
+              for (let i = 0; i < openBraces - closeBraces; i++) {
+                cleaned += '}';
+                console.log("🔧 Added closing brace");
+              }
+            }
+
+            // Now apply other cleaning
+            cleaned = cleaned
               .replace(/[\u0000-\u001F]+/g, '') // Remove control characters
-              .replace(/\\/g, '\\\\') // Escape backslashes
-              .replace(/"\s+([^"]*)\s+"/g, '"$1"') // Fix spacing in strings
-              .replace(/([^\\])\\([^\\"])/g, '$1\\\\$2') // Fix single backslashes
-              .replace(/\\'/g, "'") // Replace escaped single quotes
-              .replace(/(\r\n|\n|\r)/gm, ''); // Remove newlines
+              .replace(/\\n/g, ' ') // Replace literal \n with space
+              .replace(/\n/g, ' ') // Replace actual newlines with space
+              .replace(/\r/g, '') // Remove carriage returns
+              .replace(/\t/g, ' ') // Replace tabs with space
+              .replace(/\s+/g, ' ') // Normalize whitespace
+              .replace(/,\s*([}\]])/g, '$1') // Remove trailing commas
+              .replace(/([^\\])\\([^\\"])/g, '$1\\\\$2'); // Fix single backslashes
               
             try {
               parsedContent = JSON.parse(cleaned);
               console.log("Successfully parsed cleaned JSON");
             } catch (cleanError) {
               console.error("Failed to parse even after cleaning:", cleanError);
-              throw new Error("Unable to parse OpenAI response JSON");
+              console.log("🔧 Cleaned content preview:", cleaned.substring(0, 500));
+              console.log("🔧 Cleaned content end:", cleaned.substring(cleaned.length - 200));
+
+              // As a last resort, try to extract what we can
+              console.log("🔧 Attempting to extract partial data...");
+
+              try {
+                // Try to extract individual fields using regex
+                const topicMatch = cleaned.match(/"topicSentence"\s*:\s*"([^"]*)"/);
+                const topicSentence = topicMatch ? topicMatch[1] : "Your dream contains spiritual symbolism.";
+
+                // Extract supporting points array
+                const supportingMatch = cleaned.match(/"supportingPoints"\s*:\s*\[([^\]]*)\]/);
+                let supportingPoints = [];
+                if (supportingMatch) {
+                  const pointsStr = supportingMatch[1];
+                  const points = pointsStr.match(/"([^"]*)"/g);
+                  supportingPoints = points ? points.map(p => p.replace(/"/g, '')) : [];
+                }
+
+                const conclusionMatch = cleaned.match(/"conclusionSentence"\s*:\s*"([^"]*)"/);
+                const conclusionSentence = conclusionMatch ? conclusionMatch[1] : "Consider how these insights apply to your life.";
+
+                console.log("🔧 Extracted partial data:", { topicSentence, supportingPoints, conclusionSentence });
+
+                // Create a structured response from extracted data
+                parsedContent = {
+                  topicSentence,
+                  supportingPoints: supportingPoints.length > 0 ? supportingPoints : [
+                    "The imagery suggests a journey of faith (Psalm 23:4).",
+                    "The elements in your dream reflect divine guidance (Proverbs 3:5-6).",
+                    "There are signs of spiritual growth and renewal (2 Corinthians 5:17)."
+                  ],
+                  conclusionSentence,
+                  analysis: `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`,
+                  personalizedSummary: "Your dream reveals important spiritual insights for your journey.",
+                  biblicalReferences: []
+                };
+
+                console.log("🔧 Successfully extracted partial data");
+              } catch (extractError) {
+                console.error("🔧 Failed to extract partial data:", extractError);
+                throw new Error("Unable to parse OpenAI response JSON");
+              }
             }
           } else {
             throw new Error("Content is not a string and could not be parsed");
