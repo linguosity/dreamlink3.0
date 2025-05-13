@@ -7,11 +7,12 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "fix": "./fix-errors.sh",
-    "vercel-build": "next build",
+    "vercel-build": "node scripts/update-version.js && next build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "version:update": "node scripts/update-version.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.3.1",

@@ -14,6 +14,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 import Image from 'next/image';
 import { Providers } from './providers';
+import { VersionChecker } from '@/components/VersionChecker';
 
 // Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
@@ -99,6 +100,7 @@ export default async function RootLayout({
         />
       </div>
         <Providers>
+          <VersionChecker />
           <main className="min-h-screen flex flex-col">
             {/* Env‐var warning or Navbar */}
             {!hasEnvVars ? (
