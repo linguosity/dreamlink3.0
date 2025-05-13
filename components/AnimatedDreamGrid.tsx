@@ -49,10 +49,13 @@ interface AnimatedDreamGridProps {
 export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedDreamGridProps) {
   // Access search context
   const { keywords, isLoading, isSearchEnabled } = useSearch();
-  
-  // Filter dreams based on keywords array (only if search is enabled and on client)
+
+  // Always call the hook to maintain consistent hook order
+  const searchedDreams = useDreamSearch(dreams, keywords);
+
+  // Then conditionally use the results
   const filteredDreams = typeof window !== 'undefined' && isSearchEnabled
-    ? useDreamSearch(dreams, keywords)
+    ? searchedDreams
     : dreams;
   
   // If no dreams, show placeholder
