@@ -150,8 +150,8 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     const uniqueTags = Array.from<string>(new Set(rawTags));
     const tags: string[] = uniqueTags.slice(0, 5);
     
-    // Construct the formatted analysis
-    const formattedAnalysis = `${topicSentence}. ${supportingPoints.join('. ')}. ${conclusionSentence}.`;
+    // Construct the formatted analysis - components already have periods
+    const formattedAnalysis = `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
     
     // Create dream summary from first part of analysis
     const dreamSummary = analysis.split('.').slice(0, 2).join('.') + '.';
