@@ -823,7 +823,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       >
         <CardHeader className="p-3 pb-1">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sm line-clamp-2">
+            <CardTitle className="text-sm">
               {searchTerms.length > 0 
                 ? highlightMatches(dream.title || "", searchTerms) 
                 : dream.title
@@ -875,7 +875,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           
           {/* Original text preview (shown only when there's a search match and no summary) */}
           {searchTerms.length > 0 && !dream.personalized_summary && !dream.dream_summary && (
-            <div className="text-xs text-muted-foreground line-clamp-2">
+            <div className="text-xs text-muted-foreground">
               {highlightMatches(dream.original_text, searchTerms)}
             </div>
           )}

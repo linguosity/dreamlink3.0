@@ -31,7 +31,11 @@ export default async function MainPage() {
   
   if (userError) {
     console.error("Authentication error:", userError.message);
-    return redirect("/sign-in");
+    // Don't redirect if it's a JWT error - the middleware should handle it
+    // Only redirect for other types of errors
+    if (!userError.message.includes('JWT') && !userError.message.includes('token')) {
+      return redirect("/sign-in");
+    }
   }
   
   if (!user) {

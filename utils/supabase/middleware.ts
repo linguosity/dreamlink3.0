@@ -67,9 +67,18 @@ export async function updateSession(request: NextRequest) {
     // If error, it's likely because the user is not logged in or auth server is down
     console.error('Middleware session error:', e)
     
+    // Check if it's an expired JWT error
+    const errorMessage = e instanceof Error ? e.message : String(e)
+    const isExpiredToken = errorMessage.includes('JWT') || errorMessage.includes('expired') || errorMessage.includes('token')
+    
     // Handle protected routes and root page on error
     if (request.nextUrl.pathname.startsWith('/protected') || 
         request.nextUrl.pathname === '/') {
+      // Clear the old session cookies if it's an expired token
+      if (isExpiredToken) {
+        response.cookies.set('sb-access-token', '', { maxAge: 0 })
+        response.cookies.set('sb-refresh-token', '', { maxAge: 0 })
+      }
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
     

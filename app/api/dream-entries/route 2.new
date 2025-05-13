@@ -8,6 +8,7 @@ import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
 // Schema for validating dream analysis response
 const DreamAnalysisSchema = z.object({
   dreamSummary: z.string().min(1),
+  personalizedSummary: z.string().min(1),
   topicSentence: z.string().min(1),
   supportingPoints: z.array(z.string()),
   conclusionSentence: z.string().min(1),
@@ -21,7 +22,7 @@ const DreamAnalysisSchema = z.object({
 type DreamAnalysis = z.infer<typeof DreamAnalysisSchema>;
 
 // Function to analyze dream with OpenAI using our Edge Function
-async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
+async function analyzeDream(dreamText: string, userId: string): Promise<DreamAnalysis> {
   try {
     // In Vercel production environment, we need to use internal routing
     // Rather than external URLs which can cause issues with authentication
@@ -49,11 +50,34 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     let rawResponseText;
     let parsedResponse;
     
+    // Get user's reading level from profile
+    const supabase = await createClient();
+    let readingLevel = "celestial_insight"; // Default value
+    
+    try {
+      const { data: profileData } = await supabase
+        .from("profile")
+        .select("reading_level")
+        .eq("user_id", userId)
+        .single();
+        
+      if (profileData && profileData.reading_level) {
+        readingLevel = profileData.reading_level;
+        console.log(`🔍 User reading level from profile: ${readingLevel}`);
+      } else {
+        console.log(`🔍 User profile not found or reading level not set, using default: ${readingLevel}`);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+      console.log(`🔍 Using default reading level: ${readingLevel}`);
+    }
+    
     try {
       console.log(`🔍 Making fetch request to: ${apiUrl}`);
       console.log(`🔍 Request payload: ${JSON.stringify({
         dream: dreamText.substring(0, 50) + '...',
-        topic: 'dream interpretation'
+        topic: 'dream interpretation',
+        readingLevel
       })}`);
       
       // Create a NextRequest object to pass to the handler directly
@@ -61,7 +85,8 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       // No URL required, since we're directly calling the function
       const requestBody = JSON.stringify({
         dream: dreamText,
-        topic: 'dream interpretation'
+        topic: 'dream interpretation',
+        readingLevel
       });
       
       // Create a NextRequest object
@@ -150,15 +175,15 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     const uniqueTags = Array.from<string>(new Set(rawTags));
     const tags: string[] = uniqueTags.slice(0, 5);
     
-    // Construct the formatted analysis - use the analysis directly if available
-    // Otherwise construct it from components (which should already have periods)
-    const formattedAnalysis = analysis || `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
+    // Construct the formatted analysis
+    const formattedAnalysis = `${topicSentence}. ${supportingPoints.join('. ')}. ${conclusionSentence}.`;
     
-    // Create dream summary from first part of analysis
-    const dreamSummary = analysis.split('.').slice(0, 2).join('.') + '.';
+    // Create dream summary from first part of analysis (as backup if personalized summary isn't available)
+    const dreamSummary = personalizedSummary || analysis.split('.').slice(0, 2).join('.') + '.';
     
     return {
       dreamSummary,
+      personalizedSummary: personalizedSummary || dreamSummary,
       topicSentence,
       supportingPoints,
       conclusionSentence,
@@ -362,25 +387,8 @@ export async function POST(request: Request) {
       );
     }
     
-    // Generate a title - improve handling for short inputs
-    let title: string;
-    
-    if (dream_text.length <= 10) {
-      // For very short inputs, create a descriptive title
-      title = `Dream: ${dream_text}`;
-    } else if (dream_text.length <= 50) {
-      // For medium length, use the full text as title
-      title = dream_text;
-    } else {
-      // For long text, truncate at a word boundary if possible
-      const truncated = dream_text.substring(0, 50);
-      const lastSpace = truncated.lastIndexOf(' ');
-      if (lastSpace > 30) {
-        title = truncated.substring(0, lastSpace) + "...";
-      } else {
-        title = truncated + "...";
-      }
-    }
+    // Generate a title from the first 50 characters
+    const title = dream_text.substring(0, 50) + (dream_text.length > 50 ? "..." : "");
     
     // Insert dream into database
     const { data: dreamData, error: dreamInsertError } = await supabase
@@ -449,7 +457,7 @@ export async function POST(request: Request) {
 async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: string, userId: string) {
   try {
     // Call OpenAI to analyze the dream with structured JSON response
-    const analysis = await analyzeDream(dreamText);
+    const analysis = await analyzeDream(dreamText, userId);
     
     // Access the raw OpenAI response directly from analyzeDream's result
     console.log("Checking for biblical references in the raw response...");
@@ -595,6 +603,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
     
     const { 
       dreamSummary, 
+      personalizedSummary,
       analysisSummary, 
       topicSentence,
       supportingPoints,
@@ -609,6 +618,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
       .from("dream_entries")
       .update({
         dream_summary: dreamSummary,
+        personalized_summary: personalizedSummary,
         analysis_summary: analysisSummary,
         topic_sentence: topicSentence,
         supporting_points: supportingPoints,

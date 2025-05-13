@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Send, ExpandIcon } from "lucide-react";
+import { Send, ExpandIcon, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
+import { Alert, AlertDescription } from "./ui/alert";
 import { useRouter } from "next/navigation";
 
 interface CompactDreamInputProps {
@@ -97,36 +98,37 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       <h2 className="text-lg font-medium text-center">Record Your Dream</h2>
       
       {/* Compact input form */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 max-w-2xl mx-auto">
-        <Input
-          placeholder="I dreamed that..."
-          value={dream}
-          onChange={(e) => setDream(e.target.value)}
-          className="flex-1"
-          maxLength={500}
-          disabled={isSubmitting}
-        />
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <div className="flex items-center gap-2 max-w-2xl mx-auto">
+          <Input
+            placeholder="I dreamed that..."
+            value={dream}
+            onChange={(e) => setDream(e.target.value)}
+            className="flex-1"
+            maxLength={500}
+            disabled={isSubmitting}
+          />
+          
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!dream.trim() || isSubmitting}
+            title="Submit dream"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!dream.trim() || isSubmitting}
-          title="Submit dream"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-        
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              title="Expand for more details"
-            >
-              <ExpandIcon className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                title="Expand for more details"
+              >
+                <ExpandIcon className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
           
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -147,6 +149,16 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                 {expandedDream.length}/8000 characters
               </div>
               
+              {/* Warning for short dreams in expanded form */}
+              {expandedDream.trim().length > 0 && expandedDream.trim().length < 20 && (
+                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/50">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                  <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+                    Adding more details will help generate a more insightful analysis.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <Button 
                 type="submit" 
                 className="w-full"
@@ -157,6 +169,17 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
+        
+        {/* Warning for short dreams */}
+        {dream.trim().length > 0 && dream.trim().length < 20 && (
+          <Alert className="max-w-2xl mx-auto border-amber-200 bg-amber-50 dark:bg-amber-950/50">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+              Adding more details will help generate a more insightful analysis.
+            </AlertDescription>
+          </Alert>
+        )}
       </form>
       
       <p className="text-xs text-center text-muted-foreground max-w-md mx-auto">

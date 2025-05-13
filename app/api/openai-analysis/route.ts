@@ -74,19 +74,20 @@ Analyze the following dream, connecting it to biblical themes, symbols, and scri
 "${dream}"
 
 Format your analysis using this exact structure:
-1. Start with a topic sentence that captures the main spiritual theme of the dream.
+1. Start with a topic sentence that captures the main spiritual theme without using phrases like "This dream is about" or "Your dream is about". Instead, directly state what the dream reveals, represents, or contains.
 2. Provide 1-3 supporting points based on what best explains the dream's meaning (not always exactly 3). Each point should include a direct Bible citation in parentheses.
 3. End with a concluding sentence that provides guidance based on the dream's meaning.
 4. Create a personalized summary that addresses the dreamer directly about their dream's significance using vivid language - just one compelling sentence.
 
 Example format:
-"This dream reflects God's promise of provision in times of uncertainty. The water symbolizes God's spirit bringing renewal (Isaiah 44:3), while the mountain represents the challenges you're facing (Zechariah 4:7). Consider how God might be preparing you for upcoming changes that require faith and trust."
+"God's promise of provision shines through times of uncertainty in this dream. The water symbolizes God's spirit bringing renewal (Isaiah 44:3), while the mountain represents the challenges you're facing (Zechariah 4:7). Consider how God might be preparing you for upcoming changes that require faith and trust."
 
 Additional instruction:
 - Focus analysis on theme: ${topic || 'general spiritual meaning'}
 - Keep each supporting point brief but insightful
 - Include biblical references (one per supporting point)
-- Avoid formulaic phrases like "This dream symbolizes" or "This dream represents"
+- NEVER start with "This dream is about", "Your dream is about", "This dream symbolizes", or "This dream represents"
+- Begin directly with the spiritual theme or insight without introductory phrases
 - Ensure each supporting point has logical connection to the dream content
 - Use parenthetical citations (Book Chapter:Verse)
 - Make the concluding sentence actionable but gentle
@@ -131,7 +132,7 @@ ${readingLevelInstructions}
                 properties: {
                   topicSentence: {
                     type: "string",
-                    description: "A single sentence that captures the main spiritual theme of the dream"
+                    description: "A single sentence that captures the main spiritual theme WITHOUT using 'This dream is about' or similar introductory phrases. Start directly with the theme."
                   },
                   supportingPoints: {
                     type: "array",
@@ -350,11 +351,8 @@ ${readingLevelInstructions}
         supportingPoints = parsedContent.supportingPoints || [];
         conclusionSentence = parsedContent.conclusionSentence || "Consider how these insights apply to your life.";
         
-        // Ensure each component already has its proper punctuation
-        topicSentence = topicSentence.endsWith('.') ? topicSentence : topicSentence + '.';
-        conclusionSentence = conclusionSentence.endsWith('.') ? conclusionSentence : conclusionSentence + '.';
-        supportingPoints = supportingPoints.map(point => point.endsWith('.') ? point : point + '.');
-        
+        // Don't add extra periods - the AI already provides proper punctuation
+        // Only use the analysis if it's provided, otherwise construct it from components
         analysis = parsedContent.analysis || `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
         const personalizedSummary = parsedContent.personalizedSummary || "Your dream reveals important spiritual insights for your journey.";
 
