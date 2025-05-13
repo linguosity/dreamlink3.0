@@ -3,6 +3,7 @@
 import React from 'react';
 import { ThemeProvider } from 'next-themes';
 import { SearchProvider } from '@/context/search-context';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,9 +13,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <SearchProvider>
-        {children}
-      </SearchProvider>
+      <TooltipProvider delayDuration={200} skipDelayDuration={0}>
+        <SearchProvider>
+          {children}
+        </SearchProvider>
+      </TooltipProvider>
     </ThemeProvider>
   );
 }

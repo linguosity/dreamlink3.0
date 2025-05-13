@@ -321,6 +321,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const originalContentRef = useRef<HTMLDivElement>(null);
   const [dream, setDream] = useState(initialDream);
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure client-side hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Format date as MMM DD
   const dateObj = dream.created_at ? new Date(dream.created_at) : new Date();
@@ -701,7 +707,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     
     // Create JSX elements with formatted citations and tooltips
     return (
-      <TooltipProvider>
+      <TooltipProvider delayDuration={200} skipDelayDuration={0}>
         {text.split(/(\([^)]*\))/).map((part, index) => {
           // Check if this part contains a Bible reference
           const refMatch = part.match(/\(([\w\s]+\d+:\d+)\)/);
@@ -1007,9 +1013,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   </div>
                 )}
                 
-                {dream.bible_refs && dream.bible_refs.length > 0 && (
+                {dream.bible_refs && dream.bible_refs.length > 0 && isMounted && (
                   <div className="flex flex-wrap gap-1">
-                    <TooltipProvider>
+                    <TooltipProvider delayDuration={200} skipDelayDuration={0}>
                       {dream.bible_refs.map((ref, index) => {
                         // Get verse text using our utility function
                         const { text: verseText, isFallback, source } = getVerseText(ref);
