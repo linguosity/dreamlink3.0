@@ -1,3 +1,16 @@
+// app/(auth-pages)/sign-in/page.tsx
+//
+// Technical explanation:
+// Creates the UI for the sign-in page. Includes a form for email and
+// password, a 'Forgot Password?' link, and a submit button triggering
+// `signInAction`. Displays messages from search params and links to the
+// sign-up page. Uses Card components for structure.
+//
+// Analogy:
+// The main login screen of a secure application, like an online bank. Users
+// provide credentials to access. Links are available for password recovery or
+// new user registration.
+
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";

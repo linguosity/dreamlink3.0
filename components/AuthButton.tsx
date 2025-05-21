@@ -1,3 +1,24 @@
+// components/AuthButton.tsx
+//
+// Technical explanation:
+// Async server component that dynamically renders UI based on auth status and
+// environment variable setup.
+// - Shows a warning badge if essential Supabase environment variables are missing.
+// - Renders an `AuthDropdown` component (displaying user email and a sign-out
+//   option) if a user is currently authenticated.
+// - Shows "Sign In" and "Sign Up" buttons if no user is authenticated, allowing
+//   visitors to access authentication pages.
+//
+// Analogy:
+// This component is like an intelligent welcome sign at the entrance of the
+// "Dreamlink house".
+// - If the house's systems are down (missing environment variables), it displays
+//   a "Temporarily Closed - System Maintenance" notice.
+// - For recognized residents (logged-in users), it shows a personalized menu
+//   (AuthDropdown) with their name and an option to leave (sign out).
+// - For new visitors (anonymous users), it presents clear "Enter" (Sign In) and
+//   "Register" (Sign Up) buttons.
+
 import { signOutAction } from "@/app/actions";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";

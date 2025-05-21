@@ -1,3 +1,15 @@
+// app/(auth-pages)/smtp-message.tsx
+//
+// Technical explanation:
+// A React component displaying an informational message about email rate
+// limiting with Supabase's default SMTP. It links to Supabase documentation
+// for enabling custom SMTP. Used on pages that trigger authentication emails.
+//
+// Analogy:
+// A notice near a service counter (sign-up/password reset) informing about
+// potential delays with standard mail (default SMTP) and pointing to info on
+// a faster courier service (custom SMTP).
+
 import { ArrowUpRight, InfoIcon } from "lucide-react";
 import Link from "next/link";
 

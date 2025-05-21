@@ -1,4 +1,15 @@
 // app/api/auth/signout/route.ts
+//
+// Technical explanation:
+// API route for user sign-out. On GET request, calls
+// `supabase.auth.signOut()` to clear the session and auth cookies. Redirects
+// to a `redirect_to` query param destination or defaults to `/sign-in`.
+//
+// Analogy:
+// The official "check-out" desk. Processes departure, invalidates entry
+// permit (clears auth cookies), and directs to the main exit or a specified
+// pick-up point.
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 

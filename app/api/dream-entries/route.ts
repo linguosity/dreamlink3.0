@@ -1,3 +1,23 @@
+// app/api/dream-entries/route.ts
+//
+// Technical explanation:
+// This file defines the API route handler for managing dream entries. It
+// supports GET, POST, and DELETE HTTP methods to interact with the Supabase
+// database. For POST requests (new dream entries), it also triggers an
+// asynchronous AI analysis of the dream content using a separate OpenAI
+// analysis service.
+//
+// Analogy:
+// This script acts like a central post office for all dream-related mail.
+// - When you send a new dream (POST request), the post office receives it,
+//   stores it in the main archive (Supabase), and also sends a copy to a
+//   specialist (AI analysis service) for interpretation.
+// - If you want to retrieve a dream (GET request), the post office fetches
+//   it from the archive for you.
+// - If you want to discard a dream (DELETE request), the post office removes
+//   it from the archive.
+// It handles all the backend logistics for your dream journal entries.
+
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";

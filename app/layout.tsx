@@ -1,4 +1,15 @@
 // app/layout.tsx
+//
+// Technical explanation:
+// Main layout component for the Next.js application. It sets up the HTML
+// structure, includes global styles, fonts, and providers. It also handles
+// basic user authentication logic and renders the Navbar and Footer.
+//
+// Analogy:
+// It's like the blueprint of a house, defining the overall structure, where
+// the rooms (pages) will go, and common elements like the foundation (HTML
+// structure), a security system (auth), and shared utilities (providers,
+// global styles).
 
 import { Metadata } from "next";
 import { EnvVarWarning } from "@/components/env-var-warning";

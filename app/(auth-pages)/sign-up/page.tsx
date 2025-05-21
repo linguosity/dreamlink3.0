@@ -1,3 +1,16 @@
+// app/(auth-pages)/sign-up/page.tsx
+//
+// Technical explanation:
+// Defines the client-side UI and logic for user registration. Manages form
+// state (email, password) and uses `useTransition` for submission pending
+// states. Calls `signUpAction` (server action) for registration. Displays a
+// toast notification on success and links to the sign-in page.
+//
+// Analogy:
+// A registration form for a new service. Users fill in details (email,
+// password) to create an account. The form is submitted (like sending an
+// application), and on success, provides next steps (email verification).
+
 'use client';
 
 import { useTransition, useState } from "react";

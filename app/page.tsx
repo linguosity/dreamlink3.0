@@ -1,3 +1,17 @@
+// app/page.tsx
+//
+// Technical explanation:
+// Main page component (landing page after login). This component is responsible
+// for fetching and displaying the user's dream entries. It includes
+// functionality for adding new dreams (CompactDreamInput) and viewing existing
+// ones in a gallery format (AnimatedDreamGrid).
+//
+// Analogy:
+// This page is like the main living room of the "Dreamlink house." It's where
+// you first land after entering, see your collected dream items displayed
+// (dream gallery), and have a convenient spot to jot down new dream experiences
+// (dream input).
+
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";

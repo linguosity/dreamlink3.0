@@ -1,3 +1,15 @@
+// app/(auth-pages)/forgot-password/page.tsx
+//
+// Technical explanation:
+// Defines the UI and client-side logic for the "Forgot Password" page. It
+// presents a form for users to enter their email to request a password reset
+// link. Uses server actions (`forgotPasswordAction`) for form submission and
+// displays success/error messages. Includes a link to the sign-in page.
+//
+// Analogy:
+// Like a "lost key" counter. Users provide their email (identification) to
+// initiate a process (password reset link) to get a new key.
+
 import { forgotPasswordAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";

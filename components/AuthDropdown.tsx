@@ -1,3 +1,24 @@
+// components/AuthDropdown.tsx
+//
+// Technical explanation:
+// Client component serving as the main navigation bar for authenticated users.
+// It displays the application logo, a search input field (currently UI toggle
+// only, not fully functional), and a user avatar with their email. Clicking the
+// avatar toggles a dropdown menu which provides navigation links to "My Profile",
+// "Settings", "About / Privacy", and includes a "LogoutButton" component for
+// signing out.
+//
+// Analogy:
+// This component acts as the main dashboard or control panel for a personalized
+// online service (like a social media site or email inbox) after a user has
+// logged in.
+// - The "Dreamlink" logo is like the brand mark, always visible.
+// - The search bar is like a general "find anything" tool on the dashboard (though
+//   its full search capability isn't implemented here, the UI element is present).
+// - The user's avatar and email is their personal identifier, and clicking it
+//   opens a menu with options for managing their account ("My Profile", "Settings"),
+//   getting help or information ("About / Privacy"), and exiting the service ("Logout").
+
 "use client";
 
 import { useState } from "react";

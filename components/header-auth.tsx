@@ -1,3 +1,23 @@
+// components/header-auth.tsx
+//
+// Technical explanation:
+// Client component serving as a navigation bar for authenticated users. Receives
+// user data (email) as a prop. Displays the application logo, a search bar UI
+// (which is toggleable but not fully functional for search operations), and a
+// user avatar. Clicking the avatar opens a dropdown menu with navigation links
+// to Profile, Settings, About/Privacy pages, and a Logout option that calls the
+// `signOutAction` server action.
+//
+// Analogy:
+// This component is like the main control panel header for a logged-in user on a
+// website (e.g., a social media dashboard or online banking portal).
+// - The "Dreamlink" logo is the brand identity, always visible.
+// - The search bar is a common utility for finding content (though here it's just
+//   the UI part).
+// - The user's avatar/icon, when clicked, reveals a personal menu, providing
+//   quick access to their profile, account settings, informational pages, and
+//   the option to sign out of the service.
+
 "use client";
 
 import { useState } from "react";

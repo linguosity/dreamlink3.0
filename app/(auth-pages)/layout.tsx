@@ -1,3 +1,20 @@
+// app/(auth-pages)/layout.tsx
+//
+// Technical explanation:
+// Layout for authentication pages (sign-in, sign-up, forgot-password).
+// Redirects to '/' if a user session exists. Otherwise, displays the
+// authentication form (passed as children) in a centered layout, typically
+// featuring the application logo or name. It also handles the display of
+// error or success messages passed via URL search parameters.
+//
+// Analogy:
+// This is like the reception lobby for a members-only club. If you're already
+// a recognized member (active session), you're quickly ushered into the main
+// club area ('/'). If you're not recognized, you remain in the lobby to go
+// through the entry procedures (sign-in, sign-up). Any important notices
+// (error or success messages) related to these procedures are displayed
+// prominently in this lobby area.
+
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";

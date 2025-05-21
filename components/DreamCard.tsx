@@ -1,3 +1,22 @@
+// components/DreamCard.tsx
+//
+// Technical explanation:
+// UI component for displaying a single dream entry card. It's responsible for
+// showing the dream's title, date, a brief summary, and any associated tags.
+// This component also handles user interactions such as viewing detailed
+// analysis in a dialog, deleting the dream entry, sharing it, and displaying
+// loading states while data is being fetched or processed. It also includes
+// functionality to highlight search terms within the card content.
+//
+// Analogy:
+// Think of this as an individual display case for each dream in a gallery.
+// Each case shows a preview of the dream (title, summary, tags) and has
+// buttons to manage it: one to open a detailed view (like looking closer at
+// the item), one to remove it from the gallery (delete), and one to share it
+// with others. It also shows if the item is still being prepared (loading state)
+// and can highlight parts of the description if you're searching for something
+// specific.
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
