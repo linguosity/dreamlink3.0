@@ -1,18 +1,21 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import AnimatedDreamGrid from '@/components/AnimatedDreamGrid';
+import { SearchProvider } from '@/context/search-context';
 
 // Mock the DreamCard component
-jest.mock('next/dynamic', () => () => {
-  return function MockDreamCard({ dream }: any) {
-    return (
-      <div data-testid={`dream-card-${dream.id}`}>
+vi.mock('next/dynamic', () => ({
+  default: () => {
+    return function MockDreamCard({ dream }: any) {
+      return (
+        <div data-testid={`dream-card-${dream.id}`}>
         <div>{dream.title}</div>
         <div>{dream.original_text}</div>
-      </div>
-    );
-  };
-});
+        </div>
+      );
+    };
+  }
+}));
 
 describe('AnimatedDreamGrid Filtering', () => {
   const mockDreams = [
@@ -40,7 +43,7 @@ describe('AnimatedDreamGrid Filtering', () => {
   ];
 
   it('should render all dreams by default', () => {
-    render(<AnimatedDreamGrid dreams={mockDreams} />);
+    render(<SearchProvider><AnimatedDreamGrid dreams={mockDreams} /></SearchProvider>);
     
     // Check that all dreams are rendered
     mockDreams.forEach(dream => {
@@ -49,7 +52,7 @@ describe('AnimatedDreamGrid Filtering', () => {
   });
   
   it('should render placeholder when no dreams are provided', () => {
-    render(<AnimatedDreamGrid dreams={[]} />);
+    render(<SearchProvider><AnimatedDreamGrid dreams={[]} /></SearchProvider>);
     
     // Check for placeholder
     expect(screen.getByTestId('dream-card-placeholder')).toBeInTheDocument();
