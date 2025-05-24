@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Send, ExpandIcon, AlertCircle } from "lucide-react";
+import { Send, ExpandIcon, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -18,7 +18,26 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [expandedDream, setExpandedDream] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tipDismissed, setTipDismissed] = useState(false);
   const router = useRouter();
+
+  // Check localStorage for persistent tip dismissal on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('dreamlink-tip-dismissed');
+      if (dismissed === 'true') {
+        setTipDismissed(true);
+      }
+    }
+  }, []);
+
+  // Handle permanent tip dismissal
+  const handlePermanentDismiss = () => {
+    setTipDismissed(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dreamlink-tip-dismissed', 'true');
+    }
+  };
 
   // Handler for submitting from compact input
   const handleSubmit = async (event?: React.FormEvent) => {
@@ -99,12 +118,12 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       
       {/* Compact input form */}
       <form onSubmit={handleSubmit} className="space-y-2">
-        <div className="flex items-center gap-2 max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 w-full px-4 sm:max-w-2xl sm:mx-auto sm:px-0">
           <Input
             placeholder="I dreamed that..."
             value={dream}
             onChange={(e) => setDream(e.target.value)}
-            className="flex-1"
+            className="flex-1 min-w-0"
             maxLength={500}
             disabled={isSubmitting}
           />
@@ -113,9 +132,14 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             type="submit"
             size="icon"
             disabled={!dream.trim() || isSubmitting}
-            title="Submit dream"
+            title={isSubmitting ? "Processing..." : "Submit dream"}
+            className={isSubmitting ? "blur-[0.5px]" : ""}
           >
-            <Send className="h-4 w-4" />
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -149,14 +173,29 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                 {expandedDream.length}/8000 characters
               </div>
               
-              {/* Warning for short dreams in expanded form */}
-              {expandedDream.trim().length > 0 && expandedDream.trim().length < 20 && (
-                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/50">
-                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-                  <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-                    Adding more details will help generate a more insightful analysis.
-                  </AlertDescription>
-                </Alert>
+              {/* Gentle hint for short dreams in expanded form */}
+              {expandedDream.trim().length > 0 && expandedDream.trim().length < 20 && !tipDismissed && (
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                  </div>
+                  <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
+                    <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
+                  </p>
+                  <button
+                    onClick={handlePermanentDismiss}
+                    className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+                    aria-label="Dismiss tip permanently"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
+                      <path d="m18 6-12 12"/>
+                      <path d="m6 6 12 12"/>
+                    </svg>
+                  </button>
+                </div>
               )}
               
               <Button 
@@ -171,14 +210,31 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         </Dialog>
         </div>
         
-        {/* Warning for short dreams */}
-        {dream.trim().length > 0 && dream.trim().length < 20 && (
-          <Alert className="max-w-2xl mx-auto border-amber-200 bg-amber-50 dark:bg-amber-950/50">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-              Adding more details will help generate a more insightful analysis.
-            </AlertDescription>
-          </Alert>
+        {/* Gentle hint for short dreams */}
+        {dream.trim().length > 0 && dream.trim().length < 20 && !tipDismissed && (
+          <div className="max-w-2xl mx-auto px-4 sm:px-0">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </div>
+              <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
+                <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
+              </p>
+              <button
+                onClick={handlePermanentDismiss}
+                className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+                aria-label="Dismiss tip permanently"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
+                  <path d="m18 6-12 12"/>
+                  <path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         )}
       </form>
       

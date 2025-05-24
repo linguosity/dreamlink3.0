@@ -78,6 +78,8 @@ Format your analysis using this exact structure:
 2. Provide 1-3 supporting points based on what best explains the dream's meaning (not always exactly 3). Each point should include a direct Bible citation in parentheses.
 3. End with a concluding sentence that provides guidance based on the dream's meaning.
 4. Create a personalized summary that addresses the dreamer directly about their dream's significance using vivid language - just one compelling sentence.
+5. Generate a clever, memorable title (3-6 words) that captures the essence of the dream and its spiritual meaning, making it easy for the dreamer to identify this dream later (e.g., "Walking on Sacred Waters", "The Golden Key Vision", "Angels in the Storm").
+6. Generate 3-5 meaningful tags that capture the dream's key themes, symbols, emotions, or spiritual concepts (e.g., "transformation", "divine guidance", "fear", "water symbolism", "spiritual growth").
 
 Example format:
 "God's promise of provision shines through times of uncertainty in this dream. The water symbolizes God's spirit bringing renewal (Isaiah 44:3), while the mountain represents the challenges you're facing (Zechariah 4:7). Consider how God might be preparing you for upcoming changes that require faith and trust."
@@ -121,7 +123,7 @@ ${readingLevelInstructions}
             { role: "user", content: prompt }
           ],
           temperature: 0.7,
-          max_tokens: 500,
+          max_tokens: 2000,
           response_format: {
             type: "json_schema",
             json_schema: {
@@ -154,6 +156,10 @@ ${readingLevelInstructions}
                     type: "string",
                     description: "A compelling one-sentence summary that addresses the dreamer directly about their dream's significance using vivid language"
                   },
+                  dreamTitle: {
+                    type: "string",
+                    description: "A clever, memorable title (3-6 words) that captures the essence of the dream and its spiritual meaning"
+                  },
                   biblicalReferences: {
                     type: "array",
                     description: "Array of all biblical references extracted from the supporting points",
@@ -172,10 +178,20 @@ ${readingLevelInstructions}
                       additionalProperties: false,
                       required: ["citation", "verseText"]
                     }
+                  },
+                  tags: {
+                    type: "array",
+                    description: "3-5 meaningful tags that capture the dream's key themes, symbols, emotions, or spiritual concepts",
+                    items: {
+                      type: "string",
+                      description: "A single word or short phrase representing a key theme, symbol, emotion, or spiritual concept from the dream"
+                    },
+                    minItems: 3,
+                    maxItems: 5
                   }
                 },
                 additionalProperties: false,
-                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis", "personalizedSummary", "biblicalReferences"]
+                required: ["topicSentence", "supportingPoints", "conclusionSentence", "analysis", "personalizedSummary", "dreamTitle", "biblicalReferences", "tags"]
               }
             }
           }
@@ -332,7 +348,9 @@ ${readingLevelInstructions}
                   conclusionSentence,
                   analysis: `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`,
                   personalizedSummary: "Your dream reveals important spiritual insights for your journey.",
-                  biblicalReferences: []
+                  dreamTitle: "Spiritual Insight Dream",
+                  biblicalReferences: [],
+                  tags: ["spiritual journey", "divine guidance", "faith"]
                 };
 
                 console.log("🔧 Successfully extracted partial data");
@@ -359,7 +377,11 @@ ${readingLevelInstructions}
         // Also extract biblical references with verse text if available
         const biblicalReferences = parsedContent.biblicalReferences || [];
         
-        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion, personalized summary`);
+        // Extract tags and dream title from the AI response
+        const tags = parsedContent.tags || [];
+        const dreamTitle = parsedContent.dreamTitle || "";
+        
+        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion, personalized summary, dream title: "${dreamTitle}", ${tags.length} tags`);
         
         return NextResponse.json({
           topicSentence,
@@ -367,7 +389,9 @@ ${readingLevelInstructions}
           conclusionSentence,
           analysis,
           personalizedSummary,
-          biblicalReferences
+          dreamTitle,
+          biblicalReferences,
+          tags
         });
       } catch (error) {
         console.error("❌ Error parsing content from OpenAI:", error);
@@ -382,6 +406,7 @@ ${readingLevelInstructions}
           ],
           conclusionSentence: "Consider how these insights might apply to your current life circumstances.",
           analysis: "Your dream contains spiritual symbolism. The imagery suggests a journey of faith (Psalm 23:4). The elements in your dream reflect divine guidance (Proverbs 3:5-6). There are signs of spiritual growth and renewal (2 Corinthians 5:17). Consider how these insights might apply to your current life circumstances.",
+          dreamTitle: "Sacred Journey Vision",
           biblicalReferences: [
             {
               citation: "Psalm 23:4",
@@ -395,7 +420,8 @@ ${readingLevelInstructions}
               citation: "2 Corinthians 5:17",
               verseText: "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
             }
-          ]
+          ],
+          tags: ["spiritual journey", "divine guidance", "faith", "transformation", "trust"]
         });
       }
     } catch (error) {

@@ -112,7 +112,7 @@ export default async function RootLayout({
       </div>
         <Providers>
           <VersionChecker />
-          <main className="min-h-screen flex flex-col">
+          <main className="min-h-screen flex flex-col animate-fade-in">
             {/* Env‐var warning or Navbar */}
             {!hasEnvVars ? (
               <div className="w-full flex justify-center border-b h-16">

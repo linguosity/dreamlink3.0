@@ -92,12 +92,20 @@ export default function Signup() {
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4 border-t pt-4">
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link className="text-primary font-medium hover:underline" href="/sign-in">
-            Sign in
-          </Link>
-        </p>
+        <div className="text-center space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link className="text-primary font-medium hover:underline" href="/sign-in">
+              Sign in
+            </Link>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Want to see our plans?{" "}
+            <Link className="text-primary font-medium hover:underline" href="/pricing">
+              View Pricing
+            </Link>
+          </p>
+        </div>
         <SmtpMessage />
       </CardFooter>
     </Card>

@@ -847,16 +847,18 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         onClick={handleCardClick}
       >
         <CardHeader className="p-3 pb-1">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-sm">
-              {searchTerms.length > 0 
-                ? highlightMatches(dream.title || "", searchTerms) 
-                : dream.title
-              }
+          <div className="flex justify-between items-start gap-2">
+            <CardTitle className="text-sm leading-5 flex-1 min-w-0">
+              <div className="break-words">
+                {searchTerms.length > 0 
+                  ? highlightMatches(dream.title || "", searchTerms) 
+                  : dream.title
+                }
+              </div>
             </CardTitle>
-            <div className="flex items-center text-xs text-muted-foreground">
+            <div className="flex items-center text-xs text-muted-foreground flex-shrink-0">
               <CalendarIcon className="h-3 w-3 mr-1" />
-              {formattedDate}
+              <span className="whitespace-nowrap">{formattedDate}</span>
             </div>
           </div>
         </CardHeader>
@@ -865,7 +867,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           {/* Summary */}
           {(dream.personalized_summary || dream.dream_summary) && (
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-4 break-words">
                 {searchTerms.length > 0 
                   ? highlightMatches(dream.personalized_summary || dream.dream_summary || "", searchTerms)
                   : (dream.personalized_summary || dream.dream_summary)
@@ -877,7 +879,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           {/* Tags */}
           {dream.tags && dream.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {dream.tags.map((tag, index) => {
+              {dream.tags.slice(0, 6).map((tag, index) => {
                 // Check if tag matches any search term
                 const isTagMatch = searchTerms.some(term => 
                   term && tag.toLowerCase().includes(term.toLowerCase())
@@ -885,7 +887,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 
                 return (
                   <Badge key={index} variant="secondary" className={cn(
-                    "text-xs px-1 py-0",
+                    "text-xs px-2 py-0.5 break-words",
                     isTagMatch && "bg-primary/10"
                   )}>
                     {isTagMatch

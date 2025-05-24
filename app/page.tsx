@@ -78,15 +78,15 @@ export default async function MainPage() {
   }
 
   return (
-    <div className="container py-10 relative">
+    <div className="container py-6 sm:py-10 relative">
       {/*<div className="absolute inset-0 bg-fixed bg-cover bg-center -z-10" style={{ backgroundImage: "url('/images/background.jpg')" }}></div>*/}
       <div className="absolute inset-0 -z-10"></div>
-      <div className="max-w-4xl mx-auto space-y-10 relative z-10">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 relative z-10 px-4 sm:px-0">
         {/* Dream Input Section */}
         <CompactDreamInput userId={user.id} />
         
         {/* Animated Dream Grid */}
-        <div className="mt-12">
+        <div className="mt-8 sm:mt-12">
           <h2 className="text-lg font-semibold mb-4">Your Dream Gallery</h2>
           <AnimatedDreamGrid dreams={dreams || []} />
         </div>
@@ -95,26 +95,26 @@ export default async function MainPage() {
         <footer className="border-t pt-8 mt-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-3 text-white">Dreamlink</h3>
-              <p className="text-gray-200 text-sm">
+              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Dreamlink</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
                 AI-powered dream journaling with biblical insights and dream pattern analysis.
               </p>
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3 text-white">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><Link href="/account" className="text-sm hover:underline">Account</Link></li>
-                <li><Link href="/settings" className="text-sm hover:underline">Settings</Link></li>
-                <li><Link href="/help" className="text-sm hover:underline">Help</Link></li>
-                <li><Link href="/about" className="text-sm hover:underline">About</Link></li>
-                <li><Link href="/privacy" className="text-sm hover:underline">Privacy Policy</Link></li>
+              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Quick Links</h3>
+              <ul className="space-y-3">
+                <li><Link href="/account" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Account</Link></li>
+                <li><Link href="/settings" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Settings</Link></li>
+                <li><Link href="/help" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Help</Link></li>
+                <li><Link href="/about" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">About</Link></li>
+                <li><Link href="/privacy" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3 text-white">Connect</h3>
-              <p className="text-gray-200 text-sm mb-2">
+              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Connect</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                 Have questions or feedback?
               </p>
               <div className="space-y-4">
@@ -122,7 +122,7 @@ export default async function MainPage() {
                   <Button variant="outline" size="sm" className="bg-white text-gray-900 hover:bg-gray-100">Contact Us</Button>
                 </Link>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2 text-gray-200">Share:</h4>
+                  <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Share:</h4>
                   {/* Social share buttons rendered client-side */}
                   <div className="flex items-center space-x-2">
                     <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(defaultUrl)}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity">
@@ -151,7 +151,7 @@ export default async function MainPage() {
             </div>
           </div>
           
-          <div className="text-center text-xs text-gray-200 mt-8 pt-4 border-t">
+          <div className="text-center text-xs text-gray-600 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
             &copy; {new Date().getFullYear()} Dreamlink. All rights reserved.
           </div>
         </footer>

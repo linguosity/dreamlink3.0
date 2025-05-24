@@ -53,25 +53,26 @@ export default function Navbar() {
   
   return (
     <nav className="sticky top-0 z-50 border-b bg-background p-4">
-      <div className="container mx-auto flex items-center justify-between">
-        {/* Left: Logo */}
-        <div className="w-1/6 flex justify-start">
-          <Link href="/" className="text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
-            Dreamlink
+      <div className="container mx-auto flex items-center justify-between gap-3">
+        {/* Left: Logo - flexible width on mobile */}
+        <div className="flex-shrink-0">
+          <Link href="/" className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
+            <span className="hidden sm:inline">Dreamlink</span>
+            <span className="sm:hidden">DL</span>
           </Link>
         </div>
 
-        {/* Center: Search - exactly centered */}
-        <div className="w-4/6 flex justify-center">
+        {/* Center: Search - takes available space */}
+        <div className="flex-1 flex justify-center px-2">
           <div className="w-full max-w-md">
             {/* Search UI - Using client-side only rendering to prevent hydration mismatch */}
             {typeof window !== 'undefined' ? (
               isSearchEnabled ? (
                 <div 
                   className={cn(
-                    "border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-10 cursor-text",
-                    isFocused ? "ring-2 ring-ring ring-offset-2 border-primary" : "",
-                    keywords.length > 0 ? "border-primary" : ""
+                    "border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-10 cursor-text transition-all duration-200",
+                    isFocused ? "border-primary shadow-sm bg-background/50" : "border-border hover:border-border/80",
+                    keywords.length > 0 ? "border-primary/70" : ""
                   )}
                   onClick={() => {
                     document.getElementById('search-input')?.focus();
@@ -114,8 +115,8 @@ export default function Navbar() {
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     onClick={(e) => e.stopPropagation()}
-                    placeholder={keywords.length > 0 ? "Add keyword..." : "Search dreams..."}
-                    className="flex-1 bg-transparent border-none text-sm min-w-[100px] outline-none"
+                    placeholder={keywords.length > 0 ? "Add..." : "Search..."}
+                    className="flex-1 bg-transparent border-none text-sm min-w-[60px] outline-none"
                     autoComplete="off"
                     data-testid="search-input"
                   />
@@ -159,7 +160,7 @@ export default function Navbar() {
         </div>
 
         {/* Right: Profile Avatar with Dropdown */}
-        <div className="w-1/6 flex justify-end">
+        <div className="flex-shrink-0">
           <UserAvatar />
         </div>
       </div>

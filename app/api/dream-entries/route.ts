@@ -146,7 +146,7 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
     const analysisResponse = parsedResponse;
     
     // Extract the properties we need
-    const { analysis, topicSentence, supportingPoints, conclusionSentence } = analysisResponse;
+    const { analysis, topicSentence, supportingPoints, conclusionSentence, tags, dreamTitle } = analysisResponse;
     
     // Extract biblical references from supporting points
     let biblicalReferences = supportingPoints
@@ -156,26 +156,15 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       })
       .filter(Boolean);
     
-    // Extract key themes for tags
-    const rawTags = analysis
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((word: string) => 
-        word.length > 4 && 
-        !['this', 'that', 'these', 'those', 'there', 'their', 'about', 'which'].includes(word)
-      )
-      .slice(0, 10);
-    
-    // Remove duplicates and limit to 5 tags
-    const uniqueTags = Array.from<string>(new Set(rawTags));
-    const tags: string[] = uniqueTags.slice(0, 5);
-    
     // Construct the formatted analysis - use the analysis directly if available
     // Otherwise construct it from components (which should already have periods)
     const formattedAnalysis = analysis || `${topicSentence} ${supportingPoints.join(' ')} ${conclusionSentence}`;
     
     // Create dream summary from first part of analysis
     const dreamSummary = analysis.split('.').slice(0, 2).join('.') + '.';
+    
+    // Use tags from ChatGPT response, with fallback if not provided
+    const finalTags = tags && tags.length > 0 ? tags : ["spiritual insight", "dream analysis"];
     
     return {
       dreamSummary,
@@ -185,7 +174,8 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       analysisSummary: analysis,
       formattedAnalysis,
       biblicalReferences,
-      tags
+      tags: finalTags,
+      dreamTitle: dreamTitle || ""
     };
   } catch (error) {
     console.error("Error calling OpenAI Edge Function:", error);
@@ -199,7 +189,8 @@ async function analyzeDream(dreamText: string): Promise<DreamAnalysis> {
       analysisSummary: "The analysis service encountered an error. Please try again later.",
       formattedAnalysis: "This dream may contain meaningful symbolic elements. Consider the emotions and symbols in this dream for personal insight.",
       biblicalReferences: [],
-      tags: ["error", "analysis-failed"]
+      tags: ["error", "analysis-failed"],
+      dreamTitle: "Dream Analysis Error"
     };
   }
 }
@@ -621,23 +612,33 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
       conclusionSentence,
       formattedAnalysis, 
       biblicalReferences, 
-      tags 
+      tags,
+      dreamTitle
     } = analysis;
     
+    // Prepare update object with analysis data
+    const updateData: any = {
+      dream_summary: dreamSummary,
+      analysis_summary: analysisSummary,
+      topic_sentence: topicSentence,
+      supporting_points: supportingPoints,
+      conclusion_sentence: conclusionSentence,
+      formatted_analysis: formattedAnalysis,
+      tags: tags,
+      bible_refs: biblicalReferences,
+      raw_analysis: analysis // Store the complete analysis response as JSONB
+    };
+
+    // Update title with AI-generated title if available and better than current title
+    if (dreamTitle && dreamTitle.trim().length > 0) {
+      updateData.title = dreamTitle;
+      console.log(`🎯 Updating dream title to AI-generated: "${dreamTitle}"`);
+    }
+
     // Update the dream entry with analysis - including raw analysis JSONB
     const { error: updateError } = await supabase
       .from("dream_entries")
-      .update({
-        dream_summary: dreamSummary,
-        analysis_summary: analysisSummary,
-        topic_sentence: topicSentence,
-        supporting_points: supportingPoints,
-        conclusion_sentence: conclusionSentence,
-        formatted_analysis: formattedAnalysis,
-        tags: tags,
-        bible_refs: biblicalReferences,
-        raw_analysis: analysis // Store the complete analysis response as JSONB
-      })
+      .update(updateData)
       .eq("id", dreamId);
       
     if (updateError) {
