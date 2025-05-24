@@ -20,6 +20,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { FormMessage, Message } from "@/components/form-message";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import AuthNavigation from "@/components/AuthNavigation";
 
 export default async function AuthLayout({
   children,
@@ -68,19 +69,50 @@ export default async function AuthLayout({
 
   // Otherwise render the normal auth UI
   return (
-    <div className="flex items-center justify-center min-h-screen w-full">
-      <div className="flex flex-col items-center max-w-md w-full mx-auto px-5">
-        <div className="mb-8">
-          <h1 className="font-blanka text-4xl tracking-wider">Dreamlink</h1>
-        </div>
-        
-        {(message.error || message.success) && (
-          <div className="w-full mb-4">
-            <FormMessage message={message as Message} />
+    <div className="min-h-screen w-full relative">
+      {/* Background */}
+      <div className="fixed inset-0 -z-10">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-fixed opacity-20 blur-[2px]"
+          style={{ backgroundImage: "url('/images/background.jpg')" }}
+        />
+        <div className="absolute inset-0 bg-background/90" />
+      </div>
+
+      <div className="flex items-center justify-center min-h-screen w-full">
+        <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-8 w-8 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center shadow-lg">
+                <div className="h-4 w-4 bg-background rounded-full"></div>
+              </div>
+              <h1 className="font-extrabold text-3xl tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Dreamlink
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              AI-Powered Biblical Dream Interpretation
+            </p>
           </div>
-        )}
-        
-        {children}
+          
+          {/* Navigation */}
+          <div className="w-full max-w-md">
+            <AuthNavigation variant="compact" />
+          </div>
+          
+          {/* Messages */}
+          {(message.error || message.success) && (
+            <div className="w-full max-w-md">
+              <FormMessage message={message as Message} />
+            </div>
+          )}
+          
+          {/* Content */}
+          <div className="w-full max-w-md">
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );

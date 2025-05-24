@@ -64,13 +64,28 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           <FormMessage message={searchParams} />
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center border-t pt-4">
-        <p className="text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link className="text-primary font-medium hover:underline" href="/sign-up" prefetch={true}>
-            Sign up
-          </Link>
-        </p>
+      <CardFooter className="flex flex-col space-y-4 border-t pt-4">
+        <div className="text-center space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link className="text-primary font-medium hover:underline" href="/sign-up" prefetch={true}>
+              Sign up
+            </Link>
+          </p>
+          
+          <div className="p-3 bg-muted/30 rounded-lg border border-primary/20">
+            <p className="text-xs text-muted-foreground mb-2">
+              🌟 Discover our flexible pricing options
+            </p>
+            <Link 
+              href="/pricing"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              View Pricing Plans
+              <span className="text-xs">→</span>
+            </Link>
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );

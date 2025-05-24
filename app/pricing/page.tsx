@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, ArrowLeft } from "lucide-react";
+import AuthNavigation from "@/components/AuthNavigation";
 
 const plans = [
   {
@@ -77,6 +78,20 @@ export default function PricingPage() {
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 py-16">
+        {/* Navigation */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/sign-up" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Sign Up
+            </Link>
+            <div className="flex-1 max-w-md mx-4">
+              <AuthNavigation variant="compact" />
+            </div>
+            <div className="w-20" /> {/* Spacer for balance */}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-16">
           <Badge variant="outline" className="mb-4 text-xs font-medium">
