@@ -621,11 +621,11 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
       dream_summary: dreamSummary,
       analysis_summary: analysisSummary,
       topic_sentence: topicSentence,
-      supporting_points: supportingPoints,
+      supporting_points: Array.isArray(supportingPoints) ? supportingPoints : [],
       conclusion_sentence: conclusionSentence,
       formatted_analysis: formattedAnalysis,
-      tags: tags,
-      bible_refs: biblicalReferences,
+      tags: Array.isArray(tags) ? tags : [],
+      bible_refs: Array.isArray(biblicalReferences) ? biblicalReferences : [],
       raw_analysis: analysis // Store the complete analysis response as JSONB
     };
 
@@ -734,7 +734,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
           const { error: updateRefsError } = await supabase
             .from("dream_entries")
             .update({
-              bible_refs: rangedReferencesToStore,
+              bible_refs: Array.isArray(rangedReferencesToStore) ? rangedReferencesToStore : [],
             })
             .eq("id", dreamId);
             
