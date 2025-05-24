@@ -551,12 +551,27 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     console.log('This dream is loading:', dream.id);
     setIsLoading(true);
     
+    let pollCount = 0;
+    const maxPolls = 60; // Maximum 2 minutes of polling (60 * 2s = 120s)
+    
     const interval = setInterval(async () => {
       try {
+        pollCount++;
+        console.log(`Polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
+        
+        // Stop polling after maximum attempts
+        if (pollCount >= maxPolls) {
+          console.log('Maximum polling attempts reached, stopping');
+          setIsLoading(false);
+          localStorage.removeItem('loadingDreamId');
+          clearInterval(interval);
+          return;
+        }
+        
         // If dream already has analysis locally, stop polling
         if (dream.dream_summary || dream.analysis_summary || 
             (dream.supporting_points && dream.supporting_points.length > 0)) {
-          console.log('Dream analysis complete:', dream.id);
+          console.log('Dream analysis complete locally:', dream.id);
           setIsLoading(false);
           localStorage.removeItem('loadingDreamId');
           clearInterval(interval);
@@ -571,6 +586,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           }
         });
         
+        if (!response.ok) {
+          console.error(`API error: ${response.status}`);
+          return;
+        }
+        
         const data = await response.json();
         
         if (data && data.dreams && data.dreams.length > 0) {
@@ -584,17 +604,25 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             setIsLoading(false);
             localStorage.removeItem('loadingDreamId');
             clearInterval(interval);
+            
+            // Trigger a page refresh to ensure all components update
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
           }
         }
       } catch (err) {
         console.error('Error checking dream status:', err);
-        // Optionally clear interval after repeated failures
+        // Continue polling on errors, but count it as an attempt
       }
     }, 2000);
     
     // Always clear on unmount
-    return () => clearInterval(interval);
-  }, [dream.id, dream.dream_summary, dream.analysis_summary, dream.supporting_points]);
+    return () => {
+      console.log('Clearing polling interval for dream:', dream.id);
+      clearInterval(interval);
+    };
+  }, [dream.id]); // Removed other dependencies to prevent re-creating interval
   
   // Calculate and store the maximum height of tab content
   // Fetch Bible verses when the dialog opens
