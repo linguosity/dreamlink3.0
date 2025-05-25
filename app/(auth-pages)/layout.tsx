@@ -83,11 +83,9 @@ export default async function AuthLayout({
         <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <h1 className="font-blanka text-3xl tracking-wider from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Dreamlink
-              </h1>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              AI-Powered Biblical Dream Interpretation
+            </p>
           </div>
           
           {/* Navigation */}
