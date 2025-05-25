@@ -48,7 +48,7 @@ export default function Signup() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full min-h-[500px]">
       <CardHeader>
         <CardTitle className="text-2xl">Create your account</CardTitle>
         <CardDescription>

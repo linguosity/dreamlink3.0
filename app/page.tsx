@@ -104,11 +104,11 @@ export default async function MainPage() {
             <div>
               <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Quick Links</h3>
               <ul className="space-y-3">
-                <li><Link href="/account" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Account</Link></li>
-                <li><Link href="/settings" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Settings</Link></li>
-                <li><Link href="/help" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Help</Link></li>
-                <li><Link href="/about" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">About</Link></li>
-                <li><Link href="/privacy" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/account" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Account</Link></li>
+                <li><Link href="/settings" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Settings</Link></li>
+                <li><Link href="/help" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Help</Link></li>
+                <li><Link href="/about" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">About</Link></li>
+                <li><Link href="/privacy" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
             
