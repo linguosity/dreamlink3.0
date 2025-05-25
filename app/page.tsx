@@ -62,6 +62,10 @@ export default async function MainPage() {
     return redirect("/sign-in");
   }
 
+  // Add a small delay after successful auth to ensure session is fully established
+  // This helps prevent timing issues with subsequent API calls
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   console.log("Home page - Fetching dream entries for user:", user.id);
   
   // Fetch dream entries for the logged in user
