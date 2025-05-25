@@ -96,9 +96,7 @@ export default async function MainPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Dreamlink</h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                AI-powered dream journaling with biblical insights and dream pattern analysis.
-              </p>
+              
             </div>
             
             <div>

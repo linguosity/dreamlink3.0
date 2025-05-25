@@ -91,9 +91,6 @@ export default async function AuthLayout({
                 Dreamlink
               </h1>
             </div>
-            <p className="text-sm text-muted-foreground">
-              AI-Powered Biblical Dream Interpretation
-            </p>
           </div>
           
           {/* Navigation */}
