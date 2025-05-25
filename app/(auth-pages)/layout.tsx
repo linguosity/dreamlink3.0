@@ -84,10 +84,7 @@ export default async function AuthLayout({
           {/* Header */}
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3">
-              <div className="h-8 w-8 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center shadow-lg">
-                <div className="h-4 w-4 bg-background rounded-full"></div>
-              </div>
-              <h1 className="font-blanka text-3xl tracking-wider bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <h1 className="font-blanka text-3xl tracking-wider from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Dreamlink
               </h1>
             </div>
