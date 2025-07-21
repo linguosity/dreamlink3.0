@@ -90,13 +90,14 @@ export default async function RootLayout({
     console.error("Unexpected auth error in layout:", err);
   }
 
-  // Determine if the current path is an auth‐related page
+  // Determine if the current path is an auth‐related page or landing page
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isAuthPage =
     pathname.includes("/sign-in") ||
     pathname.includes("/sign-up") ||
     pathname.includes("/forgot-password");
+  const isLandingPage = pathname.includes("/landing");
 
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
@@ -120,7 +121,7 @@ export default async function RootLayout({
                   <EnvVarWarning />
                 </div>
               </div>
-            ) : !isAuthPage && user ? (
+            ) : !isAuthPage && !isLandingPage && user ? (
               <Navbar />
             ) : null}
 
@@ -128,7 +129,7 @@ export default async function RootLayout({
             <div
               className={
                 `flex-1 ` +
-                (!user && !isAuthPage ? "flex items-center justify-center" : "")
+                (!user && !isAuthPage && !isLandingPage ? "flex items-center justify-center" : "")
               }
             >
               {children}
@@ -137,7 +138,7 @@ export default async function RootLayout({
             {/* Global toast container */}
             <Toaster />
 
-            {/* Footer only on auth pages */}
+            {/* Footer only on auth pages (landing page has its own footer) */}
             {isAuthPage && (
               <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
                 <p className="text-white">

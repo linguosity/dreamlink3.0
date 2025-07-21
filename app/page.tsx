@@ -48,18 +48,18 @@ export default async function MainPage() {
     // Don't redirect if it's a JWT error - the middleware should handle it
     // Only redirect for other types of errors
     if (!userError.message.includes('JWT') && !userError.message.includes('token')) {
-      return redirect("/sign-in");
+      return redirect("/landing");
     }
   }
   
   if (!user) {
-    console.error("No user in session - redirecting to sign in");
+    console.error("No user in session - redirecting to landing page");
     
     // Add a small delay to ensure cookies are properly processed
     // This can help with issues related to cookie propagation
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    return redirect("/sign-in");
+    return redirect("/landing");
   }
 
   // Add a small delay after successful auth to ensure session is fully established
