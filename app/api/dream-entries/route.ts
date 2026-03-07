@@ -23,6 +23,10 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse, NextRequest, after } from "next/server";
 import { z } from "zod";
 
+// Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
+// The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
+export const maxDuration = 60;
+
 // Import the handler directly
 import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
 import { generateAndStoreDreamImage, buildImagePrompt } from "@/utils/imageGeneration";
