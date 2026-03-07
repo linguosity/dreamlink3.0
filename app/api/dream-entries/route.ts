@@ -24,6 +24,7 @@ import { z } from "zod";
 
 // Import the handler directly
 import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
+import { generateAndStoreDreamImage, buildImagePrompt } from "@/utils/imageGeneration";
 
 // Schema for validating dream analysis response
 const DreamAnalysisSchema = z.object({
@@ -633,6 +634,18 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
     if (dreamTitle && dreamTitle.trim().length > 0) {
       updateData.title = dreamTitle;
       console.log(`🎯 Updating dream title to AI-generated: "${dreamTitle}"`);
+    }
+
+    // Generate dream image using FLUX.2 [klein] 9B (non-critical — failure won't block save)
+    try {
+      const imagePrompt = buildImagePrompt(dreamTitle, dreamSummary, topicSentence);
+      const imageUrl = await generateAndStoreDreamImage(dreamId, imagePrompt);
+      if (imageUrl) {
+        updateData.image_url = imageUrl;
+        console.log(`🎨 Dream image ready: ${imageUrl}`);
+      }
+    } catch (imgErr) {
+      console.error('🎨 Image generation failed (non-critical, continuing):', imgErr);
     }
 
     // Update the dream entry with analysis - including raw analysis JSONB

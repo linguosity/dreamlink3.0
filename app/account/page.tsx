@@ -63,14 +63,8 @@ export default function AccountPage() {
         setUser(user);
         
         if (user) {
-          // Fetch subscription data from your database
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('subscription_tier')
-            .eq('id', user.id)
-            .single();
-          
-          const tier = profileData?.subscription_tier || "free";
+          // subscription_tier not yet implemented — default to free
+          const tier = "free";
           setCurrentSubscription(tier);
           
           // Update subscription tiers with current status

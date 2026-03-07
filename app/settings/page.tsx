@@ -39,7 +39,7 @@ export default function SettingsPage() {
         if (user) {
           // Fetch user preferences from your database
           const { data: profileData } = await supabase
-            .from('profiles')
+            .from('profile')
             .select('preferences')
             .eq('id', user.id)
             .single();
@@ -82,7 +82,7 @@ export default function SettingsPage() {
     
     try {
       await supabase
-        .from('profiles')
+        .from('profile')
         .update({ preferences })
         .eq('id', user.id);
         

@@ -64,7 +64,7 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           try {
             // Fetch subscription data from profiles table
             const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
+              .from('profile')
               .select('subscription_tier')
               .eq('id', data.user.id)
               .single();

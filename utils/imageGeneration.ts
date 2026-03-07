@@ -1,0 +1,185 @@
+// utils/imageGeneration.ts
+//
+// Handles AI image generation for dream entries using the Black Forest Labs
+// FLUX.2 [klein] 9B model, with automatic upload to Supabase Storage.
+//
+// Flow:
+//   1. Submit a generation request to BFL API (async)
+//   2. Poll the polling_url until status is "Ready"
+//   3. Download the generated image from the signed URL
+//   4. Upload to Supabase Storage bucket "dream-images"
+//   5. Return the permanent public URL
+
+import { createClient } from '@supabase/supabase-js';
+
+const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
+const POLL_INTERVAL_MS = 1500;
+const TIMEOUT_MS = 90_000; // 90 second timeout
+
+// Square 1024×1024 — best balance of quality and load speed for card display
+const IMAGE_WIDTH = 1024;
+const IMAGE_HEIGHT = 1024;
+
+/**
+ * Builds a FLUX.2 [klein] image prompt following BFL's prompting guide:
+ *   Subject → Setting → Details → Lighting → Atmosphere
+ *   + Style/Mood annotation at the end
+ *
+ * Key principles applied:
+ * - Prose sentences, not keyword lists
+ * - Subject and action lead the prompt
+ * - Lighting described explicitly (source, quality, direction, temperature)
+ * - Style/Mood tags appended for consistent biblical aesthetic
+ *
+ * See: docs/flux-prompting-guide.md
+ */
+export function buildImagePrompt(
+  dreamTitle?: string,
+  dreamSummary?: string,
+  topicSentence?: string
+): string {
+  // Prefer the AI-generated title as the scene anchor — it's the most concise
+  // and evocative summary. Fall back through summary → topic sentence → generic.
+  const subject = dreamTitle || topicSentence || dreamSummary || 'A sacred vision';
+
+  // Strip any trailing punctuation so the sentence flows cleanly
+  const cleanSubject = subject.replace(/[.!?]+$/, '').trim();
+
+  // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
+  // then append Style/Mood annotations for consistent biblical aesthetic output
+  return (
+    `${cleanSubject} unfolds across an ancient, sacred landscape steeped in divine light. ` +
+    `Worn stone and hand-woven cloth catch the glow of a single luminous column of light ` +
+    `descending from parted clouds above, casting long warm golden rays across the scene ` +
+    `while deep indigo shadows gather at the edges. ` +
+    `The air shimmers with faint celestial mist, and subtle biblical symbols — scrolls, ` +
+    `olive branches, gentle waters — emerge from the surrounding stillness. ` +
+    `Style: Painterly biblical illustration with luminous depth, reminiscent of classical ` +
+    `religious oil painting. Mood: Sacred, awe-inspiring, deeply spiritual, transcendent.`
+  );
+}
+
+/**
+ * Generates a dream image via BFL API, downloads it, uploads to Supabase
+ * Storage, and returns the permanent public URL.
+ *
+ * Uses the service-role key so it can bypass RLS for storage uploads.
+ * This is safe because this function only runs server-side.
+ */
+export async function generateAndStoreDreamImage(
+  dreamId: string,
+  prompt: string
+): Promise<string | null> {
+  const bflApiKey = process.env.BFL_API_KEY;
+  if (!bflApiKey) {
+    console.log('⚠️ BFL_API_KEY not set — skipping image generation');
+    return null;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.log('⚠️ Supabase service role key not set — skipping image storage');
+    return null;
+  }
+
+  // Admin client bypasses RLS for storage uploads
+  const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+
+  console.log('🎨 Submitting dream image generation to FLUX.2 [klein] 9B...');
+  console.log(`🎨 Prompt: ${prompt.substring(0, 100)}...`);
+
+  // ── Step 1: Submit generation request ──────────────────────────────────────
+  const submitRes = await fetch(BFL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'x-key': bflApiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt,
+      width: IMAGE_WIDTH,
+      height: IMAGE_HEIGHT,
+    }),
+  });
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`BFL submit failed (${submitRes.status}): ${errText}`);
+  }
+
+  const submitData = await submitRes.json();
+  const pollingUrl: string = submitData.polling_url;
+  const requestId: string = submitData.id;
+
+  if (!pollingUrl) {
+    throw new Error('BFL response missing polling_url');
+  }
+  console.log(`🎨 BFL request ID: ${requestId}`);
+
+  // ── Step 2: Poll until Ready ────────────────────────────────────────────────
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < TIMEOUT_MS) {
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+
+    const pollRes = await fetch(pollingUrl, {
+      headers: {
+        'accept': 'application/json',
+        'x-key': bflApiKey,
+      },
+    });
+
+    if (!pollRes.ok) {
+      console.log(`🎨 Poll returned ${pollRes.status}, retrying...`);
+      continue;
+    }
+
+    const pollData = await pollRes.json();
+    console.log(`🎨 BFL status: ${pollData.status}`);
+
+    if (pollData.status === 'Ready' && pollData.result?.sample) {
+      const signedUrl: string = pollData.result.sample;
+
+      // ── Step 3: Download image ─────────────────────────────────────────────
+      console.log('🎨 Downloading generated image...');
+      const imgRes = await fetch(signedUrl);
+      if (!imgRes.ok) {
+        throw new Error(`Failed to download image from BFL (${imgRes.status})`);
+      }
+
+      const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
+      const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+      const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+      const fileName = `${dreamId}/dream-image.${ext}`;
+
+      // ── Step 4: Upload to Supabase Storage ────────────────────────────────
+      console.log(`🎨 Uploading to Supabase Storage: dream-images/${fileName}`);
+      const { error: uploadError } = await adminSupabase.storage
+        .from('dream-images')
+        .upload(fileName, imageBuffer, {
+          contentType,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      }
+
+      // ── Step 5: Return public URL ──────────────────────────────────────────
+      const { data: urlData } = adminSupabase.storage
+        .from('dream-images')
+        .getPublicUrl(fileName);
+
+      console.log(`🎨 Dream image stored successfully: ${urlData.publicUrl}`);
+      return urlData.publicUrl;
+    }
+
+    if (pollData.status === 'Error' || pollData.status === 'Failed') {
+      throw new Error(`BFL generation failed: ${JSON.stringify(pollData)}`);
+    }
+  }
+
+  throw new Error('BFL image generation timed out after 90 seconds');
+}

@@ -57,7 +57,28 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   const filteredDreams = typeof window !== 'undefined' && isSearchEnabled
     ? searchedDreams
     : dreams;
-  
+
+  // Hooks must be called before any conditional returns (Rules of Hooks)
+  const [loadingDreamId, setLoadingDreamId] = useState<string | null>(null);
+
+  // Check for loading dream
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const storedLoadingId = localStorage.getItem('loadingDreamId');
+    if (storedLoadingId) {
+      setLoadingDreamId(storedLoadingId);
+    }
+
+    // Clear loading state if we have analysis
+    const loadingDream = dreams.find(d => d.id === storedLoadingId);
+    if (loadingDream && (loadingDream.dream_summary || loadingDream.analysis_summary ||
+        (loadingDream.supporting_points && loadingDream.supporting_points.length > 0))) {
+      localStorage.removeItem('loadingDreamId');
+      setLoadingDreamId(null);
+    }
+  }, [dreams]);
+
   // If no dreams, show placeholder
   if (!dreams || dreams.length === 0) {
     const placeholderDream = {
@@ -80,26 +101,6 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     );
   }
 
-  const [loadingDreamId, setLoadingDreamId] = useState<string | null>(null);
-  
-  // Check for loading dream
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const storedLoadingId = localStorage.getItem('loadingDreamId');
-    if (storedLoadingId) {
-      setLoadingDreamId(storedLoadingId);
-    }
-    
-    // Clear loading state if we have analysis
-    const loadingDream = dreams.find(d => d.id === storedLoadingId);
-    if (loadingDream && (loadingDream.dream_summary || loadingDream.analysis_summary || 
-        (loadingDream.supporting_points && loadingDream.supporting_points.length > 0))) {
-      localStorage.removeItem('loadingDreamId');
-      setLoadingDreamId(null);
-    }
-  }, [dreams]);
-  
   // Show no results state (client-side only)
   if (typeof window !== 'undefined' && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0) {
     return (
