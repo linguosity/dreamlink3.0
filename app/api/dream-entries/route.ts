@@ -551,7 +551,7 @@ async function analyzeAndUpdateDream(dreamId: string, dreamText: string, userId:
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-5-nano-2025-08-07",
             messages: [
               {
                 role: "system",
@@ -683,7 +683,7 @@ async function analyzeAndUpdateDream(dreamId: string, dreamText: string, userId:
         dream_entry_id: dreamId,
         prompt: `Analyze dream: ${dreamText}`,
         response: JSON.stringify(analysis),
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano-2025-08-07",
         temperature: 0.7
       });
       
