@@ -533,11 +533,11 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini-2024-07-18",
+            model: "gpt-4o-mini",
             messages: [
-              { 
-                role: "system", 
-                content: "You are a biblical dream interpreter with deep knowledge of Bible verses." 
+              {
+                role: "system",
+                content: "You are a biblical dream interpreter with deep knowledge of Bible verses."
               },
               { 
                 role: "user", 
@@ -653,7 +653,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
         dream_entry_id: dreamId,
         prompt: `Analyze dream: ${dreamText}`,
         response: JSON.stringify(analysis),
-        model: "gpt-4o-mini-2024-07-18",
+        model: "gpt-4o-mini",
         temperature: 0.7
       });
       

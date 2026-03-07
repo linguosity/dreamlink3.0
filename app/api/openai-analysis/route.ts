@@ -117,7 +117,7 @@ ${readingLevelInstructions}
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini-2024-07-18", // Latest model
+          model: "gpt-4o-mini", // Current model
           messages: [
             { role: "system", content: "You are a biblical dream interpreter who provides concise analysis with scripture references." },
             { role: "user", content: prompt }

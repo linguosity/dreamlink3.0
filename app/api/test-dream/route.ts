@@ -26,7 +26,7 @@ export async function POST(request: Request) {
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini-2024-07-18",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "You are a test assistant. Respond with 'API Working' and the word count of the input." },
             { role: "user", content: dream_text }
