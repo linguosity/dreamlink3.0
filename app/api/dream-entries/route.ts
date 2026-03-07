@@ -19,7 +19,8 @@
 // It handles all the backend logistics for your dream journal entries.
 
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse, NextRequest } from "next/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { NextResponse, NextRequest, after } from "next/server";
 import { z } from "zod";
 
 // Import the handler directly
@@ -436,9 +437,12 @@ export async function POST(request: Request) {
     
     const dreamId = dreamData.id;
     
-    // No await here to prevent blocking the response
-    analyzeAndUpdateDream(supabase, dreamId, dream_text, user.id).catch(error => {
-      console.error(`Background analysis failed for dream ${dreamId}:`, error);
+    // Use after() to schedule background work that survives after the response is sent.
+    // Vercel will keep the serverless function alive until after() callbacks complete.
+    after(() => {
+      analyzeAndUpdateDream(dreamId, dream_text, user.id).catch(error => {
+        console.error(`Background analysis failed for dream ${dreamId}:`, error);
+      });
     });
     
     // Return success with the created dream ID immediately
@@ -457,8 +461,17 @@ export async function POST(request: Request) {
   }
 }
 
-// Background analysis function that updates the dream entry when complete
-async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: string, userId: string) {
+// Background analysis function that updates the dream entry when complete.
+// Uses a service-role admin client so it:
+//   1. Bypasses RLS (no "42501" errors) — INSERT/UPDATE work without policies
+//   2. Is independent of the request cookie context (safe after response is sent)
+async function analyzeAndUpdateDream(dreamId: string, dreamText: string, userId: string) {
+  // Create our own admin client — cookie-based client is gone after response
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     // Call OpenAI to analyze the dream with structured JSON response
     const analysis = await analyzeDream(dreamText);
@@ -649,7 +662,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
     }
 
     // Update the dream entry with analysis - including raw analysis JSONB
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminSupabase
       .from("dream_entries")
       .update(updateData)
       .eq("id", dreamId);
@@ -660,7 +673,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
     }
     
     // Store the ChatGPT interaction
-    const { error: chatGptError } = await supabase
+    const { error: chatGptError } = await adminSupabase
       .from("chatgpt_interactions")
       .insert({
         dream_entry_id: dreamId,
@@ -744,7 +757,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
         if (JSON.stringify(rangedReferencesToStore) !== JSON.stringify(updatedBiblicalReferences)) {
           console.log("Updating dream_entries bible_refs to match structured response");
           
-          const { error: updateRefsError } = await supabase
+          const { error: updateRefsError } = await adminSupabase
             .from("dream_entries")
             .update({
               bible_refs: Array.isArray(rangedReferencesToStore) ? rangedReferencesToStore : [],
@@ -967,7 +980,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
         }).filter(Boolean); // Remove any null entries
         
         if (bibleReferences.length > 0) {
-          const { error: bibleError } = await supabase
+          const { error: bibleError } = await adminSupabase
             .from("bible_citations")
             .insert(bibleReferences);
             
@@ -989,7 +1002,7 @@ async function analyzeAndUpdateDream(supabase: any, dreamId: string, dreamText: 
     console.error(`Analysis failed for dream ${dreamId}:`, error);
     
     // Update with error message
-    await supabase
+    await adminSupabase
       .from("dream_entries")
       .update({
         dream_summary: "Analysis could not be completed at this time."

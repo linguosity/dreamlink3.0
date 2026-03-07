@@ -64,36 +64,22 @@ export async function updateSession(request: NextRequest) {
     
     return finalResponse
   } catch (e) {
-    // If error, it's likely because the user is not logged in or auth server is down
+    // Session refresh failed — most likely a transient network error hitting Supabase's
+    // auth server on a cold start. Do NOT clear cookies here: a network blip should
+    // not log the user out. The next request will retry the refresh automatically.
     console.error('Middleware session error:', e)
-    
-    // Check if it's an expired JWT error
-    const errorMessage = e instanceof Error ? e.message : String(e)
-    const isExpiredToken = errorMessage.includes('JWT') || errorMessage.includes('expired') || errorMessage.includes('token')
-    
-    // Clear expired auth cookies to prevent auth state mismatch
-    if (isExpiredToken) {
-      response.cookies.set('sb-access-token', '', { maxAge: 0 })
-      response.cookies.set('sb-refresh-token', '', { maxAge: 0 })
-      // Also clear any Supabase session cookies
-      response.cookies.set('supabase-auth-token', '', { maxAge: 0 })
-      response.cookies.set('supabase.auth.token', '', { maxAge: 0 })
-    }
-    
-    // Handle protected routes and root page on error
-    if (request.nextUrl.pathname.startsWith('/protected') || 
-        request.nextUrl.pathname === '/') {
+
+    // Only redirect if on a strictly protected route
+    if (request.nextUrl.pathname.startsWith('/protected')) {
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
-    
-    // For non-protected routes, just continue without auth
+
+    // For all other routes, pass through and let the page/API handle auth state
     const pathHeaders = new Headers(request.headers)
     pathHeaders.set('x-pathname', request.nextUrl.pathname)
-    
+
     return NextResponse.next({
-      request: {
-        headers: pathHeaders,
-      },
+      request: { headers: pathHeaders },
     })
   }
 }
