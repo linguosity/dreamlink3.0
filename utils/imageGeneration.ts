@@ -17,9 +17,10 @@ const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
 const POLL_INTERVAL_MS = 1500;
 const TIMEOUT_MS = 90_000; // 90 second timeout
 
-// Square 1024×1024 — best balance of quality and load speed for card display
-const IMAGE_WIDTH = 1024;
-const IMAGE_HEIGHT = 1024;
+// Square 512×512 — thumbnail-optimized for DreamCard grid display
+// ~75% smaller file size vs 1024×1024 with faster generation
+const IMAGE_WIDTH = 512;
+const IMAGE_HEIGHT = 512;
 
 /**
  * Builds a FLUX.2 [klein] image prompt following BFL's prompting guide:
