@@ -23,8 +23,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
-import Image from 'next/image';
 import { Providers } from './providers';
+import { LazyWaterBackground } from '@/components/LazyWaterBackground';
 import { VersionChecker } from '@/components/VersionChecker';
 
 // Determine the base URL for metadata and redirects
@@ -102,15 +102,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/images/background.jpg"
-          alt=""
-          fill
-          className="object-cover object-center blur-[5px]"
-          priority
-        />
-      </div>
+      <LazyWaterBackground />
         <Providers>
           <VersionChecker />
           <main className="min-h-screen flex flex-col animate-fade-in">

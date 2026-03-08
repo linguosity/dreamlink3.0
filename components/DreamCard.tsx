@@ -307,17 +307,8 @@ function DreamImageShimmer() {
   );
 }
 
-// Image header component for the card
+// Image header component for the card — only renders when an image exists or is loading
 function DreamImageHeader({ imageUrl, isLoading }: { imageUrl: string | null; isLoading: boolean }) {
-  if (!imageUrl && !isLoading) {
-    // Gradient placeholder when no image
-    return (
-      <div className="relative w-full h-40 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-950 dark:to-purple-950 flex items-center justify-center">
-        <div className="text-xs text-muted-foreground dark:text-muted-foreground/60">No image yet</div>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return <DreamImageShimmer />;
   }
@@ -386,7 +377,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
-  const [isPollingCardImage, setIsPollingCardImage] = useState(!initialDream.image_url && initialLoading);
+  // Poll for image if: no image yet AND (card is loading OR dream was created within the last 2 minutes)
+  const isRecentDream = initialDream.created_at
+    ? (Date.now() - new Date(initialDream.created_at).getTime()) < 2 * 60 * 1000
+    : false;
+  const [isPollingCardImage, setIsPollingCardImage] = useState(
+    !initialDream.image_url && (initialLoading || (isRecentDream && !!initialDream.dream_summary))
+  );
 
   // Ensure client-side hydration
   useEffect(() => {
@@ -713,7 +710,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
     console.log('Starting image polling for dream:', dream.id);
     let pollCount = 0;
-    const maxPolls = 6; // 30 seconds (6 * 5s)
+    const maxPolls = 12; // 60 seconds (12 * 5s)
 
     const interval = setInterval(async () => {
       try {
@@ -1034,32 +1031,39 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   // Render loading skeleton if in loading state
   if (isLoading) {
     return (
-      <Card className="overflow-hidden transition-all aspect-square">
-        <CardHeader className="p-3 pb-1">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-4 w-[150px]" />
-            <Skeleton className="h-3 w-[60px]" />
-          </div>
-        </CardHeader>
+      <Card className="overflow-hidden transition-all aspect-square relative">
+        {/* Shimmer background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted-foreground/5 to-muted dark:from-slate-800 dark:via-slate-700/10 dark:to-slate-800 overflow-hidden">
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 dark:via-white/5 to-transparent" />
+        </div>
 
-        <CardContent className="p-3 pt-1 space-y-2">
-          {/* Summary Skeleton */}
-          <div>
-            <Skeleton className="h-3 w-full mb-1" />
-            <Skeleton className="h-3 w-[80%]" />
-          </div>
+        <div className="relative flex flex-col h-full">
+          <CardHeader className="p-3 pb-1">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-[60%]" />
+              <Skeleton className="h-3 w-[50px]" />
+            </div>
+          </CardHeader>
 
-          {/* Tags Skeleton */}
-          <div className="flex flex-wrap gap-1">
-            <Skeleton className="h-4 w-12 rounded-full" />
-            <Skeleton className="h-4 w-14 rounded-full" />
-            <Skeleton className="h-4 w-10 rounded-full" />
-          </div>
+          <CardContent className="p-3 pt-1 space-y-2 flex-1 flex flex-col justify-end">
+            {/* Summary Skeleton */}
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-[85%]" />
+            </div>
 
-          <p className="text-xs text-muted-foreground text-center animate-pulse">
-            Analyzing your dream...
-          </p>
-        </CardContent>
+            {/* Tags Skeleton */}
+            <div className="flex flex-wrap gap-1">
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-4 w-20 rounded-full" />
+              <Skeleton className="h-4 w-14 rounded-full" />
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center animate-pulse">
+              Analyzing your dream...
+            </p>
+          </CardContent>
+        </div>
       </Card>
     );
   }
@@ -1093,32 +1097,31 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           }
         }}
       >
-        {/* Dream image header */}
-        <div className="w-full h-40 flex-shrink-0">
-          <DreamImageHeader imageUrl={cardImageUrl} isLoading={isPollingCardImage} />
-        </div>
-
-        {/* Background image (shown when user has images enabled and image exists) */}
-        {dream.image_url && (
+        {/* Background image or shimmer while image loads */}
+        {cardImageUrl ? (
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${dream.image_url})` }}
+            style={{ backgroundImage: `url(${cardImageUrl})` }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
           </div>
-        )}
+        ) : isPollingCardImage ? (
+          <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted-foreground/10 to-muted dark:from-slate-800 dark:via-slate-700/20 dark:to-slate-800 overflow-hidden">
+            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+          </div>
+        ) : null}
 
         <div className={cn(
-          "relative flex flex-col h-full flex-1 overflow-hidden",
-          dream.image_url && "text-white"
+          "relative flex flex-col h-full flex-1",
+          (cardImageUrl || isPollingCardImage) && "text-white"
         )}>
           <CardHeader className="p-3 pb-1">
             <div className="flex justify-between items-start gap-2">
               <CardTitle className={cn(
                 "text-sm leading-5 flex-1 min-w-0",
-                dream.image_url && "text-white"
+                (cardImageUrl || isPollingCardImage) && "text-white"
               )}>
-                <div className="break-words">
+                <div className="break-words line-clamp-2">
                   {searchTerms.length > 0
                     ? highlightMatches(dream.title || "", searchTerms)
                     : dream.title
@@ -1127,7 +1130,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </CardTitle>
               <div className={cn(
                 "flex items-center text-xs flex-shrink-0",
-                dream.image_url ? "text-white/70" : "text-muted-foreground"
+                (cardImageUrl || isPollingCardImage) ? "text-white/70" : "text-muted-foreground"
               )}>
                 <CalendarIcon className="h-3 w-3 mr-1" />
                 <span className="whitespace-nowrap">{formattedDate}</span>
@@ -1135,13 +1138,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             </div>
           </CardHeader>
 
-          <CardContent className="p-3 pt-1 space-y-2 flex-1 flex flex-col justify-end">
+          <CardContent className="p-3 pt-1 space-y-1.5 flex-1 flex flex-col justify-end overflow-hidden">
             {/* Summary */}
             {(dream.personalized_summary || dream.dream_summary) && (
               <div>
                 <p className={cn(
-                  "text-xs leading-4 break-words line-clamp-3",
-                  dream.image_url ? "text-white/80" : "text-muted-foreground"
+                  "text-xs leading-4 break-words line-clamp-2",
+                  (cardImageUrl || isPollingCardImage) ? "text-white/80" : "text-muted-foreground"
                 )}>
                   {searchTerms.length > 0
                     ? highlightMatches(dream.personalized_summary || dream.dream_summary || "", searchTerms)
@@ -1153,17 +1156,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
             {/* Tags */}
             {dream.tags && dream.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {dream.tags.slice(0, 6).map((tag, index) => {
+              <div className="flex flex-wrap gap-1 overflow-hidden max-h-[3.5rem]">
+                {dream.tags.slice(0, 4).map((tag, index) => {
                   const isTagMatch = searchTerms.some(term =>
                     term && tag.toLowerCase().includes(term.toLowerCase())
                   );
 
                   return (
                     <Badge key={index} variant="secondary" className={cn(
-                      "text-xs px-2 py-0.5 break-words",
+                      "text-[10px] px-1.5 py-0 leading-4 truncate max-w-[8rem]",
                       isTagMatch && "bg-primary/10",
-                      dream.image_url && "bg-white/20 text-white border-white/20"
+                      cardImageUrl && "bg-white/20 text-white border-white/20"
                     )}>
                       {isTagMatch
                         ? highlightMatches(tag, searchTerms)
@@ -1178,8 +1181,8 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             {/* Original text preview (shown only when there's a search match and no summary) */}
             {searchTerms.length > 0 && !dream.personalized_summary && !dream.dream_summary && (
               <div className={cn(
-                "text-xs",
-                dream.image_url ? "text-white/80" : "text-muted-foreground"
+                "text-xs line-clamp-2",
+                cardImageUrl ? "text-white/80" : "text-muted-foreground"
               )}>
                 {highlightMatches(dream.original_text, searchTerms)}
               </div>

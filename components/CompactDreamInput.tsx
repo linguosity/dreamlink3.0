@@ -123,6 +123,28 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         // Clear any stale loading state from previous attempts
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
+
+        // Fire off image generation in the background (non-blocking).
+        // We don't await this — it runs independently of the page refresh.
+        if (result.analysis) {
+          const imageBody = JSON.stringify({
+            dreamId: result.id,
+            title: result.analysis.dreamTitle || "",
+            summary: result.analysis.analysis || "",
+            topicSentence: result.analysis.topicSentence || "",
+          });
+          // Use navigator.sendBeacon-style approach: start fetch before refresh
+          // but don't let router.refresh() cancel it by keeping a reference
+          const imageRequest = fetch("/api/dream-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: imageBody,
+            keepalive: true,
+          }).catch((err) => console.error("Image generation request failed:", err));
+          // Small delay to ensure the request is dispatched before refresh
+          await new Promise(resolve => setTimeout(resolve, 100));
+          void imageRequest; // keep reference alive
+        }
       }
 
       // Refresh the page to show the new fully-analyzed entry

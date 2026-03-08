@@ -20,14 +20,13 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { NextResponse, NextRequest, after } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 // Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
 export const maxDuration = 60;
 
 import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
-import { generateAndStoreDreamImage, buildImagePrompt } from "@/utils/imageGeneration";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -392,31 +391,9 @@ export async function POST(request: Request) {
         }
       }
 
-      // ── 6. Kick off image gen in background (non-critical) ─
-      after(() => {
-        (async () => {
-          try {
-            const imagePrompt = buildImagePrompt(
-              dreamTitle,
-              dreamSummary,
-              topicSentence
-            );
-            const imageUrl = await generateAndStoreDreamImage(
-              dreamId,
-              imagePrompt
-            );
-            if (imageUrl) {
-              await adminSupabase
-                .from("dream_entries")
-                .update({ image_url: imageUrl })
-                .eq("id", dreamId);
-              console.log(`🎨 Dream image saved: ${imageUrl}`);
-            }
-          } catch (imgErr) {
-            console.error("🎨 Image generation failed (non-critical):", imgErr);
-          }
-        })();
-      });
+      // ── 6. Image gen is triggered client-side via /api/dream-image ─
+      // (after() was killed by Vercel Hobby 10s timeout, so the client
+      //  fires a separate request to /api/dream-image instead)
     } catch (analysisError) {
       console.error("Analysis failed:", analysisError);
       // Mark the dream so the UI knows analysis failed
