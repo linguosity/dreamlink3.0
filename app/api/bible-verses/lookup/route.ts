@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     // Get all Bible citations for the dream
     const { data: citations, error } = await supabase
       .from("bible_citations")
-      .select("bible_book, chapter, verse, full_text")
+      .select("bible_book, chapter, verse, end_verse, full_text")
       .eq("dream_entry_id", dreamId);
       
     if (error) {

@@ -370,17 +370,13 @@ export async function POST(request: Request) {
       if (biblicalReferences.length > 0) {
         const citations = biblicalReferences
           .map((ref: any, index: number) => {
-            if (!ref?.citation) return null;
-            const parts = ref.citation
-              .trim()
-              .match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
-            if (!parts) return null;
-            const [, book, chapter, verse] = parts;
+            if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
             return {
               dream_entry_id: dreamId,
-              bible_book: book.trim(),
-              chapter: parseInt(chapter, 10),
-              verse: parseInt(verse.split("-")[0], 10),
+              bible_book: ref.book.trim(),
+              chapter: ref.chapter,
+              verse: ref.verse,
+              end_verse: ref.endVerse || null,
               full_text: ref.verseText || `Verse text not available`,
               citation_order: index + 1,
             };

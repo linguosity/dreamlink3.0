@@ -6,6 +6,7 @@ export const bibleCitationSchema = z.object({
   bible_book: z.string(),
   chapter: z.number().int(),
   verse: z.number().int(),
+  end_verse: z.number().int().nullable().optional(), // For verse ranges (e.g., 15 for "1:14-15")
   full_text: z.string(),
   citation_order: z.number().int().default(1),
   source: z.string().optional(), // Tracks where the verse text came from (OpenAI response, fallback, etc.)

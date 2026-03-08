@@ -168,15 +168,31 @@ ${readingLevelInstructions}
                       properties: {
                         citation: {
                           type: "string",
-                          description: "The Bible citation (e.g., 'Genesis 1:1')"
+                          description: "The full Bible citation string (e.g., 'Genesis 1:1' or '1 Peter 5:6-8')"
+                        },
+                        book: {
+                          type: "string",
+                          description: "The Bible book name (e.g., 'Genesis', '1 Peter', 'Song of Solomon')"
+                        },
+                        chapter: {
+                          type: "integer",
+                          description: "The chapter number"
+                        },
+                        verse: {
+                          type: "integer",
+                          description: "The starting verse number"
+                        },
+                        endVerse: {
+                          type: ["integer", "null"],
+                          description: "The ending verse number for ranges (e.g., 15 for '1:14-15'), or null for single verses"
                         },
                         verseText: {
-                          type: "string", 
-                          description: "The actual text of the Bible verse"
+                          type: "string",
+                          description: "The actual text of the Bible verse(s)"
                         }
                       },
                       additionalProperties: false,
-                      required: ["citation", "verseText"]
+                      required: ["citation", "book", "chapter", "verse", "endVerse", "verseText"]
                     }
                   },
                   tags: {
@@ -426,14 +442,26 @@ ${readingLevelInstructions}
           biblicalReferences: [
             {
               citation: "Psalm 23:4",
+              book: "Psalm",
+              chapter: 23,
+              verse: 4,
+              endVerse: null,
               verseText: "Even though I walk through the darkest valley, I will fear no evil, for you are with me; your rod and your staff, they comfort me."
             },
             {
               citation: "Proverbs 3:5-6",
+              book: "Proverbs",
+              chapter: 3,
+              verse: 5,
+              endVerse: 6,
               verseText: "Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight."
             },
             {
               citation: "2 Corinthians 5:17",
+              book: "2 Corinthians",
+              chapter: 5,
+              verse: 17,
+              endVerse: null,
               verseText: "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
             }
           ],
