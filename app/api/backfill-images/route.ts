@@ -12,7 +12,7 @@ import {
   generateAndStoreDreamImage,
 } from "@/utils/imageGeneration";
 
-export const maxDuration = 300; // 5 minutes (Vercel Pro) or 60s on Hobby
+export const maxDuration = 60; // Vercel Hobby plan limit
 
 export async function POST() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
