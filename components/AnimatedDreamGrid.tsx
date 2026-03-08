@@ -79,24 +79,20 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     }
   }, [dreams]);
 
-  // If no dreams, show placeholder
+  // If no dreams, show empty state
   if (!dreams || dreams.length === 0) {
-    const placeholderDream = {
-      id: 'placeholder',
-      original_text: "I was walking along a beach at sunset when I noticed the water was crystal clear. I could see colorful fish swimming beneath the surface. Suddenly, the water parted in front of me like the Red Sea in the Bible. I walked between the walls of water and discovered an ancient temple with symbols I couldn't understand. Inside the temple was a bright light that spoke to me, saying I had a mission to fulfill. I woke up feeling peaceful yet with a sense of purpose.",
-      title: 'Example: Ocean Temple Dream',
-      dream_summary: 'A journey to an underwater temple where divine guidance was received, suggesting a spiritual calling or mission.',
-      analysis_summary: 'This dream contains elements of divine revelation and spiritual journey. The parting waters reference Moses and the Exodus story, while the temple represents a sacred space for divine communication. The voice from light suggests divine guidance or calling.',
-      tags: ['Water', 'Temple', 'Divine Message', 'Journey'],
-      bible_refs: ['Exodus 14:21', 'John 8:12', '1 Kings 6:19', 'Psalm 23:2'],
-      created_at: new Date().toISOString()
-    };
-    
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="col-span-1">
-          <DreamCard empty={true} dream={placeholderDream} />
+      <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+        <div className="bg-muted rounded-full p-8 mb-6">
+          <Search className="h-12 w-12 text-muted-foreground" />
         </div>
+        <h3 className="text-2xl font-semibold mb-3">No dreams recorded yet</h3>
+        <p className="text-muted-foreground max-w-md mb-6">
+          Your dream journal is empty. Start by recording your first dream above to receive AI-powered spiritual interpretations and biblical insights.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Dreams are where spiritual wisdom awakens. Each one is a message waiting to be understood.
+        </p>
       </div>
     );
   }

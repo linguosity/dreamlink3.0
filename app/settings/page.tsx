@@ -291,21 +291,21 @@ export default function SettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ReadingLevel.RADIANT_CLARITY}>
-                    Radiant Clarity (Simple)
+                    Simple (Radiant Clarity)
                   </SelectItem>
                   <SelectItem value={ReadingLevel.CELESTIAL_INSIGHT}>
-                    Celestial Insight (Standard)
+                    Standard (Celestial Insight)
                   </SelectItem>
                   <SelectItem value={ReadingLevel.PROPHETIC_WISDOM}>
-                    Prophetic Wisdom (Advanced)
+                    Advanced (Prophetic Wisdom)
                   </SelectItem>
                   <SelectItem value={ReadingLevel.DIVINE_REVELATION}>
-                    Divine Revelation (Scholarly)
+                    Scholarly (Divine Revelation)
                   </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground mt-1">
-                This setting determines the language complexity used in your dream analysis.
+                Choose the complexity level for dream interpretations. Simple uses everyday language, Standard adds theological depth, Advanced includes scholarly references, and Scholarly offers in-depth theological analysis.
               </p>
             </div>
             

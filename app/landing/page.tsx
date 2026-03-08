@@ -272,8 +272,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
+      <footer className="relative bg-gray-900 text-white py-12">
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <h3 className="font-bold text-lg mb-4">DreamLink</h3>
@@ -306,7 +307,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
             © {new Date().getFullYear()} DreamLink. All rights reserved.
           </div>

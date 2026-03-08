@@ -137,10 +137,20 @@ export default function Navbar() {
                     </button>
                   )}
                   
-                  {/* Keyboard shortcut hint */}
-                  <span className="ml-auto text-xs text-muted-foreground hidden sm:inline">
+                  {/* Keyboard shortcut hint - hidden when focused or has content */}
+                  <span className={cn(
+                    "ml-auto text-xs text-muted-foreground hidden sm:inline",
+                    isFocused || currentInput ? "hidden" : ""
+                  )}>
                     Ctrl+K
                   </span>
+
+                  {/* Press Enter hint - shown only when focused and has text */}
+                  {isFocused && currentInput && (
+                    <span className="text-xs text-muted-foreground">
+                      Press Enter to search
+                    </span>
+                  )}
                 </div>
               ) : (
                 // Original search UI when feature is disabled (simplified)

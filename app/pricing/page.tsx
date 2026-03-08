@@ -155,17 +155,19 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Button 
+              <Button
                 className={`
                   w-full py-3 text-base font-medium transition-all duration-200
-                  ${plan.popular 
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl' 
-                    : 'bg-background hover:bg-muted text-foreground border border-border hover:border-primary'
+                  ${plan.popular
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl'
+                    : plan.name === 'Seeker'
+                    ? 'bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                    : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl'
                   }
                 `}
-                variant={plan.popular ? "default" : "outline"}
+                variant={plan.popular || plan.name !== 'Seeker' ? "default" : "outline"}
               >
-                {plan.cta}
+                {plan.name === 'Seeker' ? 'Your Current Plan' : plan.cta}
               </Button>
             </Card>
           ))}

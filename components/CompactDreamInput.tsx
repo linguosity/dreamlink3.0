@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Send, ExpandIcon, AlertCircle, Loader2 } from "lucide-react";
+import { Send, PenLine, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useRouter } from "next/navigation";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -19,6 +20,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const router = useRouter();
 
   // Check localStorage for persistent tip dismissal on component mount
@@ -152,11 +154,13 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             placeholder="I dreamed that..."
             value={dream}
             onChange={(e) => setDream(e.target.value)}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             className="flex-1 min-w-0"
             maxLength={500}
             disabled={isSubmitting}
           />
-          
+
           <Button
             type="submit"
             size="icon"
@@ -170,17 +174,24 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               <Send className="h-4 w-4" />
             )}
           </Button>
-        
+
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                title="Expand for more details"
-              >
-                <ExpandIcon className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      aria-label="Add more detail"
+                    >
+                      <PenLine className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Add more detail</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </DialogTrigger>
           
           <DialogContent className="sm:max-w-[600px]">
@@ -227,18 +238,34 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                 </div>
               )}
               
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={!expandedDream.trim() || isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit Dream for Analysis"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Dream for Analysis"
+                )}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
         </div>
-        
+
+        {/* Inline hint for richer analysis when focused with short input */}
+        {inputFocused && dream.trim().length > 0 && dream.trim().length < 50 && (
+          <div className="max-w-2xl mx-auto px-4 sm:px-0">
+            <p className="text-xs text-muted-foreground italic">
+              For richer analysis, expand your entry
+            </p>
+          </div>
+        )}
+
         {/* Gentle hint for short dreams */}
         {dream.trim().length > 0 && dream.trim().length < 20 && !tipDismissed && (
           <div className="max-w-2xl mx-auto px-4 sm:px-0">
