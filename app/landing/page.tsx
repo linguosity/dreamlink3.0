@@ -22,11 +22,12 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden backdrop-blur-sm">
+        <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/70" />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
-        <div className="container mx-auto px-4 py-16 sm:py-24 relative">
+        <div className="container mx-auto px-4 py-16 sm:py-24 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-4 px-4 py-2">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -70,7 +71,7 @@ export default function LandingPage() {
       </section>
 
       {/* Problem Section */}
-      <section className="py-16 bg-gray-50 dark:bg-slate-800/50">
+      <section className="py-16 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
@@ -107,7 +108,7 @@ export default function LandingPage() {
       </section>
 
       {/* Solution Section */}
-      <section className="py-16">
+      <section className="py-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -182,7 +183,7 @@ export default function LandingPage() {
       </section>
 
       {/* Target Audience */}
-      <section className="py-16 bg-gray-50 dark:bg-slate-800/50">
+      <section className="py-16 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
@@ -219,7 +220,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonial */}
-      <section className="py-16">
+      <section className="py-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <Card className="p-8 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-none">
@@ -248,7 +249,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-16 bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-white mb-4">
@@ -272,7 +273,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative bg-gray-900 text-white py-12">
+      <footer className="relative bg-gray-900/80 text-white py-12 backdrop-blur-sm">
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8">

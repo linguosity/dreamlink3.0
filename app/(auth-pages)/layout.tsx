@@ -70,14 +70,8 @@ export default async function AuthLayout({
   // Otherwise render the normal auth UI
   return (
     <div className="min-h-screen w-full relative">
-      {/* Background */}
-      <div className="fixed inset-0 -z-10">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-fixed opacity-20 blur-[2px]"
-          style={{ backgroundImage: "url('/images/background.jpg')" }}
-        />
-        <div className="absolute inset-0 bg-background/90" />
-      </div>
+      {/* Semi-transparent overlay so water background shows through */}
+      <div className="fixed inset-0 -z-[5] bg-background/60 backdrop-blur-[2px]" />
 
       <div className="flex items-center justify-center min-h-screen w-full">
         <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 space-y-8">

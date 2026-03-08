@@ -101,7 +101,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">
+      <body className="text-foreground">
       <LazyWaterBackground />
         <Providers>
           <VersionChecker />
