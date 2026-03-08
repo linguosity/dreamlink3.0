@@ -11,6 +11,7 @@
 //   5. Return the permanent public URL
 
 import { createClient } from '@supabase/supabase-js';
+import { ImageAesthetic, AESTHETIC_PRESETS } from '@/schema/imageAesthetic';
 
 const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
 const POLL_INTERVAL_MS = 1500;
@@ -36,7 +37,8 @@ const IMAGE_HEIGHT = 1024;
 export function buildImagePrompt(
   dreamTitle?: string,
   dreamSummary?: string,
-  topicSentence?: string
+  topicSentence?: string,
+  aesthetic?: ImageAesthetic
 ): string {
   // Prefer the AI-generated title as the scene anchor — it's the most concise
   // and evocative summary. Fall back through summary → topic sentence → generic.
@@ -45,18 +47,12 @@ export function buildImagePrompt(
   // Strip any trailing punctuation so the sentence flows cleanly
   const cleanSubject = subject.replace(/[.!?]+$/, '').trim();
 
+  // Look up the aesthetic preset (default to Sacred Oil Painting for free users)
+  const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.SACRED_OIL_PAINTING];
+
   // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
-  // then append Style/Mood annotations for consistent biblical aesthetic output
-  return (
-    `${cleanSubject} unfolds across an ancient, sacred landscape steeped in divine light. ` +
-    `Worn stone and hand-woven cloth catch the glow of a single luminous column of light ` +
-    `descending from parted clouds above, casting long warm golden rays across the scene ` +
-    `while deep indigo shadows gather at the edges. ` +
-    `The air shimmers with faint celestial mist, and subtle biblical symbols — scrolls, ` +
-    `olive branches, gentle waters — emerge from the surrounding stillness. ` +
-    `Style: Painterly biblical illustration with luminous depth, reminiscent of classical ` +
-    `religious oil painting. Mood: Sacred, awe-inspiring, deeply spiritual, transcendent.`
-  );
+  // then append Style/Mood annotations from the selected aesthetic preset
+  return `${cleanSubject} ${preset.scene} ${preset.styleAnnotation}`;
 }
 
 /**

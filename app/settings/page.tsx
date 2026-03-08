@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ReadingLevel } from '@/schema/profile';
 import { SearchFeatureToggle } from '@/components/SearchFeatureToggle';
+import { ImageAesthetic, AESTHETIC_PRESETS, getAvailableAesthetics, type AestheticTier } from '@/schema/imageAesthetic';
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,6 +28,8 @@ export default function SettingsPage() {
   });
   const [readingLevel, setReadingLevel] = useState<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const [bibleVersion, setBibleVersion] = useState<string>("KJV");
+  const [imageAesthetic, setImageAesthetic] = useState<string>(ImageAesthetic.SACRED_OIL_PAINTING);
+  const [userTier, setUserTier] = useState<AestheticTier>("free");
   const [isSaving, setIsSaving] = useState(false);
   const supabase = createClient();
 
@@ -338,6 +341,59 @@ export default function SettingsPage() {
           </CardFooter>
         </Card>
         
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Dream Image Style</CardTitle>
+            <CardDescription>Choose the visual aesthetic for AI-generated dream images</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.values(AESTHETIC_PRESETS).map((preset) => {
+                const isAvailable = getAvailableAesthetics(userTier).some(a => a.id === preset.id);
+                const isSelected = imageAesthetic === preset.id;
+                const tierLabel = preset.tier === "free" ? "" : preset.tier === "visionary" ? "Visionary" : "Prophet";
+
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => isAvailable && setImageAesthetic(preset.id)}
+                    disabled={!isAvailable}
+                    className={`relative text-left p-3 rounded-lg border-2 transition-all ${
+                      isSelected
+                        ? "border-primary bg-primary/5 dark:bg-primary/10"
+                        : isAvailable
+                        ? "border-border hover:border-primary/50 hover:bg-muted/50"
+                        : "border-border/50 opacity-60 cursor-not-allowed"
+                    }`}
+                  >
+                    {tierLabel && (
+                      <span className={`absolute top-2 right-2 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                        isAvailable
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}>
+                        {tierLabel}
+                      </span>
+                    )}
+                    <div className="font-medium text-sm">{preset.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{preset.description}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {userTier === "free" && (
+              <p className="text-xs text-muted-foreground">
+                <Link href="/pricing" className="text-primary hover:underline">Upgrade your plan</Link> to unlock more image styles.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button onClick={saveReadingSettings} disabled={loading || isSaving}>
+              {isSaving ? "Saving..." : "Save Image Style"}
+            </Button>
+          </CardFooter>
+        </Card>
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-destructive">Danger Zone</CardTitle>

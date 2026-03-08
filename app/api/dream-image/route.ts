@@ -10,12 +10,13 @@ import {
   buildImagePrompt,
   generateAndStoreDreamImage,
 } from "@/utils/imageGeneration";
+import { ImageAesthetic, imageAestheticSchema } from "@/schema/imageAesthetic";
 
 export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: NextRequest) {
   try {
-    const { dreamId, title, summary, topicSentence } = await request.json();
+    const { dreamId, title, summary, topicSentence, aesthetic } = await request.json();
 
     if (!dreamId) {
       return NextResponse.json(
@@ -36,7 +37,15 @@ export async function POST(request: NextRequest) {
 
     const adminSupabase = createAdminClient(supabaseUrl, serviceRoleKey);
 
-    const imagePrompt = buildImagePrompt(title, summary, topicSentence);
+    // Validate aesthetic if provided, default to sacred oil painting
+    const parsedAesthetic = aesthetic
+      ? imageAestheticSchema.safeParse(aesthetic)
+      : null;
+    const selectedAesthetic = parsedAesthetic?.success
+      ? parsedAesthetic.data
+      : ImageAesthetic.SACRED_OIL_PAINTING;
+
+    const imagePrompt = buildImagePrompt(title, summary, topicSentence, selectedAesthetic);
     const imageUrl = await generateAndStoreDreamImage(dreamId, imagePrompt);
 
     if (imageUrl) {
