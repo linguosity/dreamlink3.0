@@ -362,7 +362,7 @@ export async function POST(request: Request) {
         dream_entry_id: dreamId,
         prompt: `Analyze dream: ${dream_text}`,
         response: JSON.stringify(analysisResult),
-        model: "gpt-5-nano-2025-08-07",
+        model: "gpt-4o-mini",
         temperature: 0.7,
       });
 

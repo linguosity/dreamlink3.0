@@ -117,12 +117,13 @@ ${readingLevelInstructions}
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-5-nano-2025-08-07",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "You are a biblical dream interpreter who provides concise analysis with scripture references." },
             { role: "user", content: prompt }
           ],
-          max_completion_tokens: 4000,
+          temperature: 0.7,
+          max_tokens: 2000,
           response_format: {
             type: "json_schema",
             json_schema: {
