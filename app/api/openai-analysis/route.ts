@@ -122,7 +122,7 @@ ${readingLevelInstructions}
             { role: "system", content: "You are a biblical dream interpreter who provides concise analysis with scripture references." },
             { role: "user", content: prompt }
           ],
-          max_completion_tokens: 2000,
+          max_completion_tokens: 4000,
           response_format: {
             type: "json_schema",
             json_schema: {
@@ -207,14 +207,30 @@ ${readingLevelInstructions}
       
       const data = await response.json();
       console.log(`🔍 OpenAI API response received. Has choices: ${data.choices ? 'yes' : 'no'}`);
-      
-      if (!data.choices || !data.choices[0]?.message?.content) {
-        console.error("❌ Invalid response format from OpenAI");
+
+      // Log usage to understand reasoning vs completion token split
+      if (data.usage) {
+        console.log(`🔍 Token usage: prompt=${data.usage.prompt_tokens}, completion=${data.usage.completion_tokens}, reasoning=${data.usage.completion_tokens_details?.reasoning_tokens || 0}`);
+      }
+
+      const message = data.choices?.[0]?.message;
+      console.log(`🔍 Message keys: ${message ? Object.keys(message).join(', ') : 'no message'}`);
+      console.log(`🔍 Content type: ${typeof message?.content}, length: ${message?.content?.length ?? 'null'}, finish_reason: ${data.choices?.[0]?.finish_reason}`);
+
+      if (!data.choices || message?.content == null) {
+        console.error("❌ Invalid response format from OpenAI — content is null/undefined");
+        console.error("❌ Full response:", JSON.stringify(data).substring(0, 500));
         return NextResponse.json({ error: "Invalid response from OpenAI" }, { status: 500 });
       }
-      
+
+      // If content is empty string, the model used all tokens for reasoning
+      if (message.content === '') {
+        console.error("❌ OpenAI returned empty content (reasoning used all tokens). finish_reason:", data.choices[0].finish_reason);
+        return NextResponse.json({ error: "Model returned empty response — try increasing max_completion_tokens" }, { status: 500 });
+      }
+
       // Get the content from the message
-      const content = data.choices[0].message.content;
+      const content = message.content;
       console.log(`🔍 Content type: ${typeof content}`);
       
       // Parse the content as JSON
