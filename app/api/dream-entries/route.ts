@@ -373,7 +373,7 @@ export async function POST(request: Request) {
             if (!ref?.citation) return null;
             const parts = ref.citation
               .trim()
-              .match(/([a-zA-Z\s]+)\s+(\d+):(\d+)/);
+              .match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
             if (!parts) return null;
             const [, book, chapter, verse] = parts;
             return {

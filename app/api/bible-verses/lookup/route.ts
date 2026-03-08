@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     // Helper function to expand verse ranges
     function expandVerseRange(reference: string): string[] {
       // Match patterns like "Book XX:YY-ZZ" where YY and ZZ are verse numbers
-      const rangeMatch = reference.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+      const rangeMatch = reference.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
       
       if (!rangeMatch) {
         // Not a range, return as is
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
     if (dreamRefs.length > 0) {
       dreamRefs.forEach((ref, index) => {
         // Try to find this reference in our citations
-        const parsed = ref.match(/([a-zA-Z\s]+)\s+(\d+):(\d+)/);
+        const parsed = ref.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
         if (parsed) {
           const [, book, chapter, verse] = parsed;
           const normalizedRef = normalizeReference(book, parseInt(chapter), parseInt(verse));
@@ -182,7 +182,7 @@ export async function GET(request: Request) {
     // Add fallbacks for any dream references that are missing
     dreamRefs.forEach(ref => {
       // First check if this is a verse range
-      const isRange = ref.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+      const isRange = ref.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
       
       if (isRange) {
         console.log(`Processing verse range: ${ref}`);
@@ -272,7 +272,7 @@ export async function GET(request: Request) {
           console.log(`📖 Using fallback verse text for ${ref} -> ${BIBLE_VERSES[ref].substring(0, 30)}...`);
         } else {
           // Last attempt - try to normalize the reference and check again
-          const parsed = ref.match(/([a-zA-Z\s]+)\s+(\d+):(\d+)/);
+          const parsed = ref.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
           if (parsed) {
             const [, book, chapter, verse] = parsed;
             const normalizedRef = normalizeReference(book, parseInt(chapter), parseInt(verse));

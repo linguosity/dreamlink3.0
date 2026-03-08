@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   
   try {
     // Parse reference into components
-    const refParts = reference.match(/([a-zA-Z\s]+)\s+(\d+):(\d+)/);
+    const refParts = reference.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
     
     if (!refParts) {
       return NextResponse.json(

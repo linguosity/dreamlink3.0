@@ -363,7 +363,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   // Helper function to expand verse ranges
   const expandVerseRange = (reference: string): string[] => {
     // Match patterns like "Book XX:YY-ZZ" where YY and ZZ are verse numbers
-    const rangeMatch = reference.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+    const rangeMatch = reference.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
     
     if (!rangeMatch) {
       // Not a range, return as is
@@ -399,7 +399,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     let source = "";
     
     // Check if this is a verse range
-    const isRange = reference.match(/^([a-zA-Z\s]+\s+\d+):(\d+)-(\d+)$/);
+    const isRange = reference.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
     
     if (isRange) {
       console.log(`Processing verse range in component: ${reference}`);
@@ -495,7 +495,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         
         // Try splitting and reformatting (book name + chapter:verse)
         else {
-          const match = reference.match(/([a-zA-Z\s]+)\s*(\d+:\d+)/);
+          const match = reference.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s*(\d+:\d+)/);
           if (match) {
             const [, book, chapterVerse] = match;
             const reformattedRef = `${book.trim()} ${chapterVerse.trim()}`;
@@ -1048,6 +1048,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{dream.title}</DialogTitle>
+            <DialogDescription className="sr-only">Dream analysis details</DialogDescription>
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarIcon className="h-3 w-3 mr-1" />
               {dateObj.toLocaleDateString('en-US', {
