@@ -41,19 +41,27 @@ export function buildImagePrompt(
   topicSentence?: string,
   aesthetic?: ImageAesthetic
 ): string {
-  // Prefer the AI-generated title as the scene anchor — it's the most concise
-  // and evocative summary. Fall back through summary → topic sentence → generic.
-  const subject = dreamTitle || topicSentence || dreamSummary || 'A sacred vision';
+  // Build the subject from ALL available dream content for unique imagery.
+  // Title alone is too generic — the summary carries the actual dream details.
+  const title = dreamTitle?.replace(/[.!?]+$/, '').trim();
+  const summary = dreamSummary?.replace(/[.!?]+$/, '').trim();
+  const topic = topicSentence?.replace(/[.!?]+$/, '').trim();
 
-  // Strip any trailing punctuation so the sentence flows cleanly
-  const cleanSubject = subject.replace(/[.!?]+$/, '').trim();
+  // Combine: title sets the scene, summary/topic add unique detail
+  // Truncate summary to ~120 chars to keep the prompt focused for FLUX
+  const truncatedSummary = summary && summary.length > 120
+    ? summary.substring(0, 120).replace(/\s+\S*$/, '')
+    : summary;
+
+  const parts = [title, truncatedSummary || topic].filter(Boolean);
+  const subject = parts.length > 0 ? parts.join('. ') : 'A sacred vision';
 
   // Look up the aesthetic preset (default to Sacred Oil Painting for free users)
   const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.SACRED_OIL_PAINTING];
 
   // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
   // then append Style/Mood annotations from the selected aesthetic preset
-  return `${cleanSubject} ${preset.scene} ${preset.styleAnnotation}`;
+  return `${subject}. ${preset.scene} ${preset.styleAnnotation}`;
 }
 
 /**
