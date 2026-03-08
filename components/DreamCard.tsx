@@ -540,44 +540,67 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     };
   };
   
+  // Track whether analysis timed out so we can show an error state
+  const [analysisTimedOut, setAnalysisTimedOut] = useState(false);
+
   // Check if this dream is the loading dream (just submitted)
   useEffect(() => {
-    const loadingDreamId = typeof window !== 'undefined' ? 
-      localStorage.getItem('loadingDreamId') : null;
-    
+    if (typeof window === 'undefined') return;
+
+    const loadingDreamId = localStorage.getItem('loadingDreamId');
+    const loadingStartedAt = localStorage.getItem('loadingDreamStartedAt');
+
     // Only poll for the "loading" dream
     if (loadingDreamId !== dream.id) return;
-    
+
+    // Guard against stale loading state from a previous session/page load.
+    // If the loading flag was set more than 3 minutes ago, the background job
+    // almost certainly failed — stop polling immediately and show an error.
+    if (loadingStartedAt) {
+      const elapsed = Date.now() - parseInt(loadingStartedAt, 10);
+      if (elapsed > 3 * 60 * 1000) {
+        console.log('Stale loadingDreamId detected (>3 min old), clearing');
+        localStorage.removeItem('loadingDreamId');
+        localStorage.removeItem('loadingDreamStartedAt');
+        setIsLoading(false);
+        setAnalysisTimedOut(true);
+        return;
+      }
+    }
+
     console.log('This dream is loading:', dream.id);
     setIsLoading(true);
-    
+
     let pollCount = 0;
     const maxPolls = 60; // Maximum 2 minutes of polling (60 * 2s = 120s)
-    
+
     const interval = setInterval(async () => {
       try {
         pollCount++;
         console.log(`Polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
-        
-        // Stop polling after maximum attempts
+
+        // Stop polling after maximum attempts — show timeout error
         if (pollCount >= maxPolls) {
           console.log('Maximum polling attempts reached, stopping');
           setIsLoading(false);
+          setAnalysisTimedOut(true);
           localStorage.removeItem('loadingDreamId');
+          localStorage.removeItem('loadingDreamStartedAt');
           clearInterval(interval);
           return;
         }
-        
+
         // If dream already has analysis locally, stop polling
-        if (dream.dream_summary || dream.analysis_summary || 
+        if (dream.dream_summary || dream.analysis_summary ||
             (dream.supporting_points && dream.supporting_points.length > 0)) {
           console.log('Dream analysis complete locally:', dream.id);
           setIsLoading(false);
           localStorage.removeItem('loadingDreamId');
+          localStorage.removeItem('loadingDreamStartedAt');
           clearInterval(interval);
           return;
         }
-        
+
         // Check dream status via API
         const response = await fetch(`/api/dream-entries?id=${dream.id}`, {
           method: 'GET',
@@ -585,26 +608,40 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             'Cache-Control': 'no-cache, no-store, must-revalidate',
           }
         });
-        
+
         if (!response.ok) {
           console.error(`API error: ${response.status}`);
           return;
         }
-        
+
         const data = await response.json();
-        
+
         if (data && data.dreams && data.dreams.length > 0) {
           const updatedDream = data.dreams[0];
-          
+
+          // Check for analysis error state (fallback text from failed analysis)
+          if (updatedDream.dream_summary === "Analysis could not be completed at this time.") {
+            console.log('Dream analysis failed on server, stopping poll');
+            setDream(updatedDream);
+            setIsLoading(false);
+            setAnalysisTimedOut(true);
+            localStorage.removeItem('loadingDreamId');
+            localStorage.removeItem('loadingDreamStartedAt');
+            clearInterval(interval);
+            return;
+          }
+
           // When analysis arrives, update state and stop polling
-          if (updatedDream.dream_summary || updatedDream.analysis_summary || 
+          if (updatedDream.dream_summary || updatedDream.analysis_summary ||
              (updatedDream.supporting_points && updatedDream.supporting_points.length > 0)) {
             console.log('Dream analysis detected via API, updating state');
             setDream(updatedDream);
             setIsLoading(false);
+            setAnalysisTimedOut(false);
             localStorage.removeItem('loadingDreamId');
+            localStorage.removeItem('loadingDreamStartedAt');
             clearInterval(interval);
-            
+
             // Trigger a page refresh to ensure all components update
             if (typeof window !== 'undefined') {
               window.location.reload();
@@ -616,7 +653,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         // Continue polling on errors, but count it as an attempt
       }
     }, 2000);
-    
+
     // Always clear on unmount
     return () => {
       console.log('Clearing polling interval for dream:', dream.id);
@@ -824,6 +861,69 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     );
   };
 
+  // Handler to retry analysis for a timed-out dream
+  const handleRetryAnalysis = async () => {
+    setAnalysisTimedOut(false);
+    setIsLoading(true);
+
+    // Set loading state in localStorage so polling resumes
+    localStorage.setItem('loadingDreamId', dream.id);
+    localStorage.setItem('loadingDreamStartedAt', Date.now().toString());
+
+    try {
+      // Re-submit the dream text for analysis
+      const response = await fetch('/api/dream-entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dream_text: dream.original_text }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Retry failed: ${response.status}`);
+      }
+
+      // The polling effect will pick up from here on re-render
+      window.location.reload();
+    } catch (err) {
+      console.error('Error retrying analysis:', err);
+      setIsLoading(false);
+      setAnalysisTimedOut(true);
+      localStorage.removeItem('loadingDreamId');
+      localStorage.removeItem('loadingDreamStartedAt');
+    }
+  };
+
+  // Render timeout error state
+  if (analysisTimedOut && !isLoading) {
+    return (
+      <Card className="overflow-hidden transition-all h-full border-destructive/50">
+        <CardHeader className="p-3 pb-1">
+          <div className="flex justify-between items-start gap-2">
+            <CardTitle className="text-sm leading-5 flex-1 min-w-0">
+              <div className="break-words">{dream.title || "Dream"}</div>
+            </CardTitle>
+            <div className="flex items-center text-xs text-muted-foreground flex-shrink-0">
+              <CalendarIcon className="h-3 w-3 mr-1" />
+              <span className="whitespace-nowrap">{formattedDate}</span>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-3 pt-1 space-y-2">
+          <p className="text-xs text-destructive">
+            Analysis timed out. The AI service may have been temporarily unavailable.
+          </p>
+          <FallbackButton
+            className="h-7 px-3 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={handleRetryAnalysis}
+          >
+            Retry Analysis
+          </FallbackButton>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Render loading skeleton if in loading state
   if (isLoading) {
     return (
@@ -834,20 +934,24 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <Skeleton className="h-3 w-[60px]" />
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-3 pt-1 space-y-2">
           {/* Summary Skeleton */}
           <div>
             <Skeleton className="h-3 w-full mb-1" />
             <Skeleton className="h-3 w-[80%]" />
           </div>
-          
+
           {/* Tags Skeleton */}
           <div className="flex flex-wrap gap-1">
             <Skeleton className="h-4 w-12 rounded-full" />
             <Skeleton className="h-4 w-14 rounded-full" />
             <Skeleton className="h-4 w-10 rounded-full" />
           </div>
+
+          <p className="text-xs text-muted-foreground text-center animate-pulse">
+            Analyzing your dream...
+          </p>
         </CardContent>
       </Card>
     );

@@ -34,7 +34,7 @@ export const signUpAction = async (formData: FormData) => {
     }
 
     // in action.ts ↓
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -46,6 +46,20 @@ export const signUpAction = async (formData: FormData) => {
     if (error) {
       console.error(error.code + " " + error.message);
       return { error: error.message };
+    }
+
+    // Create a profile row for the new user so downstream queries don't fail
+    if (signUpData?.user) {
+      const { error: profileError } = await supabase
+        .from("profile")
+        .upsert(
+          { user_id: signUpData.user.id },
+          { onConflict: "user_id" }
+        );
+      if (profileError) {
+        console.error("Failed to create profile for new user:", profileError.message);
+        // Non-fatal — the user is still signed up
+      }
     }
 
     return { success: "Thanks for signing up! Check your email for a verification link." };

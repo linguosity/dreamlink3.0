@@ -41,7 +41,7 @@ export default function SettingsPage() {
           const { data: profileData } = await supabase
             .from('profile')
             .select('preferences')
-            .eq('id', user.id)
+            .eq('user_id', user.id)
             .single();
           
           if (profileData?.preferences) {
@@ -84,7 +84,7 @@ export default function SettingsPage() {
       await supabase
         .from('profile')
         .update({ preferences })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
         
       toast.success('Preferences saved successfully!');
     } catch (error) {

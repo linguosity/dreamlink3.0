@@ -113,13 +113,17 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         throw new Error(result.error || "Failed to submit dream");
       }
       
-      // Store the loading dream ID in localStorage
+      // The API now returns the analysis synchronously, so no polling needed.
+      // If analysis succeeded, the dream is ready; if it failed, the dream
+      // still exists in the DB and the card will show a retry button.
       if (result.id) {
-        localStorage.setItem('loadingDreamId', result.id);
-        console.log('Set loading dream ID:', result.id);
+        console.log('Dream saved:', result.id, result.analysis ? '(with analysis)' : '(analysis failed)');
+        // Clear any stale loading state from previous attempts
+        localStorage.removeItem('loadingDreamId');
+        localStorage.removeItem('loadingDreamStartedAt');
       }
 
-      // Refresh the page to show the new entry with loading state
+      // Refresh the page to show the new fully-analyzed entry
       router.refresh();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

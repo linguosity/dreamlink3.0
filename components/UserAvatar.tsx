@@ -62,21 +62,24 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           setInitials(emailInitials);
           
           try {
-            // Fetch subscription data from profiles table
-            const { data: profileData, error: profileError } = await supabase
-              .from('profile')
-              .select('subscription_tier')
-              .eq('id', data.user.id)
-              .single();
-            
-            if (profileError) {
-              console.log("Profile data not found, using default tier");
+            // Fetch subscription data from the subscriptions table (not profile)
+            const { data: subData, error: subError } = await supabase
+              .from('subscriptions')
+              .select('plan, status')
+              .eq('user_id', data.user.id)
+              .eq('status', 'active')
+              .maybeSingle();
+
+            if (subError) {
+              console.log("Subscription data not found, using default tier:", subError.message);
               setSubscription("free");
+            } else if (subData?.plan) {
+              setSubscription(subData.plan);
             } else {
-              setSubscription(profileData?.subscription_tier || "free");
+              setSubscription("free");
             }
           } catch (profileFetchError) {
-            console.error("Error fetching profile:", profileFetchError);
+            console.error("Error fetching subscription:", profileFetchError);
             setSubscription("free");
           }
         }
