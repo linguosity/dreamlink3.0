@@ -9,6 +9,7 @@ import { Textarea } from "./ui/textarea";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { toast } from "sonner";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -120,6 +121,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       // still exists in the DB and the card will show a retry button.
       if (result.id) {
         console.log('Dream saved:', result.id, result.analysis ? '(with analysis)' : '(analysis failed)');
+        // Show success toast
+        toast.success("Dream recorded! Analysis on its way…");
+
         // Clear any stale loading state from previous attempts
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
@@ -167,13 +171,11 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-medium text-center">Record Your Dream</h2>
-      
       {/* Compact input form */}
       <form onSubmit={handleSubmit} className="space-y-2">
         <div className="flex items-center gap-2 w-full px-4 sm:max-w-2xl sm:mx-auto sm:px-0">
           <Input
-            placeholder="I dreamed that..."
+            placeholder="I dreamed that... (AI-powered analysis with biblical insights)"
             value={dream}
             onChange={(e) => setDream(e.target.value)}
             onFocus={() => setInputFocused(true)}
@@ -188,7 +190,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             size="icon"
             disabled={!dream.trim() || isSubmitting}
             title={isSubmitting ? "Processing..." : "Submit dream"}
-            className={isSubmitting ? "blur-[0.5px]" : ""}
+            className={`${!dream.trim() && !isSubmitting ? "opacity-50 cursor-not-allowed" : ""} ${isSubmitting ? "blur-[0.5px]" : ""}`}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -204,11 +206,13 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                   <TooltipTrigger asChild>
                     <Button
                       type="button"
-                      size="icon"
+                      size="sm"
                       variant="outline"
-                      aria-label="Add more detail"
+                      aria-label="Expand dream entry"
+                      className="gap-2"
                     >
                       <PenLine className="h-4 w-4" />
+                      <span className="text-xs font-medium">Expand</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Add more detail</TooltipContent>
@@ -282,8 +286,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         {/* Inline hint for richer analysis when focused with short input */}
         {inputFocused && dream.trim().length > 0 && dream.trim().length < 50 && (
           <div className="max-w-2xl mx-auto px-4 sm:px-0">
-            <p className="text-xs text-muted-foreground italic">
-              For richer analysis, expand your entry
+            <p className="text-xs text-amber-600 dark:text-amber-400 italic bg-amber-50 dark:bg-amber-950/20 px-3 py-2 rounded-md border border-amber-200 dark:border-amber-900/30">
+              ✨ For richer analysis, expand your entry
             </p>
           </div>
         )}
@@ -315,10 +319,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
           </div>
         )}
       </form>
-      
-      <p className="text-xs text-center text-muted-foreground max-w-md mx-auto">
-        Record your dream for AI-powered analysis with biblical insights
-      </p>
     </div>
   );
 }

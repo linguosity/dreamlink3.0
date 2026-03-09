@@ -9,19 +9,25 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export default function Navbar() {
-  const { 
-    currentInput, 
-    setCurrentInput, 
-    keywords, 
-    addKeyword, 
-    removeKeyword, 
+  const {
+    currentInput,
+    setCurrentInput,
+    keywords,
+    addKeyword,
+    removeKeyword,
     removeLastKeyword,
     clearKeywords,
-    isSearchEnabled 
+    isSearchEnabled
   } = useSearch();
-  
+
   const [isFocused, setIsFocused] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   
+  // Detect macOS platform
+  useEffect(() => {
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform));
+  }, []);
+
   // Handle keyboard shortcut for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,7 +40,7 @@ export default function Navbar() {
         }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -142,7 +148,7 @@ export default function Navbar() {
                     "ml-auto text-xs text-muted-foreground hidden sm:inline",
                     isFocused || currentInput ? "hidden" : ""
                   )}>
-                    Ctrl+K
+                    {isMac ? "⌘K" : "Ctrl+K"}
                   </span>
 
                   {/* Press Enter hint - shown only when focused and has text */}

@@ -118,7 +118,7 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="focus:outline-none">
+      <DropdownMenuTrigger className="focus:outline-none" aria-label="Open account menu">
         <div className={`rounded-full bg-primary text-primary-foreground font-medium flex items-center justify-center ${sizeClasses[size]}`}>
           {user.user_metadata?.avatar_url ? (
             <img 

@@ -92,6 +92,15 @@ const CalendarIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const CloudMoonIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 2c-5.33 4.55-8 8.48-8 12 0 3.31 1.72 4 6 4h12c1.66 0 2-1 2-2.5V8c0-5-2.75-6-12-6z" />
+    <path d="M17 8h2" />
+    <path d="M17 13h1" />
+    <path d="M19 11v2" />
+  </svg>
+);
+
 const BookIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -1084,7 +1093,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     <>
       <Card
         className={cn(
-          "overflow-hidden transition-all aspect-square cursor-pointer hover:shadow-lg hover:scale-[1.01] will-change-transform focus-visible:ring-2 focus-visible:ring-ring relative flex flex-col",
+          "overflow-hidden transition-all aspect-square cursor-pointer hover:shadow-lg hover:scale-[1.01] will-change-transform focus-visible:ring-2 focus-visible:ring-ring relative flex flex-col group",
           searchTerms.length > 0 && "ring-1 ring-primary"
         )}
         onClick={handleCardClick}
@@ -1097,7 +1106,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           }
         }}
       >
-        {/* Background image or shimmer while image loads */}
+        {/* Background: image, loading shimmer, or solid fallback */}
         {cardImageUrl ? (
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -1106,10 +1115,21 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
           </div>
         ) : isPollingCardImage ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted-foreground/10 to-muted dark:from-slate-800 dark:via-slate-700/20 dark:to-slate-800 overflow-hidden">
-            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-indigo-900 overflow-hidden">
+            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-white/60 text-xs">
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Generating image…</span>
+              </div>
+            </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="absolute inset-0 bg-card/90 dark:bg-card/95 backdrop-blur-sm" />
+        )}
 
         <div className={cn(
           "relative flex flex-col h-full flex-1",
@@ -1154,10 +1174,27 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </div>
             )}
 
+            {/* Blank/pending state placeholder */}
+            {!dream.personalized_summary && !dream.dream_summary && !dream.analysis_summary &&
+             (!dream.supporting_points || dream.supporting_points.length === 0) && !isLoading && (
+              <div className="flex flex-col items-center justify-center py-4 text-center flex-1">
+                <CloudMoonIcon className={cn(
+                  "h-6 w-6 mb-2",
+                  (cardImageUrl || isPollingCardImage) ? "text-white/50" : "text-muted-foreground"
+                )} />
+                <p className={cn(
+                  "text-xs",
+                  (cardImageUrl || isPollingCardImage) ? "text-white/50" : "text-muted-foreground"
+                )}>
+                  Analysis pending…
+                </p>
+              </div>
+            )}
+
             {/* Tags */}
             {dream.tags && dream.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 overflow-hidden max-h-[3.5rem]">
-                {dream.tags.slice(0, 4).map((tag, index) => {
+                {dream.tags.slice(0, 3).map((tag, index) => {
                   const isTagMatch = searchTerms.some(term =>
                     term && tag.toLowerCase().includes(term.toLowerCase())
                   );
@@ -1166,7 +1203,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     <Badge key={index} variant="secondary" className={cn(
                       "text-[10px] px-1.5 py-0 leading-4 truncate max-w-[8rem]",
                       isTagMatch && "bg-primary/10",
-                      cardImageUrl && "bg-white/20 text-white border-white/20"
+                      (cardImageUrl || isPollingCardImage) && "bg-white/20 text-white border-white/20"
                     )}>
                       {isTagMatch
                         ? highlightMatches(tag, searchTerms)
@@ -1175,6 +1212,14 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     </Badge>
                   );
                 })}
+                {dream.tags.length > 3 && (
+                  <Badge variant="secondary" className={cn(
+                    "text-[10px] px-1.5 py-0 leading-4",
+                    (cardImageUrl || isPollingCardImage) && "bg-white/20 text-white border-white/20"
+                  )}>
+                    +{dream.tags.length - 3} more
+                  </Badge>
+                )}
               </div>
             )}
 
@@ -1185,6 +1230,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 cardImageUrl ? "text-white/80" : "text-muted-foreground"
               )}>
                 {highlightMatches(dream.original_text, searchTerms)}
+              </div>
+            )}
+
+            {/* "Tap to view" affordance - visible on hover */}
+            {(dream.personalized_summary || dream.dream_summary || dream.analysis_summary ||
+              (dream.supporting_points && dream.supporting_points.length > 0)) && (
+              <div className={cn(
+                "text-[10px] text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity",
+                (cardImageUrl || isPollingCardImage) ? "text-white/60" : "text-muted-foreground"
+              )}>
+                View analysis →
               </div>
             )}
           </CardContent>
@@ -1215,35 +1271,40 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           )}
 
           <DialogHeader>
-            <DialogTitle>{dream.title}</DialogTitle>
-            <DialogDescription className="sr-only">Dream analysis details</DialogDescription>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <CalendarIcon className="h-3 w-3 mr-1" />
-              {dateObj.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle>{dream.title}</DialogTitle>
+                <DialogDescription className="sr-only">Dream analysis details</DialogDescription>
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                  <CalendarIcon className="h-3 w-3 mr-1" />
+                  {dateObj.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+              </div>
+              <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit">esc</span>
             </div>
           </DialogHeader>
           
-          <Tabs 
-            defaultValue="analysis" 
+          <Tabs
+            defaultValue="analysis"
             className="w-full"
             value={activeTab}
             onValueChange={(value: string) => setActiveTab(value)}
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="analysis" className="flex items-center gap-1"><PuzzleIcon className="h-3 w-3" />Analysis</TabsTrigger>
-              <TabsTrigger value="original">Original Dream</TabsTrigger>
+              <TabsTrigger value="analysis" className="flex items-center gap-1 data-[state=active]:shadow-sm"><PuzzleIcon className="h-3 w-3" />Analysis</TabsTrigger>
+              <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
             </TabsList>
-            
+
             <div style={{ minHeight: modalHeight ? `${modalHeight}px` : 'auto' }}>
-              <TabsContent value="analysis" className="space-y-4 p-1">
+              <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
                 <div ref={analysisContentRef}>
                   {/* Summary section removed as requested */}
-                  
+
                   {dream.formatted_analysis ? (
                     <div className="text-sm text-muted-foreground">
                       {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
@@ -1275,10 +1336,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   )}
                 </div>
               </TabsContent>
-              
-              <TabsContent value="original" className="space-y-4 p-1">
+
+              <TabsContent value="original" className="space-y-4 p-1 min-h-0">
                 <div ref={originalContentRef} className="text-sm whitespace-pre-wrap">
-                  {searchTerms.length > 0 
+                  {searchTerms.length > 0
                     ? highlightMatches(dream.original_text, searchTerms)
                     : dream.original_text
                   }
@@ -1291,33 +1352,64 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           <div className="flex justify-end items-center mb-4">
             <div className="text-xs text-muted-foreground mr-2">Share:</div>
             <div className="flex items-center space-x-2">
-              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Facebook">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#3b5998" className="rounded-full">
-                  <path d="M18 2h-12c-2.21 0-4 1.79-4 4v12c0 2.21 1.79 4 4 4h12c2.21 0 4-1.79 4-4v-12c0-2.21-1.79-4-4-4zm0 4v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v7h-3v-7h-2v-3h2v-2.5c0-1.93 1.57-3.5 3.5-3.5h2.5z"/>
-                </svg>
-              </a>
-              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Twitter">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#1DA1F2" className="rounded-full">
-                  <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05-.78-.83-1.9-1.36-3.16-1.36-2.35 0-4.27 1.92-4.27 4.29 0 .34.03.67.11.98-3.56-.18-6.73-1.89-8.84-4.48-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21-.36.1-.74.15-1.13.15-.27 0-.54-.03-.8-.08.54 1.69 2.11 2.95 4 2.98-1.46 1.16-3.31 1.84-5.33 1.84-.34 0-.68-.02-1.02-.06 1.9 1.22 4.16 1.93 6.58 1.93 7.88 0 12.21-6.54 12.21-12.21 0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
-                </svg>
-              </a>
-              <a href={`viber://forward?text=${encodeURIComponent(getShareableText() + " " + getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Viber">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#7360f2" className="rounded-full">
-                  <path d="M12 1c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2.238 7.525c2.246.235 3.455 1.512 3.667 3.824.039.433-.28.857-.75.857-.458 0-.85-.34-.885-.797-.149-1.604-.85-2.354-2.092-2.521-.389-.053-.695-.368-.695-.76 0-.415.366-.776.755-.603zm.31-1.97c3.252.306 5.212 2.374 5.499 5.666.029.337-.252.665-.585.665-.327 0-.596-.265-.626-.601-.211-2.609-1.69-4.153-4.209-4.405-.335-.033-.591-.321-.591-.656 0-.355.327-.673.682-.622.377-.04.422-.053.422-.053s-.045.013-.422.053c-.051-.006-.091-.029-.137-.045.437.065-.01.044-.059.044-.345 0-.627-.291-.627-.64 0-.35.282-.642.626-.642.168 0 .32.066.435.174.032-.016.119-.062.119-.062s-.086.045-.119.062v-.001zm.536-1.56c4.23.283 6.766 2.862 7.081 7.215.015.21-.31.437-.491.437-.261 0-.49-.213-.506-.47-.267-3.705-2.276-5.761-5.871-6.003-.348-.023-.611-.306-.611-.658 0-.336.273-.625.602-.625.188.001.362.081.486.214.047-.021.103-.045.103-.045s-.056.023-.103.045v.001zm9.022 12.114c-.597-.893-1.13-1.878-1.676-2.84-.741-1.309-1.929-.303-2.454.3-.536.616-1.032.674-1.362.27-.981-1.195-1.615-2.071-2.38-3.634 0 0-.3-.61-.873-1.641l-.014-.029c-.3-.61-.273-.913.045-1.289.309-.37 1.464-1.591.9-3.178-.535-1.505-2.565-5.802-3.618-5.148-1.061.658-1.357 1.41-1.352 2.11.005.7.194 1.339.374 1.862.172.5.316.958.316 1.363 0 .255-.043.49-.118.695-.127.347-.322.582-.508.808-.199.244-.38.458-.536.798-.151.333-.211.704-.211 1.102 0 1.008.619 2.674 1.125 3.589.399.731.81 1.359 1.246 1.887.859 1.044 1.893 1.893 2.834 2.507 1.451.948 3.082 1.608 4.999 1.608 1.072 0 1.96-.244 2.674-.732.366-.249.666-.559.916-.914.229-.328.401-.702.489-1.102.088-.4.096-.8.033-1.196-.065-.416-.176-.821-.291-1.211-.104-.35-.237-.695-.237-1.067 0-.39.124-.876.675-1.591.088-.115.999-1.179 1.271-1.499.272-.32.743-1.111.25-1.888z"/>
-                </svg>
-              </a>
-              <a href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Telegram">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0088cc" className="rounded-full">
-                  <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.041 16.737c-.26 0-.215-.198-.306-.396l-.762-2.512 5.859-3.671-6.659 3.939-2.833-.726c-.613-.151-.613-.586.306-.879l11.08-4.581c.504-.302.909.151.706.879l-1.867 8.823c-.151.528-.628.654-1.01.4l-2.833-2.08-1.365 1.376c-.151.152-.306.228-.316.328z"/>
-                </svg>
-              </a>
-              <a
-                href={`sms:?body=${encodeURIComponent(`${getShareableText()} ${getShareUrl()}`)}`}
-                className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full"
-                aria-label="Share via SMS"
-              >
-                <MessageSquareIcon className="h-6 w-6 text-gray-600" />
-              </a>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Facebook">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#3b5998" className="rounded-full">
+                        <path d="M18 2h-12c-2.21 0-4 1.79-4 4v12c0 2.21 1.79 4 4 4h12c2.21 0 4-1.79 4-4v-12c0-2.21-1.79-4-4-4zm0 4v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v7h-3v-7h-2v-3h2v-2.5c0-1.93 1.57-3.5 3.5-3.5h2.5z"/>
+                      </svg>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Facebook</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Twitter">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#1DA1F2" className="rounded-full">
+                        <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05-.78-.83-1.9-1.36-3.16-1.36-2.35 0-4.27 1.92-4.27 4.29 0 .34.03.67.11.98-3.56-.18-6.73-1.89-8.84-4.48-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21-.36.1-.74.15-1.13.15-.27 0-.54-.03-.8-.08.54 1.69 2.11 2.95 4 2.98-1.46 1.16-3.31 1.84-5.33 1.84-.34 0-.68-.02-1.02-.06 1.9 1.22 4.16 1.93 6.58 1.93 7.88 0 12.21-6.54 12.21-12.21 0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                      </svg>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Twitter</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href={`viber://forward?text=${encodeURIComponent(getShareableText() + " " + getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Viber">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#7360f2" className="rounded-full">
+                        <path d="M12 1c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2.238 7.525c2.246.235 3.455 1.512 3.667 3.824.039.433-.28.857-.75.857-.458 0-.85-.34-.885-.797-.149-1.604-.85-2.354-2.092-2.521-.389-.053-.695-.368-.695-.76 0-.415.366-.776.755-.603zm.31-1.97c3.252.306 5.212 2.374 5.499 5.666.029.337-.252.665-.585.665-.327 0-.596-.265-.626-.601-.211-2.609-1.69-4.153-4.209-4.405-.335-.033-.591-.321-.591-.656 0-.355.327-.673.682-.622.377-.04.422-.053.422-.053s-.045.013-.422.053c-.051-.006-.091-.029-.137-.045.437.065-.01.044-.059.044-.345 0-.627-.291-.627-.64 0-.35.282-.642.626-.642.168 0 .32.066.435.174.032-.016.119-.062.119-.062s-.086.045-.119.062v-.001zm.536-1.56c4.23.283 6.766 2.862 7.081 7.215.015.21-.31.437-.491.437-.261 0-.49-.213-.506-.47-.267-3.705-2.276-5.761-5.871-6.003-.348-.023-.611-.306-.611-.658 0-.336.273-.625.602-.625.188.001.362.081.486.214.047-.021.103-.045.103-.045s-.056.023-.103.045v.001zm9.022 12.114c-.597-.893-1.13-1.878-1.676-2.84-.741-1.309-1.929-.303-2.454.3-.536.616-1.032.674-1.362.27-.981-1.195-1.615-2.071-2.38-3.634 0 0-.3-.61-.873-1.641l-.014-.029c-.3-.61-.273-.913.045-1.289.309-.37 1.464-1.591.9-3.178-.535-1.505-2.565-5.802-3.618-5.148-1.061.658-1.357 1.41-1.352 2.11.005.7.194 1.339.374 1.862.172.5.316.958.316 1.363 0 .255-.043.49-.118.695-.127.347-.322.582-.508.808-.199.244-.38.458-.536.798-.151.333-.211.704-.211 1.102 0 1.008.619 2.674 1.125 3.589.399.731.81 1.359 1.246 1.887.859 1.044 1.893 1.893 2.834 2.507 1.451.948 3.082 1.608 4.999 1.608 1.072 0 1.96-.244 2.674-.732.366-.249.666-.559.916-.914.229-.328.401-.702.489-1.102.088-.4.096-.8.033-1.196-.065-.416-.176-.821-.291-1.211-.104-.35-.237-.695-.237-1.067 0-.39.124-.876.675-1.591.088-.115.999-1.179 1.271-1.499.272-.32.743-1.111.25-1.888z"/>
+                      </svg>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Viber</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Telegram">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0088cc" className="rounded-full">
+                        <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.041 16.737c-.26 0-.215-.198-.306-.396l-.762-2.512 5.859-3.671-6.659 3.939-2.833-.726c-.613-.151-.613-.586.306-.879l11.08-4.581c.504-.302.909.151.706.879l-1.867 8.823c-.151.528-.628.654-1.01.4l-2.833-2.08-1.365 1.376c-.151.152-.306.228-.316.328z"/>
+                      </svg>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Telegram</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={`sms:?body=${encodeURIComponent(`${getShareableText()} ${getShareUrl()}`)}`}
+                      className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                      aria-label="Share via SMS"
+                    >
+                      <MessageSquareIcon className="h-6 w-6 text-gray-600" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>SMS</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
