@@ -346,50 +346,83 @@ export async function POST(request: Request) {
         updateData.title = dreamTitle;
       }
 
-      // ── 3. Write analysis to DB ───────────────────────────
-      const { error: updateError } = await adminSupabase
-        .from("dream_entries")
-        .update(updateData)
-        .eq("id", dreamId);
+      // ── 3-5. Run DB operations in parallel ────────────────
+      // Prepare bible citations data upfront for parallel execution
+      const citations = biblicalReferences.length > 0
+        ? biblicalReferences
+            .map((ref: any, index: number) => {
+              if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
+              return {
+                dream_entry_id: dreamId,
+                bible_book: ref.book.trim(),
+                chapter: ref.chapter,
+                verse: ref.verse,
+                end_verse: ref.endVerse || null,
+                full_text: ref.verseText || `Verse text not available`,
+                citation_order: index + 1,
+              };
+            })
+            .filter(Boolean)
+        : [];
 
-      if (updateError) {
-        console.error("Error updating dream with analysis:", updateError);
-      }
+      // Execute all three DB operations in parallel
+      const results = await Promise.all([
+        // 1. Update dream_entries with analysis data
+        adminSupabase
+          .from("dream_entries")
+          .update(updateData)
+          .eq("id", dreamId)
+          .then(({ error: updateError }) => {
+            if (updateError) {
+              console.error("Error updating dream with analysis:", updateError);
+            }
+            return { success: !updateError, error: updateError };
+          }),
 
-      // ── 4. Store ChatGPT interaction ──────────────────────
-      await adminSupabase.from("chatgpt_interactions").insert({
-        dream_entry_id: dreamId,
-        prompt: `Analyze dream: ${dream_text}`,
-        response: JSON.stringify(analysisResult),
-        model: "gpt-4o-mini",
-        temperature: 0.7,
-      });
-
-      // ── 5. Store bible citations ──────────────────────────
-      if (biblicalReferences.length > 0) {
-        const citations = biblicalReferences
-          .map((ref: any, index: number) => {
-            if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
-            return {
-              dream_entry_id: dreamId,
-              bible_book: ref.book.trim(),
-              chapter: ref.chapter,
-              verse: ref.verse,
-              end_verse: ref.endVerse || null,
-              full_text: ref.verseText || `Verse text not available`,
-              citation_order: index + 1,
-            };
+        // 2. Insert into chatgpt_interactions
+        adminSupabase
+          .from("chatgpt_interactions")
+          .insert({
+            dream_entry_id: dreamId,
+            prompt: `Analyze dream: ${dream_text}`,
+            response: JSON.stringify(analysisResult),
+            model: "gpt-4o-mini",
+            temperature: 0.7,
           })
-          .filter(Boolean);
+          .then(({ error: chatgptError }) => {
+            if (chatgptError) {
+              console.error("Error storing ChatGPT interaction:", chatgptError);
+            }
+            return { success: !chatgptError, error: chatgptError };
+          }),
 
-        if (citations.length > 0) {
-          const { error: bibleError } = await adminSupabase
-            .from("bible_citations")
-            .insert(citations);
-          if (bibleError)
-            console.error("Error saving Bible citations:", bibleError);
+        // 3. Insert into bible_citations (if there are citations)
+        citations.length > 0
+          ? adminSupabase
+              .from("bible_citations")
+              .insert(citations)
+              .then(({ error: bibleError }) => {
+                if (bibleError) {
+                  console.error("Error saving Bible citations:", bibleError);
+                }
+                return { success: !bibleError, error: bibleError };
+              })
+          : Promise.resolve({ success: true, error: null }),
+      ]);
+
+      // Log results (all operations attempted, errors logged individually above)
+      const operationNames = [
+        "dream_entries update",
+        "chatgpt_interactions insert",
+        "bible_citations insert",
+      ];
+      results.forEach((result, index) => {
+        if (result.success) {
+          console.log(`✅ ${operationNames[index]} succeeded`);
+        } else {
+          console.warn(`⚠️ ${operationNames[index]} failed: ${result.error?.message}`);
         }
-      }
+      });
 
       // ── 6. Image gen is triggered client-side via /api/dream-image ─
       // (after() was killed by Vercel Hobby 10s timeout, so the client

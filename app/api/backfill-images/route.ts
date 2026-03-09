@@ -6,7 +6,7 @@
 // Call repeatedly until all dreams have images.
 
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/utils/supabase/admin";
 import {
   buildImagePrompt,
   generateAndStoreDreamImage,
@@ -15,14 +15,7 @@ import {
 export const maxDuration = 60; // Vercel Hobby plan limit
 
 export async function POST() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-  }
-
-  const adminSupabase = createAdminClient(supabaseUrl, serviceRoleKey);
+  const adminSupabase = getAdminClient();
 
   // Find the next dream without an image that has analysis data
   const { data: dreams, error } = await adminSupabase

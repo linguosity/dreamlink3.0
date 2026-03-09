@@ -133,62 +133,48 @@ ${readingLevelInstructions}
                 type: "object",
                 properties: {
                   topicSentence: {
-                    type: "string",
-                    description: "A single sentence that captures the main spiritual theme WITHOUT using 'This dream is about' or similar introductory phrases. Start directly with the theme."
+                    type: "string"
                   },
                   supportingPoints: {
                     type: "array",
                     items: {
-                      type: "string",
-                      description: "A supporting point with a biblical citation in parentheses"
-                    },
-                    description: "1-3 supporting points with biblical citations"
+                      type: "string"
+                    }
                   },
                   conclusionSentence: {
-                    type: "string",
-                    description: "A concluding sentence that provides guidance based on the dream's meaning"
+                    type: "string"
                   },
                   analysis: {
-                    type: "string",
-                    description: "The complete analysis text combining all elements"
+                    type: "string"
                   },
                   personalizedSummary: {
-                    type: "string",
-                    description: "A compelling one-sentence summary that addresses the dreamer directly about their dream's significance using vivid language"
+                    type: "string"
                   },
                   dreamTitle: {
-                    type: "string",
-                    description: "A clever, memorable title (3-6 words) that captures the essence of the dream and its spiritual meaning"
+                    type: "string"
                   },
                   biblicalReferences: {
                     type: "array",
-                    description: "Array of all biblical references extracted from the supporting points",
                     items: {
                       type: "object",
                       properties: {
                         citation: {
-                          type: "string",
-                          description: "The full Bible citation string (e.g., 'Genesis 1:1' or '1 Peter 5:6-8')"
+                          type: "string"
                         },
                         book: {
-                          type: "string",
-                          description: "The Bible book name (e.g., 'Genesis', '1 Peter', 'Song of Solomon')"
+                          type: "string"
                         },
                         chapter: {
-                          type: "integer",
-                          description: "The chapter number"
+                          type: "integer"
                         },
                         verse: {
-                          type: "integer",
-                          description: "The starting verse number"
+                          type: "integer"
                         },
                         endVerse: {
-                          type: ["integer", "null"],
-                          description: "The ending verse number for ranges (e.g., 15 for '1:14-15'), or null for single verses"
+                          type: ["integer", "null"]
                         },
                         verseText: {
-                          type: "string",
-                          description: "The actual text of the Bible verse(s)"
+                          type: "string"
                         }
                       },
                       additionalProperties: false,
@@ -197,10 +183,8 @@ ${readingLevelInstructions}
                   },
                   tags: {
                     type: "array",
-                    description: "3-5 meaningful tags that capture the dream's key themes, symbols, emotions, or spiritual concepts",
                     items: {
-                      type: "string",
-                      description: "A single word or short phrase representing a key theme, symbol, emotion, or spiritual concept from the dream"
+                      type: "string"
                     },
                     minItems: 3,
                     maxItems: 5

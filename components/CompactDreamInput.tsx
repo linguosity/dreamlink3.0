@@ -138,16 +138,13 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             topicSentence: result.analysis.topicSentence || "",
           });
           // Use navigator.sendBeacon-style approach: start fetch before refresh
-          // but don't let router.refresh() cancel it by keeping a reference
-          const imageRequest = fetch("/api/dream-image", {
+          // The keepalive: true option ensures the request survives navigation
+          fetch("/api/dream-image", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: imageBody,
             keepalive: true,
           }).catch((err) => console.error("Image generation request failed:", err));
-          // Small delay to ensure the request is dispatched before refresh
-          await new Promise(resolve => setTimeout(resolve, 100));
-          void imageRequest; // keep reference alive
         }
       }
 

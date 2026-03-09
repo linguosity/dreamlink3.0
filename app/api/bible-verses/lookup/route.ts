@@ -1,87 +1,102 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export async function GET(request: Request) {
   const supabase = await createClient();
   const url = new URL(request.url);
   const dreamId = url.searchParams.get('dreamId');
-  
+
   if (!dreamId) {
     return NextResponse.json(
       { error: "Dream ID is required" },
       { status: 400 }
     );
   }
-  
+
   try {
     // Helper function to expand verse ranges
     function expandVerseRange(reference: string): string[] {
       // Match patterns like "Book XX:YY-ZZ" where YY and ZZ are verse numbers
       const rangeMatch = reference.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
-      
+
       if (!rangeMatch) {
         // Not a range, return as is
         return [reference.trim()];
       }
-      
+
       const [, bookChapter, startVerse, endVerse] = rangeMatch;
       const start = parseInt(startVerse, 10);
       const end = parseInt(endVerse, 10);
-      
+
       // Check if it's a valid range
       if (isNaN(start) || isNaN(end) || start > end) {
-        console.log(`⚠️ Invalid verse range: ${reference}`);
+        if (DEBUG) console.log(`⚠️ Invalid verse range: ${reference}`);
         return [reference.trim()];
       }
-      
+
       // Expand the range
       const expandedRefs: string[] = [];
       for (let verse = start; verse <= end; verse++) {
         expandedRefs.push(`${bookChapter}:${verse}`);
       }
-      
-      console.log(`Expanded verse range ${reference} into ${expandedRefs.length} individual verses`);
+
+      if (DEBUG) console.log(`Expanded verse range ${reference} into ${expandedRefs.length} individual verses`);
       return expandedRefs;
     }
-    
-    // Get all Bible citations for the dream
-    const { data: citations, error } = await supabase
-      .from("bible_citations")
-      .select("bible_book, chapter, verse, end_verse, full_text")
-      .eq("dream_entry_id", dreamId);
-      
-    if (error) {
-      console.error("Error fetching Bible citations:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch Bible citations" },
-        { status: 500 }
-      );
-    }
-    
+
     // Helper function to normalize Bible references
     const normalizeReference = (book: string, chapter: number, verse: number): string => {
       // Normalize book name by removing extra spaces
       const normalizedBook = book.trim().replace(/\s+/g, ' ');
       return `${normalizedBook} ${chapter}:${verse}`;
     };
-    
-    // Format citations into a lookup map for the frontend
-    const verseLookup: Record<string, string> = {};
-    
-    // Get the bible_refs from the dream_entries table to ensure we're using the exact same references
-    // that are stored in the dream entry
-    const { data: dreamData } = await supabase
+
+    // OPTIMIZED: Single query fetching dream entry with related bible_citations
+    // This eliminates the N+1 pattern by using Supabase's relation syntax
+    const { data: dreamData, error } = await supabase
       .from("dream_entries")
-      .select("bible_refs")
+      .select(`
+        id,
+        bible_refs,
+        bible_citations (
+          bible_book,
+          chapter,
+          verse,
+          end_verse,
+          full_text,
+          citation_order
+        )
+      `)
       .eq("id", dreamId)
       .single();
-      
+
+    if (error) {
+      console.error("Error fetching dream entry with citations:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch Bible citations" },
+        { status: 500 }
+      );
+    }
+
+    // Format citations into a lookup map for the frontend
+    const verseLookup: Record<string, string> = {};
+
     const dreamRefs = dreamData?.bible_refs || [];
-    console.log(`Bible refs from dream_entries: ${dreamRefs.join(", ")}`);
+    const citations = (dreamData?.bible_citations || []) as Array<{
+      bible_book: string;
+      chapter: number;
+      verse: number;
+      end_verse?: number;
+      full_text: string;
+      citation_order?: number;
+    }>;
+
+    if (DEBUG) console.log(`Bible refs from dream_entries: ${dreamRefs.join(", ")}`);
     
-    // Add debug logging
-    console.log(`Retrieved ${citations.length} citations for dream ${dreamId}`);
-    
+    if (DEBUG) console.log(`Retrieved ${citations.length} citations for dream ${dreamId}`);
+
     // Create an array to capture all verses for debugging
     const verseMapping = [];
     
@@ -118,9 +133,9 @@ export async function GET(request: Request) {
               index
             });
             
-            console.log(`✅ Found exact match for dream ref ${ref} -> ${citation.full_text.substring(0, 30)}...`);
+            if (DEBUG) console.log(`✅ Found exact match for dream ref ${ref} -> ${citation.full_text.substring(0, 30)}...`);
           } else {
-            console.log(`❌ Could not find exact match for dream ref ${ref}`);
+            if (DEBUG) console.log(`❌ Could not find exact match for dream ref ${ref}`);
             
             // Add to debugging
             verseMapping.push({
@@ -156,12 +171,11 @@ export async function GET(request: Request) {
           source: "normalized only"
         });
         
-        console.log(`Mapped normalized ${normalizedRef} -> ${citation.full_text.substring(0, 30)}...`);
+        if (DEBUG) console.log(`Mapped normalized ${normalizedRef} -> ${citation.full_text.substring(0, 30)}...`);
       }
     });
     
-    // Print detailed mapping for debugging
-    console.log("All verse mappings:", verseMapping);
+    if (DEBUG) console.log("All verse mappings:", verseMapping);
     
     // Standard verses for fallbacks
     const BIBLE_VERSES: Record<string, string> = {
@@ -185,18 +199,18 @@ export async function GET(request: Request) {
       const isRange = ref.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
       
       if (isRange) {
-        console.log(`Processing verse range: ${ref}`);
-        
+        if (DEBUG) console.log(`Processing verse range: ${ref}`);
+
         // If we already have this range, skip it
         if (verseLookup[ref]) {
-          console.log(`Range ${ref} already in verseLookup`);
+          if (DEBUG) console.log(`Range ${ref} already in verseLookup`);
           return;
         }
-        
+
         // Check if we have a fallback for the range as a whole
         if (BIBLE_VERSES[ref]) {
           verseLookup[ref] = BIBLE_VERSES[ref];
-          
+
           // Add to our mapping for debugging
           verseMapping.push({
             reference: ref,
@@ -204,31 +218,31 @@ export async function GET(request: Request) {
             found: true,
             source: "fallback-range",
           });
-          
-          console.log(`📖 Using fallback verse text for range ${ref}`);
+
+          if (DEBUG) console.log(`📖 Using fallback verse text for range ${ref}`);
         } else {
           // Try to expand the range and look up each individual verse
           const expandedRefs = expandVerseRange(ref);
           const expandedTexts: string[] = [];
-          
+
           // Try to find text for each verse in the range
           expandedRefs.forEach(expandedRef => {
             // Check if we have this individual verse in our citations
             if (verseLookup[expandedRef]) {
               expandedTexts.push(verseLookup[expandedRef]);
-            } 
+            }
             // Check if we have a fallback for this individual verse
             else if (BIBLE_VERSES[expandedRef]) {
               expandedTexts.push(BIBLE_VERSES[expandedRef]);
             }
           });
-          
+
           // If we found texts for at least some verses, combine them
           if (expandedTexts.length > 0) {
             // Create a combined text for the entire range
             const combinedText = expandedTexts.join(" ");
             verseLookup[ref] = combinedText;
-            
+
             verseMapping.push({
               reference: ref,
               text: combinedText.substring(0, 50) + "...",
@@ -237,13 +251,13 @@ export async function GET(request: Request) {
               expandedCount: expandedTexts.length,
               totalInRange: expandedRefs.length
             });
-            
-            console.log(`📖 Created combined text for ${ref} from ${expandedTexts.length}/${expandedRefs.length} verses`);
+
+            if (DEBUG) console.log(`📖 Created combined text for ${ref} from ${expandedTexts.length}/${expandedRefs.length} verses`);
           } else {
             // No individual verses found either - use placeholder
-            console.log(`⚠️ No verse text available for range: ${ref}`);
+            if (DEBUG) console.log(`⚠️ No verse text available for range: ${ref}`);
             verseLookup[ref] = `Verse text not available for ${ref}`;
-            
+
             verseMapping.push({
               reference: ref,
               found: false,
@@ -253,14 +267,14 @@ export async function GET(request: Request) {
         }
       } else {
         // Regular single verse reference
-        
+
         // Skip if we already have this reference
         if (verseLookup[ref]) return;
-        
+
         // Check if we have a fallback
         if (BIBLE_VERSES[ref]) {
           verseLookup[ref] = BIBLE_VERSES[ref];
-          
+
           // Add to our mapping for debugging
           verseMapping.push({
             reference: ref,
@@ -268,19 +282,19 @@ export async function GET(request: Request) {
             found: true,
             source: "fallback",
           });
-          
-          console.log(`📖 Using fallback verse text for ${ref} -> ${BIBLE_VERSES[ref].substring(0, 30)}...`);
+
+          if (DEBUG) console.log(`📖 Using fallback verse text for ${ref} -> ${BIBLE_VERSES[ref].substring(0, 30)}...`);
         } else {
           // Last attempt - try to normalize the reference and check again
           const parsed = ref.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
           if (parsed) {
             const [, book, chapter, verse] = parsed;
             const normalizedRef = normalizeReference(book, parseInt(chapter), parseInt(verse));
-            
+
             // Check if we have this normalized version in our fallbacks
             if (BIBLE_VERSES[normalizedRef]) {
               verseLookup[ref] = BIBLE_VERSES[normalizedRef];
-              
+
               verseMapping.push({
                 reference: ref,
                 normalizedReference: normalizedRef,
@@ -288,15 +302,15 @@ export async function GET(request: Request) {
                 found: true,
                 source: "fallback-normalized",
               });
-              
-              console.log(`📖 Using normalized fallback verse text for ${ref} -> ${BIBLE_VERSES[normalizedRef].substring(0, 30)}...`);
+
+              if (DEBUG) console.log(`📖 Using normalized fallback verse text for ${ref} -> ${BIBLE_VERSES[normalizedRef].substring(0, 30)}...`);
             } else {
               // We don't have this verse even in fallbacks
-              console.log(`⚠️ No verse text available for reference: ${ref}`);
-              
+              if (DEBUG) console.log(`⚠️ No verse text available for reference: ${ref}`);
+
               // Use a placeholder that clearly indicates it's missing
               verseLookup[ref] = `Verse text not available for ${ref}`;
-              
+
               verseMapping.push({
                 reference: ref,
                 found: false,
@@ -310,48 +324,50 @@ export async function GET(request: Request) {
     
     // Create the final combined lookup, but ensure database values take precedence over fallbacks
     const combinedLookup = { ...verseLookup };
-    
-    // Debug the final lookup state
-    console.log("Final verse lookup map size:", Object.keys(combinedLookup).length);
-    
-    // More compact logging for references
-    const refKeys = Object.keys(combinedLookup);
-    if (refKeys.length <= 10) {
-      console.log("Final verse references available:", refKeys.join(", "));
-    } else {
-      console.log(`Final verse references available (${refKeys.length} total): ${refKeys.slice(0, 10).join(", ")}...`);
-    }
-    
-    // Detailed logging for dream refs status
-    console.log("Status for each dream reference:");
-    dreamRefs.forEach(ref => {
-      const status = verseLookup[ref] 
-        ? (verseLookup[ref].includes("not available") ? "Missing" : "Found") 
-        : "Missing";
-      console.log(`  ${ref}: ${status}`);
-    });
-    
-    // Add additional debug info to help diagnose issues
-    if (dreamId) {
-      const debugInfo = {
-        versesRequestedFromDream: dreamRefs.length,
-        versesFoundInDatabase: citations.length,
-        versesFoundTotal: Object.keys(verseLookup).length,
-        dbVersesExample: citations.length > 0 ? `${citations[0].bible_book} ${citations[0].chapter}:${citations[0].verse} => ${citations[0].full_text.substring(0, 50)}...` : "None",
-        statsBySource: {
-          exactMatch: verseMapping.filter(m => m.source === "exact match").length,
-          normalizedOnly: verseMapping.filter(m => m.source === "normalized only").length,
-          fallback: verseMapping.filter(m => m.source === "fallback").length,
-          fallbackNormalized: verseMapping.filter(m => m.source === "fallback-normalized").length,
-          missing: verseMapping.filter(m => m.source === "missing").length,
-        },
-        dreamRefsMatchStatus: dreamRefs.map(ref => ({
-          ref,
-          found: verseLookup[ref] ? true : false,
-          source: verseMapping.find(m => m.reference === ref)?.source || "unknown"
-        }))
-      };
-      console.log("Bible verse lookup debug info:", debugInfo);
+
+    if (DEBUG) {
+      // Debug the final lookup state
+      console.log("Final verse lookup map size:", Object.keys(combinedLookup).length);
+
+      // More compact logging for references
+      const refKeys = Object.keys(combinedLookup);
+      if (refKeys.length <= 10) {
+        console.log("Final verse references available:", refKeys.join(", "));
+      } else {
+        console.log(`Final verse references available (${refKeys.length} total): ${refKeys.slice(0, 10).join(", ")}...`);
+      }
+
+      // Detailed logging for dream refs status
+      console.log("Status for each dream reference:");
+      dreamRefs.forEach(ref => {
+        const status = verseLookup[ref]
+          ? (verseLookup[ref].includes("not available") ? "Missing" : "Found")
+          : "Missing";
+        console.log(`  ${ref}: ${status}`);
+      });
+
+      // Add additional debug info to help diagnose issues
+      if (dreamId) {
+        const debugInfo = {
+          versesRequestedFromDream: dreamRefs.length,
+          versesFoundInDatabase: citations.length,
+          versesFoundTotal: Object.keys(verseLookup).length,
+          dbVersesExample: citations.length > 0 ? `${citations[0].bible_book} ${citations[0].chapter}:${citations[0].verse} => ${citations[0].full_text.substring(0, 50)}...` : "None",
+          statsBySource: {
+            exactMatch: verseMapping.filter(m => m.source === "exact match").length,
+            normalizedOnly: verseMapping.filter(m => m.source === "normalized only").length,
+            fallback: verseMapping.filter(m => m.source === "fallback").length,
+            fallbackNormalized: verseMapping.filter(m => m.source === "fallback-normalized").length,
+            missing: verseMapping.filter(m => m.source === "missing").length,
+          },
+          dreamRefsMatchStatus: dreamRefs.map(ref => ({
+            ref,
+            found: verseLookup[ref] ? true : false,
+            source: verseMapping.find(m => m.reference === ref)?.source || "unknown"
+          }))
+        };
+        console.log("Bible verse lookup debug info:", debugInfo);
+      }
     }
     
     return NextResponse.json(combinedLookup);
