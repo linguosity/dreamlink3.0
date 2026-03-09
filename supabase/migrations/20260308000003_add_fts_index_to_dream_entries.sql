@@ -1,20 +1,37 @@
 -- supabase/migrations/20260308000003_add_fts_index_to_dream_entries.sql
 --
 -- Add full-text search capability to dream_entries table
--- This migration creates a tsvector column for efficient text search
--- and indexes it with a GIN index for fast lookups.
+-- Uses a trigger to maintain the tsvector column since generated columns
+-- require immutable expressions and to_tsvector('english', ...) is not immutable.
 
--- Add full-text search vector column
--- Combines title, dream_summary, original_text, and tags with weighted importance
--- A = highest weight (title), B = medium weight, C = lower weight
+-- Add the tsvector column (not generated — maintained by trigger)
 ALTER TABLE dream_entries
-ADD COLUMN IF NOT EXISTS search_vector tsvector
-GENERATED ALWAYS AS (
+ADD COLUMN IF NOT EXISTS search_vector tsvector;
+
+-- Create an immutable helper function for building the search vector
+CREATE OR REPLACE FUNCTION dream_entries_search_vector_update() RETURNS trigger AS $$
+BEGIN
+  NEW.search_vector :=
+    setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(NEW.dream_summary, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(NEW.original_text, '')), 'C') ||
+    setweight(to_tsvector('english', coalesce(array_to_string(NEW.tags, ' '), '')), 'B');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fire on INSERT and UPDATE
+CREATE TRIGGER dream_entries_search_vector_trigger
+  BEFORE INSERT OR UPDATE ON dream_entries
+  FOR EACH ROW
+  EXECUTE FUNCTION dream_entries_search_vector_update();
+
+-- Backfill existing rows
+UPDATE dream_entries SET search_vector =
   setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
   setweight(to_tsvector('english', coalesce(dream_summary, '')), 'B') ||
   setweight(to_tsvector('english', coalesce(original_text, '')), 'C') ||
-  setweight(to_tsvector('english', coalesce(array_to_string(tags, ' '), '')), 'B')
-) STORED;
+  setweight(to_tsvector('english', coalesce(array_to_string(tags, ' '), '')), 'B');
 
 -- Create GIN index for fast full-text search queries
 CREATE INDEX IF NOT EXISTS dream_entries_search_idx ON dream_entries USING GIN (search_vector);
