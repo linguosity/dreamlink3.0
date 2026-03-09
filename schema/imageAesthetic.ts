@@ -42,15 +42,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Classical biblical illustration with luminous golden light",
     tier: "free",
     scene:
-      "unfolds across an ancient, sacred landscape steeped in divine light. " +
-      "Worn stone and hand-woven cloth catch the glow of a single luminous column of light " +
-      "descending from parted clouds above, casting long warm golden rays across the scene " +
-      "while deep indigo shadows gather at the edges. " +
-      "The air shimmers with faint celestial mist, and subtle biblical symbols — scrolls, " +
-      "olive branches, gentle waters — emerge from the surrounding stillness.",
+      "Warm golden lighting with soft shadows. Rich earthy palette of ochre, umber, and deep blue.",
     styleAnnotation:
-      "Style: Painterly biblical illustration with luminous depth, reminiscent of classical " +
-      "religious oil painting. Mood: Sacred, awe-inspiring, deeply spiritual, transcendent.",
+      "Style: Classical oil painting, layered glazes, visible brushwork. Mood: Sacred, contemplative.",
   },
 
   [ImageAesthetic.STAINED_GLASS]: {
@@ -59,14 +53,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Medieval cathedral window with jewel-toned light",
     tier: "free",
     scene:
-      "is depicted within the bordered panels of a grand cathedral stained glass window. " +
-      "Rich jewel tones of sapphire blue, ruby red, emerald green, and amber gold fill each segment, " +
-      "separated by dark lead lines that trace flowing organic shapes. " +
-      "Colored light filters through the translucent glass, casting prismatic patterns " +
-      "onto an unseen stone floor below.",
+      "Bold jewel tones of sapphire, ruby, emerald, and amber separated by dark lead lines.",
     styleAnnotation:
-      "Style: Medieval Gothic stained glass window art with bold outlines and luminous " +
-      "translucent color. Mood: Reverent, timeless, holy, contemplative.",
+      "Style: Medieval stained glass window with bold outlines and translucent color. Mood: Reverent, timeless.",
   },
 
   [ImageAesthetic.WATERCOLOR_DREAMSCAPE]: {
@@ -75,14 +64,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Soft, flowing watercolors with ethereal morning light",
     tier: "visionary",
     scene:
-      "materializes through soft washes of translucent color that bleed gently into one another. " +
-      "Delicate brushstrokes suggest rolling hills, flowing water, and distant horizons " +
-      "bathed in soft diffused morning light filtering through a thin veil of mist. " +
-      "Edges dissolve into the white of the paper, and pigment pools in organic shapes " +
-      "that feel both intentional and beautifully accidental.",
+      "Soft diffused morning light. Colors bleed gently into one another with visible paper texture.",
     styleAnnotation:
-      "Style: Ethereal watercolor illustration with visible paper texture, wet-on-wet technique, " +
-      "and controlled color bleeding. Mood: Peaceful, dreamlike, gentle, meditative.",
+      "Style: Ethereal watercolor, wet-on-wet technique, edges dissolving into white. Mood: Peaceful, dreamlike.",
   },
 
   [ImageAesthetic.CELESTIAL_COSMOS]: {
@@ -91,14 +75,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Cosmic nebulae and starfields with spiritual radiance",
     tier: "visionary",
     scene:
-      "expands across the infinite canvas of deep space, surrounded by swirling nebulae " +
-      "in shades of violet, teal, and rose gold. Distant stars punctuate the darkness " +
-      "like scattered diamonds, while a luminous celestial body — part moon, part divine eye — " +
-      "radiates soft white light from the upper portion of the scene. " +
-      "Cosmic dust trails weave through the composition like spiritual rivers.",
+      "Deep space backdrop with swirling nebulae in violet, teal, and rose gold. Distant starfields.",
     styleAnnotation:
-      "Style: Cosmic spiritual art blending NASA deep-space photography with mystical " +
-      "symbolism. Mood: Infinite, transcendent, wonder-filled, divinely vast.",
+      "Style: Cosmic spiritual art, deep-space palette with mystical radiance. Mood: Infinite, transcendent.",
   },
 
   [ImageAesthetic.RENAISSANCE_FRESCO]: {
@@ -107,14 +86,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Sistine Chapel grandeur with warm divine radiance",
     tier: "visionary",
     scene:
-      "is rendered upon an aged plaster ceiling with the monumental grandeur of a Renaissance fresco. " +
-      "Muscular figures in flowing robes reach toward divine light streaming from the upper heavens. " +
-      "Warm candlelight and divine radiance illuminate skin tones of ochre and rose, " +
-      "while architectural elements of marble columns and gilded arches frame the composition. " +
-      "Fine cracks in the plaster add centuries of authentic patina.",
+      "Warm candlelight on aged plaster. Skin tones of ochre and rose. Fine cracks add patina.",
     styleAnnotation:
-      "Style: High Renaissance fresco in the tradition of Michelangelo and Raphael, with " +
-      "masterful anatomy and dramatic foreshortening. Mood: Majestic, heroic, divinely inspired, eternal.",
+      "Style: High Renaissance fresco, masterful anatomy, dramatic foreshortening. Mood: Majestic, eternal.",
   },
 
   [ImageAesthetic.SURREAL_PROPHETIC]: {
@@ -123,14 +97,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Dalí-meets-Blake surrealism with dramatic chiaroscuro",
     tier: "prophet",
     scene:
-      "warps reality across a vast desert of melting stone and impossible architecture. " +
-      "Objects defy gravity and scale — enormous eyes peer through cracked earth, " +
-      "staircases spiral into clouds, and rivers flow upward toward a burning horizon. " +
-      "Dramatic chiaroscuro side-lighting carves deep shadows against blazing highlights, " +
-      "creating an atmosphere of prophetic intensity and divine mystery.",
+      "Reality warped — objects defy gravity and scale. Dramatic chiaroscuro with deep shadows and blazing highlights.",
     styleAnnotation:
-      "Style: Surrealist prophetic art combining Salvador Dalí's dreamscapes with " +
-      "William Blake's visionary engravings. Mood: Otherworldly, intense, prophetic, unsettling beauty.",
+      "Style: Surrealist dreamscape with visionary intensity. Mood: Otherworldly, prophetic, unsettling beauty.",
   },
 
   [ImageAesthetic.ANIME_SACRED]: {
@@ -139,14 +108,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Anime fantasy with ethereal spiritual glow",
     tier: "prophet",
     scene:
-      "unfolds in a luminous anime fantasy world where ancient temples float among cherry blossoms " +
-      "and crystalline waterfalls cascade into glowing pools below. " +
-      "Neon-tinged ethereal light emanates from sacred symbols carved into floating stone pillars, " +
-      "while delicate particle effects and lens flares dance through the atmosphere. " +
-      "Characters have large expressive eyes reflecting inner spiritual light.",
+      "Luminous ethereal glow with delicate particle effects and soft lens flares.",
     styleAnnotation:
-      "Style: High-quality anime illustration blending Studio Ghibli environments with " +
-      "spiritual fantasy elements. Mood: Enchanting, hopeful, spiritually luminous, wonder.",
+      "Style: High-quality anime illustration with spiritual fantasy elements. Mood: Enchanting, hopeful.",
   },
 
   [ImageAesthetic.PHOTOREALISTIC_VISION]: {
@@ -155,14 +119,9 @@ export const AESTHETIC_PRESETS: Record<ImageAesthetic, AestheticPreset> = {
     description: "Cinematic photography with golden hour backlight",
     tier: "prophet",
     scene:
-      "is captured in a photorealistic moment of extraordinary beauty and spiritual significance. " +
-      "Golden hour backlight with subtle lens flare illuminates the scene from behind, " +
-      "creating a warm halo effect around the central subject while foreground elements " +
-      "fall into rich, creamy bokeh. Every texture — fabric weave, skin pores, water droplets — " +
-      "is rendered with crystalline sharpness at the focal plane.",
+      "Golden hour backlight with subtle lens flare. Shallow depth of field, creamy bokeh.",
     styleAnnotation:
-      "Style: Shot on 35mm film (Kodak Portra 400) with shallow depth of field — subject " +
-      "razor-sharp, background softly blurred. Mood: Intimate, sacred, cinematic, breathtaking.",
+      "Style: 35mm film photography, Kodak Portra 400, razor-sharp focus. Mood: Intimate, cinematic.",
   },
 };
 
