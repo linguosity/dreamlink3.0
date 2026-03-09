@@ -14,8 +14,12 @@ import { createClient } from '@supabase/supabase-js';
 import { ImageAesthetic, AESTHETIC_PRESETS } from '@/schema/imageAesthetic';
 
 const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
-const POLL_INTERVAL_MS = 1500;
 const TIMEOUT_MS = 90_000; // 90 second timeout
+
+// Exponential backoff polling config
+const INITIAL_POLL_DELAY_MS = 500;
+const BACKOFF_MULTIPLIER = 1.3;
+const MAX_POLL_DELAY_MS = 4000;
 
 // Square 512×512 — thumbnail-optimized for DreamCard grid display
 // ~75% smaller file size vs 1024×1024 with faster generation
@@ -125,9 +129,10 @@ export async function generateAndStoreDreamImage(
 
   // ── Step 2: Poll until Ready ────────────────────────────────────────────────
   const startTime = Date.now();
+  let currentDelay = INITIAL_POLL_DELAY_MS;
 
   while (Date.now() - startTime < TIMEOUT_MS) {
-    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+    await new Promise(resolve => setTimeout(resolve, currentDelay));
 
     const pollRes = await fetch(pollingUrl, {
       headers: {
@@ -138,6 +143,8 @@ export async function generateAndStoreDreamImage(
 
     if (!pollRes.ok) {
       console.log(`🎨 Poll returned ${pollRes.status}, retrying...`);
+      // Increase delay with exponential backoff, capped at MAX_POLL_DELAY_MS
+      currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
       continue;
     }
 
@@ -184,6 +191,9 @@ export async function generateAndStoreDreamImage(
     if (pollData.status === 'Error' || pollData.status === 'Failed') {
       throw new Error(`BFL generation failed: ${JSON.stringify(pollData)}`);
     }
+
+    // Increase delay with exponential backoff, capped at MAX_POLL_DELAY_MS
+    currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
   }
 
   throw new Error('BFL image generation timed out after 90 seconds');

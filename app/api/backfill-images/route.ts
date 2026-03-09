@@ -2,7 +2,7 @@
 //
 // One-time script to generate images for dream entries that are missing them.
 // Call via: POST /api/backfill-images
-// Processes one dream per request to stay within Vercel timeout.
+// Processes up to 3 dreams per request with timeout safety buffer (10s buffer before 60s limit).
 // Call repeatedly until all dreams have images.
 
 import { NextResponse } from "next/server";
@@ -16,15 +16,17 @@ export const maxDuration = 60; // Vercel Hobby plan limit
 
 export async function POST() {
   const adminSupabase = getAdminClient();
+  const startTime = Date.now();
+  const TIMEOUT_BUFFER = 10000; // 10s buffer before 60s limit
 
-  // Find the next dream without an image that has analysis data
+  // Find up to 3 dreams without images that have analysis data
   const { data: dreams, error } = await adminSupabase
     .from("dream_entries")
     .select("id, title, dream_summary, topic_sentence")
     .is("image_url", null)
     .not("dream_summary", "is", null)
     .order("created_at", { ascending: false })
-    .limit(1);
+    .limit(3);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,50 +36,75 @@ export async function POST() {
     return NextResponse.json({ message: "All dreams have images!", remaining: 0 });
   }
 
-  const dream = dreams[0];
-
-  // Count how many more need images (for progress reporting)
+  // Count total remaining dreams that need images (for progress reporting)
   const { count } = await adminSupabase
     .from("dream_entries")
     .select("id", { count: "exact", head: true })
     .is("image_url", null)
     .not("dream_summary", "is", null);
 
-  try {
-    const imagePrompt = buildImagePrompt(
-      dream.title || "",
-      dream.dream_summary || "",
-      dream.topic_sentence || ""
-    );
+  const results: Array<{
+    dreamId: string;
+    title?: string;
+    status: "success" | "no_image" | "error" | "timeout";
+    imageUrl?: string;
+    error?: string;
+  }> = [];
 
-    const imageUrl = await generateAndStoreDreamImage(dream.id, imagePrompt);
-
-    if (imageUrl) {
-      await adminSupabase
-        .from("dream_entries")
-        .update({ image_url: imageUrl })
-        .eq("id", dream.id);
-
-      return NextResponse.json({
-        status: "success",
-        dreamId: dream.id,
-        title: dream.title,
-        imageUrl,
-        remaining: (count || 1) - 1,
-      });
+  // Process dreams sequentially (not parallel) to avoid BFL rate limits
+  for (const dream of dreams) {
+    // Check if we're approaching the timeout
+    if (Date.now() - startTime > 60000 - TIMEOUT_BUFFER) {
+      console.log(
+        `Approaching timeout, stopping batch. Processed ${results.length} of ${dreams.length} dreams.`
+      );
+      break;
     }
 
-    return NextResponse.json({
-      status: "no_image_returned",
-      dreamId: dream.id,
-      remaining: count || 0,
-    });
-  } catch (err) {
-    return NextResponse.json({
-      status: "error",
-      dreamId: dream.id,
-      error: err instanceof Error ? err.message : String(err),
-      remaining: count || 0,
-    }, { status: 500 });
+    try {
+      const imagePrompt = buildImagePrompt(
+        dream.title || "",
+        dream.dream_summary || "",
+        dream.topic_sentence || ""
+      );
+
+      const imageUrl = await generateAndStoreDreamImage(dream.id, imagePrompt);
+
+      if (imageUrl) {
+        await adminSupabase
+          .from("dream_entries")
+          .update({ image_url: imageUrl })
+          .eq("id", dream.id);
+
+        results.push({
+          dreamId: dream.id,
+          title: dream.title,
+          status: "success",
+          imageUrl,
+        });
+      } else {
+        results.push({
+          dreamId: dream.id,
+          title: dream.title,
+          status: "no_image",
+        });
+      }
+    } catch (err) {
+      results.push({
+        dreamId: dream.id,
+        title: dream.title,
+        status: "error",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
+
+  const successCount = results.filter((r) => r.status === "success").length;
+
+  return NextResponse.json({
+    results,
+    processed: results.length,
+    successful: successCount,
+    remaining: Math.max(0, (count || 0) - successCount),
+  });
 }

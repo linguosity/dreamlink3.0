@@ -21,12 +21,22 @@
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse, NextRequest } from "next/server";
+import crypto from 'crypto';
 
 // Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
 export const maxDuration = 60;
 
 import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
+
+// Simple in-memory analysis cache (LRU-style with TTL)
+const analysisCache = new Map<string, { result: any; timestamp: number }>();
+const CACHE_TTL_MS = 3600000; // 1 hour
+const MAX_CACHE_SIZE = 100;
+
+function getAnalysisCacheKey(dreamText: string, readingLevel?: string): string {
+  return crypto.createHash('sha256').update(`${dreamText}:${readingLevel || 'default'}`).digest('hex');
+}
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -284,27 +294,43 @@ export async function POST(request: Request) {
     let analysisResult: any = null;
 
     try {
-      // ── 1. Call OpenAI (single call) ──────────────────────
-      const analysisRequest = new NextRequest(
-        "http://internal-routing/api/openai-analysis",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            dream: dream_text,
-            topic: "dream interpretation",
-          }),
+      // ── 0. Check analysis cache ──────────────────────────────
+      const cacheKey = getAnalysisCacheKey(dream_text);
+      const cached = analysisCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        console.log('✅ Analysis cache hit');
+        analysisResult = cached.result;
+      } else {
+        // ── 1. Call OpenAI (single call) ──────────────────────
+        const analysisRequest = new NextRequest(
+          "http://internal-routing/api/openai-analysis",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              dream: dream_text,
+              topic: "dream interpretation",
+            }),
+          }
+        );
+
+        const analysisResponse = await openAiHandler(analysisRequest);
+
+        if (!analysisResponse.ok) {
+          throw new Error(`OpenAI returned ${analysisResponse.status}`);
         }
-      );
 
-      const analysisResponse = await openAiHandler(analysisRequest);
+        analysisResult = JSON.parse(await analysisResponse.text());
+        console.log("✅ Analysis complete:", Object.keys(analysisResult).join(", "));
 
-      if (!analysisResponse.ok) {
-        throw new Error(`OpenAI returned ${analysisResponse.status}`);
+        // ── Store in cache ──────────────────────────────────────
+        // Evict oldest if at capacity
+        if (analysisCache.size >= MAX_CACHE_SIZE) {
+          const oldestKey = analysisCache.keys().next().value;
+          if (oldestKey) analysisCache.delete(oldestKey);
+        }
+        analysisCache.set(cacheKey, { result: analysisResult, timestamp: Date.now() });
       }
-
-      analysisResult = JSON.parse(await analysisResponse.text());
-      console.log("✅ Analysis complete:", Object.keys(analysisResult).join(", "));
 
       // ── 2. Build the DB update payload ────────────────────
       const {

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const query = url.searchParams.get('q') || '';
     const cursor = url.searchParams.get('cursor') || undefined;
     const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-    
+
     // If no query, return an error
     if (!query) {
       return NextResponse.json(
@@ -44,36 +44,59 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Define the base query
+
+    // Attempt full-text search using the search_vector column
     let dreamQuery = supabase
       .from("dream_entries")
       .select("*")
       .eq("user_id", user.id)
-      // When we implement full-text search, we'll use this:
-      // .textSearch('search_vector', query, { type: 'websearch' })
-      // For now, use a simple ILIKE query
-      .or(`original_text.ilike.%${query}%, title.ilike.%${query}%, dream_summary.ilike.%${query}%`)
+      .textSearch('search_vector', query, { type: 'websearch', config: 'english' })
       .order('created_at', { ascending: false })
       .limit(limit);
-    
+
     // Add cursor pagination if provided
     if (cursor) {
       dreamQuery = dreamQuery.gt('id', cursor);
     }
-    
-    // Execute the query
-    const { data: dreams, error } = await dreamQuery;
-    
+
+    // Execute the FTS query
+    let { data: dreams, error } = await dreamQuery;
+
     // Handle errors
     if (error) {
-      console.error("Error searching dreams:", error);
+      console.error("Error searching dreams with FTS:", error);
       return NextResponse.json(
         { error: "Failed to search dreams" },
         { status: 500 }
       );
     }
-    
+
+    // If FTS returns no results, fall back to ILIKE search
+    if (!dreams || dreams.length === 0) {
+      let fallbackQuery = supabase
+        .from("dream_entries")
+        .select("*")
+        .eq("user_id", user.id)
+        .or(`original_text.ilike.%${query}%, title.ilike.%${query}%, dream_summary.ilike.%${query}%`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (cursor) {
+        fallbackQuery = fallbackQuery.gt('id', cursor);
+      }
+
+      const fallbackResult = await fallbackQuery;
+      dreams = fallbackResult.data;
+
+      if (fallbackResult.error) {
+        console.error("Error in fallback ILIKE search:", fallbackResult.error);
+        return NextResponse.json(
+          { error: "Failed to search dreams" },
+          { status: 500 }
+        );
+      }
+    }
+
     // Return the search results
     return NextResponse.json({
       results: dreams || [],
