@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 import { Moon, Sparkles, CheckCircle } from "lucide-react";
+import GoogleOAuthButton from "@/components/GoogleOAuthButton";
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -75,7 +76,20 @@ export default function Signup() {
               7 days free • No credit card required • Cancel anytime
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <GoogleOAuthButton />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-800 px-2 text-muted-foreground">
+                  or sign up with email
+                </span>
+              </div>
+            </div>
+
             <form className="flex-1 flex flex-col w-full space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Moon, Sparkles } from "lucide-react";
+import GoogleOAuthButton from "@/components/GoogleOAuthButton";
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
@@ -50,13 +51,26 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
               Sign in to access your dream journal and interpretations
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <GoogleOAuthButton />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-800 px-2 text-muted-foreground">
+                  or continue with email
+                </span>
+              </div>
+            </div>
+
             <form className="flex-1 flex flex-col w-full space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input name="email" id="email" placeholder="you@example.com" required />
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="password">Password</Label>
@@ -71,16 +85,16 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
                 <Input
                   type="password"
                   name="password"
-                  id="password" 
+                  id="password"
                   placeholder="Your password"
                   required
                 />
               </div>
-              
+
               <SubmitButton pendingText="Signing In..." formAction={signInAction} className="w-full">
                 Sign in
               </SubmitButton>
-              
+
               <FormMessage message={searchParams} />
             </form>
           </CardContent>
