@@ -83,10 +83,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   // Common submission logic with retry for auth timing issues
   const submitDream = async (dreamText: string, retryCount = 0) => {
     setIsSubmitting(true);
-    
+
     try {
-      console.log(`Submitting dream to API (attempt ${retryCount + 1}) with user ID:`, userId);
-      
       const response = await fetch("/api/dream-entries", {
         method: "POST",
         headers: {
@@ -98,8 +96,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         }),
       });
 
-      console.log("Dream submission response status:", response.status);
-      
       // Get the response text first to ensure we can see the error even if it's not valid JSON
       const responseText = await response.text();
       
@@ -114,8 +110,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       // Handle 401 auth errors with retry logic
       if (response.status === 401 && retryCount < 2) {
-        console.log(`Auth error on attempt ${retryCount + 1}, retrying after delay...`);
-        
         // Wait a bit for auth state to sync
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -139,7 +133,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       // If analysis succeeded, the dream is ready; if it failed, the dream
       // still exists in the DB and the card will show a retry button.
       if (result.id) {
-        console.log('Dream saved:', result.id, result.analysis ? '(with analysis)' : '(analysis failed)');
         // Show success toast
         toast.success("Dream recorded! Analysis on its way…");
 
