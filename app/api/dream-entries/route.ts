@@ -130,20 +130,13 @@ export async function DELETE(request: Request) {
       );
     }
     
-    // Delete related records first (foreign key constraints)
-    // Delete bible citations
-    await supabase
-      .from("bible_citations")
-      .delete()
-      .eq("dream_entry_id", id);
-      
-    // Delete ChatGPT interactions  
-    await supabase
-      .from("chatgpt_interactions")
-      .delete()
-      .eq("dream_entry_id", id);
-    
-    // Delete the dream entry
+    // Delete related records in parallel (independent of each other)
+    await Promise.all([
+      supabase.from("bible_citations").delete().eq("dream_entry_id", id),
+      supabase.from("chatgpt_interactions").delete().eq("dream_entry_id", id),
+    ]);
+
+    // Then delete the dream entry (depends on above due to FK constraints)
     const { error: deleteError } = await supabase
       .from("dream_entries")
       .delete()

@@ -23,6 +23,8 @@ export const profileSchema = z.object({
   language: z.string().optional(),
   bible_version: z.string().optional(),
   reading_level: readingLevelSchema.default(ReadingLevel.CELESTIAL_INSIGHT).optional(),
+  image_aesthetic: z.string().optional(), // user's preferred image style
+  preferences: z.record(z.unknown()).optional(), // JSONB preferences object
   created_at: z.string().optional(), // ISO string returned by DB; optional on input
 });
 

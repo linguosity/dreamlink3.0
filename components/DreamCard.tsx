@@ -139,6 +139,14 @@ const ShareIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const RefreshCwIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M23 4v6h-6" />
+    <path d="M1 20v-6h6" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36" />
+  </svg>
+);
+
 const MessageSquare = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -386,6 +394,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
+  const [imageError, setImageError] = useState(false);
   // Poll for image if: no image yet AND (card is loading OR dream was created within the last 2 minutes)
   const isRecentDream = initialDream.created_at
     ? (Date.now() - new Date(initialDream.created_at).getTime()) < 2 * 60 * 1000
@@ -729,6 +738,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         if (pollCount >= maxPolls) {
           console.log('Max image polling attempts reached');
           setIsPollingCardImage(false);
+          setImageError(true);
           clearInterval(interval);
           return;
         }
@@ -761,6 +771,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             setCardImageUrl(updatedDream.image_url);
             setDream(updatedDream);
             setIsPollingCardImage(false);
+            setImageError(false);
             clearInterval(interval);
           }
         }
@@ -1006,6 +1017,37 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     }
   };
 
+  // Handler to retry image generation for a failed dream image
+  const handleRetryImageGeneration = async () => {
+    setImageError(false);
+    setIsPollingCardImage(true);
+
+    try {
+      // Call the dream-image API to regenerate the image
+      const response = await fetch('/api/dream-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dreamId: dream.id,
+          title: dream.title,
+          summary: dream.analysis_summary || dream.dream_summary || dream.personalized_summary,
+          topicSentence: dream.topic_sentence,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Image generation request failed: ${response.status}`);
+      }
+
+      console.log('Image generation retry requested for dream:', dream.id);
+      // Polling will resume automatically via setIsPollingCardImage(true)
+    } catch (err) {
+      console.error('Error retrying image generation:', err);
+      setIsPollingCardImage(false);
+      setImageError(true);
+    }
+  };
+
   // Render timeout error state
   if (analysisTimedOut && !isLoading) {
     return (
@@ -1106,7 +1148,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           }
         }}
       >
-        {/* Background: image, loading shimmer, or solid fallback */}
+        {/* Background: image, loading shimmer, error state, or solid fallback */}
         {cardImageUrl ? (
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -1125,6 +1167,24 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 </svg>
                 <span>Generating image…</span>
               </div>
+            </div>
+          </div>
+        ) : imageError ? (
+          <div className="absolute inset-0 bg-card/90 dark:bg-card/95 backdrop-blur-sm flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center gap-2 text-center">
+              <RefreshCwIcon className="h-4 w-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">Image unavailable</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRetryImageGeneration();
+                }}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Retry
+              </Button>
             </div>
           </div>
         ) : (
