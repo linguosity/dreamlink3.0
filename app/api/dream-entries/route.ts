@@ -209,7 +209,7 @@ export async function POST(request: Request) {
   try {
     // Parse request body
     const body = await request.json();
-    const { dream_text } = body;
+    const { dream_text, reading_level } = body;
     
     if (!dream_text || typeof dream_text !== "string" || dream_text.trim() === "") {
       return NextResponse.json(
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
 
     try {
       // ── 0. Check analysis cache ──────────────────────────────
-      const cacheKey = getAnalysisCacheKey(dream_text);
+      const cacheKey = getAnalysisCacheKey(dream_text, reading_level);
       const cached = analysisCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
         if (DEBUG) console.log('✅ Analysis cache hit');
@@ -309,6 +309,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               dream: dream_text,
               topic: "dream interpretation",
+              readingLevel: reading_level || undefined,
             }),
           }
         );

@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { ImageAesthetic } from "@/schema/imageAesthetic";
+import { ReadingLevel } from "@/schema/profile";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -25,20 +26,20 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [tipDismissed, setTipDismissed] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const userAesthetic = useRef<string>(ImageAesthetic.SACRED_OIL_PAINTING);
+  const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
 
-  // Fetch user's preferred image aesthetic from profile
+  // Fetch user's preferred image aesthetic and reading level from profile
   useEffect(() => {
     const supabase = createClient();
     supabase
       .from('profile')
-      .select('image_aesthetic')
+      .select('image_aesthetic, reading_level')
       .eq('user_id', userId)
       .single()
       .then(({ data }) => {
-        if (data?.image_aesthetic) {
-          userAesthetic.current = data.image_aesthetic;
-        }
+        if (data?.image_aesthetic) userAesthetic.current = data.image_aesthetic;
+        if (data?.reading_level) userReadingLevel.current = data.reading_level;
       });
   }, [userId]);
 
@@ -93,7 +94,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         },
         body: JSON.stringify({
           dream_text: dreamText,
-          // Remove user_id from request body - let server determine auth
+          reading_level: userReadingLevel.current,
         }),
       });
 
