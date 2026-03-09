@@ -65,7 +65,8 @@ export function buildImagePrompt(
 
   // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
   // then append Style/Mood annotations from the selected aesthetic preset
-  return `${subject}. ${preset.scene} ${preset.styleAnnotation}`;
+  // Default camera: 35mm film (Kodak Portra 400) with shallow DoF
+  return `${subject}. ${preset.scene} ${preset.styleAnnotation} Shot on 35mm film (Kodak Portra 400) with shallow depth of field—subject razor-sharp, background softly blurred.`;
 }
 
 /**
