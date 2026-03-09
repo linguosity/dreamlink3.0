@@ -97,7 +97,7 @@ export async function generateAndStoreDreamImage(
   const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
   console.log('🎨 Submitting dream image generation to FLUX.2 [klein] 9B...');
-  console.log(`🎨 Prompt: ${prompt.substring(0, 100)}...`);
+  console.log(`🎨 Full prompt: ${prompt}`);
 
   // ── Step 1: Submit generation request ──────────────────────────────────────
   const submitRes = await fetch(BFL_ENDPOINT, {
