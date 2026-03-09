@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export async function GET(request: Request) {
   // Log the received cookies for debugging
   const cookieStore = await cookies();
-  console.log("[debug-session] Cookies:", cookieStore.getAll());
+  if (DEBUG) console.log("[debug-session] Cookies:", cookieStore.getAll());
 
   // Create a Supabase server client using the cookies from the request
   const supabase = createServerClient(

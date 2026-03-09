@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export async function POST(request: Request) {
   try {
-    console.log("🧪 Test dream API endpoint called");
-    
+    if (DEBUG) console.log("🧪 Test dream API endpoint called");
+
     const body = await request.json();
     const { dream_text } = body;
-    
+
     if (!dream_text) {
       return NextResponse.json({ error: "Dream text is required" }, { status: 400 });
     }
-    
-    console.log("🧪 Dream text received:", dream_text.substring(0, 50) + "...");
-    
+
+    if (DEBUG) console.log("🧪 Dream text received:", dream_text.substring(0, 50) + "...");
+
     // Test OpenAI call directly
     try {
-      console.log("🧪 Testing OpenAI API call...");
-      console.log("🧪 OpenAI API Key exists:", !!process.env.OPENAI_API_KEY);
-      console.log("🧪 OpenAI API Key length:", process.env.OPENAI_API_KEY?.length || 0);
+      if (DEBUG) console.log("🧪 Testing OpenAI API call...");
+      if (DEBUG) console.log("🧪 OpenAI API Key exists:", !!process.env.OPENAI_API_KEY);
+      if (DEBUG) console.log("🧪 OpenAI API Key length:", process.env.OPENAI_API_KEY?.length || 0);
       
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -36,8 +38,8 @@ export async function POST(request: Request) {
         }),
       });
       
-      console.log("🧪 OpenAI response status:", response.status);
-      
+      if (DEBUG) console.log("🧪 OpenAI response status:", response.status);
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error("🧪 OpenAI error:", errorData);
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
       }
       
       const data = await response.json();
-      console.log("🧪 OpenAI response:", data);
+      if (DEBUG) console.log("🧪 OpenAI response:", data);
       
       return NextResponse.json({
         success: true,

@@ -12,6 +12,8 @@ import {
 } from "@/utils/imageGeneration";
 import { ImageAesthetic, imageAestheticSchema } from "@/schema/imageAesthetic";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: NextRequest) {

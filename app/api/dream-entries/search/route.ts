@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { FeatureFlag, isFeatureEnabled } from "@/utils/feature-flags";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 /**
  * API route for searching dream entries
  * This is a stub for future implementation of server-side search

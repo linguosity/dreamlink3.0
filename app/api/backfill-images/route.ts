@@ -12,6 +12,8 @@ import {
   generateAndStoreDreamImage,
 } from "@/utils/imageGeneration";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export const maxDuration = 60; // Vercel Hobby plan limit
 
 export async function POST() {
@@ -55,7 +57,7 @@ export async function POST() {
   for (const dream of dreams) {
     // Check if we're approaching the timeout
     if (Date.now() - startTime > 60000 - TIMEOUT_BUFFER) {
-      console.log(
+      if (DEBUG) console.log(
         `Approaching timeout, stopping batch. Processed ${results.length} of ${dreams.length} dreams.`
       );
       break;

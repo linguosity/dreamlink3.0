@@ -19,9 +19,11 @@
 // It handles all the backend logistics for your dream journal entries.
 
 import { createClient } from "@/utils/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
+
+const DEBUG = process.env.NODE_ENV === 'development';
 
 // Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
@@ -169,20 +171,20 @@ export async function DELETE(request: Request) {
 }
 
 export async function POST(request: Request) {
-  console.log("API: Dream entry - POST request received");
-  
+  if (DEBUG) console.log("API: Dream entry - POST request received");
+
   const supabase = await createClient();
-  
+
   // Get current user with more detailed logging
-  console.log("API: Dream entry - Checking authentication");
+  if (DEBUG) console.log("API: Dream entry - Checking authentication");
   const { data, error: authError } = await supabase.auth.getUser();
   const user = data?.user;
-  
-  console.log("API: Dream entry - Auth result:", user ? "User authenticated" : "No user found");
-  if (user) {
+
+  if (DEBUG) console.log("API: Dream entry - Auth result:", user ? "User authenticated" : "No user found");
+  if (DEBUG && user) {
     console.log("API: Dream entry - User ID:", user.id);
   }
-  
+
   if (authError) {
     console.error("API: Dream entry - Auth error:", authError.message);
     return NextResponse.json(
@@ -190,13 +192,13 @@ export async function POST(request: Request) {
       { status: 401 }
     );
   }
-  
+
   if (!user) {
     console.error("API: Dream entry - No user in session");
-    
+
     // Also check session to see if there's more info
     const { data: sessionData } = await supabase.auth.getSession();
-    console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
+    if (DEBUG) console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
     
     return NextResponse.json(
       { error: "Unauthorized: You must be logged in to submit a dream" },
@@ -247,8 +249,8 @@ export async function POST(request: Request) {
       .select()
       .single();
     
-    console.log("Dream insert response:", { data: dreamData, error: dreamInsertError });
-    
+    if (DEBUG) console.log("Dream insert response:", { data: dreamData, error: dreamInsertError });
+
     if (dreamInsertError) {
       console.error("Error saving dream:", dreamInsertError);
       
@@ -285,11 +287,8 @@ export async function POST(request: Request) {
     // finishes in 3-8 s.
     // ────────────────────────────────────────────────────────
 
-    // Admin client for DB writes (bypasses RLS)
-    const adminSupabase = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Admin client for DB writes (bypasses RLS) — singleton
+    const adminSupabase = getAdminClient();
 
     let analysisResult: any = null;
 
@@ -298,7 +297,7 @@ export async function POST(request: Request) {
       const cacheKey = getAnalysisCacheKey(dream_text);
       const cached = analysisCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-        console.log('✅ Analysis cache hit');
+        if (DEBUG) console.log('✅ Analysis cache hit');
         analysisResult = cached.result;
       } else {
         // ── 1. Call OpenAI (single call) ──────────────────────
@@ -321,7 +320,7 @@ export async function POST(request: Request) {
         }
 
         analysisResult = JSON.parse(await analysisResponse.text());
-        console.log("✅ Analysis complete:", Object.keys(analysisResult).join(", "));
+        if (DEBUG) console.log("✅ Analysis complete:", Object.keys(analysisResult).join(", "));
 
         // ── Store in cache ──────────────────────────────────────
         // Evict oldest if at capacity
@@ -444,7 +443,7 @@ export async function POST(request: Request) {
       ];
       results.forEach((result, index) => {
         if (result.success) {
-          console.log(`✅ ${operationNames[index]} succeeded`);
+          if (DEBUG) console.log(`✅ ${operationNames[index]} succeeded`);
         } else {
           console.warn(`⚠️ ${operationNames[index]} failed: ${result.error?.message}`);
         }

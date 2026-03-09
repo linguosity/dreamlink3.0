@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ReadingLevel } from "@/schema/profile";
 
+const DEBUG = process.env.NODE_ENV === 'development';
+
 export const runtime = "edge"; // Use Edge Runtime
 
 // Helper function to get reading level instructions
@@ -50,15 +52,15 @@ function getReadingLevelInstructions(readingLevel: string): string {
 
 export async function POST(request: Request) {
   try {
-    console.log("🔍 OpenAI Edge Function: Request received");
-    
+    if (DEBUG) console.log("🔍 OpenAI Edge Function: Request received");
+
     const { dream, topic, readingLevel } = await request.json();
-    console.log(`🔍 Dream content received. Length: ${dream?.length || 0} chars`);
-    console.log(`🔍 Analysis topic: ${topic || 'general spiritual meaning'}`);
-    console.log(`🔍 Reading level: ${readingLevel || ReadingLevel.CELESTIAL_INSIGHT}`);
-    
+    if (DEBUG) console.log(`🔍 Dream content received. Length: ${dream?.length || 0} chars`);
+    if (DEBUG) console.log(`🔍 Analysis topic: ${topic || 'general spiritual meaning'}`);
+    if (DEBUG) console.log(`🔍 Reading level: ${readingLevel || ReadingLevel.CELESTIAL_INSIGHT}`);
+
     if (!dream) {
-      console.log("❌ Error: Dream content is missing");
+      if (DEBUG) console.log("❌ Error: Dream content is missing");
       return NextResponse.json({ error: "Dream content is required" }, { status: 400 });
     }
     
@@ -99,8 +101,8 @@ Additional instruction:
 ${readingLevelInstructions}
 `;
 
-    console.log("🔍 Preparing OpenAI API call");
-    console.log(`🔍 API Key present: ${process.env.OPENAI_API_KEY ? 'Yes (masked)' : 'No'}`);
+    if (DEBUG) console.log("🔍 Preparing OpenAI API call");
+    if (DEBUG) console.log(`🔍 API Key present: ${process.env.OPENAI_API_KEY ? 'Yes (masked)' : 'No'}`);
     
     // Initialize variables to be used across try-catch blocks
     let analysis = '';
@@ -109,9 +111,14 @@ ${readingLevelInstructions}
     let conclusionSentence = '';
     
     try {
-      console.log("🔍 Sending request to OpenAI API");
+      if (DEBUG) console.log("🔍 Sending request to OpenAI API");
+      // Abort after 45s to stay within Vercel's 60s function timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45_000);
+
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -198,8 +205,9 @@ ${readingLevelInstructions}
         }),
       });
 
-      console.log(`🔍 OpenAI API response status: ${response.status}`);
-      
+      clearTimeout(timeout);
+      if (DEBUG) console.log(`🔍 OpenAI API response status: ${response.status}`);
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("❌ OpenAI API error:", JSON.stringify(errorData));
@@ -207,16 +215,16 @@ ${readingLevelInstructions}
       }
       
       const data = await response.json();
-      console.log(`🔍 OpenAI API response received. Has choices: ${data.choices ? 'yes' : 'no'}`);
+      if (DEBUG) console.log(`🔍 OpenAI API response received. Has choices: ${data.choices ? 'yes' : 'no'}`);
 
       // Log usage to understand reasoning vs completion token split
-      if (data.usage) {
+      if (data.usage && DEBUG) {
         console.log(`🔍 Token usage: prompt=${data.usage.prompt_tokens}, completion=${data.usage.completion_tokens}, reasoning=${data.usage.completion_tokens_details?.reasoning_tokens || 0}`);
       }
 
       const message = data.choices?.[0]?.message;
-      console.log(`🔍 Message keys: ${message ? Object.keys(message).join(', ') : 'no message'}`);
-      console.log(`🔍 Content type: ${typeof message?.content}, length: ${message?.content?.length ?? 'null'}, finish_reason: ${data.choices?.[0]?.finish_reason}`);
+      if (DEBUG) console.log(`🔍 Message keys: ${message ? Object.keys(message).join(', ') : 'no message'}`);
+      if (DEBUG) console.log(`🔍 Content type: ${typeof message?.content}, length: ${message?.content?.length ?? 'null'}, finish_reason: ${data.choices?.[0]?.finish_reason}`);
 
       if (!data.choices || message?.content == null) {
         console.error("❌ Invalid response format from OpenAI — content is null/undefined");
@@ -232,34 +240,36 @@ ${readingLevelInstructions}
 
       // Get the content from the message
       const content = message.content;
-      console.log(`🔍 Content type: ${typeof content}`);
+      if (DEBUG) console.log(`🔍 Content type: ${typeof content}`);
       
       // Parse the content as JSON
       try {
         // Log full content for debugging
         if (typeof content === 'string') {
-          console.log(`🔍 Content length: ${content.length} characters`);
-          console.log(`🔍 Content preview (first 200): ${content.substring(0, 200)}`);
-          console.log(`🔍 Content preview (last 200): ${content.substring(content.length - 200)}`);
+          if (DEBUG) {
+            console.log(`🔍 Content length: ${content.length} characters`);
+            console.log(`🔍 Content preview (first 200): ${content.substring(0, 200)}`);
+            console.log(`🔍 Content preview (last 200): ${content.substring(content.length - 200)}`);
 
-          // Check for common JSON issues
-          const openBraces = (content.match(/{/g) || []).length;
-          const closeBraces = (content.match(/}/g) || []).length;
-          const openBrackets = (content.match(/\[/g) || []).length;
-          const closeBrackets = (content.match(/]/g) || []).length;
-          const quotes = (content.match(/"/g) || []).length;
+            // Check for common JSON issues
+            const openBraces = (content.match(/{/g) || []).length;
+            const closeBraces = (content.match(/}/g) || []).length;
+            const openBrackets = (content.match(/\[/g) || []).length;
+            const closeBrackets = (content.match(/]/g) || []).length;
+            const quotes = (content.match(/"/g) || []).length;
 
-          console.log(`🔍 JSON structure check:`);
-          console.log(`   - Open braces: ${openBraces}, Close braces: ${closeBraces}`);
-          console.log(`   - Open brackets: ${openBrackets}, Close brackets: ${closeBrackets}`);
-          console.log(`   - Quote count: ${quotes} (should be even)`);
+            console.log(`🔍 JSON structure check:`);
+            console.log(`   - Open braces: ${openBraces}, Close braces: ${closeBraces}`);
+            console.log(`   - Open brackets: ${openBrackets}, Close brackets: ${closeBrackets}`);
+            console.log(`   - Quote count: ${quotes} (should be even)`);
 
-          // Log the area around position 2431 where the error occurs
-          const errorPosition = 2431;
-          const contextStart = Math.max(0, errorPosition - 50);
-          const contextEnd = Math.min(content.length, errorPosition + 50);
-          console.log(`🔍 Content around error position ${errorPosition}:`);
-          console.log(`   "${content.substring(contextStart, contextEnd)}"`);
+            // Log the area around position 2431 where the error occurs
+            const errorPosition = 2431;
+            const contextStart = Math.max(0, errorPosition - 50);
+            const contextEnd = Math.min(content.length, errorPosition + 50);
+            console.log(`🔍 Content around error position ${errorPosition}:`);
+            console.log(`   "${content.substring(contextStart, contextEnd)}"`);
+          }
         }
 
         let parsedContent;
@@ -267,25 +277,25 @@ ${readingLevelInstructions}
         // Try to parse the content safely
         try {
           parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
-          console.log(`🔍 Successfully parsed content`);
+          if (DEBUG) console.log(`🔍 Successfully parsed content`);
         } catch (parseError) {
           console.error("❌ JSON parse error:", parseError);
-          console.log("Attempting to sanitize and repair JSON...");
+          if (DEBUG) console.log("Attempting to sanitize and repair JSON...");
           
           // Try to repair common JSON issues
           if (typeof content === 'string') {
-            console.log("🔧 Attempting to repair JSON...");
+            if (DEBUG) console.log("🔧 Attempting to repair JSON...");
 
             // First, try to find where the JSON might be truncated
             let cleaned = content;
 
             // Check if the JSON appears to be truncated
             const lastChar = cleaned[cleaned.length - 1];
-            console.log(`🔧 Last character: "${lastChar}"`);
+            if (DEBUG) console.log(`🔧 Last character: "${lastChar}"`);
 
             // If it doesn't end with } or ], it's likely truncated
             if (lastChar !== '}' && lastChar !== ']') {
-              console.log("🔧 JSON appears truncated. Attempting to close structures...");
+              if (DEBUG) console.log("🔧 JSON appears truncated. Attempting to close structures...");
 
               // Count open structures
               const openBraces = (cleaned.match(/{/g) || []).length;
@@ -296,19 +306,19 @@ ${readingLevelInstructions}
               // Try to close any open strings first
               if ((cleaned.match(/"/g) || []).length % 2 !== 0) {
                 cleaned += '"';
-                console.log("🔧 Added closing quote");
+                if (DEBUG) console.log("🔧 Added closing quote");
               }
 
               // Close arrays
               for (let i = 0; i < openBrackets - closeBrackets; i++) {
                 cleaned += ']';
-                console.log("🔧 Added closing bracket");
+                if (DEBUG) console.log("🔧 Added closing bracket");
               }
 
               // Close objects
               for (let i = 0; i < openBraces - closeBraces; i++) {
                 cleaned += '}';
-                console.log("🔧 Added closing brace");
+                if (DEBUG) console.log("🔧 Added closing brace");
               }
             }
 
@@ -325,14 +335,14 @@ ${readingLevelInstructions}
               
             try {
               parsedContent = JSON.parse(cleaned);
-              console.log("Successfully parsed cleaned JSON");
+              if (DEBUG) console.log("Successfully parsed cleaned JSON");
             } catch (cleanError) {
               console.error("Failed to parse even after cleaning:", cleanError);
-              console.log("🔧 Cleaned content preview:", cleaned.substring(0, 500));
-              console.log("🔧 Cleaned content end:", cleaned.substring(cleaned.length - 200));
+              if (DEBUG) console.log("🔧 Cleaned content preview:", cleaned.substring(0, 500));
+              if (DEBUG) console.log("🔧 Cleaned content end:", cleaned.substring(cleaned.length - 200));
 
               // As a last resort, try to extract what we can
-              console.log("🔧 Attempting to extract partial data...");
+              if (DEBUG) console.log("🔧 Attempting to extract partial data...");
 
               try {
                 // Try to extract individual fields using regex
@@ -351,7 +361,7 @@ ${readingLevelInstructions}
                 const conclusionMatch = cleaned.match(/"conclusionSentence"\s*:\s*"([^"]*)"/);
                 const conclusionSentence = conclusionMatch ? conclusionMatch[1] : "Consider how these insights apply to your life.";
 
-                console.log("🔧 Extracted partial data:", { topicSentence, supportingPoints, conclusionSentence });
+                if (DEBUG) console.log("🔧 Extracted partial data:", { topicSentence, supportingPoints, conclusionSentence });
 
                 // Create a structured response from extracted data
                 parsedContent = {
@@ -369,7 +379,7 @@ ${readingLevelInstructions}
                   tags: ["spiritual journey", "divine guidance", "faith"]
                 };
 
-                console.log("🔧 Successfully extracted partial data");
+                if (DEBUG) console.log("🔧 Successfully extracted partial data");
               } catch (extractError) {
                 console.error("🔧 Failed to extract partial data:", extractError);
                 throw new Error("Unable to parse OpenAI response JSON");
@@ -397,7 +407,7 @@ ${readingLevelInstructions}
         const tags = parsedContent.tags || [];
         const dreamTitle = parsedContent.dreamTitle || "";
         
-        console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion, personalized summary, dream title: "${dreamTitle}", ${tags.length} tags`);
+        if (DEBUG) console.log(`🔍 Analysis structure: Topic sentence, ${supportingPoints.length} points, conclusion, personalized summary, dream title: "${dreamTitle}", ${tags.length} tags`);
         
         return NextResponse.json({
           topicSentence,
