@@ -24,7 +24,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
-  const userAesthetic = useRef<string>(ImageAesthetic.SACRED_OIL_PAINTING);
+  const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
 

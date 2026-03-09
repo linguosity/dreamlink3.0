@@ -28,7 +28,7 @@ export default function SettingsPage() {
   });
   const [readingLevel, setReadingLevel] = useState<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const [bibleVersion, setBibleVersion] = useState<string>("KJV");
-  const [imageAesthetic, setImageAesthetic] = useState<string>(ImageAesthetic.SACRED_OIL_PAINTING);
+  const [imageAesthetic, setImageAesthetic] = useState<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const [userTier, setUserTier] = useState<AestheticTier>("free");
   const [isSaving, setIsSaving] = useState(false);
   const supabase = createClient();

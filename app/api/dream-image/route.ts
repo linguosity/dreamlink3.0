@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       : null;
     const selectedAesthetic = parsedAesthetic?.success
       ? parsedAesthetic.data
-      : ImageAesthetic.SACRED_OIL_PAINTING;
+      : ImageAesthetic.PHOTOREALISTIC_VISION;
 
     const imagePrompt = buildImagePrompt(title, summary, topicSentence, selectedAesthetic);
     const imageUrl = await generateAndStoreDreamImage(dreamId, imagePrompt);

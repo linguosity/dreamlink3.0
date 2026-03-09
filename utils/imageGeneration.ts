@@ -61,7 +61,7 @@ export function buildImagePrompt(
   const subject = parts.length > 0 ? parts.join('. ') : 'A sacred vision';
 
   // Look up the aesthetic preset (default to Sacred Oil Painting for free users)
-  const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.SACRED_OIL_PAINTING];
+  const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.PHOTOREALISTIC_VISION];
 
   // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
   // then append Style/Mood annotations from the selected aesthetic preset
