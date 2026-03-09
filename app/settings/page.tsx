@@ -38,35 +38,21 @@ export default function SettingsPage() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
-        
+
         if (user) {
-          // Fetch user preferences from your database
-          const { data: profileData } = await supabase
+          // Single query to fetch all profile columns we need
+          const { data: profile } = await supabase
             .from('profile')
-            .select('preferences')
+            .select('reading_level, bible_version, image_aesthetic, preferences')
             .eq('user_id', user.id)
             .single();
-          
-          if (profileData?.preferences) {
-            setPreferences({
-              ...preferences,
-              ...profileData.preferences
-            });
-          }
-          
-          // Fetch user profile with reading level and Bible version
-          const { data: userProfile } = await supabase
-            .from('profile')
-            .select('reading_level, bible_version')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (userProfile) {
-            if (userProfile.reading_level) {
-              setReadingLevel(userProfile.reading_level);
-            }
-            if (userProfile.bible_version) {
-              setBibleVersion(userProfile.bible_version);
+
+          if (profile) {
+            if (profile.reading_level) setReadingLevel(profile.reading_level);
+            if (profile.bible_version) setBibleVersion(profile.bible_version);
+            if (profile.image_aesthetic) setImageAesthetic(profile.image_aesthetic);
+            if (profile.preferences) {
+              setPreferences(prev => ({ ...prev, ...profile.preferences }));
             }
           }
         }
@@ -132,6 +118,26 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error saving reading settings:', error);
       toast.error('Failed to save reading settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveImageStyle = async () => {
+    if (!user) return;
+    setIsSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('profile')
+        .update({ image_aesthetic: imageAesthetic })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast.success('Image style saved successfully');
+    } catch (error) {
+      console.error('Error saving image style:', error);
+      toast.error('Failed to save image style');
     } finally {
       setIsSaving(false);
     }
@@ -388,7 +394,7 @@ export default function SettingsPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button onClick={saveReadingSettings} disabled={loading || isSaving}>
+            <Button onClick={saveImageStyle} disabled={loading || isSaving}>
               {isSaving ? "Saving..." : "Save Image Style"}
             </Button>
           </CardFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Send, PenLine, AlertCircle, Loader2 } from "lucide-react";
@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
+import { ImageAesthetic } from "@/schema/imageAesthetic";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -22,7 +24,23 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
+  const userAesthetic = useRef<string>(ImageAesthetic.SACRED_OIL_PAINTING);
   const router = useRouter();
+
+  // Fetch user's preferred image aesthetic from profile
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('profile')
+      .select('image_aesthetic')
+      .eq('user_id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data?.image_aesthetic) {
+          userAesthetic.current = data.image_aesthetic;
+        }
+      });
+  }, [userId]);
 
   // Check localStorage for persistent tip dismissal on component mount
   useEffect(() => {
@@ -136,6 +154,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             title: result.analysis.dreamTitle || "",
             summary: result.analysis.analysis || "",
             topicSentence: result.analysis.topicSentence || "",
+            aesthetic: userAesthetic.current,
           });
           // Use navigator.sendBeacon-style approach: start fetch before refresh
           // The keepalive: true option ensures the request survives navigation
