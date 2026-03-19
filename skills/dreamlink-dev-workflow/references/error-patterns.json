@@ -1,0 +1,311 @@
+{
+  "description": "Dreamlink-specific error patterns and their fixes",
+  "last_updated": "2026-03-19",
+  "patterns": [
+    {
+      "id": "ts-unused-import",
+      "error_code": "TS2305",
+      "pattern": "is not exported from module",
+      "description": "Import statement references unused or non-existent symbol",
+      "category": "auto-fix",
+      "auto_fix_available": true,
+      "fix_template": "Remove import statement or fix the imported symbol name",
+      "dreamlink_context": "Common during refactoring when imports are added but not used immediately",
+      "example": {
+        "error": "error TS2305: 'ProfileType' is not exported from module './profile'",
+        "fix": "Either remove the import or check the actual export name in profile.ts"
+      }
+    },
+    {
+      "id": "ts-unused-variable",
+      "error_code": "TS6133",
+      "pattern": "is declared but never used",
+      "description": "Variable declared but not referenced in code",
+      "category": "auto-fix",
+      "auto_fix_available": true,
+      "fix_template": "Remove variable declaration or prefix with underscore if intentional: const _unused = ...",
+      "dreamlink_context": "Occurs when extracting values that end up unused",
+      "example": {
+        "error": "error TS6133: 'userId' is declared but never used",
+        "fix": "Remove the variable or rename to _userId if intentionally unused"
+      }
+    },
+    {
+      "id": "ts-type-mismatch-profile-subscription",
+      "error_code": "TS2339",
+      "pattern": "profile\\.subscription_tier",
+      "description": "Accessing non-existent property subscription_tier on profile type",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Query subscriptions table instead: const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single()",
+      "dreamlink_context": "Known Dreamlink issue: profile table doesn't have subscription_tier; it's stored in subscriptions table. See CLAUDE.md known issues #4",
+      "reference": "CLAUDE.md:103",
+      "example": {
+        "error": "error TS2339: Property 'subscription_tier' does not exist on type 'Profile'",
+        "fix": "Replace profile.subscription_tier lookup with subscriptions table query"
+      }
+    },
+    {
+      "id": "ts-field-equality-mismatch",
+      "error_code": "TS2345",
+      "pattern": "\\.eq\\('id'",
+      "description": "Using .eq('id', userId) instead of .eq('user_id', userId) in query",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Change .eq('id', userId) to .eq('user_id', userId). Many Dreamlink tables use user_id as the user reference.",
+      "dreamlink_context": "Common pattern confusion in Dreamlink. Most tables use 'user_id' foreign key, not 'id'",
+      "reference": "CLAUDE.md:103",
+      "example": {
+        "error": "error TS2345: Argument of type \"'id'\" is not assignable to parameter",
+        "fix": "Change to .eq('user_id', user.id) to match the actual column name"
+      }
+    },
+    {
+      "id": "ts-implicit-any",
+      "error_code": "TS7006",
+      "pattern": "implicitly has type 'any'",
+      "description": "Function parameter or variable missing type annotation",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Add explicit type annotation: (param: string) => or const value: number = ...",
+      "dreamlink_context": "Dreamlink requires strict TypeScript mode with explicit types",
+      "example": {
+        "error": "error TS7006: Parameter 'dream' implicitly has an 'any' type",
+        "fix": "Add type: function analyzeDream(dream: string) { ... }"
+      }
+    },
+    {
+      "id": "ts-missing-await",
+      "error_code": "TS2488",
+      "pattern": "createServerClient",
+      "description": "Missing await on async function like createServerClient()",
+      "category": "auto-fix",
+      "auto_fix_available": false,
+      "fix_template": "Add await: const client = await createServerClient(...)",
+      "dreamlink_context": "createServerClient is async and must be awaited. Common mistake in server actions. See CLAUDE.md authentication #1",
+      "reference": "CLAUDE.md:77",
+      "example": {
+        "error": "error TS2488: Type 'Promise<SupabaseClient>' has no properties",
+        "fix": "Change: const client = createServerClient(...) to: const client = await createServerClient(...)"
+      }
+    },
+    {
+      "id": "eslint-no-console",
+      "error_code": "no-console",
+      "pattern": "console\\.(log|warn|error|info|debug)",
+      "description": "Direct console.log() in production code",
+      "category": "manual-review",
+      "auto_fix_available": true,
+      "fix_template": "Remove console.log or replace with structured logging: import { logger } from '@/utils/logger'; logger.info(...)",
+      "dreamlink_context": "Dreamlink forbids direct console.log in production code. Use structured logging instead. See CLAUDE.md code style",
+      "reference": "CLAUDE.md:50",
+      "example": {
+        "error": "error no-console: 'console.log' was called",
+        "fix": "Replace with logger.info() or remove if not needed"
+      }
+    },
+    {
+      "id": "eslint-floating-promises",
+      "error_code": "no-floating-promises",
+      "pattern": "Floating promise",
+      "description": "Promise not awaited or caught",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Add await or .catch() handler: await operation() or operation().catch(err => handleError(err))",
+      "dreamlink_context": "Async operations must be properly handled to prevent silent failures",
+      "example": {
+        "error": "error no-floating-promises: Promises must be awaited, returned, or explicitly marked as ignored",
+        "fix": "Change: fetchData(); to: await fetchData() or return fetchData()"
+      }
+    },
+    {
+      "id": "openai-max-tokens-reasoning",
+      "error_code": "CUSTOM",
+      "pattern": "max_tokens.*gpt-5-nano",
+      "description": "Using max_tokens with reasoning model (should use max_completion_tokens)",
+      "category": "manual-review",
+      "auto_fix_available": true,
+      "fix_template": "Replace max_tokens with max_completion_tokens for gpt-5-nano",
+      "dreamlink_context": "gpt-5-nano is a reasoning model that uses max_completion_tokens, not max_tokens. See CLAUDE.md OpenAI model note",
+      "reference": "CLAUDE.md:89-92",
+      "example": {
+        "error": "OpenAI API error: Unknown parameter 'max_tokens' for gpt-5-nano",
+        "fix": "Change max_tokens: 2000 to max_completion_tokens: 4000"
+      }
+    },
+    {
+      "id": "openai-temperature-reasoning",
+      "error_code": "CUSTOM",
+      "pattern": "temperature.*gpt-5-nano",
+      "description": "Setting temperature on reasoning model (not supported)",
+      "category": "manual-review",
+      "auto_fix_available": true,
+      "fix_template": "Remove temperature parameter for gpt-5-nano",
+      "dreamlink_context": "Reasoning models don't support custom temperature (always uses 1.0)",
+      "reference": "CLAUDE.md:89-92",
+      "example": {
+        "error": "OpenAI API error: Reasoning models don't support temperature parameter",
+        "fix": "Remove: temperature: 0.7 from gpt-5-nano API calls"
+      }
+    },
+    {
+      "id": "edge-runtime-fs-import",
+      "error_code": "CUSTOM",
+      "pattern": "import.*from 'fs'|import.*from 'node:",
+      "description": "Using node.js module in edge runtime route",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Either remove 'export const runtime = edge' or remove incompatible import",
+      "dreamlink_context": "OpenAI routes use Edge Runtime which doesn't support fs, path, etc.",
+      "reference": "CLAUDE.md:17-19",
+      "example": {
+        "error": "Module 'fs' not found in edge runtime",
+        "fix": "Remove import fs from 'fs' or move to Node.js runtime (remove runtime='edge')"
+      }
+    },
+    {
+      "id": "supabase-browser-in-server",
+      "error_code": "CUSTOM",
+      "pattern": "createBrowserClient.*app/actions\\.ts|createBrowserClient.*route\\.ts",
+      "description": "Using browser client in server context (actions or route handlers)",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Use createServerClient in server actions/routes: const client = await createServerClient()",
+      "dreamlink_context": "Supabase SSR pattern: browser client for 'use client' components, server client for actions/routes",
+      "reference": "CLAUDE.md:73-81",
+      "example": {
+        "error": "createBrowserClient called in server action context",
+        "fix": "Import and use createServerClient from @/utils/supabase/server"
+      }
+    },
+    {
+      "id": "supabase-server-in-browser",
+      "error_code": "CUSTOM",
+      "pattern": "createServerClient.*\\?use client",
+      "description": "Using server client in browser component",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Use createBrowserClient in 'use client' components: const supabase = createBrowserClient()",
+      "dreamlink_context": "Supabase SSR pattern: server client can only be used in server actions/routes",
+      "reference": "CLAUDE.md:73-81",
+      "example": {
+        "error": "createServerClient used in client component",
+        "fix": "Import createBrowserClient from @/utils/supabase/client"
+      }
+    },
+    {
+      "id": "rls-policy-test-failure",
+      "error_code": "CUSTOM",
+      "pattern": "no rows returned|RLS policy",
+      "description": "Test failing due to RLS policy denying access",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Use admin client in tests to bypass RLS: const adminClient = createClient(url, serviceRoleKey)",
+      "dreamlink_context": "RLS policies strictly enforced; tests need admin client to insert test data",
+      "example": {
+        "error": "Test failed: no rows returned (RLS policy denied access)",
+        "fix": "Use admin client for test data setup"
+      }
+    },
+    {
+      "id": "next-themes-hydration",
+      "error_code": "CUSTOM",
+      "pattern": "hydration.*theme|mismatch.*theme",
+      "description": "Hydration mismatch in theme provider",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Wrap ThemeProvider in Suspense: <Suspense fallback={...}><ThemeProvider>...",
+      "dreamlink_context": "next-themes requires proper hydration handling in Next.js",
+      "example": {
+        "error": "Hydration mismatch: expected text 'light' but found 'dark'",
+        "fix": "Wrap ThemeProvider in Suspense with loading fallback"
+      }
+    },
+    {
+      "id": "framer-motion-server-component",
+      "error_code": "CUSTOM",
+      "pattern": "motion\\.|AnimatePresence.*(?!use client)",
+      "description": "Using Framer Motion in server component",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Add 'use client' directive to component: 'use client'",
+      "dreamlink_context": "Framer Motion requires client-side rendering",
+      "example": {
+        "error": "Server component can't use motion components",
+        "fix": "Add 'use client' at top of file"
+      }
+    },
+    {
+      "id": "debug-endpoint-no-auth",
+      "error_code": "CUSTOM",
+      "pattern": "app/api/debug|app/api/seed|app/api/test",
+      "description": "Debug/seed endpoint without authentication guard",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Add auth check at start of handler: const user = await getUser(); if (!user || !isAdmin(user)) return new Response('Unauthorized', { status: 401 })",
+      "dreamlink_context": "Debug endpoints must never be accessible in production without proper auth guards",
+      "example": {
+        "error": "Debug endpoint /api/debug/seed accessible without authentication",
+        "fix": "Add requireAuth middleware or check user permissions"
+      }
+    },
+    {
+      "id": "duplicate-file-conflict",
+      "error_code": "CUSTOM",
+      "pattern": "providers 2\\.tsx|use-dream-search 2\\.ts",
+      "description": "Duplicate/conflicting file will cause import confusion",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Consolidate duplicate files: choose one version and delete the other",
+      "dreamlink_context": "Duplicate files cause import resolution issues and confusion during development",
+      "example": {
+        "error": "File 'providers 2.tsx' conflicts with 'providers.tsx'",
+        "fix": "Review both versions, consolidate changes, delete the duplicate"
+      }
+    },
+    {
+      "id": "version-json-outdated",
+      "error_code": "CUSTOM",
+      "pattern": "version\\.json",
+      "description": "public/version.json not updated or missing",
+      "category": "manual-review",
+      "auto_fix_available": true,
+      "fix_template": "Run npm run version:update to regenerate version.json",
+      "dreamlink_context": "Version file tracks deployment and git commit hash",
+      "example": {
+        "error": "version.json not updated in this commit",
+        "fix": "Run: npm run version:update"
+      }
+    },
+    {
+      "id": "schema-drift-missing-field",
+      "error_code": "CUSTOM",
+      "pattern": "schema.*missing|column.*not found",
+      "description": "Zod schema missing field that exists in DB (schema drift)",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Add field to Zod schema: fieldName: z.string().nullable() or update migration if field shouldn't exist",
+      "dreamlink_context": "Schema drift occurs when migrations add columns but Zod schemas aren't updated",
+      "reference": "Run: node scripts/validate-schema-sync.js",
+      "example": {
+        "error": "bible_citations.source column not found in schema",
+        "fix": "Add to bibleCitationSchema: source: z.string().optional()"
+      }
+    },
+    {
+      "id": "missing-schema-for-table",
+      "error_code": "CUSTOM",
+      "pattern": "payments.*no schema|no zod.*table",
+      "description": "SQL table exists but no corresponding Zod schema",
+      "category": "manual-review",
+      "auto_fix_available": false,
+      "fix_template": "Create Zod schema for table: Create schema/payments.ts with z.object definition",
+      "dreamlink_context": "Known Dreamlink issue: payments table has no Zod schema",
+      "reference": "CLAUDE.md schema context",
+      "example": {
+        "error": "payments table exists in DB but no Zod schema found",
+        "fix": "Create schema/payments.ts with proper Zod schema"
+      }
+    }
+  ]
+}
