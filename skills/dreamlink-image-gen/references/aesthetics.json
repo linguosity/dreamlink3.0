@@ -1,0 +1,140 @@
+{
+  "aesthetics": [
+    {
+      "id": "sacred_oil_painting",
+      "name": "Sacred Oil Painting",
+      "display_name": "Sacred Oil Painting",
+      "description": "Classical biblical illustration with luminous golden light, reminiscent of Old Masters",
+      "tier": "free",
+      "scene_prose_template": "Warm golden lighting with soft shadows creating depth. Rich earthy palette of ochre, umber, burnt sienna, and deep lapis blue. Soft chiaroscuro with painterly texture visible throughout.",
+      "style_annotation": "Style: Classical oil painting with layered glazes, visible brushwork, and impasto details. Mood: Sacred, contemplative, timeless.",
+      "flux_parameters": {
+        "guidance_scale": 7.5,
+        "steps": null
+      },
+      "color_palette": ["#D4AF37", "#8B7355", "#2F4F4F", "#8B6914", "#F5DEB3", "#654321"],
+      "mood_keywords": ["sacred", "contemplative", "luminous", "divine", "timeless", "reverent"],
+      "example_prompt_fragment": "A figure kneeling in prayer, bathed in golden light streaming through a stone archway. Classical oil painting style with soft shadows and rich earth tones.",
+      "negative_prompt_hints": "modern, digital, bright colors, harsh lighting, cartoon, anime, photorealistic"
+    },
+    {
+      "id": "stained_glass",
+      "name": "Stained Glass",
+      "display_name": "Stained Glass",
+      "description": "Medieval cathedral window aesthetic with jewel-toned light and bold geometric patterns",
+      "tier": "free",
+      "scene_prose_template": "Bold jewel tones of sapphire blue, ruby red, emerald green, and amber yellow separated by dark lead lines. Light radiates through translucent color creating a glowing effect. Geometric and organic patterns interweave.",
+      "style_annotation": "Style: Medieval stained glass window with bold outlines, thick lead lines, and translucent jewel-toned colors. Mood: Reverent, sacred geometry, timeless spirituality.",
+      "flux_parameters": {
+        "guidance_scale": 8.0,
+        "steps": null
+      },
+      "color_palette": ["#1E3A8A", "#DC2626", "#059669", "#F59E0B", "#2D3E50", "#FFD700"],
+      "mood_keywords": ["reverent", "sacred", "geometric", "medieval", "luminous", "spiritual"],
+      "example_prompt_fragment": "A saint surrounded by geometric patterns of glowing sapphire and ruby, separated by dark lead lines. Stained glass cathedral window aesthetic with divine radiance.",
+      "negative_prompt_hints": "photorealistic, modern, naturalistic, soft edges, smooth, blurred, realistic"
+    },
+    {
+      "id": "watercolor_dreamscape",
+      "name": "Watercolor Dreamscape",
+      "display_name": "Watercolor Dreamscape",
+      "description": "Soft, flowing watercolors with ethereal morning light and dissolving edges",
+      "tier": "visionary",
+      "scene_prose_template": "Soft diffused morning light creating an ethereal atmosphere. Colors bleed gently into one another with visible paper texture. Hazy, translucent washes of cool blues, soft purples, and pale greens. Edges dissolve into white space.",
+      "style_annotation": "Style: Ethereal watercolor with wet-on-wet technique, edges dissolving into white, visible paper texture, and soft color gradients. Mood: Peaceful, dreamlike, introspective, gentle.",
+      "flux_parameters": {
+        "guidance_scale": 6.5,
+        "steps": null
+      },
+      "color_palette": ["#E0F2FE", "#D1FAE5", "#F3E8FF", "#FEE2E2", "#DBEAFE", "#7C3AED"],
+      "mood_keywords": ["peaceful", "ethereal", "dreamlike", "soft", "introspective", "gentle"],
+      "example_prompt_fragment": "A misty figure floating through a dreamscape, painted in soft watercolor washes of blue and purple. Colors blend and dissolve into white space with visible paper texture.",
+      "negative_prompt_hints": "sharp edges, photorealistic, detailed, bold colors, harsh lighting, oil painting, digital art"
+    },
+    {
+      "id": "celestial_cosmos",
+      "name": "Celestial Cosmos",
+      "display_name": "Celestial Cosmos",
+      "description": "Cosmic nebulae and starfields with spiritual radiance and transcendent atmosphere",
+      "tier": "visionary",
+      "scene_prose_template": "Deep space backdrop with swirling nebulae in violet, teal, and rose gold. Distant starfields twinkle and shimmer. Cosmic dust particles catch light. Aurora-like colors blend and flow. Infinite depth and scale.",
+      "style_annotation": "Style: Cosmic spiritual art with deep-space palette, mystical radiance, star clusters, and nebula flows. Mood: Infinite, transcendent, awe-inspiring, eternal.",
+      "flux_parameters": {
+        "guidance_scale": 7.0,
+        "steps": null
+      },
+      "color_palette": ["#1E0B3E", "#6D28D9", "#14B8A6", "#F97316", "#EC4899", "#0EA5E9"],
+      "mood_keywords": ["infinite", "transcendent", "cosmic", "mystical", "awe-inspiring", "eternal"],
+      "example_prompt_fragment": "A figure ascending through cosmic nebulae of violet and teal, surrounded by swirling stars and aurora light. Deep space backdrop with infinite depth.",
+      "negative_prompt_hints": "earth-like, landscape, photorealistic, limited color palette, dim lighting, cartoon"
+    },
+    {
+      "id": "renaissance_fresco",
+      "name": "Renaissance Fresco",
+      "display_name": "Renaissance Fresco",
+      "description": "Sistine Chapel grandeur with warm divine radiance and masterful Renaissance anatomy",
+      "tier": "visionary",
+      "scene_prose_template": "Warm candlelight on aged plaster with careful light modeling. Skin tones of ochre and rose. Fine cracks and patina of age add character. Dramatic foreshortening and anatomical mastery. Divine light radiates from above.",
+      "style_annotation": "Style: High Renaissance fresco with masterful anatomy, dramatic foreshortening, soft modeling light, and aged plaster texture. Mood: Majestic, eternal, divine grace.",
+      "flux_parameters": {
+        "guidance_scale": 7.5,
+        "steps": null
+      },
+      "color_palette": ["#DEB887", "#CD853F", "#B8860B", "#8B4513", "#A0826D", "#F5DEB3"],
+      "mood_keywords": ["majestic", "eternal", "divine", "graceful", "anatomical", "renaissance"],
+      "example_prompt_fragment": "A muscular figure reaching toward divine light, painted in Renaissance fresco style with masterful anatomy and warm candlelight. Aged plaster texture with ochre and rose tones.",
+      "negative_prompt_hints": "modern, cartoon, simple, digital, photorealistic, contemporary, harsh lighting"
+    },
+    {
+      "id": "surreal_prophetic",
+      "name": "Surreal Prophetic",
+      "display_name": "Surreal Prophetic",
+      "description": "Dalí-meets-Blake surrealism with dramatic chiaroscuro and prophetic intensity",
+      "tier": "prophet",
+      "scene_prose_template": "Reality warped and dreamlike—objects defy gravity and normal scale relationships. Dramatic chiaroscuro with deep shadows melting into blazing highlights. Impossible geometries coexist. Unsettling beauty with profound meaning.",
+      "style_annotation": "Style: Surrealist dreamscape with visionary intensity, impossible geometries, dramatic lighting contrasts, and emotional depth. Mood: Otherworldly, prophetic, unsettling beauty, profound mystery.",
+      "flux_parameters": {
+        "guidance_scale": 8.5,
+        "steps": null
+      },
+      "color_palette": ["#0F172A", "#1E1B4B", "#DC2626", "#F59E0B", "#7C3AED", "#06B6D4"],
+      "mood_keywords": ["otherworldly", "prophetic", "surreal", "intense", "mysterious", "visionary"],
+      "example_prompt_fragment": "A figure trapped in impossible geometry, defying gravity and scale. Surrealist dreamscape with dramatic chiaroscuro, melting shadows, and blazing highlights. Prophetic and unsettling.",
+      "negative_prompt_hints": "realistic, naturalistic, calm, peaceful, orderly, simple, bright colors"
+    },
+    {
+      "id": "anime_sacred",
+      "name": "Anime Sacred",
+      "display_name": "Anime Sacred",
+      "description": "High-quality anime fantasy with ethereal spiritual glow and enchanting atmosphere",
+      "tier": "prophet",
+      "scene_prose_template": "Luminous ethereal glow surrounding key elements. Delicate particle effects shimmer and dance. Soft lens flares and light refractions. Spiritual fantasy atmosphere with bright, hopeful coloring. Dynamic composition with visual elegance.",
+      "style_annotation": "Style: High-quality anime illustration with spiritual fantasy elements, ethereal glow effects, particle shimmer, and dynamic composition. Mood: Enchanting, hopeful, magical, spiritually uplifting.",
+      "flux_parameters": {
+        "guidance_scale": 7.5,
+        "steps": null
+      },
+      "color_palette": ["#FDF8F6", "#F472B6", "#60A5FA", "#34D399", "#FBBF24", "#A78BFA"],
+      "mood_keywords": ["enchanting", "hopeful", "magical", "ethereal", "spiritual", "uplifting"],
+      "example_prompt_fragment": "A beautiful anime character surrounded by ethereal glow and particle effects, spiritual aura radiating outward. High-quality anime fantasy style with soft lens flares and hopeful atmosphere.",
+      "negative_prompt_hints": "photorealistic, realistic, dark, oil painting, watercolor, grayscale, low-quality"
+    },
+    {
+      "id": "photorealistic_vision",
+      "name": "Photorealistic Vision",
+      "display_name": "Photorealistic Vision",
+      "description": "Cinematic photography with golden hour backlight, shallow depth of field, and intimate radiance",
+      "tier": "prophet",
+      "scene_prose_template": "Golden hour backlight with subtle lens flare and warm rim lighting. Shallow depth of field with creamy bokeh background. Fine details rendered sharply in foreground. Cinematic color grading with warm tones and lifted shadows.",
+      "style_annotation": "Style: 35mm film photography (Kodak Portra 400), razor-sharp subject focus, cinematic color grading, subtle film grain. Mood: Intimate, cinematic, transcendent, profoundly real.",
+      "flux_parameters": {
+        "guidance_scale": 7.0,
+        "steps": null
+      },
+      "color_palette": ["#FFD700", "#FFA500", "#FF8C00", "#8B6914", "#D2B48C", "#F5DEB3"],
+      "mood_keywords": ["cinematic", "intimate", "photorealistic", "transcendent", "golden", "real"],
+      "example_prompt_fragment": "A figure backlit by golden hour light with subtle lens flare, shot on 35mm Kodak Portra 400. Shallow depth of field with creamy bokeh, cinematic color grading, intimate and transcendent mood.",
+      "negative_prompt_hints": "cartoon, anime, watercolor, oil painting, abstract, dark, low-quality, digital art"
+    }
+  ]
+}
