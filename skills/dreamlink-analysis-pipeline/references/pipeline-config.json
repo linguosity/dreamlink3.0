@@ -1,0 +1,201 @@
+{
+  "model_configs": {
+    "gpt-5-nano": {
+      "display_name": "GPT-5 Nano (Reasoning)",
+      "description": "Reasoning model with internal thought process; best for deep analysis",
+      "max_completion_tokens": 4000,
+      "supports_temperature": false,
+      "supports_json_schema": true,
+      "cost_per_1k_input_tokens": 0.0015,
+      "cost_per_1k_output_tokens": 0.006,
+      "estimated_cost_per_request": 0.30,
+      "average_latency_ms": 8000,
+      "recommended_for": [
+        "prophetic_wisdom",
+        "divine_revelation"
+      ],
+      "reasoning_tokens_included": true,
+      "max_input_tokens": 8192,
+      "notes": "No custom temperature; max_completion_tokens includes internal reasoning. Monitor finish_reason for truncation."
+    },
+    "gpt-4o-mini": {
+      "display_name": "GPT-4 Omni Mini",
+      "description": "Fast, cost-effective model; good for standard analysis",
+      "max_tokens": 2000,
+      "supports_temperature": true,
+      "supports_json_schema": true,
+      "cost_per_1k_input_tokens": 0.00015,
+      "cost_per_1k_output_tokens": 0.0006,
+      "estimated_cost_per_request": 0.08,
+      "average_latency_ms": 2000,
+      "recommended_for": [
+        "radiant_clarity",
+        "celestial_insight"
+      ],
+      "reasoning_tokens_included": false,
+      "max_input_tokens": 8192,
+      "notes": "Fastest option; suitable for high-volume processing."
+    },
+    "gpt-4.1-nano": {
+      "display_name": "GPT-4.1 Nano",
+      "description": "Advanced reasoning variant with better structured output",
+      "max_completion_tokens": 3000,
+      "supports_temperature": false,
+      "supports_json_schema": true,
+      "cost_per_1k_input_tokens": 0.001,
+      "cost_per_1k_output_tokens": 0.004,
+      "estimated_cost_per_request": 0.20,
+      "average_latency_ms": 6000,
+      "recommended_for": [
+        "prophetic_wisdom"
+      ],
+      "reasoning_tokens_included": true,
+      "max_input_tokens": 8192,
+      "notes": "Alternative reasoning model; good balance of cost and quality."
+    }
+  },
+
+  "cache_config": {
+    "enabled": true,
+    "ttl_hours": 24,
+    "max_entries": 10000,
+    "table_name": "analysis_cache",
+    "cleanup_interval_hours": 24,
+    "cleanup_job_name": "cleanup_analysis_cache",
+    "description": "Persistent cache using Supabase table; SHA-256 key based on dream_text + reading_level"
+  },
+
+  "validation_rules": {
+    "min_dream_length": 10,
+    "max_dream_length": 10000,
+    "required_analysis_fields": [
+      "topicSentence",
+      "supportingPoints",
+      "conclusionSentence",
+      "personalizedSummary",
+      "dreamTitle",
+      "biblicalReferences",
+      "tags",
+      "analysis"
+    ],
+    "supporting_points_min": 1,
+    "supporting_points_max": 5,
+    "tags_min": 3,
+    "tags_max": 5,
+    "dream_title_min_words": 3,
+    "dream_title_max_words": 6,
+    "citation_regex": "\\([A-Za-z0-9\\s:]+\\)",
+    "description": "Input and output validation constraints for the analysis pipeline"
+  },
+
+  "retry_config": {
+    "max_retries": 2,
+    "backoff_ms": 1000,
+    "backoff_multiplier": 2,
+    "retry_on": [
+      "ETIMEDOUT",
+      "ECONNRESET",
+      "429",
+      "500",
+      "502",
+      "503",
+      "504"
+    ],
+    "description": "Exponential backoff strategy for transient errors"
+  },
+
+  "timeout_config": {
+    "openai_timeout_ms": 45000,
+    "total_pipeline_timeout_ms": 60000,
+    "cache_lookup_timeout_ms": 2000,
+    "profile_lookup_timeout_ms": 2000,
+    "database_write_timeout_ms": 5000,
+    "description": "Pipeline stage timeouts (Vercel 60s function limit)"
+  },
+
+  "error_handling": {
+    "empty_content_strategy": "return_error_with_message",
+    "json_parse_failure_strategy": "attempt_repair_then_fallback",
+    "database_write_failure_strategy": "log_continue_for_noncritical",
+    "image_generation_failure_strategy": "nonblocking_async",
+    "cache_failure_strategy": "graceful_degradation",
+    "description": "Strategies for handling errors at each pipeline stage"
+  },
+
+  "monitoring": {
+    "metrics_to_track": [
+      "cache_hit_rate",
+      "average_response_time",
+      "openai_token_usage",
+      "finish_reason_distribution",
+      "error_rate_by_stage",
+      "database_write_success_rate"
+    ],
+    "alert_thresholds": {
+      "cache_hit_rate_below": 0.2,
+      "response_time_above_ms": 15000,
+      "finish_reason_length_above_percent": 0.05,
+      "error_rate_above_percent": 0.01,
+      "database_write_failure_above_percent": 0.02
+    },
+    "description": "Recommended metrics and alert thresholds for production monitoring"
+  },
+
+  "database_schema": {
+    "analysis_cache": {
+      "description": "Persistent cache for analysis results (replaces in-memory LRU)",
+      "columns": {
+        "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+        "cache_key": "TEXT NOT NULL UNIQUE (SHA-256 of dream_text:reading_level)",
+        "analysis_data": "JSONB NOT NULL (full OpenAI response)",
+        "created_at": "TIMESTAMPTZ DEFAULT NOW()",
+        "expires_at": "TIMESTAMPTZ NOT NULL (created_at + 24 hours)",
+        "metadata": "JSONB (optional: user_id for audit, dream length, etc.)"
+      },
+      "indexes": [
+        "idx_analysis_cache_key_expires (cache_key, expires_at)"
+      ],
+      "constraints": [
+        "CHECK (expires_at > created_at)"
+      ],
+      "cleanup": "DELETE FROM analysis_cache WHERE expires_at < NOW() (run daily)"
+    }
+  },
+
+  "prompting_strategy": {
+    "base_system_message": "You are a biblical dream interpreter who provides concise, insightful analysis with scripture references.",
+    "prompt_structure": [
+      "1. System message (role definition)",
+      "2. Reading level instructions (from dreamlink-domain-knowledge skill)",
+      "3. Dream analysis instructions (core prompt)",
+      "4. Dream text (user input)",
+      "5. Format instructions (JSON schema expectations)",
+      "6. Output constraints (length, field requirements)"
+    ],
+    "reading_level_interpolation": "Insert reading level-specific instructions from dreamlink-domain-knowledge skill based on user profile",
+    "domain_knowledge_integration": "Reference dream symbol taxonomy and biblical themes from dreamlink-domain-knowledge when constructing prompts"
+  },
+
+  "composition_references": {
+    "dreamlink-domain-knowledge": {
+      "usage": "Provides reading level instructions, dream symbol taxonomy, and biblical theme mappings",
+      "methods_used": [
+        "getReadingLevelInstructions(readingLevel)",
+        "dream-symbols.json (symbol meanings)",
+        "bible-crossrefs.json (theme mapping)"
+      ]
+    },
+    "dreamlink-image-gen": {
+      "usage": "Triggered after successful analysis storage to generate accompanying image",
+      "interface": "POST /api/dream-image with dream_entry_id, themes, aesthetic_preference",
+      "async_pattern": "Fire-and-forget; image appears after processing completes"
+    }
+  },
+
+  "version_history": {
+    "1.0": {
+      "date": "2026-03-19",
+      "changes": "Initial release: Replaces in-memory LRU cache with Supabase-backed persistent cache; adds validation repair and error recovery"
+    }
+  }
+}
