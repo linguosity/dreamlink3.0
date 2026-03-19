@@ -1,0 +1,84 @@
+{
+  "reading_levels": [
+    {
+      "id": "RADIANT_CLARITY",
+      "name": "Radiant Clarity",
+      "display_name": "3rd Grade Level",
+      "grade_equivalent": 3,
+      "grade_age": "8-9 years old",
+      "vocabulary_target": "200-500 common words, mostly 1-2 syllables",
+      "sentence_complexity": "Short, simple sentences (8-12 words maximum). One idea per sentence. No complex clauses.",
+      "tone_guidelines": [
+        "Warm and encouraging",
+        "Safe and reassuring",
+        "Wonder-filled but not scary",
+        "Direct and concrete",
+        "Affirming of feelings"
+      ],
+      "description": "For young dreamers or families sharing dreams. Uses the simplest language, concrete examples, and warm tone. Focus on beauty and safety.",
+      "prompt_modifiers": "Use only very simple words that a 3rd grader knows. Keep sentences short (8-12 words). Be warm and encouraging. Don't use big words or scary ideas. Use concrete examples. Make it feel safe and wonderful.",
+      "example_output_snippet": "Your dream about the garden is beautiful! Gardens are places where things grow and where it's safe. In the Bible, God made a wonderful garden called Eden. It was full of flowers, fruit, and peace. Your dream might mean that good things are growing in your life. That's a happy thing!",
+      "color_hex": "#FFE6B3"
+    },
+    {
+      "id": "CELESTIAL_INSIGHT",
+      "name": "Celestial Insight",
+      "display_name": "8th Grade Level",
+      "grade_equivalent": 8,
+      "grade_age": "13-14 years old",
+      "vocabulary_target": "1500-2000 words, mix of common and less common terms",
+      "sentence_complexity": "Varied sentence length (12-20 words typical). Some compound and simple complex sentences. Clear transitions between ideas.",
+      "tone_guidelines": [
+        "Thoughtful and engaging",
+        "Balanced detail without overwhelming",
+        "Mix of practical and spiritual",
+        "Respectful of teen perspective",
+        "Curious and exploratory"
+      ],
+      "description": "The default level for general audience and teens. Balanced explanation with moderate vocabulary and some depth. Connects spiritual and practical meaning.",
+      "prompt_modifiers": "Explain this at an 8th-grade level. Use moderate vocabulary and include some spiritual concepts. Mix practical advice with biblical wisdom. Include relatable examples. Keep the tone thoughtful but accessible.",
+      "example_output_snippet": "Dreams about mountains often represent challenges or spiritual growth. When you dream of climbing a mountain, it might reflect a real challenge you're facing or a spiritual goal you're working toward. In the Bible, mountains are places where important meetings with God happened. Mount Sinai is where God gave the Ten Commandments to Moses. Your dream could mean that you're in a season of growth, and the difficulty of climbing represents the effort required to reach your goal. That's a sign of strength and determination.",
+      "color_hex": "#B3D9FF"
+    },
+    {
+      "id": "PROPHETIC_WISDOM",
+      "name": "Prophetic Wisdom",
+      "display_name": "12th Grade Level",
+      "grade_equivalent": 12,
+      "grade_age": "17-18 years old",
+      "vocabulary_target": "3000+ words, academic and theological vocabulary",
+      "sentence_complexity": "Complex sentences with subordinate clauses (20+ words). Sophisticated sentence structure. Multiple paragraphs with clear thesis.",
+      "tone_guidelines": [
+        "Intellectually rigorous",
+        "Theologically informed",
+        "Assumes biblical literacy",
+        "Nuanced and contextual",
+        "Scholarly but accessible"
+      ],
+      "description": "For adults seeking theological depth. Rich vocabulary, extensive biblical context, and nuanced analysis. Assumes familiarity with scripture.",
+      "prompt_modifiers": "Provide a 12th-grade level interpretation with theological depth. Use rich vocabulary and assume biblical knowledge. Include cross-references and theological context. Discuss symbolism and archetype. Be nuanced and comprehensive. Include historical and cultural context where relevant.",
+      "example_output_snippet": "The mountain archetype occupies a liminal space within biblical consciousness, functioning simultaneously as a threshold between the material and transcendent realms. Theologically, mountains represent both the pinnacle of human aspiration and the locus of divine encounter—Moses receiving the Torah on Mount Sinai, Jesus transfigured on an unnamed mountain, and John's eschatological vision of the Holy City elevated above earthly geography. Jungian analysis identifies the mountain with the Self archetype, the individuated center toward which the psyche perpetually gravitates. Your dream of ascending a mountain thus suggests an integrative process, a developmental trajectory toward wholeness that necessarily involves confrontation with limitation and resistance. The Hebraic notion of 'aliyah' (ascent) further enriches this interpretation, implying both geographical movement and spiritual elevation.",
+      "color_hex": "#D9B3FF"
+    },
+    {
+      "id": "DIVINE_REVELATION",
+      "name": "Divine Revelation",
+      "display_name": "Scholarly/Academic Level",
+      "grade_equivalent": "graduate+",
+      "grade_age": "Scholar, academic, researcher",
+      "vocabulary_target": "Unrestricted academic vocabulary; original language terms (Hebrew, Greek, Aramaic)",
+      "sentence_complexity": "Highly complex with multiple subordinate clauses, parenthetical insertions, and sophisticated flow. Dense but precise.",
+      "tone_guidelines": [
+        "Rigorously academic",
+        "Hermeneutically sophisticated",
+        "Etymologically precise",
+        "Cross-cultural and comparative",
+        "Evidentially documented"
+      ],
+      "description": "For scholars, theologians, and advanced seekers. Employs academic rigor, original language analysis, extensive cross-references, and hermeneutical sophistication.",
+      "prompt_modifiers": "Provide comprehensive scholarly interpretation suitable for academic theology. Include original language analysis (Hebrew/Greek where relevant). Reference scholarly sources, commentaries, and historical-critical analysis. Discuss hermeneutical frameworks, typology, and symbolism. Include gematria analysis if numerically significant. Use academic tone with rigorous citations.",
+      "example_output_snippet": "The oneiric imagery of mountain ascent invokes the Hebrew concept of har (הר), which in biblical anthropomorphic geography represents not merely topographical elevation but rather the sacred axis mundi—the cosmological center through which human consciousness interfaces with divine reality (cf. Eliade's analysis in 'The Sacred and the Profane'). The motif appears paradigmatically in theophanic narratives: har Sinai as the locus of covenant inauguration (Exodus 19:1-25, particularly the sapphire-pavement vision in Exodus 24:10); har Tabor as the eschatological judgment seat; and har Zion as the perpetually renewed point of connection between celestial Jerusalem and terrestrial Jerusalem. From Jungian hermeneutics, the mountain complex integrates the Shadow (obstacles and resistance), the Wise Old Man archetype (transpersonal wisdom), and the Self (integrative wholeness), thereby suggesting a dreams expressing individuation processes consonant with Ladner's analysis of 'the symbolic self.'",
+      "color_hex": "#FFB3D9"
+    }
+  ]
+}

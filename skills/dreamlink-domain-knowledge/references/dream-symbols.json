@@ -1,0 +1,1743 @@
+{
+  "symbols": [
+    {
+      "id": "water",
+      "name": "Water",
+      "category": "Nature",
+      "common_meanings": [
+        "Emotion, especially the unconscious mind",
+        "Purification, cleansing, renewal",
+        "Life, abundance, spiritual flow",
+        "Danger, drowning, being overwhelmed",
+        "Crossing a threshold or boundary",
+        "The Holy Spirit in Christian tradition"
+      ],
+      "biblical_references": [
+        {
+          "book": "Exodus",
+          "chapter": 14,
+          "verse": "21-22",
+          "context": "Crossing the Red Sea - divine deliverance and new beginning"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 3,
+          "verse": "16",
+          "context": "Jesus baptized in water - Holy Spirit presence"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 23,
+          "verse": "2",
+          "context": "Still waters for comfort and restoration"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 22,
+          "verse": "1",
+          "context": "River of life flowing from God's throne"
+        },
+        {
+          "book": "John",
+          "chapter": 4,
+          "verse": "14",
+          "context": "Living water - eternal spiritual sustenance"
+        }
+      ],
+      "jungian_archetype": "The Shadow (chaos, unconscious) or The Self (wholeness)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "mountain",
+      "name": "Mountain",
+      "category": "Nature",
+      "common_meanings": [
+        "Obstacle or challenge to overcome",
+        "Spiritual elevation or enlightenment",
+        "God's presence and majesty",
+        "A goal or aspiration",
+        "Stability and permanence",
+        "Testing or trial of faith"
+      ],
+      "biblical_references": [
+        {
+          "book": "Exodus",
+          "chapter": 19,
+          "verse": "1-3",
+          "context": "Mt. Sinai - God's presence and law given"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 6,
+          "verse": "1",
+          "context": "The Sermon on the Mount - spiritual teaching"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 121,
+          "verse": "1-2",
+          "context": "Lifting eyes to the mountains for help"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 22,
+          "verse": "2",
+          "context": "Mt. Moriah - Abraham's test of faith"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 17,
+          "verse": "1-8",
+          "context": "Transfiguration on the mountain - divine transformation"
+        }
+      ],
+      "jungian_archetype": "The Hero (facing challenges) or The Wise Old Man/Woman (peak of wisdom)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "tree",
+      "name": "Tree",
+      "category": "Nature",
+      "common_meanings": [
+        "Growth, life, vitality",
+        "Connection between earth and heaven",
+        "Knowledge and wisdom",
+        "Family lineage and roots",
+        "Bearing fruit and productivity",
+        "Stability and deep foundation"
+      ],
+      "biblical_references": [
+        {
+          "book": "Genesis",
+          "chapter": 2,
+          "verse": "9",
+          "context": "Tree of Life in the Garden - eternal life"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 2,
+          "verse": "17",
+          "context": "Tree of Knowledge of Good and Evil"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 1,
+          "verse": "3",
+          "context": "Righteous person planted by streams, bearing fruit"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 7,
+          "verse": "17-20",
+          "context": "Good tree bears good fruit - you know people by their actions"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 22,
+          "verse": "2",
+          "context": "Tree of Life in the New Jerusalem bearing twelve kinds of fruit"
+        }
+      ],
+      "jungian_archetype": "The Self (wholeness and integration) or The Wise Old Man/Woman (ancient wisdom)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "fire",
+      "name": "Fire",
+      "category": "Nature",
+      "common_meanings": [
+        "Passion, energy, enthusiasm",
+        "Divine presence or judgment",
+        "Purification and testing",
+        "Destruction and loss",
+        "Transformation and renewal",
+        "Danger and warning"
+      ],
+      "biblical_references": [
+        {
+          "book": "Exodus",
+          "chapter": 3,
+          "verse": "2",
+          "context": "Burning bush - God's presence in the fire"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 29,
+          "verse": "7",
+          "context": "The voice of the Lord flashes with fire"
+        },
+        {
+          "book": "Malachi",
+          "chapter": 3,
+          "verse": "2",
+          "context": "The Lord will sit as a refiner with fire, purifying"
+        },
+        {
+          "book": "Acts",
+          "chapter": 2,
+          "verse": "3",
+          "context": "Tongues of fire at Pentecost - Holy Spirit empowering"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 3,
+          "verse": "18",
+          "context": "Refined by fire - spiritual refinement"
+        }
+      ],
+      "jungian_archetype": "The Shadow (destructive force) or The Self (transformative power)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "garden",
+      "name": "Garden",
+      "category": "Nature",
+      "common_meanings": [
+        "Paradise, safe haven, peace",
+        "Growth and cultivation",
+        "Abundance and provision",
+        "New beginning or restoration",
+        "Beauty and harmony",
+        "A place of nurture"
+      ],
+      "biblical_references": [
+        {
+          "book": "Genesis",
+          "chapter": 2,
+          "verse": "8-15",
+          "context": "The Garden of Eden - God's perfect provision"
+        },
+        {
+          "book": "Song of Solomon",
+          "chapter": 4,
+          "verse": "12-16",
+          "context": "Garden as beloved, beauty and enclosed paradise"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 51,
+          "verse": "3",
+          "context": "God makes waste places like the Garden of Eden"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 26,
+          "verse": "36-39",
+          "context": "Gethsemane garden - place of submission to God's will"
+        },
+        {
+          "book": "John",
+          "chapter": 20,
+          "verse": "15",
+          "context": "Jesus standing in a garden - resurrection and new life"
+        }
+      ],
+      "jungian_archetype": "The Mother (nourishment) or The Self (wholeness and harmony)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "river",
+      "name": "River",
+      "category": "Nature",
+      "common_meanings": [
+        "Life's journey and flow",
+        "Separation or boundary",
+        "Abundance flowing freely",
+        "The passage of time",
+        "Movement and change",
+        "Power and force"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 46,
+          "verse": "4",
+          "context": "River gladdening the city of God"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 2,
+          "verse": "10",
+          "context": "River flowing out of Eden to water the garden"
+        },
+        {
+          "book": "Joshua",
+          "chapter": 3,
+          "verse": "14-17",
+          "context": "Jordan River crossing - entering the promised land"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 22,
+          "verse": "1",
+          "context": "River of the water of life flowing from God's throne"
+        },
+        {
+          "book": "Ezekiel",
+          "chapter": 47,
+          "verse": "1-12",
+          "context": "River flowing from temple bringing healing and life"
+        }
+      ],
+      "jungian_archetype": "The Journey (life's passage) or The Shadow (overwhelming power)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "storm",
+      "name": "Storm",
+      "category": "Nature",
+      "common_meanings": [
+        "Turmoil, chaos, confusion",
+        "God's power and presence",
+        "Trial or testing of faith",
+        "Emotional upheaval",
+        "Clearing of atmosphere (catharsis)",
+        "Danger and uncertainty"
+      ],
+      "biblical_references": [
+        {
+          "book": "Mark",
+          "chapter": 4,
+          "verse": "35-41",
+          "context": "Jesus calms the storm - faith conquering fear"
+        },
+        {
+          "book": "Job",
+          "chapter": 38,
+          "verse": "1",
+          "context": "God speaks from the storm - divine wisdom"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 107,
+          "verse": "25-29",
+          "context": "Storms and God's stilling power"
+        },
+        {
+          "book": "Jonah",
+          "chapter": 1,
+          "verse": "4",
+          "context": "Great storm sent by God - judgment and correction"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 6,
+          "verse": "13",
+          "context": "Heavenly signs - storms as precursors to judgment"
+        }
+      ],
+      "jungian_archetype": "The Shadow (chaos) or The Self (testing)",
+      "emotional_valence": "negative"
+    },
+    {
+      "id": "lion",
+      "name": "Lion",
+      "category": "Animals",
+      "common_meanings": [
+        "Courage, strength, power",
+        "Danger, threat, aggression",
+        "Majesty and nobility",
+        "God's protective power",
+        "Spiritual enemy or adversary",
+        "Leadership and dominion"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 27,
+          "verse": "1",
+          "context": "The Lord is my light and salvation - the lion of my heart"
+        },
+        {
+          "book": "Proverbs",
+          "chapter": 30,
+          "verse": "30",
+          "context": "Lion is mightiest among beasts"
+        },
+        {
+          "book": "1 Peter",
+          "chapter": 5,
+          "verse": "8",
+          "context": "The devil prowls like a roaring lion seeking to devour"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 5,
+          "verse": "5",
+          "context": "The Lion of the tribe of Judah - Jesus in power"
+        },
+        {
+          "book": "Daniel",
+          "chapter": 6,
+          "verse": "19-23",
+          "context": "Daniel in the lion's den - God's protection over the righteous"
+        }
+      ],
+      "jungian_archetype": "The Hero (courage) or The Shadow (predatory force)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "eagle",
+      "name": "Eagle",
+      "category": "Animals",
+      "common_meanings": [
+        "Vision, perspective, freedom",
+        "God's protection and care",
+        "Spiritual elevation",
+        "Power and authority",
+        "Swiftness and judgment",
+        "Soaring above circumstances"
+      ],
+      "biblical_references": [
+        {
+          "book": "Exodus",
+          "chapter": 19,
+          "verse": "4",
+          "context": "I carried you on eagles' wings - God's protection"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 91,
+          "verse": "4",
+          "context": "Under His wings you will find refuge"
+        },
+        {
+          "book": "Deuteronomy",
+          "chapter": 32,
+          "verse": "11",
+          "context": "As an eagle stirs its nest, teaching young to fly"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 4,
+          "verse": "7",
+          "context": "Living creatures - one like an eagle seeing all"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 24,
+          "verse": "28",
+          "context": "Wherever the carcass is, the eagles gather - judgment"
+        }
+      ],
+      "jungian_archetype": "The Wise Old Man/Woman (distant perspective) or The Hero (soaring above)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "serpent",
+      "name": "Serpent",
+      "category": "Animals",
+      "common_meanings": [
+        "Deception, temptation, evil",
+        "Wisdom and discernment",
+        "Healing and restoration",
+        "Cunning and manipulation",
+        "Shedding skin for renewal",
+        "Danger and threat"
+      ],
+      "biblical_references": [
+        {
+          "book": "Genesis",
+          "chapter": 3,
+          "verse": "1-5",
+          "context": "The serpent in the Garden - deception and fall"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 10,
+          "verse": "16",
+          "context": "Be wise as serpents and innocent as doves"
+        },
+        {
+          "book": "Numbers",
+          "chapter": 21,
+          "verse": "8-9",
+          "context": "Bronze serpent - healing and deliverance"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 12,
+          "verse": "9",
+          "context": "The dragon, that ancient serpent, called the devil"
+        },
+        {
+          "book": "John",
+          "chapter": 3,
+          "verse": "14",
+          "context": "As Moses lifted up the serpent, so must the Son of Man be lifted up"
+        }
+      ],
+      "jungian_archetype": "The Shadow (temptation) or The Wise Old Man/Woman (hidden wisdom)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "lamb",
+      "name": "Lamb",
+      "category": "Animals",
+      "common_meanings": [
+        "Innocence, purity, gentleness",
+        "Sacrifice, redemption",
+        "Jesus Christ (the Lamb of God)",
+        "Vulnerability, meekness",
+        "Peace and restoration",
+        "Guidance and care"
+      ],
+      "biblical_references": [
+        {
+          "book": "John",
+          "chapter": 1,
+          "verse": "29",
+          "context": "The Lamb of God who takes away the sin of the world"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 5,
+          "verse": "12",
+          "context": "The Lamb who was slain is worthy of power and glory"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 53,
+          "verse": "7",
+          "context": "Like a lamb led to slaughter - innocent suffering"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 23,
+          "verse": "1",
+          "context": "The Lord is my shepherd - we are His sheep/lambs"
+        },
+        {
+          "book": "1 Peter",
+          "chapter": 1,
+          "verse": "19",
+          "context": "Redeemed with the precious blood of Christ, like a lamb"
+        }
+      ],
+      "jungian_archetype": "The Child (innocence) or The Victim",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "dove",
+      "name": "Dove",
+      "category": "Animals",
+      "common_meanings": [
+        "Peace, gentleness, harmony",
+        "Holy Spirit, divine presence",
+        "Purity and innocence",
+        "Love and compassion",
+        "Forgiveness and reconciliation",
+        "Sacrifice and offering"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 3,
+          "verse": "16",
+          "context": "Holy Spirit descending like a dove at Jesus' baptism"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 8,
+          "verse": "11",
+          "context": "Dove returns with olive branch - peace after flood"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 10,
+          "verse": "16",
+          "context": "Be innocent as doves"
+        },
+        {
+          "book": "Song of Solomon",
+          "chapter": 6,
+          "verse": "9",
+          "context": "My dove is unique - beloved"
+        },
+        {
+          "book": "Luke",
+          "chapter": 2,
+          "verse": "24",
+          "context": "Offering two young doves - redemption and purity"
+        }
+      ],
+      "jungian_archetype": "The Anima (feminine grace) or The Self (peace)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "fish",
+      "name": "Fish",
+      "category": "Animals",
+      "common_meanings": [
+        "Jesus and Christian faith",
+        "Abundance and provision",
+        "Life under spiritual waters",
+        "Caught or trapped",
+        "Feeding the multitudes",
+        "Transformation and evolution"
+      ],
+      "biblical_references": [
+        {
+          "book": "Mark",
+          "chapter": 1,
+          "verse": "17",
+          "context": "I will make you fishers of men"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 14,
+          "verse": "17-21",
+          "context": "Jesus feeds 5,000 with five loaves and two fish"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 13,
+          "verse": "47-50",
+          "context": "Parable of the net - separating good and bad fish"
+        },
+        {
+          "book": "Luke",
+          "chapter": 5,
+          "verse": "4-7",
+          "context": "Miraculous catch of fish - abundance"
+        },
+        {
+          "book": "John",
+          "chapter": 21,
+          "verse": "1-14",
+          "context": "Risen Jesus and the miraculous catch - provision and fellowship"
+        }
+      ],
+      "jungian_archetype": "The Self (life and provision) or The Child (feeding)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "wolf",
+      "name": "Wolf",
+      "category": "Animals",
+      "common_meanings": [
+        "Predatory danger, threat",
+        "Cunning and deception",
+        "Pack mentality, belonging",
+        "Ferociousness, aggression",
+        "Isolation and wilderness",
+        "False teachers, spiritual enemies"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 7,
+          "verse": "15",
+          "context": "False prophets come as wolves in sheep's clothing"
+        },
+        {
+          "book": "John",
+          "chapter": 10,
+          "verse": "12",
+          "context": "The hired hand flees when the wolf comes"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 10,
+          "verse": "16",
+          "context": "I am sending you as sheep in the midst of wolves"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 11,
+          "verse": "6",
+          "context": "The wolf shall dwell with the lamb - restoration"
+        },
+        {
+          "book": "Acts",
+          "chapter": 20,
+          "verse": "29",
+          "context": "Fierce wolves will come among you"
+        }
+      ],
+      "jungian_archetype": "The Shadow (predatory nature) or The Hero (fierce courage)",
+      "emotional_valence": "negative"
+    },
+    {
+      "id": "king",
+      "name": "King",
+      "category": "People/Figures",
+      "common_meanings": [
+        "Authority, power, rule",
+        "God's sovereignty",
+        "Jesus Christ, the King of Kings",
+        "Ambition, pride, dominion",
+        "Leadership, governance",
+        "Wisdom and judgment"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 24,
+          "verse": "7-10",
+          "context": "The King of glory - God Almighty"
+        },
+        {
+          "book": "1 Timothy",
+          "chapter": 6,
+          "verse": "15",
+          "context": "King of kings and Lord of lords"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 2,
+          "verse": "2",
+          "context": "Where is He who has been born King of the Jews"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 19,
+          "verse": "16",
+          "context": "He has a name written on him - King of Kings"
+        },
+        {
+          "book": "Daniel",
+          "chapter": 2,
+          "verse": "44",
+          "context": "God will set up a kingdom that will never be destroyed"
+        }
+      ],
+      "jungian_archetype": "The Hero (mastery) or The Wise Old Man/Woman (wisdom and rule)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "priest",
+      "name": "Priest",
+      "category": "People/Figures",
+      "common_meanings": [
+        "Intercession, mediation",
+        "Sacred duty, holiness",
+        "Spiritual authority",
+        "Sacrifice and offering",
+        "Connection between God and people",
+        "Judgment and discernment"
+      ],
+      "biblical_references": [
+        {
+          "book": "Hebrews",
+          "chapter": 4,
+          "verse": "14-16",
+          "context": "Jesus, our great High Priest"
+        },
+        {
+          "book": "1 Peter",
+          "chapter": 2,
+          "verse": "5",
+          "context": "You are a royal priesthood, a holy nation"
+        },
+        {
+          "book": "Leviticus",
+          "chapter": 1,
+          "verse": "1-3",
+          "context": "Priests offering sacrifices before God"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 110,
+          "verse": "4",
+          "context": "You are a priest forever, in the order of Melchizedek"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 1,
+          "verse": "6",
+          "context": "He made us a kingdom of priests"
+        }
+      ],
+      "jungian_archetype": "The Wise Old Man/Woman (spiritual wisdom) or The Caregiver",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "stranger",
+      "name": "Stranger",
+      "category": "People/Figures",
+      "common_meanings": [
+        "Unknown or unfamiliar aspect of self",
+        "Opportunity or threat",
+        "The unconscious, shadow",
+        "Hospitality and kindness",
+        "Alienation, feeling out of place",
+        "Angel or messenger unrecognized"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 25,
+          "verse": "35",
+          "context": "Whatever you did for the least of these strangers..."
+        },
+        {
+          "book": "Hebrews",
+          "chapter": 13,
+          "verse": "2",
+          "context": "Do not forget to show hospitality to strangers, for some have entertained angels"
+        },
+        {
+          "book": "Leviticus",
+          "chapter": 19,
+          "verse": "34",
+          "context": "Love the stranger as yourself"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 18,
+          "verse": "1-8",
+          "context": "Abraham welcomes three strangers - angels unrecognized"
+        },
+        {
+          "book": "1 John",
+          "chapter": 3,
+          "verse": "12",
+          "context": "We are strangers and sojourners on earth"
+        }
+      ],
+      "jungian_archetype": "The Shadow (unknown self) or The Messenger (divine messenger)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "child",
+      "name": "Child",
+      "category": "People/Figures",
+      "common_meanings": [
+        "Innocence, vulnerability, potential",
+        "New beginnings, growth",
+        "Dependency, need for care",
+        "Wonder and curiosity",
+        "Playfulness and joy",
+        "Inner child, pure nature"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 18,
+          "verse": "2-4",
+          "context": "Unless you become like a child, you won't enter the kingdom"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 19,
+          "verse": "14",
+          "context": "Let the little children come to me"
+        },
+        {
+          "book": "1 Corinthians",
+          "chapter": 13,
+          "verse": "11",
+          "context": "When I was a child, I spoke as a child; when I became a man, I put away childish things"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 127,
+          "verse": "3",
+          "context": "Children are a heritage from the Lord"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 11,
+          "verse": "6",
+          "context": "A little child will lead them"
+        }
+      ],
+      "jungian_archetype": "The Child (innocence and potential) or The Self (wholeness)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "angel",
+      "name": "Angel",
+      "category": "People/Figures",
+      "common_meanings": [
+        "Divine message, guidance",
+        "Protection and care",
+        "God's presence, heavenly realm",
+        "Messengers from the divine",
+        "Spiritual awakening",
+        "Hope and reassurance"
+      ],
+      "biblical_references": [
+        {
+          "book": "Luke",
+          "chapter": 1,
+          "verse": "26-28",
+          "context": "Gabriel appears to Mary - bearing divine message"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 91,
+          "verse": "11-12",
+          "context": "He will command His angels to guard you"
+        },
+        {
+          "book": "Hebrews",
+          "chapter": 1,
+          "verse": "14",
+          "context": "Angels are spirits sent to serve those who will inherit salvation"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 4,
+          "verse": "11",
+          "context": "Angels came and attended to Jesus"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 1,
+          "verse": "20",
+          "context": "Angels are stars in God's hand"
+        }
+      ],
+      "jungian_archetype": "The Messenger (divine communication) or The Wise Old Man/Woman",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "door",
+      "name": "Door",
+      "category": "Objects",
+      "common_meanings": [
+        "Opportunity, new beginnings",
+        "Threshold, transition",
+        "Access or denial",
+        "Choice, decision point",
+        "Boundary between worlds",
+        "Jesus as the door to salvation"
+      ],
+      "biblical_references": [
+        {
+          "book": "John",
+          "chapter": 10,
+          "verse": "7-9",
+          "context": "I am the door; whoever enters through me will be saved"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 3,
+          "verse": "20",
+          "context": "I stand at the door and knock; if anyone opens, I will come in"
+        },
+        {
+          "book": "1 Corinthians",
+          "chapter": 16,
+          "verse": "9",
+          "context": "A great and effective door has opened for me"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 6,
+          "verse": "6",
+          "context": "Go into your room, close the door, pray in secret"
+        },
+        {
+          "book": "2 Corinthians",
+          "chapter": 2,
+          "verse": "12",
+          "context": "A door was opened to me in the Lord"
+        }
+      ],
+      "jungian_archetype": "The Shadow (what lies beyond) or Threshold Guardian",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "key",
+      "name": "Key",
+      "category": "Objects",
+      "common_meanings": [
+        "Knowledge, secrets revealed",
+        "Power, unlocking potential",
+        "Authority and responsibility",
+        "Solution to a problem",
+        "Access to hidden treasure",
+        "Control and mastery"
+      ],
+      "biblical_references": [
+        {
+          "book": "Revelation",
+          "chapter": 1,
+          "verse": "18",
+          "context": "I hold the keys of death and Hades"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 16,
+          "verse": "19",
+          "context": "I give you the keys of the kingdom of heaven"
+        },
+        {
+          "book": "Luke",
+          "chapter": 11,
+          "verse": "52",
+          "context": "You have taken away the key to knowledge"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 3,
+          "verse": "7",
+          "context": "He who holds the key of David opens what no one can shut"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 20,
+          "verse": "1",
+          "context": "Angel holding the key to the Abyss"
+        }
+      ],
+      "jungian_archetype": "The Wise Old Man/Woman (secret knowledge) or The Hero (mastery)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "crown",
+      "name": "Crown",
+      "category": "Objects",
+      "common_meanings": [
+        "Authority, power, rulership",
+        "Achievement, victory, reward",
+        "Glory and honor",
+        "Divine blessing",
+        "Vanity and pride",
+        "Eternal reward"
+      ],
+      "biblical_references": [
+        {
+          "book": "2 Timothy",
+          "chapter": 4,
+          "verse": "8",
+          "context": "The crown of righteousness is laid up for me"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 2,
+          "verse": "10",
+          "context": "Be faithful unto death, and I will give you the crown of life"
+        },
+        {
+          "book": "1 Corinthians",
+          "chapter": 9,
+          "verse": "25",
+          "context": "An imperishable crown, we run the race"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 27,
+          "verse": "29",
+          "context": "Crown of thorns placed on Jesus - mockery and redemption"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 4,
+          "verse": "10",
+          "context": "Elders cast their crowns before the throne"
+        }
+      ],
+      "jungian_archetype": "The Hero (achievement) or The Wise Old Man/Woman (authority)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "sword",
+      "name": "Sword",
+      "category": "Objects",
+      "common_meanings": [
+        "Conflict, division, struggle",
+        "Truth, God's Word",
+        "Justice and judgment",
+        "Spiritual warfare",
+        "Cutting away, severing",
+        "Power and strength"
+      ],
+      "biblical_references": [
+        {
+          "book": "Ephesians",
+          "chapter": 6,
+          "verse": "17",
+          "context": "The sword of the Spirit, which is the word of God"
+        },
+        {
+          "book": "Hebrews",
+          "chapter": 4,
+          "verse": "12",
+          "context": "The word of God is sharper than any two-edged sword"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 10,
+          "verse": "34",
+          "context": "I come not to bring peace, but a sword"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 1,
+          "verse": "16",
+          "context": "A sharp sword coming from the mouth of Christ"
+        },
+        {
+          "book": "1 Samuel",
+          "chapter": 15,
+          "verse": "33",
+          "context": "As your sword has made women childless, so shall your mother be childless"
+        }
+      ],
+      "jungian_archetype": "The Hero (warrior energy) or The Shadow (violence)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "bread",
+      "name": "Bread",
+      "category": "Objects",
+      "common_meanings": [
+        "Sustenance, nourishment, provision",
+        "Jesus Christ (the Bread of Life)",
+        "Labor, work, daily toil",
+        "Sharing, communion, fellowship",
+        "Dependence on God",
+        "Life itself"
+      ],
+      "biblical_references": [
+        {
+          "book": "John",
+          "chapter": 6,
+          "verse": "35",
+          "context": "Jesus said, I am the bread of life"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 6,
+          "verse": "11",
+          "context": "Give us today our daily bread"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 14,
+          "verse": "19",
+          "context": "Jesus blessed and broke the bread and gave it to the disciples"
+        },
+        {
+          "book": "1 Corinthians",
+          "chapter": 10,
+          "verse": "17",
+          "context": "We who are many are one body, for we all partake of the one bread"
+        },
+        {
+          "book": "Proverbs",
+          "chapter": 9,
+          "verse": "5",
+          "context": "Come, eat my food and drink the wine I have mixed"
+        }
+      ],
+      "jungian_archetype": "The Mother (nourishment) or The Self (sustenance)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "wine",
+      "name": "Wine",
+      "category": "Objects",
+      "common_meanings": [
+        "Joy, celebration, abundance",
+        "Jesus' blood, covenant, redemption",
+        "Intoxication, loss of control",
+        "Transformation, fermentation",
+        "Communion, fellowship",
+        "God's judgment, wrath"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 26,
+          "verse": "27-29",
+          "context": "Drink this, it is my blood of the covenant"
+        },
+        {
+          "book": "John",
+          "chapter": 2,
+          "verse": "1-11",
+          "context": "Jesus turns water into wine - abundance and blessing"
+        },
+        {
+          "book": "Ephesians",
+          "chapter": 5,
+          "verse": "18",
+          "context": "Don't be filled with wine, but be filled with the Spirit"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 104,
+          "verse": "15",
+          "context": "Wine gladdens the heart of man"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 14,
+          "verse": "19",
+          "context": "The wine of God's wrath upon the earth"
+        }
+      ],
+      "jungian_archetype": "The Self (transformation) or The Shadow (intoxication)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "garment",
+      "name": "Garment",
+      "category": "Objects",
+      "common_meanings": [
+        "Identity, personality, outward self",
+        "Covering, shame or protection",
+        "Righteousness, holiness",
+        "Status and position",
+        "Transformation through clothing",
+        "God's covering"
+      ],
+      "biblical_references": [
+        {
+          "book": "Isaiah",
+          "chapter": 61,
+          "verse": "10",
+          "context": "He has clothed me with garments of salvation"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 22,
+          "verse": "11-12",
+          "context": "Wedding garment parable - wearing the right attire"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 19,
+          "verse": "8",
+          "context": "She is given fine linen, bright and clean - righteousness"
+        },
+        {
+          "book": "Colossians",
+          "chapter": 3,
+          "verse": "12",
+          "context": "Put on compassion, kindness, humility, gentleness and patience"
+        },
+        {
+          "book": "Luke",
+          "chapter": 15,
+          "verse": "22",
+          "context": "Bring the best robe and put it on him - the prodigal son"
+        }
+      ],
+      "jungian_archetype": "The Anima/Animus (persona) or The Self (identity)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "vessel",
+      "name": "Vessel",
+      "category": "Objects",
+      "common_meanings": [
+        "Recipient, container, usefulness",
+        "The body as a vessel for the spirit",
+        "Emptiness waiting to be filled",
+        "Fragility, being broken",
+        "Purpose and function",
+        "Transformation through filling"
+      ],
+      "biblical_references": [
+        {
+          "book": "2 Corinthians",
+          "chapter": 4,
+          "verse": "7",
+          "context": "We have this treasure in jars of clay - power in weakness"
+        },
+        {
+          "book": "1 Thessalonians",
+          "chapter": 4,
+          "verse": "4",
+          "context": "Each should know how to possess his vessel in holiness"
+        },
+        {
+          "book": "2 Timothy",
+          "chapter": 2,
+          "verse": "20-21",
+          "context": "In a household are vessels of gold and vessels of wood - noble use"
+        },
+        {
+          "book": "Acts",
+          "chapter": 9,
+          "verse": "15",
+          "context": "Ananias, he is a chosen instrument of mine"
+        },
+        {
+          "book": "Romans",
+          "chapter": 9,
+          "verse": "21",
+          "context": "The potter has the right to make vessels for honorable and dishonorable use"
+        }
+      ],
+      "jungian_archetype": "The Shadow (emptiness) or The Self (container of wholeness)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "flying",
+      "name": "Flying",
+      "category": "Actions",
+      "common_meanings": [
+        "Freedom, liberation, transcendence",
+        "Escape, avoidance",
+        "Spiritual elevation, enlightenment",
+        "Perspective from above",
+        "Joy, lightness, euphoria",
+        "Out of control (falling from the sky)"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 91,
+          "verse": "4",
+          "context": "Under His wings you will find refuge"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 40,
+          "verse": "31",
+          "context": "Those who hope in the Lord will renew their strength, mount up with wings like eagles"
+        },
+        {
+          "book": "Ezekiel",
+          "chapter": 1,
+          "verse": "10-14",
+          "context": "Wheels and wings moving in perfect harmony - God's throne vision"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 4,
+          "verse": "8",
+          "context": "Living creatures with wings - celestial worship"
+        },
+        {
+          "book": "2 Kings",
+          "chapter": 2,
+          "verse": "11",
+          "context": "Elijah taken up to heaven in a whirlwind"
+        }
+      ],
+      "jungian_archetype": "The Hero (transcendence) or The Self (spiritual elevation)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "falling",
+      "name": "Falling",
+      "category": "Actions",
+      "common_meanings": [
+        "Loss of control, helplessness",
+        "Spiritual decline or separation from God",
+        "Fear and anxiety",
+        "Humility, lowering of pride",
+        "Surrender and letting go",
+        "Failure and shame"
+      ],
+      "biblical_references": [
+        {
+          "book": "Proverbs",
+          "chapter": 16,
+          "verse": "18",
+          "context": "Pride goes before destruction, and a haughty spirit before a fall"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 91,
+          "verse": "12",
+          "context": "They will lift you up in their hands, so you will not strike your foot against a stone"
+        },
+        {
+          "book": "Romans",
+          "chapter": 3,
+          "verse": "23",
+          "context": "All have sinned and fall short of the glory of God"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 6,
+          "verse": "13",
+          "context": "Stars falling from the heavens - cosmic upheaval"
+        },
+        {
+          "book": "Luke",
+          "chapter": 10,
+          "verse": "18",
+          "context": "I saw Satan fall like lightning from heaven"
+        }
+      ],
+      "jungian_archetype": "The Shadow (descent into chaos) or The Child (vulnerability)",
+      "emotional_valence": "negative"
+    },
+    {
+      "id": "running",
+      "name": "Running",
+      "category": "Actions",
+      "common_meanings": [
+        "Pursuit, seeking, chase",
+        "Escape, avoidance, fleeing",
+        "Urgency, racing against time",
+        "Effort, striving, exhaustion",
+        "Direction and purpose",
+        "Competition and victory"
+      ],
+      "biblical_references": [
+        {
+          "book": "Hebrews",
+          "chapter": 12,
+          "verse": "1",
+          "context": "Let us run with perseverance the race marked out for us"
+        },
+        {
+          "book": "1 Corinthians",
+          "chapter": 9,
+          "verse": "24-26",
+          "context": "Run in such a way as to get the prize"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 19,
+          "verse": "5",
+          "context": "The sun runs its course with joy like a strong man"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 40,
+          "verse": "31",
+          "context": "They will run and not grow weary"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 24,
+          "verse": "17",
+          "context": "Rebekah ran to meet the servant - urgent meeting"
+        }
+      ],
+      "jungian_archetype": "The Hero (pursuing goals) or The Shadow (fleeing danger)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "climbing",
+      "name": "Climbing",
+      "category": "Actions",
+      "common_meanings": [
+        "Striving upward, ambition, growth",
+        "Difficulty, struggle, endurance",
+        "Ascent to spiritual heights",
+        "Overcoming obstacles",
+        "Perspective and gaining height",
+        "Pride and self-reliance"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 24,
+          "verse": "3-4",
+          "context": "Who may ascend the mountain of the Lord? Those with clean hands and pure hearts"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 17,
+          "verse": "1",
+          "context": "Jesus took Peter, James and John, and led them up a high mountain"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 2,
+          "verse": "2-3",
+          "context": "The mountain of the Lord will be established as the highest of mountains"
+        },
+        {
+          "book": "John",
+          "chapter": 1,
+          "verse": "51",
+          "context": "You will see heaven open, and angels ascending and descending"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 28,
+          "verse": "12",
+          "context": "Jacob's ladder with angels ascending and descending"
+        }
+      ],
+      "jungian_archetype": "The Hero (striving) or The Shadow (climbing for selfish gain)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "crossing-water",
+      "name": "Crossing Water",
+      "category": "Actions",
+      "common_meanings": [
+        "Transition, crossing a threshold",
+        "Difficulty or danger traversed",
+        "New beginning on the other side",
+        "Separation between worlds",
+        "Trusting despite obstacles",
+        "Journey and pilgrimage"
+      ],
+      "biblical_references": [
+        {
+          "book": "Joshua",
+          "chapter": 3,
+          "verse": "14-17",
+          "context": "Crossing the Jordan River into the promised land"
+        },
+        {
+          "book": "Exodus",
+          "chapter": 14,
+          "verse": "21-29",
+          "context": "Crossing the Red Sea with walls of water"
+        },
+        {
+          "book": "Mark",
+          "chapter": 4,
+          "verse": "35-39",
+          "context": "Jesus calms the storm while crossing the sea"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 21,
+          "verse": "4",
+          "context": "No more death or suffering - a new beginning"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 23,
+          "verse": "4",
+          "context": "Though I walk through the valley of the shadow of death, I will fear no evil"
+        }
+      ],
+      "jungian_archetype": "The Journey (transformation) or The Shadow (danger)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "building",
+      "name": "Building",
+      "category": "Actions",
+      "common_meanings": [
+        "Construction, creation, legacy",
+        "Establishing foundation",
+        "Growth and development",
+        "Community and cooperation",
+        "Permanence and structure",
+        "Labor and purpose"
+      ],
+      "biblical_references": [
+        {
+          "book": "1 Corinthians",
+          "chapter": 3,
+          "verse": "9",
+          "context": "We are co-workers in God's service; you are God's building"
+        },
+        {
+          "book": "Matthew",
+          "chapter": 16,
+          "verse": "18",
+          "context": "On this rock I will build my church"
+        },
+        {
+          "book": "Ephesians",
+          "chapter": 2,
+          "verse": "21-22",
+          "context": "In him the whole building is joined together and rises to become a holy temple"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 11,
+          "verse": "1-9",
+          "context": "Tower of Babel - human ambition vs. God's will"
+        },
+        {
+          "book": "Nehemiah",
+          "chapter": 2,
+          "verse": "17",
+          "context": "Let us rebuild the wall of Jerusalem"
+        }
+      ],
+      "jungian_archetype": "The Hero (creation) or The Self (wholeness through construction)",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "temple",
+      "name": "Temple",
+      "category": "Places",
+      "common_meanings": [
+        "God's presence and dwelling place",
+        "Holiness, sacredness, worship",
+        "The body as God's temple",
+        "Judgment and accountability",
+        "Permanence and stability",
+        "Access to the divine"
+      ],
+      "biblical_references": [
+        {
+          "book": "1 Corinthians",
+          "chapter": 6,
+          "verse": "19",
+          "context": "Do you not know that your bodies are temples of the Holy Spirit?"
+        },
+        {
+          "book": "Hebrews",
+          "chapter": 9,
+          "verse": "11",
+          "context": "When Christ came as high priest of the good things that are now already here"
+        },
+        {
+          "book": "John",
+          "chapter": 2,
+          "verse": "19",
+          "context": "Jesus said, destroy this temple, and I will raise it again in three days"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 21,
+          "verse": "22",
+          "context": "I did not see a temple in the city, because the Lord God Almighty and the Lamb are its temple"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 27,
+          "verse": "4",
+          "context": "One thing I ask of the Lord, this is what I seek: that I may dwell in the house of the Lord"
+        }
+      ],
+      "jungian_archetype": "The Self (sacred center) or The Wise Old Man/Woman",
+      "emotional_valence": "positive"
+    },
+    {
+      "id": "city",
+      "name": "City",
+      "category": "Places",
+      "common_meanings": [
+        "Community, civilization, culture",
+        "Complexity and interconnection",
+        "Worldly concerns and materialism",
+        "Refuge and protection",
+        "Judgment and sin",
+        "The heavenly city, eternal home"
+      ],
+      "biblical_references": [
+        {
+          "book": "Revelation",
+          "chapter": 21,
+          "verse": "2",
+          "context": "The Holy City, the new Jerusalem, coming down out of heaven"
+        },
+        {
+          "book": "Hebrews",
+          "chapter": 13,
+          "verse": "14",
+          "context": "For here we do not have an enduring city, but we are looking for the city that is to come"
+        },
+        {
+          "book": "Genesis",
+          "chapter": 11,
+          "verse": "4",
+          "context": "Come, let us build ourselves a city - human ambition"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 48,
+          "verse": "1",
+          "context": "Great is the Lord and most worthy of praise, in the city of our God"
+        },
+        {
+          "book": "Proverbs",
+          "chapter": 10,
+          "verse": "15",
+          "context": "The wealth of the rich is their fortified city"
+        }
+      ],
+      "jungian_archetype": "The Self (interconnectedness) or The Shadow (worldly chaos)",
+      "emotional_valence": "ambiguous"
+    },
+    {
+      "id": "wilderness",
+      "name": "Wilderness",
+      "category": "Places",
+      "common_meanings": [
+        "Isolation, testing, trials",
+        "Spiritual desert, emptiness",
+        "Preparation and purification",
+        "Freedom from civilization",
+        "Vulnerability and exposure",
+        "Seeking and pilgrimage"
+      ],
+      "biblical_references": [
+        {
+          "book": "Matthew",
+          "chapter": 4,
+          "verse": "1",
+          "context": "Jesus was led by the Spirit into the wilderness to be tempted"
+        },
+        {
+          "book": "Exodus",
+          "chapter": 16,
+          "verse": "1-35",
+          "context": "40 years in the wilderness - testing and provision"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 63,
+          "verse": "1",
+          "context": "In a dry and weary land where there is no water"
+        },
+        {
+          "book": "Mark",
+          "chapter": 1,
+          "verse": "35",
+          "context": "Jesus went to a solitary place to pray"
+        },
+        {
+          "book": "Revelation",
+          "chapter": 12,
+          "verse": "6",
+          "context": "The woman fled into the wilderness to be taken care of"
+        }
+      ],
+      "jungian_archetype": "The Shadow (the unknown) or The Hero (testing)",
+      "emotional_valence": "negative"
+    },
+    {
+      "id": "valley",
+      "name": "Valley",
+      "category": "Places",
+      "common_meanings": [
+        "Lowliness, humility, depression",
+        "Shadow of death, danger",
+        "Protection, shelter between heights",
+        "Fertility and abundance (water flow)",
+        "Spiritual testing and sorrow",
+        "The path of obedience"
+      ],
+      "biblical_references": [
+        {
+          "book": "Psalm",
+          "chapter": 23,
+          "verse": "4",
+          "context": "Though I walk through the valley of the shadow of death, I will fear no evil"
+        },
+        {
+          "book": "Joel",
+          "chapter": 3,
+          "verse": "2",
+          "context": "The valley of Jehoshaphat - judgment"
+        },
+        {
+          "book": "Psalm",
+          "chapter": 104,
+          "verse": "8",
+          "context": "The water flowed down into the valleys"
+        },
+        {
+          "book": "Isaiah",
+          "chapter": 40,
+          "verse": "4",
+          "context": "Every valley shall be raised up, every mountain made low"
+        },
+        {
+          "book": "Song of Solomon",
+          "chapter": 2,
+          "verse": "1",
+          "context": "I am a rose of Sharon, a lily of the valleys"
+        }
+      ],
+      "jungian_archetype": "The Shadow (descent) or The Mother (shelter)",
+      "emotional_valence": "negative"
+    }
+  ]
+}

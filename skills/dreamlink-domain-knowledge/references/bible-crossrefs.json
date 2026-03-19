@@ -1,0 +1,665 @@
+{
+  "themes": [
+    {
+      "id": "guidance-direction",
+      "theme_name": "Guidance & Direction",
+      "description": "Dreams seeking clarity about path, purpose, decision-making, or which way to go. Often shows a crossroads, a guide, or a clear destination.",
+      "primary_verses": [
+        {
+          "book": "Psalm",
+          "reference": "37:23-24",
+          "text": "The Lord makes firm the steps of the one who delights in him; though he may stumble, he will not fall, for the Lord upholds him with his hand."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "16:9",
+          "text": "In their hearts humans plan their course, but the Lord establishes their steps."
+        },
+        {
+          "book": "John",
+          "reference": "16:13",
+          "text": "But when he, the Spirit of truth, comes, he will guide you into all the truth."
+        },
+        {
+          "book": "Psalm",
+          "reference": "119:105",
+          "text": "Your word is a lamp to my feet and a light to my path."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "3:5-6",
+          "text": "Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight."
+        }
+      ],
+      "related_themes": [
+        "Purpose/Calling",
+        "Wisdom",
+        "New Beginnings"
+      ],
+      "common_dream_contexts": [
+        "Reaching a destination",
+        "Following a guide or light",
+        "Choosing between paths",
+        "Arriving at a door or gate",
+        "Climbing toward a summit"
+      ]
+    },
+    {
+      "id": "fear-anxiety",
+      "theme_name": "Fear & Anxiety",
+      "description": "Dreams reflecting worry, dread, feeling pursued or threatened. May show monsters, danger, or a sense of helplessness. Usually negative emotional tone.",
+      "primary_verses": [
+        {
+          "book": "2 Timothy",
+          "reference": "1:7",
+          "text": "For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline."
+        },
+        {
+          "book": "Psalm",
+          "reference": "27:1",
+          "text": "The Lord is my light and my salvation—whom shall I fear? The Lord is the stronghold of my life—of whom shall I be afraid?"
+        },
+        {
+          "book": "Philippians",
+          "reference": "4:6-7",
+          "text": "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus."
+        },
+        {
+          "book": "1 John",
+          "reference": "4:18",
+          "text": "There is no fear in love. But perfect love drives out fear, because fear has to do with punishment."
+        },
+        {
+          "book": "Psalm",
+          "reference": "56:3",
+          "text": "When I am afraid, I put my trust in you."
+        }
+      ],
+      "related_themes": [
+        "Protection",
+        "Promise/Hope",
+        "Rest/Peace"
+      ],
+      "common_dream_contexts": [
+        "Being chased or pursued",
+        "Falling into darkness",
+        "Drowning or being overwhelmed",
+        "Encountering monsters or enemies",
+        "Facing judgment or condemnation"
+      ]
+    },
+    {
+      "id": "promise-hope",
+      "theme_name": "Promise & Hope",
+      "description": "Dreams offering encouragement, assurance, or glimpses of future blessings. Show light, beauty, restored relationships, or abundance. Positive emotional tone.",
+      "primary_verses": [
+        {
+          "book": "Jeremiah",
+          "reference": "29:11",
+          "text": "For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope."
+        },
+        {
+          "book": "Romans",
+          "reference": "15:13",
+          "text": "May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit."
+        },
+        {
+          "book": "Hebrews",
+          "reference": "11:1",
+          "text": "Now faith is confidence in what we hope for and assurance about what we do not see."
+        },
+        {
+          "book": "1 Peter",
+          "reference": "1:3-4",
+          "text": "Praise be to the God and Father of our Lord Jesus Christ! In his great mercy he has given us new birth into a living hope through the resurrection of Jesus Christ from the dead."
+        },
+        {
+          "book": "Lamentations",
+          "reference": "3:25-26",
+          "text": "The Lord is good to those whose hope is in him, to the one who seeks him; it is good to wait quietly for the salvation of the Lord."
+        }
+      ],
+      "related_themes": [
+        "New Beginnings",
+        "Promise/Hope",
+        "Provision",
+        "Love/Relationships"
+      ],
+      "common_dream_contexts": [
+        "Seeing a rainbow or light",
+        "Reunion with loved ones",
+        "Receiving a gift or treasure",
+        "Blossoms or fruit bearing",
+        "Ascending or rising upward"
+      ]
+    },
+    {
+      "id": "warning-danger",
+      "theme_name": "Warning & Danger",
+      "description": "Dreams that caution against a path, person, or decision. Often show obstacles, walls, closed doors, or urgent signals. Mixed to negative emotional tone; may feel urgent.",
+      "primary_verses": [
+        {
+          "book": "Proverbs",
+          "reference": "22:3",
+          "text": "The prudent see danger and take refuge, but the simple keep going and pay the penalty."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "27:12",
+          "text": "The prudent see danger and take refuge, but the simple keep going and pay the penalty."
+        },
+        {
+          "book": "Psalm",
+          "reference": "91:14-15",
+          "text": "Because he loves me, says the Lord, I will rescue him; I will protect him, for he acknowledges my name. He will call on me, and I will answer him."
+        },
+        {
+          "book": "Amos",
+          "reference": "3:7",
+          "text": "Surely the Sovereign Lord does nothing without revealing his plan to his servants the prophets."
+        },
+        {
+          "book": "Matthew",
+          "reference": "24:42-44",
+          "text": "Therefore keep watch, because you do not know on what day your Lord will come. But understand this: If the owner of the house had known at what time of night the thief was coming, he would have kept watch."
+        }
+      ],
+      "related_themes": [
+        "Judgment",
+        "Spiritual Warfare",
+        "Wisdom"
+      ],
+      "common_dream_contexts": [
+        "An obstacle or wall blocking the way",
+        "A closed door or locked gate",
+        "A voice crying out or alarms",
+        "A barrier or cliff edge",
+        "Darkness or shadows ahead"
+      ]
+    },
+    {
+      "id": "transformation-growth",
+      "theme_name": "Transformation & Growth",
+      "description": "Dreams showing change, metamorphosis, becoming new, or spiritual evolution. May show shedding, climbing, emerging, or blossoming. Usually positive but may involve difficulty.",
+      "primary_verses": [
+        {
+          "book": "2 Corinthians",
+          "reference": "5:17",
+          "text": "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
+        },
+        {
+          "book": "Romans",
+          "reference": "12:2",
+          "text": "Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God's will is—his good, pleasing and perfect will."
+        },
+        {
+          "book": "Philippians",
+          "reference": "1:6",
+          "text": "Being confident of this, that he who began a good work in you will carry it on to completion until the day of Christ Jesus."
+        },
+        {
+          "book": "Galatians",
+          "reference": "6:9",
+          "text": "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up."
+        },
+        {
+          "book": "Malachi",
+          "reference": "3:2-3",
+          "text": "But who can endure the day of his coming? Who can stand when he appears? For he will be like a refiner's fire or a launderer's soap. He will sit as a refiner and purifier of silver."
+        }
+      ],
+      "related_themes": [
+        "New Beginnings",
+        "Wisdom",
+        "Purpose/Calling"
+      ],
+      "common_dream_contexts": [
+        "Breaking free from chains or cocoon",
+        "Growing taller or stronger",
+        "Shedding old clothes for new",
+        "Moving from darkness to light",
+        "Becoming clean or purified"
+      ]
+    },
+    {
+      "id": "protection",
+      "theme_name": "Protection",
+      "description": "Dreams showing safety, shelter, covering, or defense. Often show walls, roofs, embraces, or guardians. Warm, comforting emotional tone despite possible threats.",
+      "primary_verses": [
+        {
+          "book": "Psalm",
+          "reference": "91:1-2",
+          "text": "Whoever dwells in the shelter of the Most High will rest in the shadow of the Almighty. I will say of the Lord, 'He is my refuge and my fortress, my God, in whom I trust.'"
+        },
+        {
+          "book": "Psalm",
+          "reference": "27:10",
+          "text": "Though my father and mother forsake me, the Lord will receive me."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "18:10",
+          "text": "The name of the Lord is a fortified tower; the righteous run to it and are safe."
+        },
+        {
+          "book": "Isaiah",
+          "reference": "41:10",
+          "text": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand."
+        },
+        {
+          "book": "Psalm",
+          "reference": "121:4",
+          "text": "He who watches over you will not slumber; indeed, he who watches over Israel will neither slumber nor sleep."
+        }
+      ],
+      "related_themes": [
+        "Promise/Hope",
+        "Fear/Anxiety",
+        "Rest/Peace"
+      ],
+      "common_dream_contexts": [
+        "Finding shelter in a building",
+        "Being held or embraced",
+        "A guardian figure nearby",
+        "Walls protecting from outside danger",
+        "Wings covering and shielding"
+      ]
+    },
+    {
+      "id": "wisdom",
+      "theme_name": "Wisdom",
+      "description": "Dreams offering insight, understanding, or revelation of hidden knowledge. Often show teachers, books, light revealing hidden things, or clear seeing.",
+      "primary_verses": [
+        {
+          "book": "Proverbs",
+          "reference": "2:6",
+          "text": "For the Lord gives wisdom; from his mouth come knowledge and understanding."
+        },
+        {
+          "book": "James",
+          "reference": "1:5",
+          "text": "If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "14:12",
+          "text": "There is a way that appears to be right, but in the end it leads to death."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "3:13-14",
+          "text": "Blessed are those who find wisdom, those who gain understanding, for she is more profitable than silver and yields better returns than gold."
+        },
+        {
+          "book": "Colossians",
+          "reference": "1:9-10",
+          "text": "For this reason, since the day we heard about you, we have not stopped praying for you. We continually ask God to fill you with the knowledge of his will through all the wisdom and understanding that the Spirit gives."
+        }
+      ],
+      "related_themes": [
+        "Guidance/Direction",
+        "Warning/Danger",
+        "Transformation/Growth"
+      ],
+      "common_dream_contexts": [
+        "Meeting a wise teacher or elder",
+        "Reading a book or scroll",
+        "Light illuminating hidden things",
+        "Understanding a complex puzzle",
+        "Seeing clearly from a height"
+      ]
+    },
+    {
+      "id": "judgment",
+      "theme_name": "Judgment",
+      "description": "Dreams involving accountability, evaluation, standing before a judge, or facing consequences. May show courtrooms, scales, or divine assessment. Varies emotionally based on dreamer's standing.",
+      "primary_verses": [
+        {
+          "book": "Romans",
+          "reference": "14:12",
+          "text": "So then, each of us will give an account of ourselves to God."
+        },
+        {
+          "book": "Revelation",
+          "reference": "20:11-12",
+          "text": "Then I saw a great white throne and him who was seated on it. The earth and the heavens fled from his presence, and there was no place for them. And I saw the dead, great and small, standing before the throne, and books were opened."
+        },
+        {
+          "book": "2 Corinthians",
+          "reference": "5:10",
+          "text": "For we must all appear before the judgment seat of Christ, so that each of us may receive what is due us for the things done while in the body, whether good or bad."
+        },
+        {
+          "book": "John",
+          "reference": "5:24",
+          "text": "Very truly I tell you, whoever hears my word and believes him who sent me has eternal life and will not be judged guilty but has crossed over from death to life."
+        },
+        {
+          "book": "Deuteronomy",
+          "reference": "32:4",
+          "text": "He is the Rock, his works are perfect, and all his ways are just. A faithful God who does no wrong, upright and just is he."
+        }
+      ],
+      "related_themes": [
+        "Warning/Danger",
+        "Redemption",
+        "Wisdom"
+      ],
+      "common_dream_contexts": [
+        "Standing before a judge or authority",
+        "Being evaluated or assessed",
+        "Facing scales or measurement",
+        "Giving an account",
+        "Books being opened and read"
+      ]
+    },
+    {
+      "id": "redemption",
+      "theme_name": "Redemption",
+      "description": "Dreams showing rescue, restoration, forgiveness, freedom from bondage, or return to wholeness. Often show breaking free, returning home, or being restored.",
+      "primary_verses": [
+        {
+          "book": "Ephesians",
+          "reference": "1:7",
+          "text": "In him we have redemption through his blood, the forgiveness of sins, in accordance with the riches of God's grace."
+        },
+        {
+          "book": "Psalm",
+          "reference": "130:7-8",
+          "text": "Israel, put your hope in the Lord, for with the Lord is unfailing love and with him is full redemption. He himself will redeem Israel from all their sins."
+        },
+        {
+          "book": "Luke",
+          "reference": "1:68",
+          "text": "Praise be to the Lord, the God of Israel, because he has come to his people and redeemed them."
+        },
+        {
+          "book": "Titus",
+          "reference": "2:14",
+          "text": "He gave himself for us to redeem us from all wickedness and to purify for himself a people that are his very own, eager to do what is good."
+        },
+        {
+          "book": "Isaiah",
+          "reference": "43:1",
+          "text": "But now, this is what the Lord says—he who created you, Jacob, he who formed you, Israel: 'Fear not, for I have redeemed you; I have summoned you by name; you are mine.'"
+        }
+      ],
+      "related_themes": [
+        "Promise/Hope",
+        "Transformation/Growth",
+        "New Beginnings"
+      ],
+      "common_dream_contexts": [
+        "Breaking free from chains",
+        "Returning home after exile",
+        "Being forgiven and embraced",
+        "Washing away stains",
+        "Restored to wholeness"
+      ]
+    },
+    {
+      "id": "love-relationships",
+      "theme_name": "Love & Relationships",
+      "description": "Dreams involving connection, intimacy, community, or relationship with God and others. Often show embraces, meetings, joining, or union. Warm emotional tone.",
+      "primary_verses": [
+        {
+          "book": "John",
+          "reference": "13:34-35",
+          "text": "As I have loved you, so you must love one another. By this everyone will know that you are my disciples, if you love one another."
+        },
+        {
+          "book": "1 John",
+          "reference": "4:7-8",
+          "text": "Dear friends, let us love one another, for love comes from God. Everyone who loves has been born of God and knows God. Whoever does not love does not know God, because God is love."
+        },
+        {
+          "book": "Song of Solomon",
+          "reference": "2:16",
+          "text": "My beloved is mine and I am his."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "17:17",
+          "text": "A friend loves at all times, and a brother is born for a time of adversity."
+        },
+        {
+          "book": "1 Thessalonians",
+          "reference": "5:11",
+          "text": "Therefore encourage one another and build each other up, just as in fact you are doing."
+        }
+      ],
+      "related_themes": [
+        "Promise/Hope",
+        "Redemption",
+        "New Beginnings"
+      ],
+      "common_dream_contexts": [
+        "Reunion with loved ones",
+        "Being embraced or held",
+        "Wedding or bonding ceremony",
+        "Dancing or celebrating together",
+        "Intimate conversation with someone trusted"
+      ]
+    },
+    {
+      "id": "purpose-calling",
+      "theme_name": "Purpose & Calling",
+      "description": "Dreams revealing vocation, divine calling, life mission, or role to fulfill. Show clarity about what you're meant to do. Often involve being called by name or receiving a task.",
+      "primary_verses": [
+        {
+          "book": "Ephesians",
+          "reference": "4:1",
+          "text": "As a prisoner for the Lord, then, I urge you to live a life worthy of the calling you have received."
+        },
+        {
+          "book": "2 Timothy",
+          "reference": "1:9",
+          "text": "He has saved us and called us to a holy life—not because of anything we have done, but because of his own purpose and grace."
+        },
+        {
+          "book": "Romans",
+          "reference": "12:6-7",
+          "text": "We have different gifts, according to the grace given us. If a man's gift is prophesying, let him use it in proportion to his faith; if it is serving, let him serve."
+        },
+        {
+          "book": "1 Samuel",
+          "reference": "3:10",
+          "text": "The Lord came and stood there, calling as at the other times, 'Samuel! Samuel!' Then Samuel said, 'Speak, for your servant is listening.'"
+        },
+        {
+          "book": "Jeremiah",
+          "reference": "1:5",
+          "text": "Before I formed you in the womb I knew you, before you were born I set you apart; I appointed you as a prophet to the nations."
+        }
+      ],
+      "related_themes": [
+        "Guidance/Direction",
+        "Wisdom",
+        "Transformation/Growth"
+      ],
+      "common_dream_contexts": [
+        "Being called by name",
+        "Receiving a task or commission",
+        "Seeing your role clearly",
+        "Meeting someone who shows you your path",
+        "Arriving at your true destination"
+      ]
+    },
+    {
+      "id": "provision",
+      "theme_name": "Provision",
+      "description": "Dreams showing abundance, supply, God's care for needs, or material and spiritual sustenance. Often show feasts, harvests, open hands, or overflowing containers.",
+      "primary_verses": [
+        {
+          "book": "Matthew",
+          "reference": "6:11",
+          "text": "Give us today our daily bread."
+        },
+        {
+          "book": "Philippians",
+          "reference": "4:19",
+          "text": "And my God will meet all your needs according to the riches of his glory in Christ Jesus."
+        },
+        {
+          "book": "Proverbs",
+          "reference": "10:3",
+          "text": "The Lord does not let the righteous go hungry, but he thwarts the craving of the wicked."
+        },
+        {
+          "book": "Psalm",
+          "reference": "23:1-3",
+          "text": "The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul."
+        },
+        {
+          "book": "Luke",
+          "reference": "12:31",
+          "text": "But seek his kingdom, and these things will be given to you as well."
+        }
+      ],
+      "related_themes": [
+        "Promise/Hope",
+        "Protection",
+        "Rest/Peace"
+      ],
+      "common_dream_contexts": [
+        "Enjoying a feast or meal",
+        "Harvesting crops or fruit",
+        "Receiving gifts or abundance",
+        "Finding water or food",
+        "A basket or vessel overflowing"
+      ]
+    },
+    {
+      "id": "spiritual-warfare",
+      "theme_name": "Spiritual Warfare",
+      "description": "Dreams showing conflict with dark forces, demonic activity, or spiritual opposition. May show battles, armor, weapons, or confrontation with evil. Intense emotional tone.",
+      "primary_verses": [
+        {
+          "book": "Ephesians",
+          "reference": "6:12",
+          "text": "For our struggle is not against flesh and blood, but against the rulers, against the authorities, against the powers of this dark world and against the spiritual forces of evil in the heavenly realms."
+        },
+        {
+          "book": "Ephesians",
+          "reference": "6:14-17",
+          "text": "Stand firm then, with the belt of truth buckled around your waist, with the breastplate of righteousness in place, and with your feet fitted with the readiness that comes from the gospel of peace. In addition to all this, take up the shield of faith, with which you can extinguish all the flaming arrows of the evil one. Take the helmet of salvation and the sword of the Spirit, which is the word of God."
+        },
+        {
+          "book": "2 Corinthians",
+          "reference": "10:3-4",
+          "text": "For though we live in the world, we do not wage war as the world does. The weapons we fight with are not the weapons of the world. On the contrary, they have divine power to demolish strongholds."
+        },
+        {
+          "book": "1 Peter",
+          "reference": "5:8-9",
+          "text": "Be alert and of sober mind. Your enemy the devil prowls around like a roaring lion looking for someone to devour. Resist him, standing firm in the faith, because you know that the family of believers throughout the world is undergoing the same kind of sufferings."
+        },
+        {
+          "book": "Revelation",
+          "reference": "12:7-9",
+          "text": "Then war broke out in heaven. Michael and his angels fought against the dragon, and the dragon and his angels fought back."
+        }
+      ],
+      "related_themes": [
+        "Warning/Danger",
+        "Judgment",
+        "Protection"
+      ],
+      "common_dream_contexts": [
+        "Fighting monsters or demons",
+        "Wearing armor or weapons",
+        "Darkness with light breaking through",
+        "Being protected from attack",
+        "Authority over evil forces"
+      ]
+    },
+    {
+      "id": "rest-peace",
+      "theme_name": "Rest & Peace",
+      "description": "Dreams offering quietude, restoration, ease from burden, or cessation of struggle. Show gardens, still waters, sleeping peacefully, or burdens being lifted.",
+      "primary_verses": [
+        {
+          "book": "Matthew",
+          "reference": "11:28",
+          "text": "Come to me, all you who are weary and burdened, and I will give you rest."
+        },
+        {
+          "book": "Philippians",
+          "reference": "4:6-7",
+          "text": "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus."
+        },
+        {
+          "book": "Psalm",
+          "reference": "4:8",
+          "text": "In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety."
+        },
+        {
+          "book": "Hebrews",
+          "reference": "4:9-10",
+          "text": "There remains, then, a Sabbath-rest for the people of God; for anyone who enters God's rest also rests from their own work, just as God did from his."
+        },
+        {
+          "book": "John",
+          "reference": "14:27",
+          "text": "Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled and do not be afraid."
+        }
+      ],
+      "related_themes": [
+        "Protection",
+        "Promise/Hope",
+        "Redemption"
+      ],
+      "common_dream_contexts": [
+        "Sleeping peacefully",
+        "Resting in a garden or sanctuary",
+        "Burden being removed",
+        "Still water or calm landscape",
+        "Letting go of worry or control"
+      ]
+    },
+    {
+      "id": "new-beginnings",
+      "theme_name": "New Beginnings",
+      "description": "Dreams showing fresh starts, resurrection, dawn, spring, or turning a page. Often show sunrise, spring flowers, new structures, or emerging from the past.",
+      "primary_verses": [
+        {
+          "book": "2 Corinthians",
+          "reference": "5:17",
+          "text": "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
+        },
+        {
+          "book": "Revelation",
+          "reference": "21:4-5",
+          "text": "He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away.' He who was seated on the throne said, 'I am making everything new!'"
+        },
+        {
+          "book": "Lamentations",
+          "reference": "3:22-23",
+          "text": "Because of the Lord's great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness."
+        },
+        {
+          "book": "Isaiah",
+          "reference": "43:18-19",
+          "text": "Forget the former things; do not dwell on the past. See, I am doing a new thing! Now it springs up; do you not perceive it?"
+        },
+        {
+          "book": "Psalm",
+          "reference": "30:5",
+          "text": "Weeping may stay for the night, but rejoicing comes in the morning."
+        }
+      ],
+      "related_themes": [
+        "Transformation/Growth",
+        "Redemption",
+        "Promise/Hope"
+      ],
+      "common_dream_contexts": [
+        "Sunrise or dawn breaking",
+        "Blossoms and spring growth",
+        "Leaving an old place",
+        "Starting a new project or relationship",
+        "Emerging from water or darkness"
+      ]
+    }
+  ]
+}
