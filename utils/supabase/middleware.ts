@@ -46,6 +46,25 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
 
+    // Handle admin routes — must be authenticated AND have is_admin flag
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+      if (!user) {
+        return NextResponse.redirect(new URL('/sign-in', request.url))
+      }
+
+      // Check admin status via profile table
+      const { data: profile } = await supabase
+        .from('profile')
+        .select('is_admin')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!profile?.is_admin) {
+        // Non-admin users get redirected to home
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
+
     // Add pathname to headers to make it available in server components
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-pathname', request.nextUrl.pathname)
