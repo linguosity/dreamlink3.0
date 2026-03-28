@@ -231,8 +231,12 @@ export async function POST(request: Request) {
       }
     }
     
-    // Insert dream into database
-    const { data: dreamData, error: dreamInsertError } = await supabase
+    // Insert dream into database using admin client to bypass RLS.
+    // Auth is already verified above via getUser(), and the regular
+    // server client can fail if the session cookie JWT isn't properly
+    // forwarded to the database RLS context.
+    const adminSupabaseForInsert = getAdminClient();
+    const { data: dreamData, error: dreamInsertError } = await adminSupabaseForInsert
       .from("dream_entries")
       .insert({
         user_id: user.id,
