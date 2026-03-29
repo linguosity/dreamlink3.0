@@ -71,9 +71,8 @@ export default async function MainPage() {
 
   return (
     <div className="container py-6 sm:py-10 relative">
-      {/*<div className="absolute inset-0 bg-fixed bg-cover bg-center -z-10" style={{ backgroundImage: "url('/images/background.jpg')" }}></div>*/}
       <div className="absolute inset-0 -z-10"></div>
-      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 relative z-10 px-4 sm:px-0">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 relative z-10">
         {/* Dream Input Section with visual transition */}
         <div className="pb-8 sm:pb-10 border-b border-border/30">
           <CompactDreamInput userId={user.id} />
@@ -87,7 +86,7 @@ export default async function MainPage() {
         
         {/* Footer Section */}
         <footer className="border-t pt-8 mt-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div>
               <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Dreamlink</h3>
               

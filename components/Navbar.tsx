@@ -76,8 +76,8 @@ export default function Navbar() {
   };
   
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background p-4">
-      <div className="container mx-auto flex items-center justify-between gap-3">
+    <nav className="sticky top-0 z-50 border-b bg-background px-3 py-3 sm:px-4 sm:py-4">
+      <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: Logo - flexible width on mobile */}
         <div className="flex-shrink-0 flex items-center gap-2">
           <Link href="/" className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
@@ -86,7 +86,7 @@ export default function Navbar() {
           </Link>
           {isAdmin && (
             <Link href="/admin">
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/50 text-primary hover:bg-primary/10 transition-colors cursor-pointer">
+              <Badge variant="outline" className="text-[11px] px-1.5 py-0.5 border-primary/50 text-primary hover:bg-primary/10 transition-colors cursor-pointer">
                 Admin
               </Badge>
             </Link>
@@ -94,7 +94,7 @@ export default function Navbar() {
         </div>
 
         {/* Center: Search - takes available space */}
-        <div className="flex-1 flex justify-center px-2">
+        <div className="flex-1 min-w-0 flex justify-center">
           <div className="w-full max-w-md">
             {/* Search UI - Using client-side only rendering to prevent hydration mismatch */}
             {typeof window !== 'undefined' ? (
@@ -147,7 +147,7 @@ export default function Navbar() {
                     onBlur={() => setIsFocused(false)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={keywords.length > 0 ? "Add..." : "Search..."}
-                    className="flex-1 bg-transparent border-none text-sm min-w-[60px] outline-none"
+                    className="flex-1 bg-transparent border-none text-base sm:text-sm min-w-[60px] outline-none"
                     autoComplete="off"
                     data-testid="search-input"
                   />

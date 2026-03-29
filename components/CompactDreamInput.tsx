@@ -196,14 +196,14 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     <div className="space-y-3">
       {/* Compact input form */}
       <form onSubmit={handleSubmit} className="space-y-2">
-        <div className="flex items-center gap-2 w-full px-4 sm:max-w-2xl sm:mx-auto sm:px-0">
+        <div className="flex items-center gap-2 w-full sm:max-w-2xl sm:mx-auto">
           <Input
-            placeholder="I dreamed that... (AI-powered analysis with biblical insights)"
+            placeholder="I dreamed that..."
             value={dream}
             onChange={(e) => setDream(e.target.value)}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
-            className="flex-1 min-w-0"
+            className="flex-1 min-w-0 text-base sm:text-sm"
             maxLength={500}
             disabled={isSubmitting}
           />
@@ -212,8 +212,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             type="submit"
             size="icon"
             disabled={!dream.trim() || isSubmitting}
-            title={isSubmitting ? "Processing..." : "Submit dream"}
-            className={`${!dream.trim() && !isSubmitting ? "opacity-50 cursor-not-allowed" : ""} ${isSubmitting ? "blur-[0.5px]" : ""}`}
+            aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
+            className={`h-11 w-11 flex-shrink-0 ${!dream.trim() && !isSubmitting ? "opacity-50 cursor-not-allowed" : ""} ${isSubmitting ? "blur-[0.5px]" : ""}`}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -253,7 +253,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                 placeholder="Describe your dream in detail... What happened? How did you feel? Include any symbols or recurring themes that stood out to you."
                 value={expandedDream}
                 onChange={(e) => setExpandedDream(e.target.value)}
-                className="min-h-[200px]"
+                className="min-h-[200px] text-base sm:text-sm"
                 maxLength={8000}
                 disabled={isSubmitting}
               />
@@ -308,7 +308,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         {/* Inline hint for richer analysis when focused with short input */}
         {inputFocused && dream.trim().length > 0 && dream.trim().length < 50 && (
-          <div className="max-w-2xl mx-auto px-4 sm:px-0">
+          <div className="max-w-2xl mx-auto sm:px-0">
             <p className="text-xs text-amber-600 dark:text-amber-400 italic bg-amber-50 dark:bg-amber-950/20 px-3 py-2 rounded-md border border-amber-200 dark:border-amber-900/30">
               ✨ For richer analysis, expand your entry
             </p>
@@ -317,7 +317,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         {/* Gentle hint for short dreams */}
         {dream.trim().length > 0 && dream.trim().length < 20 && !tipDismissed && (
-          <div className="max-w-2xl mx-auto px-4 sm:px-0">
+          <div className="max-w-2xl mx-auto sm:px-0">
             <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
               <div className="flex-shrink-0 mt-0.5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
