@@ -309,8 +309,15 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            © {new Date().getFullYear()} DreamLink. All rights reserved.
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400 space-y-1">
+            <p>© {new Date().getFullYear()} DreamLink. All rights reserved.</p>
+            <p className="text-xs">
+              Water effect powered by{" "}
+              <a href="https://threejs.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
+                Three.js
+              </a>
+              {" "}© 2010–{new Date().getFullYear()} three.js authors, MIT License.
+            </p>
           </div>
         </div>
       </footer>

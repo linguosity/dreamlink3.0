@@ -26,6 +26,7 @@ import "./globals.css";
 import { Providers } from './providers';
 import { LazyWaterBackground } from '@/components/LazyWaterBackground';
 import { VersionChecker } from '@/components/VersionChecker';
+import CookieConsent from '@/components/CookieConsent';
 
 // Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
@@ -129,6 +130,9 @@ export default async function RootLayout({
 
             {/* Global toast container */}
             <Toaster />
+
+            {/* Cookie consent banner */}
+            <CookieConsent />
 
             {/* Footer only on auth pages (landing page has its own footer) */}
             {isAuthPage && (

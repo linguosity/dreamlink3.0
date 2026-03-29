@@ -100,6 +100,7 @@ export default async function MainPage() {
                 <li><Link href="/help" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Help</Link></li>
                 <li><Link href="/about" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">About</Link></li>
                 <li><Link href="/privacy" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="no-brand-style text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
             
@@ -142,8 +143,15 @@ export default async function MainPage() {
             </div>
           </div>
           
-          <div className="text-center text-xs text-gray-600 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-            &copy; {new Date().getFullYear()} Dreamlink. All rights reserved.
+          <div className="text-center text-xs text-gray-600 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-1">
+            <p>&copy; {new Date().getFullYear()} Dreamlink. All rights reserved.</p>
+            <p>
+              Water effect powered by{" "}
+              <a href="https://threejs.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900 dark:hover:text-gray-200">
+                Three.js
+              </a>
+              {" "}&copy; 2010–{new Date().getFullYear()} three.js authors, MIT License.
+            </p>
           </div>
         </footer>
       </div>
