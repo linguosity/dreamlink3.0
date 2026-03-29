@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { signOutAction } from "@/app/actions";
-import { Settings, User as UserIcon, LogOut } from "lucide-react";
+import { Settings, User as UserIcon, LogOut, Shield } from "lucide-react";
 
 interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg';
@@ -24,6 +24,7 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
   const [loading, setLoading] = useState(true);
   const [initials, setInitials] = useState("");
   const [subscription, setSubscription] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -81,6 +82,18 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           } catch (profileFetchError) {
             console.error("Error fetching subscription:", profileFetchError);
             setSubscription("free");
+          }
+
+          // Check admin status
+          try {
+            const { data: profileData } = await supabase
+              .from("profile")
+              .select("is_admin")
+              .eq("user_id", data.user.id)
+              .single();
+            setIsAdmin(!!profileData?.is_admin);
+          } catch {
+            // Not admin, that's fine
           }
         }
       } catch (error) {
@@ -145,6 +158,17 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <>
+            <Link href="/admin">
+              <DropdownMenuItem className="cursor-pointer">
+                <Shield className="mr-2 h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <Link href="/account">
           <DropdownMenuItem className="cursor-pointer">
             <UserIcon className="mr-2 h-4 w-4" />

@@ -7,6 +7,7 @@ import UserAvatar from "./UserAvatar";
 import { useSearch } from "@/context/search-context";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Navbar() {
   const {
@@ -22,10 +23,27 @@ export default function Navbar() {
 
   const [isFocused, setIsFocused] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Detect macOS platform
   useEffect(() => {
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform));
+  }, []);
+
+  // Check admin status
+  useEffect(() => {
+    async function checkAdmin() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single();
+      setIsAdmin(!!profile?.is_admin);
+    }
+    checkAdmin();
   }, []);
 
   // Handle keyboard shortcut for search
@@ -61,11 +79,18 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b bg-background p-4">
       <div className="container mx-auto flex items-center justify-between gap-3">
         {/* Left: Logo - flexible width on mobile */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex items-center gap-2">
           <Link href="/" className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
             <span className="hidden sm:inline">Dreamlink</span>
             <span className="sm:hidden">DL</span>
           </Link>
+          {isAdmin && (
+            <Link href="/admin">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/50 text-primary hover:bg-primary/10 transition-colors cursor-pointer">
+                Admin
+              </Badge>
+            </Link>
+          )}
         </div>
 
         {/* Center: Search - takes available space */}
