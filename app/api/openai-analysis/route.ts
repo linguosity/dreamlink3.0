@@ -1,12 +1,67 @@
 import { NextResponse } from "next/server";
 import { ReadingLevel } from "@/schema/profile";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
 export const runtime = "edge"; // Use Edge Runtime
 
-// Helper function to get reading level instructions
-function getReadingLevelInstructions(readingLevel: string): string {
+// ── Prompt cache (in-memory, 5-min TTL) ────────────────────────────
+interface CachedPrompt {
+  data: PromptData;
+  fetchedAt: number;
+}
+
+interface PromptData {
+  system_message: string;
+  main_instructions: string;
+  format_instructions: string;
+  forbidden_phrases: string[];
+  reading_level_radiant_clarity: string;
+  reading_level_celestial_insight: string;
+  reading_level_prophetic_wisdom: string;
+  reading_level_divine_revelation: string;
+}
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let promptCache: CachedPrompt | null = null;
+
+async function getActivePrompt(): Promise<PromptData | null> {
+  // Return cached if still fresh
+  if (promptCache && Date.now() - promptCache.fetchedAt < CACHE_TTL_MS) {
+    if (DEBUG) console.log("🔍 Using cached dream prompt");
+    return promptCache.data;
+  }
+
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+
+    const supabase = createSupabaseClient(url, key);
+    const { data, error } = await supabase
+      .from("dream_prompts")
+      .select("system_message, main_instructions, format_instructions, forbidden_phrases, reading_level_radiant_clarity, reading_level_celestial_insight, reading_level_prophetic_wisdom, reading_level_divine_revelation")
+      .eq("is_active", true)
+      .single();
+
+    if (error || !data) {
+      if (DEBUG) console.log("🔍 No active prompt in DB, using hardcoded fallback");
+      return null;
+    }
+
+    promptCache = { data, fetchedAt: Date.now() };
+    if (DEBUG) console.log("🔍 Loaded dream prompt from database");
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch dream prompt from DB:", err);
+    return null;
+  }
+}
+
+// ── Hardcoded fallbacks (used if DB table doesn't exist yet) ───────
+
+function getFallbackReadingLevelInstructions(readingLevel: string): string {
   switch (readingLevel) {
     case ReadingLevel.RADIANT_CLARITY:
       return `
@@ -50,6 +105,25 @@ function getReadingLevelInstructions(readingLevel: string): string {
   }
 }
 
+// Helper: get reading level text from DB prompt or fallback
+function getReadingLevelInstructions(readingLevel: string, dbPrompt: PromptData | null): string {
+  if (dbPrompt) {
+    switch (readingLevel) {
+      case ReadingLevel.RADIANT_CLARITY:
+        return dbPrompt.reading_level_radiant_clarity;
+      case ReadingLevel.CELESTIAL_INSIGHT:
+        return dbPrompt.reading_level_celestial_insight;
+      case ReadingLevel.PROPHETIC_WISDOM:
+        return dbPrompt.reading_level_prophetic_wisdom;
+      case ReadingLevel.DIVINE_REVELATION:
+        return dbPrompt.reading_level_divine_revelation;
+      default:
+        return dbPrompt.reading_level_celestial_insight;
+    }
+  }
+  return getFallbackReadingLevelInstructions(readingLevel);
+}
+
 export async function POST(request: Request) {
   try {
     if (DEBUG) console.log("🔍 OpenAI Edge Function: Request received");
@@ -64,12 +138,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Dream content is required" }, { status: 400 });
     }
     
+    // Fetch the active prompt from the database (cached)
+    const dbPrompt = await getActivePrompt();
+
     // Get reading level instructions
-    const readingLevelInstructions = getReadingLevelInstructions(
-      readingLevel || ReadingLevel.CELESTIAL_INSIGHT
-    );
-    
-    const prompt = `
+    const effectiveReadingLevel = readingLevel || ReadingLevel.CELESTIAL_INSIGHT;
+    const readingLevelInstructions = getReadingLevelInstructions(effectiveReadingLevel, dbPrompt);
+
+    // Build forbidden phrases line
+    const forbiddenPhrases = dbPrompt?.forbidden_phrases?.length
+      ? dbPrompt.forbidden_phrases.map((p) => `"${p}"`).join(", ")
+      : '"This dream is about", "Your dream is about", "This dream symbolizes", "This dream represents"';
+
+    // Build the prompt — from DB if available, otherwise hardcoded fallback
+    const systemMessage = dbPrompt?.system_message
+      || "You are a biblical dream interpreter who provides concise analysis with scripture references.";
+
+    const prompt = dbPrompt
+      ? `${dbPrompt.main_instructions}
+
+Analyze the following dream:
+"${dream}"
+
+${dbPrompt.format_instructions}
+
+- Focus analysis on theme: ${topic || 'general spiritual meaning'}
+- NEVER start with ${forbiddenPhrases}
+- Begin directly with the spiritual theme or insight without introductory phrases
+
+${readingLevelInstructions}
+`
+      : `
 You are a dream interpreter specializing in Christian biblical interpretation.
 
 Analyze the following dream, connecting it to biblical themes, symbols, and scriptures:
@@ -90,7 +189,7 @@ Additional instruction:
 - Focus analysis on theme: ${topic || 'general spiritual meaning'}
 - Keep each supporting point brief but insightful
 - Include biblical references (one per supporting point)
-- NEVER start with "This dream is about", "Your dream is about", "This dream symbolizes", or "This dream represents"
+- NEVER start with ${forbiddenPhrases}
 - Begin directly with the spiritual theme or insight without introductory phrases
 - Ensure each supporting point has logical connection to the dream content
 - Use parenthetical citations (Book Chapter:Verse)
@@ -126,7 +225,7 @@ ${readingLevelInstructions}
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: "You are a biblical dream interpreter who provides concise analysis with scripture references." },
+            { role: "system", content: systemMessage },
             { role: "user", content: prompt }
           ],
           temperature: 0.7,

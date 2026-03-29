@@ -32,19 +32,28 @@ WHERE user_id = (
 );
 
 -- ============================================
--- Step 3: Add RLS policies so admins can see all data
+-- Step 3: Create helper function & RLS policies
 -- ============================================
+
+-- Helper function to check admin status without triggering RLS recursion.
+-- SECURITY DEFINER runs as the function owner (postgres), bypassing RLS.
+CREATE OR REPLACE FUNCTION public.is_admin(check_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profile
+    WHERE user_id = check_user_id AND is_admin = true
+  );
+$$;
 
 -- Admins can read all profiles
 DO $$ BEGIN
   CREATE POLICY "Admins can read all profiles"
     ON public.profile FOR SELECT
-    USING (
-      EXISTS (
-        SELECT 1 FROM public.profile p
-        WHERE p.user_id = auth.uid() AND p.is_admin = true
-      )
-    );
+    USING (public.is_admin(auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -52,12 +61,7 @@ END $$;
 DO $$ BEGIN
   CREATE POLICY "Admins can read all dream entries"
     ON public.dream_entries FOR SELECT
-    USING (
-      EXISTS (
-        SELECT 1 FROM public.profile p
-        WHERE p.user_id = auth.uid() AND p.is_admin = true
-      )
-    );
+    USING (public.is_admin(auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -65,12 +69,7 @@ END $$;
 DO $$ BEGIN
   CREATE POLICY "Admins can read all subscriptions"
     ON public.subscriptions FOR SELECT
-    USING (
-      EXISTS (
-        SELECT 1 FROM public.profile p
-        WHERE p.user_id = auth.uid() AND p.is_admin = true
-      )
-    );
+    USING (public.is_admin(auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -78,12 +77,7 @@ END $$;
 DO $$ BEGIN
   CREATE POLICY "Admins can read all chatgpt interactions"
     ON public.chatgpt_interactions FOR SELECT
-    USING (
-      EXISTS (
-        SELECT 1 FROM public.profile p
-        WHERE p.user_id = auth.uid() AND p.is_admin = true
-      )
-    );
+    USING (public.is_admin(auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -91,12 +85,7 @@ END $$;
 DO $$ BEGIN
   CREATE POLICY "Admins can read all payments"
     ON public.payments FOR SELECT
-    USING (
-      EXISTS (
-        SELECT 1 FROM public.profile p
-        WHERE p.user_id = auth.uid() AND p.is_admin = true
-      )
-    );
+    USING (public.is_admin(auth.uid()));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

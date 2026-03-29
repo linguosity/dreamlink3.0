@@ -70,6 +70,12 @@ export default async function AdminLayout({
                 Revenue
               </Link>
               <Link
+                href="/admin/prompts"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Prompts
+              </Link>
+              <Link
                 href="/admin/system"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
