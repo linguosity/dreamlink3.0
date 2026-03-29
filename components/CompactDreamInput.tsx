@@ -232,7 +232,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
                       size="sm"
                       variant="outline"
                       aria-label="Expand dream entry"
-                      className="gap-2"
+                      className="gap-2 h-11"
                     >
                       <PenLine className="h-4 w-4" />
                       <span className="text-xs font-medium">Expand</span>

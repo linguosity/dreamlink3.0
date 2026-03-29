@@ -110,7 +110,7 @@ export default async function MainPage() {
               </p>
               <div className="space-y-4">
                 <Link href="/contact">
-                  <Button variant="outline" size="sm" className="bg-white text-gray-900 hover:bg-gray-100">Contact Us</Button>
+                  <Button variant="outline" size="sm" className="bg-white text-gray-900 hover:bg-gray-100 h-11">Contact Us</Button>
                 </Link>
                 <div className="mt-4">
                   <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Share:</h4>

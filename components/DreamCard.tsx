@@ -1261,7 +1261,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
                   return (
                     <Badge key={index} variant="secondary" className={cn(
-                      "text-[11px] px-1.5 py-0.5 leading-4 truncate max-w-[8rem]",
+                      "text-xs px-1.5 py-0.5 leading-4 truncate max-w-[8rem]",
                       isTagMatch && "bg-primary/10",
                       (cardImageUrl || isPollingCardImage) && "bg-white/20 text-white border-white/20"
                     )}>
@@ -1274,7 +1274,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 })}
                 {dream.tags.length > 3 && (
                   <Badge variant="secondary" className={cn(
-                    "text-[11px] px-1.5 py-0.5 leading-4",
+                    "text-xs px-1.5 py-0.5 leading-4",
                     (cardImageUrl || isPollingCardImage) && "bg-white/20 text-white border-white/20"
                   )}>
                     +{dream.tags.length - 3} more

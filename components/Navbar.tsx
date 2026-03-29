@@ -86,7 +86,7 @@ export default function Navbar() {
           </Link>
           {isAdmin && (
             <Link href="/admin">
-              <Badge variant="outline" className="text-[11px] px-1.5 py-0.5 border-primary/50 text-primary hover:bg-primary/10 transition-colors cursor-pointer">
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 border-primary/50 text-primary hover:bg-primary/10 transition-colors cursor-pointer">
                 Admin
               </Badge>
             </Link>

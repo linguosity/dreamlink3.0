@@ -150,7 +150,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   // Show loading state (client-side only)
   if (typeof window !== 'undefined' && isSearchEnabled && isLoading) {
     return (
-      <div className="grid gap-4 min-h-[300px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="h-64 w-full bg-muted animate-pulse rounded-md" />
         ))}
@@ -159,10 +159,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   }
 
   return (
-    <div
-      className="grid gap-4 min-h-[300px]"
-      style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gridAutoFlow: 'dense' }}
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
       <AnimatePresence initial={false}>
         {/* Optimistic placeholder card — appears instantly on submit */}
         {pendingDream && (
