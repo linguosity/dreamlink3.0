@@ -83,6 +83,20 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const submitDream = async (dreamText: string, retryCount = 0) => {
     setIsSubmitting(true);
 
+    // Optimistically show a placeholder card in the grid immediately
+    if (retryCount === 0) {
+      const placeholderId = `pending-${Date.now()}`;
+      window.dispatchEvent(
+        new CustomEvent("dreamlink:dream-submitting", {
+          detail: {
+            id: placeholderId,
+            original_text: dreamText,
+            created_at: new Date().toISOString(),
+          },
+        })
+      );
+    }
+
     try {
       const response = await fetch("/api/dream-entries", {
         method: "POST",

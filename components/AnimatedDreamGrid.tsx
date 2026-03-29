@@ -61,6 +61,34 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   // Hooks must be called before any conditional returns (Rules of Hooks)
   const [loadingDreamId, setLoadingDreamId] = useState<string | null>(null);
 
+  // Optimistic placeholder card shown immediately on submission
+  const [pendingDream, setPendingDream] = useState<Dream | null>(null);
+
+  // Listen for dream submission events to show a placeholder card instantly
+  useEffect(() => {
+    function handleDreamSubmitting(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      setPendingDream({
+        id: detail.id,
+        original_text: detail.original_text,
+        created_at: detail.created_at,
+      });
+    }
+
+    window.addEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
+    return () => window.removeEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
+  }, []);
+
+  // Clear the pending placeholder once real data arrives from the server
+  useEffect(() => {
+    if (pendingDream && dreams.length > 0) {
+      // The server data has refreshed — the real card is now in the list
+      // Give a brief moment for the animation to be smooth
+      const timer = setTimeout(() => setPendingDream(null), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [dreams, pendingDream]);
+
   // Check for loading dream
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -79,8 +107,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     }
   }, [dreams]);
 
-  // If no dreams, show empty state
-  if (!dreams || dreams.length === 0) {
+  // If no dreams (and no pending submission), show empty state
+  if ((!dreams || dreams.length === 0) && !pendingDream) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8">
         <div className="bg-muted rounded-full p-8 mb-6">
@@ -136,6 +164,27 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       style={{ gridAutoFlow: 'dense' }}
     >
       <AnimatePresence initial={false}>
+        {/* Optimistic placeholder card — appears instantly on submit */}
+        {pendingDream && (
+          <motion.div
+            key={pendingDream.id}
+            layout
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{
+              type: 'tween',
+              duration: 0.3,
+              ease: 'easeOut'
+            }}
+            className="col-span-1"
+          >
+            <DreamCard
+              dream={pendingDream}
+              loading={true}
+            />
+          </motion.div>
+        )}
         {filteredDreams.slice(0, 12).map((dream, index) => (
           <motion.div
             key={dream.id}
@@ -143,15 +192,15 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ 
-              type: 'tween', 
+            transition={{
+              type: 'tween',
               duration: 0.4,
               ease: 'easeOut'
             }}
             className="col-span-1"
           >
-            <DreamCard 
-              dream={dream} 
+            <DreamCard
+              dream={dream}
               loading={dream.id === loadingDreamId}
               searchTerms={typeof window !== 'undefined' && isSearchEnabled ? keywords : []}
             />
