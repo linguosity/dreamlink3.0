@@ -20,6 +20,15 @@ interface DashboardMetrics {
     date: string;
     count: number;
   }>;
+  recentErrors: Array<{
+    id: string;
+    error_type: string;
+    error_message: string;
+    error_context: Record<string, unknown>;
+    user_agent: string | null;
+    created_at: string;
+    user_id: string | null;
+  }>;
 }
 
 async function getMetrics(): Promise<DashboardMetrics> {
@@ -37,6 +46,7 @@ async function getMetrics(): Promise<DashboardMetrics> {
     subscriptionsResult,
     aiCallsTodayResult,
     recentSignupsResult,
+    recentErrorsResult,
   ] = await Promise.all([
     // Total users
     admin.from("profile").select("id", { count: "exact", head: true }),
@@ -68,6 +78,12 @@ async function getMetrics(): Promise<DashboardMetrics> {
       .select("user_id, created_at")
       .order("created_at", { ascending: false })
       .limit(10),
+    // Recent client errors (last 20)
+    admin
+      .from("client_error_logs")
+      .select("id, error_type, error_message, error_context, user_agent, created_at, user_id")
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   // Get dreams by day for the last 14 days
@@ -105,6 +121,7 @@ async function getMetrics(): Promise<DashboardMetrics> {
     avgDreamsPerUser: totalUsers > 0 ? Math.round((totalDreams / totalUsers) * 10) / 10 : 0,
     aiCallsToday: aiCallsTodayResult.count || 0,
     recentSignups: recentSignupsResult.data || [],
+    recentErrors: (recentErrorsResult.data || []) as DashboardMetrics["recentErrors"],
     dreamsByDay: Array.from(dreamsByDayMap.entries()).map(([date, count]) => ({
       date,
       count,
@@ -189,6 +206,52 @@ export default async function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Recent Issues */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            Recent Issues
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {metrics.recentErrors.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No errors logged — all clear!</p>
+          ) : (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              {metrics.recentErrors.map((err) => (
+                <div
+                  key={err.id}
+                  className="flex flex-col gap-1 p-3 rounded-lg border border-red-200/50 bg-red-50/30 dark:border-red-900/30 dark:bg-red-950/10"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">
+                      {err.error_type}
+                    </span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatRelativeTime(err.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground line-clamp-2">
+                    {err.error_message}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    {err.user_id && (
+                      <span className="font-mono">{err.user_id.slice(0, 8)}…</span>
+                    )}
+                    {err.user_agent && (
+                      <span className="truncate max-w-[200px]">
+                        {parseUserAgent(err.user_agent)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* System Status */}
       <Card>
         <CardHeader>
@@ -218,8 +281,8 @@ export default async function AdminDashboard() {
             />
             <StatusItem
               label="Error Monitoring"
-              status="pending"
-              detail="Sentry not connected"
+              status="operational"
+              detail="Sentry + client_error_logs"
             />
             <StatusItem
               label="Email"
@@ -281,6 +344,16 @@ function StatusItem({
       </div>
     </div>
   );
+}
+
+function parseUserAgent(ua: string): string {
+  if (ua.includes("iPhone")) return "iPhone";
+  if (ua.includes("iPad")) return "iPad";
+  if (ua.includes("Android")) return "Android";
+  if (ua.includes("Mac")) return "Mac";
+  if (ua.includes("Windows")) return "Windows";
+  if (ua.includes("Linux")) return "Linux";
+  return "Unknown device";
 }
 
 function formatRelativeTime(dateStr: string): string {
