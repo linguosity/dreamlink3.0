@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { ImageAesthetic } from "@/schema/imageAesthetic";
 import { ReadingLevel } from "@/schema/profile";
+import { logClientError } from "@/utils/errorLogger";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -179,14 +180,21 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error("Error submitting dream:", err);
-      
+
+      // Log to Supabase for debugging (fire-and-forget)
+      logClientError("dream_submission", err.message, {
+        route: "/api/dream-entries",
+        retryCount,
+        dreamText: dreamText,
+      });
+
       // More user-friendly error messages
       let userMessage = err.message;
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
         userMessage = "Please wait a moment and try again. If the issue persists, try refreshing the page.";
       }
-      
-      alert(`Failed to submit your dream: ${userMessage}`);
+
+      toast.error(`Failed to submit your dream: ${userMessage}`);
     } finally {
       setIsSubmitting(false);
     }

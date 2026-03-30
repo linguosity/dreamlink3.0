@@ -25,6 +25,8 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { cn } from "@/lib/utils";
 import { highlightMatches } from "@/utils/highlight";
+import { toast } from "sonner";
+import { logClientError } from "@/utils/errorLogger";
 
 // Instead of direct import, use fallback icon components
 const MessageSquareIcon = ({ className }: { className?: string }) => (
@@ -897,7 +899,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       
     } catch (error) {
       console.error('Error deleting dream:', error);
-      alert('Failed to delete this dream. Please try again.');
+      logClientError("dream_delete", error instanceof Error ? error.message : String(error), {
+        route: `/api/dream-entries?id=${dream.id}`,
+      });
+      toast.error('Failed to delete this dream. Please try again.');
     } finally {
       setIsDeleting(false);
     }
