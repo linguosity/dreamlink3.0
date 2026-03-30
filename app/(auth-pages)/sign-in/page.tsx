@@ -35,7 +35,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           </Badge>
           <h1 className="text-3xl font-bold mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              Sign in to Dreamwise
+              Sign in to DreamRiver
             </span>
           </h1>
           <p className="text-gray-600 dark:text-gray-300">

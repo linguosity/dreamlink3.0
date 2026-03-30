@@ -45,7 +45,7 @@ export default function HeaderAuth({ user }: HeaderAuthProps) {
       {/* Left: Logo */}
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-bold text-gray-800">
-          Dreamwise
+          DreamRiver
         </Link>
       </div>
 

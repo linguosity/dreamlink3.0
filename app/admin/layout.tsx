@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Dreamwise Admin",
-  description: "Admin dashboard for Dreamwise",
+  title: "DreamRiver Admin",
+  description: "Admin dashboard for DreamRiver",
 };
 
 export default async function AdminLayout({
@@ -42,7 +42,7 @@ export default async function AdminLayout({
               href="/admin"
               className="text-lg font-semibold tracking-tight"
             >
-              Dreamwise Admin
+              DreamRiver Admin
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link

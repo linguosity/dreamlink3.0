@@ -1,6 +1,6 @@
 // app/landing/page.tsx
 //
-// High-converting landing page for Dreamwise
+// High-converting landing page for DreamRiver
 // Converts visitors into users with compelling copy and clear CTAs
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export default function LandingPage() {
             </h1>
             
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Dreamwise is an AI-powered dream journal that interprets your dreams with Biblical insight — 
+              DreamRiver is an AI-powered dream journal that interprets your dreams with Biblical insight —
               so you can receive clarity, comfort, and spiritual direction in minutes.
             </p>
             
@@ -113,7 +113,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-                Dreamwise makes dream interpretation spiritually aligned and accessible
+                DreamRiver makes dream interpretation spiritually aligned and accessible
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300">
                 Just describe your dream — our AI interprets it using Biblical references, 
@@ -258,10 +258,10 @@ export default function LandingPage() {
             <p className="text-blue-100 mb-8 text-lg">
               Free 7-day trial – then just $9/mo
             </p>
-            
+
             <Link href="/sign-up">
               <Button size="lg" variant="secondary" className="px-8 py-4 text-lg font-semibold">
-                Try Dreamwise Free
+                Try DreamRiver Free
               </Button>
             </Link>
             
@@ -278,7 +278,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-4">Dreamwise</h3>
+              <h3 className="font-bold text-lg mb-4">DreamRiver</h3>
               <p className="text-gray-400 text-sm">
                 AI-powered dream interpretation with Biblical wisdom and spiritual insight.
               </p>
@@ -310,7 +310,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400 space-y-1">
-            <p>© {new Date().getFullYear()} Dreamwise. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} DreamRiver. All rights reserved.</p>
             <p className="text-xs">
               Water effect powered by{" "}
               <a href="https://threejs.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">

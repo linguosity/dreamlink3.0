@@ -16,11 +16,13 @@ interface CompactDreamInputProps {
 
 const MAX_CHARS = 8000;
 const MAX_HEIGHT_PX = 200; // ~8 lines, then scroll
+const BUTTON_STICK_BOTTOM_PX = 100; // switch from centered to bottom-pinned at this height
 
 export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dream, setDream] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
@@ -55,7 +57,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT_PX)}px`;
+    const newHeight = Math.min(textarea.scrollHeight, MAX_HEIGHT_PX);
+    textarea.style.height = `${newHeight}px`;
+    setIsExpanded(newHeight >= BUTTON_STICK_BOTTOM_PX);
   }, []);
 
   useEffect(() => {
@@ -86,10 +90,11 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
     await submitDream(dream);
     setDream("");
-    // Reset textarea height after clearing
+    // Reset textarea height and button position after clearing
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    setIsExpanded(false);
   };
 
   // Common submission logic with retry for auth timing issues
@@ -218,15 +223,15 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             style={{ maxHeight: `${MAX_HEIGHT_PX}px` }}
           />
 
-          {/* Send button — bottom-right inside textarea */}
+          {/* Send button — centered when short, bottom-right when expanded */}
           <Button
             type="submit"
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute bottom-2.5 right-2.5 h-11 w-11 rounded-lg transition-opacity ${
-              hasContent ? "opacity-100" : "opacity-30"
-            }`}
+            className={`absolute right-2.5 h-11 w-11 rounded-lg transition-all duration-200 ${
+              isExpanded ? "bottom-2.5" : "top-1/2 -translate-y-1/2"
+            } ${hasContent ? "opacity-100" : "opacity-30"}`}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

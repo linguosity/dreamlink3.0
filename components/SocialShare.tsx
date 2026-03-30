@@ -26,7 +26,7 @@ export default function SocialShare({
 }: SocialShareProps & { faded?: boolean }) {
   return (
     <div className="flex items-center space-x-2">
-      <FacebookShareButton url={url} hashtag="#dreamwise">
+      <FacebookShareButton url={url} hashtag="#dreamriver">
         <div className={`transition-opacity duration-200 ${faded ? 'opacity-50 hover:opacity-100' : ''} focus-visible:ring-2 focus-visible:ring-ring rounded-full`} aria-label="Share on Facebook">
           <FacebookIcon size={size} round={true} />
         </div>

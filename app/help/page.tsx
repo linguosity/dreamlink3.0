@@ -11,7 +11,7 @@ export default function HelpPage() {
             <h2 className="text-xl font-semibold">Recording a Dream</h2>
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
               Type your dream into the input box on the main page and press
-              submit. Dreamwise will analyze your dream and return biblical
+              submit. DreamRiver will analyze your dream and return biblical
               insights within a few seconds.
             </p>
           </div>

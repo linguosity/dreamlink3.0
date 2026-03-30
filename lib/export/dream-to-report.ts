@@ -131,11 +131,11 @@ export function dreamToReportData({
       dateOfBirth: '',
       grade: '',
     },
-    evaluatorName: 'Dreamwise AI',
+    evaluatorName: 'DreamRiver AI',
     evaluationDate: createdAt,
     reportDate: createdAt,
     sections,
-    organizationName: 'Dreamwise',
+    organizationName: 'DreamRiver',
     confidentialityNotice: 'This report is a personal spiritual reflection.',
   };
 }

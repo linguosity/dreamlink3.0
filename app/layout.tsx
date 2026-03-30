@@ -36,19 +36,19 @@ const defaultUrl = process.env.VERCEL_URL
 // ① Next.js Metadata API
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Dreamwise – Dream Journal",
+  title: "DreamRiver – Dream Journal",
   description: "Track and analyze your dreams with AI-powered insights",
   openGraph: {
-    title: "Dreamwise – Dream Journal",
+    title: "DreamRiver – Dream Journal",
     description: "Track and analyze your dreams with AI-powered insights",
     url: defaultUrl,
-    siteName: "Dreamwise",
+    siteName: "DreamRiver",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dreamwise – Dream Journal",
+    title: "DreamRiver – Dream Journal",
     description: "Track and analyze your dreams with AI-powered insights",
   },
 };
@@ -146,7 +146,7 @@ export default async function RootLayout({
             {isAuthPage && (
               <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
                 <p className="text-white">
-                  © {new Date().getFullYear()} Dreamwise. All rights reserved.
+                  © {new Date().getFullYear()} DreamRiver. All rights reserved.
                 </p>
                 <div className="flex items-center gap-4">
                   <ThemeSwitcher />
