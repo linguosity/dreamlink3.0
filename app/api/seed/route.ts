@@ -3,14 +3,21 @@ import { createClient } from '@/utils/supabase/server';
 
 // For debugging purposes - directly access supabase URL and key to debug
 import { createClient as createDirectClient } from '@supabase/supabase-js';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createDirectClient(supabaseUrl, supabaseKey);
+
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createDirectClient(supabaseUrl, supabaseKey);
+}
 
 export async function GET() {
   try {
-    // Get server-side supabase client 
+    // Get server-side supabase client
     const supabase = await createClient();
+    const supabaseAdmin = getSupabaseAdmin();
     
     // Check database structure
     const { data: tables, error: tablesError } = await supabaseAdmin
