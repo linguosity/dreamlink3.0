@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Input } from "./ui/input";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { Send, PenLine, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { Textarea } from "./ui/textarea";
+import { Send, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { ImageAesthetic } from "@/schema/imageAesthetic";
@@ -18,13 +14,14 @@ interface CompactDreamInputProps {
   userId: string;
 }
 
+const MAX_CHARS = 8000;
+const MAX_HEIGHT_PX = 200; // ~8 lines, then scroll
+
 export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dream, setDream] = useState("");
-  const [expandedDream, setExpandedDream] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
-  const [inputFocused, setInputFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
@@ -53,6 +50,18 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     }
   }, []);
 
+  // Auto-resize textarea to fit content
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT_PX)}px`;
+  }, []);
+
+  useEffect(() => {
+    autoResize();
+  }, [dream, autoResize]);
+
   // Handle permanent tip dismissal
   const handlePermanentDismiss = () => {
     setTipDismissed(true);
@@ -61,23 +70,26 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     }
   };
 
-  // Handler for submitting from compact input
+  // Keyboard: Cmd/Ctrl+Enter to submit
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (dream.trim() && !isSubmitting) {
+        handleSubmit();
+      }
+    }
+  };
+
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
     if (!dream.trim()) return;
-    
+
     await submitDream(dream);
     setDream("");
-  };
-
-  // Handler for submitting from expanded textarea
-  const handleExpandedSubmit = async (event?: React.FormEvent) => {
-    if (event) event.preventDefault();
-    if (!expandedDream.trim()) return;
-    
-    await submitDream(expandedDream);
-    setExpandedDream("");
-    setDialogOpen(false);
+    // Reset textarea height after clearing
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
   // Common submission logic with retry for auth timing issues
@@ -112,10 +124,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       // Get the response text first to ensure we can see the error even if it's not valid JSON
       const responseText = await response.text();
-      
+
       let result;
       try {
-        // Try to parse as JSON
         result = JSON.parse(responseText);
       } catch (parseError) {
         console.error("Failed to parse API response as JSON:", responseText);
@@ -124,38 +135,28 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       // Handle 401 auth errors with retry logic
       if (response.status === 401 && retryCount < 2) {
-        // Wait a bit for auth state to sync
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Recursive retry
-        setIsSubmitting(false); // Reset loading state temporarily
+        setIsSubmitting(false);
         return await submitDream(dreamText, retryCount + 1);
       }
 
       if (!response.ok) {
         console.error("API error details:", result);
-        
-        // Special handling for auth errors
+
         if (response.status === 401) {
           throw new Error("Authentication error. Please try refreshing the page and logging in again.");
         }
-        
+
         throw new Error(result.error || "Failed to submit dream");
       }
-      
-      // The API now returns the analysis synchronously, so no polling needed.
-      // If analysis succeeded, the dream is ready; if it failed, the dream
-      // still exists in the DB and the card will show a retry button.
+
       if (result.id) {
-        // Show success toast
         toast.success("Dream recorded! Analysis on its way…");
 
-        // Clear any stale loading state from previous attempts
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
 
-        // Fire off image generation in the background (non-blocking).
-        // We don't await this — it runs independently of the page refresh.
+        // Fire off image generation in the background (non-blocking)
         if (result.analysis) {
           const imageBody = JSON.stringify({
             dreamId: result.id,
@@ -164,8 +165,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             topicSentence: result.analysis.topicSentence || "",
             aesthetic: userAesthetic.current,
           });
-          // Use navigator.sendBeacon-style approach: start fetch before refresh
-          // The keepalive: true option ensures the request survives navigation
           fetch("/api/dream-image", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -175,20 +174,17 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         }
       }
 
-      // Refresh the page to show the new fully-analyzed entry
       router.refresh();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error("Error submitting dream:", err);
 
-      // Log to Supabase for debugging (fire-and-forget)
       logClientError("dream_submission", err.message, {
         route: "/api/dream-entries",
         retryCount,
         dreamText: dreamText,
       });
 
-      // More user-friendly error messages
       let userMessage = err.message;
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
         userMessage = "Please wait a moment and try again. If the issue persists, try refreshing the page.";
@@ -200,28 +196,35 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     }
   };
 
+  const hasContent = dream.trim().length > 0;
+
   return (
-    <div className="space-y-3">
-      {/* Compact input form */}
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <div className="flex items-center gap-2 w-full sm:max-w-2xl sm:mx-auto">
-          <Input
-            placeholder="I dreamed that..."
+    <div className="w-full sm:max-w-2xl sm:mx-auto space-y-2">
+      <form onSubmit={handleSubmit}>
+        {/* Textarea container with inset send button */}
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            placeholder="Describe your dream — a word, a feeling, or the whole story…"
             value={dream}
             onChange={(e) => setDream(e.target.value)}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            className="flex-1 min-w-0 text-base sm:text-sm"
-            maxLength={500}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            maxLength={MAX_CHARS}
             disabled={isSubmitting}
+            className="w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ maxHeight: `${MAX_HEIGHT_PX}px` }}
           />
 
+          {/* Send button — bottom-right inside textarea */}
           <Button
             type="submit"
             size="icon"
-            disabled={!dream.trim() || isSubmitting}
+            disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`h-11 w-11 flex-shrink-0 ${!dream.trim() && !isSubmitting ? "opacity-50 cursor-not-allowed" : ""} ${isSubmitting ? "blur-[0.5px]" : ""}`}
+            className={`absolute bottom-2.5 right-2.5 h-9 w-9 rounded-lg transition-opacity ${
+              hasContent ? "opacity-100" : "opacity-30"
+            }`}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -229,127 +232,45 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               <Send className="h-4 w-4" />
             )}
           </Button>
-
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      aria-label="Expand dream entry"
-                      className="gap-2 h-11"
-                    >
-                      <PenLine className="h-4 w-4" />
-                      <span className="text-xs font-medium">Expand</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Add more detail</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </DialogTrigger>
-          
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Record Your Dream</DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleExpandedSubmit} className="space-y-4 py-4">
-              <Textarea
-                placeholder="Describe your dream in detail... What happened? How did you feel? Include any symbols or recurring themes that stood out to you."
-                value={expandedDream}
-                onChange={(e) => setExpandedDream(e.target.value)}
-                className="min-h-[200px] text-base sm:text-sm"
-                maxLength={8000}
-                disabled={isSubmitting}
-              />
-              
-              <div className="text-xs text-muted-foreground text-right">
-                {expandedDream.length}/8000 characters
-              </div>
-              
-              {/* Gentle hint for short dreams in expanded form */}
-              {expandedDream.trim().length > 0 && expandedDream.trim().length < 20 && !tipDismissed && (
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="m9 12 2 2 4-4"/>
-                    </svg>
-                  </div>
-                  <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
-                    <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
-                  </p>
-                  <button
-                    onClick={handlePermanentDismiss}
-                    className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
-                    aria-label="Dismiss tip permanently"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
-                      <path d="m18 6-12 12"/>
-                      <path d="m6 6 12 12"/>
-                    </svg>
-                  </button>
-                </div>
-              )}
-              
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!expandedDream.trim() || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Dream for Analysis"
-                )}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
         </div>
 
-        {/* Inline hint for richer analysis when focused with short input */}
-        {inputFocused && dream.trim().length > 0 && dream.trim().length < 50 && (
-          <div className="max-w-2xl mx-auto sm:px-0">
-            <p className="text-xs text-amber-600 dark:text-amber-400 italic bg-amber-50 dark:bg-amber-950/20 px-3 py-2 rounded-md border border-amber-200 dark:border-amber-900/30">
-              ✨ For richer analysis, expand your entry
-            </p>
-          </div>
-        )}
-
-        {/* Gentle hint for short dreams */}
-        {dream.trim().length > 0 && dream.trim().length < 20 && !tipDismissed && (
-          <div className="max-w-2xl mx-auto sm:px-0">
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
-              <div className="flex-shrink-0 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="m9 12 2 2 4-4"/>
-                </svg>
-              </div>
-              <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
-                <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
-              </p>
-              <button
-                onClick={handlePermanentDismiss}
-                className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
-                aria-label="Dismiss tip permanently"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
-                  <path d="m18 6-12 12"/>
-                  <path d="m6 6 12 12"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Footer row: char count + submit hint */}
+        <div className="flex items-center justify-between px-1">
+          <span className={`text-xs transition-opacity ${hasContent ? "opacity-60" : "opacity-0"}`}>
+            {dream.length}/{MAX_CHARS}
+          </span>
+          <span className="text-xs text-muted-foreground opacity-50">
+            {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent ?? '')
+              ? '⌘↵ to submit'
+              : 'Ctrl+↵ to submit'}
+          </span>
+        </div>
       </form>
+
+      {/* Gentle hint for short dreams */}
+      {hasContent && dream.trim().length < 20 && !tipDismissed && (
+        <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
+          <div className="flex-shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
+            <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
+          </p>
+          <button
+            onClick={handlePermanentDismiss}
+            className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+            aria-label="Dismiss tip permanently"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
+              <path d="m18 6-12 12"/>
+              <path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
