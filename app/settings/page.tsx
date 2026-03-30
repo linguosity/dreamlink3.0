@@ -200,7 +200,7 @@ export default function SettingsPage() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Preferences</CardTitle>
-            <CardDescription>Customize your Dreamlink experience</CardDescription>
+            <CardDescription>Customize your Dreamwise experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Search Feature Toggle */}

@@ -4,10 +4,10 @@ export default function AboutPage() {
   return (
     <div className="flex-1 w-full flex flex-col items-center px-4 py-12">
       <div className="max-w-2xl w-full space-y-8">
-        <h1 className="text-3xl font-bold text-center">About Dreamlink</h1>
+        <h1 className="text-3xl font-bold text-center">About Dreamwise</h1>
 
         <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-          Dreamlink is an AI-powered dream journal that helps you explore the
+          Dreamwise is an AI-powered dream journal that helps you explore the
           deeper meaning of your dreams through the lens of biblical wisdom.
           Record your dreams and receive personalized insights connecting your
           experiences to scripture.

@@ -77,7 +77,7 @@ export default function PrivacyPage() {
               Third-Party Services
             </h2>
             <p>
-              We use the following third-party services to operate DreamLink:
+              We use the following third-party services to operate Dreamwise:
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>
@@ -184,7 +184,7 @@ export default function PrivacyPage() {
               Children&apos;s Privacy
             </h2>
             <p>
-              DreamLink is not directed at children under 13. We do not knowingly
+              Dreamwise is not directed at children under 13. We do not knowingly
               collect personal information from children under 13. If we learn
               that we have collected data from a child under 13, we will take
               steps to delete it promptly.

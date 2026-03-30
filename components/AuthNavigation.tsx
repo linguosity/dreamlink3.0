@@ -45,7 +45,7 @@ export default function AuthNavigation({ variant = 'compact' }: AuthNavigationPr
     return (
       <div className="space-y-4">
         <h1 className="font-blanka text-2xl tracking-wider text-center text-foreground">
-          Dreamlink
+          Dreamwise
         </h1>
         <Card className="p-1 bg-muted/50 backdrop-blur-sm">
           <div className="flex rounded-md">

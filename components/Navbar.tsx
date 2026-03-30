@@ -81,8 +81,8 @@ export default function Navbar() {
         {/* Left: Logo - flexible width on mobile */}
         <div className="flex-shrink-0 flex items-center gap-2">
           <Link href="/" className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
-            <span className="hidden sm:inline">Dreamlink</span>
-            <span className="sm:hidden">DL</span>
+            <span className="hidden sm:inline">Dreamwise</span>
+            <span className="sm:hidden">DW</span>
           </Link>
           {isAdmin && (
             <Link href="/admin">

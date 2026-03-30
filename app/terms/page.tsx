@@ -15,7 +15,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using DreamLink (&quot;the Service&quot;), you
+              By accessing or using Dreamwise (&quot;the Service&quot;), you
               agree to be bound by these Terms of Service. If you do not agree to
               these terms, please do not use the Service.
             </p>
@@ -26,7 +26,7 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              DreamLink is an AI-powered dream journaling and analysis platform
+              Dreamwise is an AI-powered dream journaling and analysis platform
               that provides biblical and spiritual interpretations of dream
               content. The Service uses artificial intelligence to generate
               analysis, imagery, and scripture references based on user-submitted
@@ -54,7 +54,7 @@ export default function TermsPage() {
             <p>
               You retain ownership of the dream descriptions and other content
               you submit to the Service (&quot;User Content&quot;). By
-              submitting User Content, you grant DreamLink a limited license to
+              submitting User Content, you grant Dreamwise a limited license to
               process your content solely for the purpose of providing the
               analysis service. We do not use your User Content for training AI
               models or for any purpose other than delivering the Service to you.
@@ -120,7 +120,7 @@ export default function TermsPage() {
               9. Limitation of Liability
             </h2>
             <p>
-              To the fullest extent permitted by law, DreamLink and its
+              To the fullest extent permitted by law, Dreamwise and its
               operators shall not be liable for any indirect, incidental,
               special, consequential, or punitive damages arising from your use
               of the Service. The Service is provided &quot;as is&quot; and

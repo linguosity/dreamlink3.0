@@ -92,7 +92,7 @@ export default function SharedDreamPage() {
           
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
             <Link href="/">
-              <Button variant="outline">Go to Dreamlink</Button>
+              <Button variant="outline">Go to Dreamwise</Button>
             </Link>
             
             <div className="flex items-center">
