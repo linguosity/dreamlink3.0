@@ -1,19 +1,11 @@
 // app/(auth-pages)/sign-up/page.tsx
 //
-// Technical explanation:
-// Defines the client-side UI and logic for user registration. Manages form
-// state (email, password) and uses `useTransition` for submission pending
-// states. Calls `signUpAction` (server action) for registration. Displays a
-// toast notification on success and links to the sign-in page.
-//
-// Analogy:
-// A registration form for a new service. Users fill in details (email,
-// password) to create an account. The form is submitted (like sending an
-// application), and on success, provides next steps (email verification).
+// React 19 modernization: uses useActionState for form state management,
+// replacing the previous useTransition + manual state pattern.
 
 'use client';
 
-import { useTransition, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { signUpAction } from "@/app/actions";
 import { toast } from "sonner";
 import { SubmitButton } from "@/components/submit-button";
@@ -26,29 +18,28 @@ import { SmtpMessage } from "../smtp-message";
 import { Moon, Sparkles, CheckCircle } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
 
+// Action state shape returned by signUpAction
+type SignUpState = {
+  error?: string;
+  success?: string;
+} | null;
+
 export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [pending, startTransition] = useTransition();
+  const [state, formAction, pending] = useActionState<SignUpState, FormData>(
+    async (_prevState, formData) => {
+      return await signUpAction(formData);
+    },
+    null
+  );
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.append('email', email);
-      formData.append('password', password);
-
-      const result = await signUpAction(formData);
-
-      if ('error' in result) {
-        toast.error(result.error);
-      } else if ('success' in result) {
-        toast.success("Check your email to verify your account.");
-        setEmail('');
-        setPassword('');
-      }
-    });
-  }
+  // Show toast notifications when state changes
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error);
+    } else if (state?.success) {
+      toast.success("Check your email to verify your account.");
+    }
+  }, [state]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent p-4">
@@ -67,13 +58,13 @@ export default function Signup() {
             Begin your spiritual dream interpretation journey
           </p>
         </div>
-        
+
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm mb-6">
           <CardHeader className="text-center pb-4">
             <Moon className="w-12 h-12 mx-auto mb-4 text-blue-600" />
             <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
             <CardDescription>
-              7 days free • No credit card required • Cancel anytime
+              7 days free &bull; No credit card required &bull; Cancel anytime
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -90,7 +81,7 @@ export default function Signup() {
               </div>
             </div>
 
-            <form className="flex-1 flex flex-col w-full space-y-4" onSubmit={handleSubmit}>
+            <form className="flex-1 flex flex-col w-full space-y-4" action={formAction}>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -98,8 +89,6 @@ export default function Signup() {
                   type="email"
                   placeholder="you@example.com"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -111,8 +100,6 @@ export default function Signup() {
                   placeholder="Your password"
                   minLength={6}
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -137,7 +124,7 @@ export default function Signup() {
             <SmtpMessage />
           </CardFooter>
         </Card>
-        
+
         {/* Benefits reminder */}
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-none">
           <CardContent className="p-4">
@@ -162,7 +149,7 @@ export default function Signup() {
             </div>
           </CardContent>
         </Card>
-        
+
         <div className="text-center mt-8">
           <Link href="/landing" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
             ← Back to homepage
