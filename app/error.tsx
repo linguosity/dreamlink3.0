@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { captureError } from "@/lib/sentry";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -17,7 +17,10 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    captureError(error, {
+      tags: { boundary: "page" },
+      extra: { digest: error.digest },
+    });
   }, [error]);
 
   return (
