@@ -203,7 +203,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       <form onSubmit={handleSubmit}>
         {/* Textarea container with inset send button */}
         <div className="relative">
+          <label htmlFor="dream-input" className="sr-only">Describe your dream</label>
           <textarea
+            id="dream-input"
             ref={textareaRef}
             placeholder="Describe your dream — a word, a feeling, or the whole story…"
             value={dream}
@@ -222,7 +224,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute bottom-2.5 right-2.5 h-9 w-9 rounded-lg transition-opacity ${
+            className={`absolute bottom-2.5 right-2.5 h-11 w-11 rounded-lg transition-opacity ${
               hasContent ? "opacity-100" : "opacity-30"
             }`}
           >

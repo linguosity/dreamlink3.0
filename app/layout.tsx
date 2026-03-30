@@ -106,6 +106,13 @@ export default async function RootLayout({
       <LazyWaterBackground />
         <Providers>
           <VersionChecker />
+          {/* Skip-to-content link for keyboard/screen-reader users */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            Skip to content
+          </a>
           <main className="min-h-screen flex flex-col animate-fade-in">
             {/* Env‐var warning or Navbar */}
             {!hasEnvVars ? (
@@ -120,6 +127,7 @@ export default async function RootLayout({
 
             {/* Main content */}
             <div
+              id="main-content"
               className={
                 `flex-1 ` +
                 (!user && !isAuthPage && !isLandingPage ? "flex items-center justify-center" : "")

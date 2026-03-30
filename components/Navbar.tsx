@@ -137,6 +137,7 @@ export default function Navbar() {
                   ))}
                   
                   {/* Input box */}
+                  <label htmlFor="search-input" className="sr-only">Search dreams</label>
                   <input
                     id="search-input"
                     type="text"
@@ -147,6 +148,7 @@ export default function Navbar() {
                     onBlur={() => setIsFocused(false)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={keywords.length > 0 ? "Add..." : "Search..."}
+                    aria-label="Search dreams"
                     className="flex-1 bg-transparent border-none text-base sm:text-sm min-w-[60px] outline-none"
                     autoComplete="off"
                     data-testid="search-input"
