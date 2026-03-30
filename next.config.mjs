@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    // Ignore TypeScript errors during build
+    // TODO: Remove after running `supabase gen types typescript` to fix 171 type errors
+    // across admin pages, API routes, and Supabase client files (all "Property X on type 'never'")
     ignoreBuildErrors: true,
   },
+  reactCompiler: true,
   reactStrictMode: true,
   images: {
     remotePatterns: [
