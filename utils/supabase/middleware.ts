@@ -13,25 +13,19 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name, value, options) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set({ name, value, ...options })
+          )
+          response = NextResponse.next({
+            request,
           })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name, options) {
-          // NextJS cookies API
-          request.cookies.delete(name)
-          response.cookies.delete(name)
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set({ name, value, ...options })
+          )
         },
       },
     }
@@ -68,19 +62,19 @@ export async function updateSession(request: NextRequest) {
     // Add pathname to headers to make it available in server components
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-pathname', request.nextUrl.pathname)
-    
+
     // Create a modified response that preserves response cookies and adds the pathname header
     const finalResponse = NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     })
-    
+
     // Copy all cookies from the original response to the final response
     response.cookies.getAll().forEach((cookie) => {
       finalResponse.cookies.set(cookie)
     })
-    
+
     return finalResponse
   } catch (e) {
     // Session refresh failed — most likely a transient network error hitting Supabase's
