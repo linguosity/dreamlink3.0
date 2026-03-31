@@ -182,17 +182,18 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           </DropdownMenuItem>
         </Link>
         <DropdownMenuSeparator />
-        <form action={signOutAction}>
-          <DropdownMenuItem 
-            className="cursor-pointer text-destructive focus:text-destructive"
-            asChild
-          >
-            <button type="submit" className="flex w-full items-center">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem
+          className="cursor-pointer text-destructive focus:text-destructive"
+          onSelect={(e) => {
+            // Prevent Radix from closing/unmounting the dropdown
+            // before the sign-out action completes
+            e.preventDefault();
+            signOutAction();
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -177,8 +177,20 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             keepalive: true,
           }).catch((err) => console.error("Image generation request failed:", err));
         }
+
+        // Notify the grid that analysis is ready so it can update immediately
+        window.dispatchEvent(
+          new CustomEvent("dreamlink:dream-analyzed", {
+            detail: {
+              id: result.id,
+              analysis: result.analysis,
+            },
+          })
+        );
       }
 
+      // Small delay to ensure DB writes have fully propagated before refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
       router.refresh();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -229,7 +241,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute right-2.5 h-11 w-11 rounded-lg transition-all duration-200 ${
+            className={`absolute right-2.5 z-10 h-11 w-11 rounded-lg transition-all duration-200 ${
               isExpanded ? "bottom-2.5" : "top-1/2 -translate-y-1/2"
             } ${hasContent ? "opacity-100" : "opacity-30"}`}
           >

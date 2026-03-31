@@ -398,11 +398,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
   const [imageError, setImageError] = useState(false);
   // Poll for image if: no image yet AND (card is loading OR dream was created within the last 2 minutes)
+  // We poll for any recent dream regardless of whether dream_summary is populated,
+  // because the server render may happen before DB writes fully propagate.
   const isRecentDream = initialDream.created_at
     ? (Date.now() - new Date(initialDream.created_at).getTime()) < 2 * 60 * 1000
     : false;
   const [isPollingCardImage, setIsPollingCardImage] = useState(
-    !initialDream.image_url && (initialLoading || (isRecentDream && !!initialDream.dream_summary))
+    !initialDream.image_url && (initialLoading || isRecentDream)
   );
 
   // Ensure client-side hydration
@@ -1314,7 +1316,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
       {/* Detail Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
           {/* Dream image in modal */}
           {(cardImageUrl || isPollingCardImage) && (
             <div className="w-full -mx-6 -mt-6 mb-4">
@@ -1365,7 +1367,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
             </TabsList>
 
-            <div style={{ minHeight: modalHeight ? `${modalHeight}px` : 'auto' }}>
+            <div>
               <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
                 <div ref={analysisContentRef}>
                   {/* Summary section removed as requested */}

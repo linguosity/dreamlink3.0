@@ -64,6 +64,9 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
 
+  // Track analyzed dream data that arrived before the server refresh
+  const [analyzedDream, setAnalyzedDream] = useState<{id: string; analysis: any} | null>(null);
+
   // Listen for dream submission events to show a placeholder card instantly
   useEffect(() => {
     function handleDreamSubmitting(e: Event) {
@@ -75,16 +78,31 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       });
     }
 
+    // Listen for analysis completion so we can update without waiting for router.refresh
+    function handleDreamAnalyzed(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.id && detail?.analysis) {
+        setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
+      }
+    }
+
     window.addEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
-    return () => window.removeEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
+    window.addEventListener('dreamlink:dream-analyzed', handleDreamAnalyzed);
+    return () => {
+      window.removeEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
+      window.removeEventListener('dreamlink:dream-analyzed', handleDreamAnalyzed);
+    };
   }, []);
 
-  // Clear the pending placeholder once real data arrives from the server
+  // Clear the pending placeholder and analyzed data once real data arrives from the server
   useEffect(() => {
     if (pendingDream && dreams.length > 0) {
       // The server data has refreshed — the real card is now in the list
       // Give a brief moment for the animation to be smooth
-      const timer = setTimeout(() => setPendingDream(null), 300);
+      const timer = setTimeout(() => {
+        setPendingDream(null);
+        setAnalyzedDream(null);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [dreams, pendingDream]);
@@ -158,11 +176,32 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     );
   }
 
+  // Enrich dreams with client-side analysis data if available (before server refresh)
+  const enrichedDreams = filteredDreams.map((dream) => {
+    if (analyzedDream && analyzedDream.id === dream.id && !dream.dream_summary) {
+      const a = analyzedDream.analysis;
+      return {
+        ...dream,
+        title: a.dreamTitle || dream.title,
+        dream_summary: a.analysis ? a.analysis.split('.').slice(0, 2).join('.') + '.' : undefined,
+        analysis_summary: a.analysis,
+        topic_sentence: a.topicSentence,
+        supporting_points: a.supportingPoints,
+        conclusion_sentence: a.conclusionSentence,
+        formatted_analysis: a.analysis || `${a.topicSentence} ${(a.supportingPoints || []).join(' ')} ${a.conclusionSentence}`,
+        personalized_summary: a.personalizedSummary,
+        tags: a.tags?.length > 0 ? a.tags : ['spiritual insight', 'dream analysis'],
+        bible_refs: (a.biblicalReferences || []).filter((r: any) => r?.citation).map((r: any) => r.citation.trim()),
+      };
+    }
+    return dream;
+  });
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
       <AnimatePresence initial={false}>
         {/* Optimistic placeholder card — appears instantly on submit */}
-        {pendingDream && (
+        {pendingDream && !analyzedDream && (
           <motion.div
             key={pendingDream.id}
             layout
@@ -182,7 +221,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             />
           </motion.div>
         )}
-        {filteredDreams.slice(0, 12).map((dream, index) => (
+        {enrichedDreams.slice(0, 12).map((dream, index) => (
           <motion.div
             key={dream.id}
             layout
