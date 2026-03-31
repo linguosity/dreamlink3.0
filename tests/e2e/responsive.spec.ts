@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Responsive Layout', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText(/your dream gallery|describe your dream/i)).toBeVisible({
+    await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -21,11 +21,11 @@ test.describe('Responsive Layout', () => {
     await expect(page.getByText(/dreamriver/i).first()).toBeVisible();
 
     // Search bar should be visible
-    await expect(page.getByPlaceholder(/search/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
   });
 
   test('dream input area is usable', async ({ page }) => {
-    const textarea = page.locator('#dream-input');
+    const textarea = page.locator('#dream-input').first();
     await expect(textarea).toBeVisible();
 
     // Textarea should be tappable/clickable
@@ -36,7 +36,7 @@ test.describe('Responsive Layout', () => {
     await textarea.fill('Testing responsive input');
 
     // Submit button should be visible and enabled
-    const submitBtn = page.getByRole('button', { name: /submit dream/i });
+    const submitBtn = page.getByRole('button', { name: /submit dream/i }).first();
     await expect(submitBtn).toBeVisible();
     await expect(submitBtn).toBeEnabled();
   });
@@ -114,8 +114,8 @@ test.describe('Responsive Layout', () => {
     await page.waitForTimeout(500);
 
     // Footer content should be visible
-    await expect(page.getByText(/quick links/i)).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText(/all rights reserved/i)).toBeVisible();
+    await expect(page.getByText(/quick links/i).first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText(/all rights reserved/i).first()).toBeVisible();
   });
 
   test('no horizontal overflow at any viewport', async ({ page }) => {

@@ -4,24 +4,25 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { encodedRedirect } from "@/utils/utils";
-import { isRedirectError } from "next/dist/client/components/redirect-error"; // Import for safe redirect handling
+import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { signUpSchema, signInSchema, forgotPasswordSchema, resetPasswordSchema } from "@/schema/auth";
 
 // --- Sign Up ---
 export const signUpAction = async (formData: FormData) => {
   try {
-    const email = formData.get("email")?.toString().trim().toLowerCase();
-    const password = formData.get("password")?.toString();
+    // Validate with Zod
+    const parsed = signUpSchema.safeParse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
 
-    if (!email || !password) {
-      redirect("/sign-up?error=Email and password are required");
+    if (!parsed.success) {
+      // Return the first validation error
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return { error: firstError };
     }
 
-    const isValidEmail = (email: string) =>
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-    if (!isValidEmail(email)) {
-      redirect("/sign-up?error=Invalid email format");
-    }
+    const { email, password } = parsed.data;
 
     const supabase = await createClient();
 
@@ -75,12 +76,17 @@ export const signUpAction = async (formData: FormData) => {
 // --- Sign In ---
 export const signInAction = async (formData: FormData) => {
   try {
-    const email = formData.get("email")?.toString().trim().toLowerCase();
-    const password = formData.get("password")?.toString();
+    const parsed = signInSchema.safeParse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
 
-    if (!email || !password) {
-      redirect("/sign-in?error=Email and password are required");
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      redirect(`/sign-in?error=${encodeURIComponent(firstError)}`);
     }
+
+    const { email, password } = parsed.data;
 
     const supabase = await createClient();
 
@@ -124,11 +130,16 @@ export const signInAction = async (formData: FormData) => {
 // --- Forgot Password ---
 export const forgotPasswordAction = async (formData: FormData) => {
   try {
-    const email = formData.get("email")?.toString().trim().toLowerCase();
+    const parsed = forgotPasswordSchema.safeParse({
+      email: formData.get("email"),
+    });
 
-    if (!email) {
-      redirect("/forgot-password?error=Email is required");
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      redirect(`/forgot-password?error=${encodeURIComponent(firstError)}`);
     }
+
+    const { email } = parsed.data;
 
     const supabase = await createClient();
     const headersList = await headers();
@@ -162,18 +173,19 @@ export const forgotPasswordAction = async (formData: FormData) => {
 // --- Reset Password ---
 export const resetPasswordAction = async (formData: FormData) => {
   try {
-    const password = formData.get("password")?.toString();
-    const confirmPassword = formData.get("confirmPassword")?.toString();
+    const parsed = resetPasswordSchema.safeParse({
+      password: formData.get("password"),
+      confirmPassword: formData.get("confirmPassword"),
+    });
 
-    if (!password || !confirmPassword) {
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
       redirect(
-        "/protected/reset-password?error=Password and confirm password are required"
+        `/protected/reset-password?error=${encodeURIComponent(firstError)}`
       );
     }
 
-    if (password !== confirmPassword) {
-      redirect("/protected/reset-password?error=Passwords do not match");
-    }
+    const { password } = parsed.data;
 
     const supabase = await createClient();
 

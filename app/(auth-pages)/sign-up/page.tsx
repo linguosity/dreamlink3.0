@@ -41,6 +41,9 @@ export default function Signup() {
     }
   }, [state]);
 
+  // Show inline error below the form
+  const errorMessage = state?.error;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent p-4">
       <div className="w-full max-w-md">
@@ -110,6 +113,16 @@ export default function Signup() {
               >
                 Sign up
               </SubmitButton>
+
+              {errorMessage && (
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/20 p-3 text-sm text-red-600 dark:text-red-400">
+                  {errorMessage}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Password must be at least 8 characters with an uppercase letter, lowercase letter, and number or special character.
+              </p>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 border-t pt-4">

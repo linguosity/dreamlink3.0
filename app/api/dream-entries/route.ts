@@ -22,6 +22,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
+import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -200,16 +201,16 @@ export async function POST(request: Request) {
   }
   
   try {
-    // Parse request body
+    // Parse and validate request body with Zod
     const body = await request.json();
-    const { dream_text, reading_level } = body;
-    
-    if (!dream_text || typeof dream_text !== "string" || dream_text.trim() === "") {
-      return NextResponse.json(
-        { error: "Dream text is required" },
-        { status: 400 }
-      );
+    const parsed = dreamEntryCreateSchema.safeParse(body);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return NextResponse.json({ error: firstError }, { status: 400 });
     }
+
+    const { dream_text, reading_level } = parsed.data;
     
     // Generate a title - improve handling for short inputs
     let title: string;

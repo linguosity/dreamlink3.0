@@ -54,6 +54,9 @@ export default defineConfig({
 
     /* Navigation timeout */
     navigationTimeout: 30_000,
+
+    /* Ignore HTTPS errors (e.g. Vercel preview cert issues) */
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for cross-browser and responsive testing */
