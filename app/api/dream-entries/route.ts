@@ -23,6 +23,8 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
 import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
+import { OPENAI_MODEL } from "@/lib/openai";
+import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -193,13 +195,38 @@ export async function POST(request: Request) {
     // Also check session to see if there's more info
     const { data: sessionData } = await supabase.auth.getSession();
     if (DEBUG) console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
-    
+
     return NextResponse.json(
       { error: "Unauthorized: You must be logged in to submit a dream" },
       { status: 401 }
     );
   }
-  
+
+  // Per-user daily rate limit — prevents a single signup from draining the
+  // OpenAI/BFL budget by submitting dreams in a loop. See lib/rateLimit.ts
+  // for policy (fail-open on DB error, 24h rolling window, env-tunable cap).
+  const rl = await checkDreamSubmissionRateLimit(user.id);
+  if (!rl.allowed) {
+    if (DEBUG) {
+      console.log(
+        `API: Dream entry - rate limited user=${user.id} used=${rl.used}/${rl.limit}`
+      );
+    }
+    return NextResponse.json(
+      {
+        error: `Daily dream submission limit reached (${rl.limit} per 24 hours). Please try again later.`,
+        used: rl.used,
+        limit: rl.limit,
+      },
+      {
+        status: 429,
+        headers: rl.retryAfterSeconds
+          ? { "Retry-After": String(rl.retryAfterSeconds) }
+          : undefined,
+      }
+    );
+  }
+
   try {
     // Parse and validate request body with Zod
     const body = await request.json();
@@ -410,7 +437,7 @@ export async function POST(request: Request) {
             dream_entry_id: dreamId,
             prompt: `Analyze dream: ${dream_text}`,
             response: JSON.stringify(analysisResult),
-            model: "gpt-4o-mini",
+            model: OPENAI_MODEL,
             temperature: 0.7,
           })
           .then(({ error: chatgptError }) => {

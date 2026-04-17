@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  // SECURITY: This route leaks env var metadata. Dev-only.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   try {
     return NextResponse.json({
       environment: {

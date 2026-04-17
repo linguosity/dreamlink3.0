@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { OPENAI_MODEL } from "@/lib/openai";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
 export async function POST(request: Request) {
+  // Dev-only test endpoint.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   try {
     if (DEBUG) console.log("🧪 Test dream API endpoint called");
 
@@ -28,7 +34,7 @@ export async function POST(request: Request) {
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: OPENAI_MODEL,
           messages: [
             { role: "system", content: "You are a test assistant. Respond with 'API Working' and the word count of the input." },
             { role: "user", content: dream_text }

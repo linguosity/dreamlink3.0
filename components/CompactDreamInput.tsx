@@ -23,6 +23,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
@@ -42,13 +43,12 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       });
   }, [userId]);
 
-  // Check localStorage for persistent tip dismissal on component mount
+  // Check localStorage for persistent tip dismissal and detect platform on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const dismissed = localStorage.getItem('dreamlink-tip-dismissed');
-      if (dismissed === 'true') {
-        setTipDismissed(true);
-      }
+    setIsMac(/Mac|iPhone|iPad/.test(navigator.userAgent ?? ''));
+    const dismissed = localStorage.getItem('dreamriver-tip-dismissed');
+    if (dismissed === 'true') {
+      setTipDismissed(true);
     }
   }, []);
 
@@ -69,9 +69,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   // Handle permanent tip dismissal
   const handlePermanentDismiss = () => {
     setTipDismissed(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dreamlink-tip-dismissed', 'true');
-    }
+    localStorage.setItem('dreamriver-tip-dismissed', 'true');
   };
 
   // Keyboard: Cmd/Ctrl+Enter to submit
@@ -105,7 +103,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     if (retryCount === 0) {
       const placeholderId = `pending-${Date.now()}`;
       window.dispatchEvent(
-        new CustomEvent("dreamlink:dream-submitting", {
+        new CustomEvent("dreamriver:dream-submitting", {
           detail: {
             id: placeholderId,
             original_text: dreamText,
@@ -180,7 +178,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         // Notify the grid that analysis is ready so it can update immediately
         window.dispatchEvent(
-          new CustomEvent("dreamlink:dream-analyzed", {
+          new CustomEvent("dreamriver:dream-analyzed", {
             detail: {
               id: result.id,
               analysis: result.analysis,
@@ -259,9 +257,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             {dream.length}/{MAX_CHARS}
           </span>
           <span className="text-xs text-muted-foreground opacity-50">
-            {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent ?? '')
-              ? '⌘↵ to submit'
-              : 'Ctrl+↵ to submit'}
+            {isMac ? '⌘↵ to submit' : 'Ctrl+↵ to submit'}
           </span>
         </div>
       </form>

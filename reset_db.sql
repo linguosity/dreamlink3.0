@@ -1,5 +1,5 @@
 -- ============================================================
--- Dreamlink 3.0 — Full Database Reset
+-- DreamRiver 3.0 — Full Database Reset
 -- Run this in Supabase SQL Editor OR via psql to wipe and
 -- re-initialize the schema before running `supabase db push`
 -- ============================================================

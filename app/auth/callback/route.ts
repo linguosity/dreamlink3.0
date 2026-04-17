@@ -15,6 +15,42 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
+/**
+ * Whitelist of safe internal paths that `redirect_to` is allowed to point at.
+ * Prevents open-redirect phishing: an attacker-supplied `redirect_to=//evil.com`
+ * would otherwise resolve (via `${origin}${redirectTo}`) to `https://evil.com`
+ * because browsers treat `//` as a protocol-relative URL.
+ *
+ * If you add a new post-login destination, add it here.
+ */
+const SAFE_REDIRECT_PATHS = new Set<string>([
+  "/",
+  "/onboarding",
+  "/account",
+  "/settings",
+  "/protected",
+  "/protected/reset-password",
+]);
+
+/**
+ * Returns a safe same-origin path to redirect to, or "/" as a fallback.
+ *
+ * Rules:
+ *  - Must start with exactly one `/` (rejects protocol-relative `//host` and
+ *    absolute URLs like `http://host/...`).
+ *  - Must not contain `://` anywhere.
+ *  - Must appear in SAFE_REDIRECT_PATHS (compared by pathname, query/hash stripped).
+ */
+function safeRedirectPath(input: string | null | undefined): string {
+  if (!input) return "/";
+  if (!input.startsWith("/")) return "/";
+  if (input.startsWith("//")) return "/";
+  if (input.includes("://")) return "/";
+  // Strip query/hash before whitelist comparison so e.g. `/account?tab=x` still matches `/account`.
+  const pathnameOnly = input.split("?")[0].split("#")[0];
+  return SAFE_REDIRECT_PATHS.has(pathnameOnly) ? input : "/";
+}
+
 export async function GET(request: Request) {
   // The `/auth/callback` route is required for the server-side auth flow implemented
   // by the SSR package. It exchanges an auth code for the user's session.
@@ -29,10 +65,6 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  if (redirectTo) {
-    return NextResponse.redirect(`${origin}${redirectTo}`);
-  }
-
-  // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/`);
+  const target = safeRedirectPath(redirectTo);
+  return NextResponse.redirect(`${origin}${target}`);
 }

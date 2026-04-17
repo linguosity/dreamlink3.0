@@ -2,6 +2,11 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  // SECURITY: This route dumps recent dream/citation data. Dev-only.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   const supabase = await createClient();
 
   try {

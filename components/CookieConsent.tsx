@@ -8,7 +8,7 @@ export default function CookieConsent() {
 
   useEffect(() => {
     // Check if user has already responded to cookie consent
-    const consent = localStorage.getItem("dreamlink-cookie-consent");
+    const consent = localStorage.getItem("dreamriver-cookie-consent");
     if (!consent) {
       // Small delay so it doesn't flash on page load
       const timer = setTimeout(() => setVisible(true), 1000);
@@ -17,12 +17,12 @@ export default function CookieConsent() {
   }, []);
 
   const accept = () => {
-    localStorage.setItem("dreamlink-cookie-consent", "accepted");
+    localStorage.setItem("dreamriver-cookie-consent", "accepted");
     setVisible(false);
   };
 
   const decline = () => {
-    localStorage.setItem("dreamlink-cookie-consent", "declined");
+    localStorage.setItem("dreamriver-cookie-consent", "declined");
     setVisible(false);
   };
 

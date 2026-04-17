@@ -12,7 +12,7 @@
 // This component acts as the main dashboard or control panel for a personalized
 // online service (like a social media site or email inbox) after a user has
 // logged in.
-// - The "Dreamlink" logo is like the brand mark, always visible.
+// - The "DreamRiver" logo is like the brand mark, always visible.
 // - The search bar is like a general "find anything" tool on the dashboard (though
 //   its full search capability isn't implemented here, the UI element is present).
 // - The user's avatar and email is their personal identifier, and clicking it

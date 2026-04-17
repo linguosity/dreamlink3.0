@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /protected/
 
-Sitemap: https://dreamlink3-0.vercel.app/sitemap.xml
+Sitemap: https://dreamriver.io/sitemap.xml

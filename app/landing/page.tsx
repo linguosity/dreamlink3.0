@@ -1,323 +1,371 @@
 // app/landing/page.tsx
 //
-// High-converting landing page for DreamRiver
-// Converts visitors into users with compelling copy and clear CTAs
+// Marketing landing page for DreamRiver.
+// Converts visitors with: Hero, Social Proof, How It Works, Features, Testimonial, Final CTA.
+// Fully responsive: mobile-first design with tablet and desktop breakpoints.
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { 
-  BookOpen, 
-  Brain, 
-  Heart, 
-  Shield, 
-  Star, 
-  Zap,
-  CheckCircle,
-  MessageCircle,
-  Moon,
-  Sparkles
+import {
+  BookOpen,
+  Brain,
+  SlidersHorizontal,
+  Star,
+  ChevronRight,
 } from "lucide-react";
+import { HeroPhoneMockup } from "@/components/HeroPhoneMockup";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden backdrop-blur-sm">
-        <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
-        <div className="container mx-auto px-4 py-16 sm:py-24 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <Badge variant="secondary" className="mb-4 px-4 py-2">
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI-Powered Dream Interpretation
-            </Badge>
-            
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                What If Your Dreams Are
-              </span>
-              <br />
-              <span className="text-gray-900 dark:text-white">
-                Messages from God?
-              </span>
-            </h1>
-            
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              DreamRiver is an AI-powered dream journal that interprets your dreams with Biblical insight —
-              so you can receive clarity, comfort, and spiritual direction in minutes.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/sign-up">
-                <Button size="lg" className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <Moon className="w-5 h-5 mr-2" />
-                  Start Interpreting Dreams
-                </Button>
-              </Link>
-              <Link href="/sign-in">
-                <Button variant="outline" size="lg" className="px-8 py-4 text-lg">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-            
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Free 7-day trial • No credit card required • Cancel anytime
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* ── Navigation ─────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-100/50 dark:border-slate-800/50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/landing" className="font-blanka tracking-wider text-xl text-gray-900 dark:text-white">
+            DreamRiver
+          </Link>
 
-      {/* Problem Section */}
-      <section className="py-16 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
-              You wake up with vivid dreams... and wonder:
-            </h2>
-            
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              <Card className="p-6 text-center">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-                <h3 className="font-semibold mb-2">"Was that random?"</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Or was God trying to tell me something important?
-                </p>
-              </Card>
-              
-              <Card className="p-6 text-center">
-                <Brain className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-                <h3 className="font-semibold mb-2">"What does it mean?"</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Decoding dreams can feel confusing and overwhelming.
-                </p>
-              </Card>
-              
-              <Card className="p-6 text-center">
-                <BookOpen className="w-12 h-12 mx-auto mb-4 text-green-600" />
-                <h3 className="font-semibold mb-2">"How does it connect?"</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  You're not sure how to connect it to Scripture.
-                </p>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Solution Section */}
-      <section className="py-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-                DreamRiver makes dream interpretation spiritually aligned and accessible
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300">
-                Just describe your dream — our AI interprets it using Biblical references, 
-                Christian symbolism, and prayer-based insight.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8 items-center mb-16">
-              <div>
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <CheckCircle className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold mb-2">Your own private dream journal</h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm">
-                        Secure, personal space to record and reflect on your dreams
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <CheckCircle className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold mb-2">AI-generated spiritual interpretations</h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm">
-                        Powered by advanced AI trained on Biblical symbolism
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <CheckCircle className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold mb-2">Relevant Bible verses tied to your dreams</h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm">
-                        Scripture connections that bring deeper meaning
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <CheckCircle className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold mb-2">Track patterns, warnings, and confirmations</h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm">
-                        Discover recurring themes and divine messages over time
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="relative">
-                {/* Placeholder for app screenshot */}
-                <div className="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-8 text-center">
-                  <Moon className="w-16 h-16 mx-auto mb-4 text-blue-600" />
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    [App Screenshot Placeholder]
-                    <br />
-                    Dream journal interface with AI interpretation
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Target Audience */}
-      <section className="py-16 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
-              Perfect for:
-            </h2>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="p-6 text-center">
-                <Heart className="w-12 h-12 mx-auto mb-4 text-red-500" />
-                <h3 className="font-semibold mb-2">Believers</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Who sense God is speaking through dreams
-                </p>
-              </Card>
-              
-              <Card className="p-6 text-center">
-                <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
-                <h3 className="font-semibold mb-2">Prophetic Christians</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  & intercessors seeking divine insight
-                </p>
-              </Card>
-              
-              <Card className="p-6 text-center">
-                <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-                <h3 className="font-semibold mb-2">Vivid Dreamers</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Who want divine clarity and understanding
-                </p>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonial */}
-      <section className="py-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <Card className="p-8 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-none">
-              <div className="flex justify-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <blockquote className="text-lg italic mb-4 text-gray-700 dark:text-gray-300">
-                "I cried reading the interpretation. It confirmed exactly what I'd been praying about. 
-                The Scripture was spot-on."
-              </blockquote>
-              <div className="flex items-center justify-center space-x-4">
-                {/* Placeholder for user photo */}
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">JB</span>
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-gray-900 dark:text-white">Janelle B.</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Verified User</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              🕊️ Start interpreting your dreams today
-            </h2>
-            <p className="text-blue-100 mb-8 text-lg">
-              Free 7-day trial – then just $9/mo
-            </p>
-
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-6">
+            <a
+              href="#features"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+            >
+              How It Works
+            </a>
+            <Link href="/sign-in" className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
+              Sign In
+            </Link>
             <Link href="/sign-up">
-              <Button size="lg" variant="secondary" className="px-8 py-4 text-lg font-semibold">
-                Try DreamRiver Free
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
+                Sign Up
               </Button>
             </Link>
-            
-            <p className="text-blue-100 text-sm mt-4">
-              No credit card required • Cancel anytime
-            </p>
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="md:hidden">
+            <Link href="/sign-up">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-5">
+                Sign Up
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero Section ───────────────────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        {/* Semi-transparent overlay — water animation shows through */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-white/70 dark:from-slate-900/50 dark:to-slate-950/70" />
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Copy */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white">
+                Discover What God
+                <br className="hidden sm:block" />
+                {" "}Is Saying Through
+                <br className="hidden sm:block" />
+                {" "}Your Dreams
+              </h1>
+
+              <p className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                AI-powered biblical dream interpretation. Journal your dreams,
+                receive scripture-backed insights in seconds.
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link href="/sign-up">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 text-base font-semibold shadow-lg shadow-blue-600/25"
+                  >
+                    Start Your Dream Journal &mdash; Free
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                Free forever. No credit card required.
+              </p>
+            </div>
+
+            {/* Phone mockup — scroll-driven flip animation */}
+            <HeroPhoneMockup />
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative bg-gray-900/80 text-white py-12 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-lg mb-4">DreamRiver</h3>
-              <p className="text-gray-400 text-sm">
-                AI-powered dream interpretation with Biblical wisdom and spiritual insight.
+      {/* ── Social Proof Bar ───────────────────────────────────────── */}
+      <section className="bg-blue-600 dark:bg-blue-700">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            {/* Stars */}
+            <div className="flex gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className="w-5 h-5 text-yellow-300 fill-yellow-300"
+                />
+              ))}
+            </div>
+
+            <p className="text-white text-sm sm:text-base font-medium text-center">
+              Join 2,000+ believers exploring God&apos;s messages in their
+              dreams.
+            </p>
+
+            {/* Avatars */}
+            <div className="flex -space-x-2">
+              {["bg-blue-300", "bg-purple-300", "bg-pink-300", "bg-amber-300"].map(
+                (bg, i) => (
+                  <div
+                    key={i}
+                    className={`w-8 h-8 ${bg} rounded-full border-2 border-blue-600 dark:border-blue-700`}
+                  />
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Works ───────────────────────────────────────────── */}
+      <section id="how-it-works" className="py-16 sm:py-20 lg:py-24 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
+            How It Works
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 relative">
+            {/* Connecting arrows (desktop only) */}
+            <div className="hidden md:block absolute top-8 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)]">
+              <div className="flex items-center justify-between px-4">
+                <ChevronRight className="w-5 h-5 text-blue-400" />
+                <div className="flex-1 h-px bg-blue-200 dark:bg-blue-800 mx-1" />
+                <ChevronRight className="w-5 h-5 text-blue-400" />
+              </div>
+            </div>
+
+            {[
+              {
+                step: 1,
+                title: "Write",
+                desc: "Describe your dream in your own words.",
+              },
+              {
+                step: 2,
+                title: "Analyze",
+                desc: "AI finds biblical themes and scripture connections.",
+              },
+              {
+                step: 3,
+                title: "Reflect",
+                desc: "Read your personalized interpretation with Bible verses.",
+              },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl sm:text-2xl font-bold mb-4">
+                  {step}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  {title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed max-w-xs">
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ───────────────────────────────────────────────── */}
+      <section id="features" className="py-16 sm:py-20 lg:py-24 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
+            Features
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: BookOpen,
+                title: "Biblical References",
+                desc: "Every interpretation grounded in scripture, not speculation.",
+                color: "text-blue-600 bg-blue-100 dark:bg-blue-900/40",
+              },
+              {
+                icon: Brain,
+                title: "AI Dream Analysis",
+                desc: "Powered by advanced AI trained to understand dream symbolism.",
+                color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40",
+              },
+              {
+                icon: SlidersHorizontal,
+                title: "Personalized Reading Levels",
+                desc: "From simple to scholarly, matched to your preference.",
+                color: "text-teal-600 bg-teal-100 dark:bg-teal-900/40",
+              },
+            ].map(({ icon: Icon, title, desc, color }) => (
+              <div
+                key={title}
+                className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 sm:p-8 text-center hover:shadow-lg transition-shadow"
+              >
+                <div
+                  className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center mx-auto mb-5`}
+                >
+                  <Icon className="w-7 h-7" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  {title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonial ────────────────────────────────────────────── */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gray-50 dark:bg-slate-900 rounded-2xl p-8 sm:p-10 lg:p-12">
+            {/* Quote mark */}
+            <div className="text-blue-600 dark:text-blue-400 text-6xl sm:text-7xl font-serif leading-none mb-4">
+              &ldquo;
+            </div>
+
+            <blockquote className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white leading-snug mb-6">
+              I was walking across a bridge over a river of golden light...
+            </blockquote>
+
+            <div className="mb-6">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Analysis:
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Your dream of crossing a bridge over golden light speaks to a
+                season of divine transition. The glowing river represents
+                God&apos;s presence guiding you through change, while the
+                bridge symbolizes faith carrying you from one chapter to
+                the next.
               </p>
             </div>
-            
+
+            {/* Scripture tags */}
+            <div className="flex flex-wrap gap-2">
+              {["Isaiah 43:2", "Psalm 23:4", "Revelation 22:1"].map(
+                (verse) => (
+                  <span
+                    key={verse}
+                    className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full"
+                  >
+                    {verse}
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ──────────────────────────────────────────────── */}
+      <section className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6">
+            Begin Your Spiritual Dream Journey Today.
+          </h2>
+
+          <Link href="/sign-up">
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 text-base font-semibold shadow-lg shadow-blue-600/25"
+            >
+              Start Your Dream Journal &mdash; Free
+            </Button>
+          </Link>
+
+          <p className="mt-6 text-sm text-gray-400 max-w-md mx-auto">
+            This app is not affiliated with any particular church or
+            denomination. All are welcome.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Footer ─────────────────────────────────────────────────── */}
+      <footer className="bg-slate-950/95 dark:bg-black/95 border-t border-slate-800">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <h3 className="font-blanka tracking-wider text-lg text-white mb-3">DreamRiver</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                AI-powered dream interpretation with Biblical wisdom.
+              </p>
+            </div>
+
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
+              <h4 className="font-semibold text-white mb-3 text-sm">Product</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="/sign-up" className="hover:text-white">Free Trial</Link></li>
+                <li>
+                  <a href="#features" className="hover:text-white transition-colors">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <Link href="/sign-up" className="hover:text-white transition-colors">
+                    Free Trial
+                  </Link>
+                </li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
+              <h4 className="font-semibold text-white mb-3 text-sm">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/help" className="hover:text-white">Help Center</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+                <li>
+                  <Link href="/help" className="hover:text-white transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Contact
+                  </Link>
+                </li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold text-white mb-3 text-sm">Legal</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+                <li>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400 space-y-1">
-            <p>© {new Date().getFullYear()} DreamRiver. All rights reserved.</p>
-            <p className="text-xs">
-              Water effect powered by{" "}
-              <a href="https://threejs.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
-                Three.js
-              </a>
-              {" "}© 2010–{new Date().getFullYear()} three.js authors, MIT License.
-            </p>
+          <div className="border-t border-slate-800 mt-8 pt-6 text-center text-sm text-gray-500">
+            <p>&copy; {new Date().getFullYear()} DreamRiver. All rights reserved.</p>
           </div>
         </div>
       </footer>

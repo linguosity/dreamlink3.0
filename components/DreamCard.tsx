@@ -1134,7 +1134,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   };
   
   const getShareUrl = () => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamlink.app';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamriver.io';
     return `${baseUrl}/shared/dream/${dream.id}`;
   };
   

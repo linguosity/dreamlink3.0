@@ -53,13 +53,18 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   // Always call the hook to maintain consistent hook order
   const searchedDreams = useDreamSearch(dreams, keywords);
 
-  // Then conditionally use the results
-  const filteredDreams = typeof window !== 'undefined' && isSearchEnabled
-    ? searchedDreams
-    : dreams;
-
   // Hooks must be called before any conditional returns (Rules of Hooks)
   const [loadingDreamId, setLoadingDreamId] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Use search results only after mount to avoid hydration mismatch
+  const filteredDreams = isMounted && isSearchEnabled
+    ? searchedDreams
+    : dreams;
 
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
@@ -86,11 +91,11 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       }
     }
 
-    window.addEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
-    window.addEventListener('dreamlink:dream-analyzed', handleDreamAnalyzed);
+    window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
+    window.addEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
     return () => {
-      window.removeEventListener('dreamlink:dream-submitting', handleDreamSubmitting);
-      window.removeEventListener('dreamlink:dream-analyzed', handleDreamAnalyzed);
+      window.removeEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
+      window.removeEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
     };
   }, []);
 
@@ -109,8 +114,6 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
 
   // Check for loading dream
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     const storedLoadingId = localStorage.getItem('loadingDreamId');
     if (storedLoadingId) {
       setLoadingDreamId(storedLoadingId);
@@ -144,7 +147,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   }
 
   // Show no results state (client-side only)
-  if (typeof window !== 'undefined' && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0) {
+  if (isMounted && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0) {
     return (
       <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
         <div className="bg-muted rounded-full p-6 mb-4">
@@ -166,7 +169,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   }
   
   // Show loading state (client-side only)
-  if (typeof window !== 'undefined' && isSearchEnabled && isLoading) {
+  if (isMounted && isSearchEnabled && isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -238,7 +241,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             <DreamCard
               dream={dream}
               loading={dream.id === loadingDreamId}
-              searchTerms={typeof window !== 'undefined' && isSearchEnabled ? keywords : []}
+              searchTerms={isMounted && isSearchEnabled ? keywords : []}
             />
           </motion.div>
         ))}
