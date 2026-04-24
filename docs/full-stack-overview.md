@@ -1,6 +1,6 @@
-# Dreamlink 3.0 — Full Stack Overview
+# DreamRiver — Full Stack Overview
 
-> Last updated: March 8, 2026
+> Last updated: April 3, 2026
 
 ---
 
@@ -21,7 +21,7 @@
 │  /api/auth/*         │  resetPasswordAction              │
 ├──────────────────────┴──────────────────────────────────┤
 │  SERVICES                                                │
-│  OpenAI (gpt-5-nano) · FLUX image gen · Supabase Auth    │
+│  OpenAI (gpt-4.1-mini) · FLUX image gen · Supabase Auth  │
 ├─────────────────────────────────────────────────────────┤
 │  DATABASE (Supabase / PostgreSQL)                        │
 │  dream_entries · bible_citations · chatgpt_interactions   │
@@ -32,7 +32,8 @@
 │  Supabase Storage: dream-images bucket                   │
 ├─────────────────────────────────────────────────────────┤
 │  DEPLOYMENT                                              │
-│  Vercel (serverless + edge) · GitHub auto-deploy          │
+│  Vercel (serverless + edge) · GitHub auto-deploy         │
+│  Domain: dreamriver.io                                   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -196,17 +197,22 @@ Three client tiers:
 
 | Setting | Value |
 |---------|-------|
-| Model | `gpt-5-nano-2025-08-07` (reasoning model) |
+| Model | `gpt-4.1-mini` (configurable via `OPENAI_MODEL` env var) |
+| API | **Responses API** (`/v1/responses`) via OpenAI SDK |
 | Runtime | Edge (zero cold start) |
-| max_completion_tokens | 4000 |
-| temperature | Default only (1.0 — model restriction) |
-| Response format | `json_schema` (structured output) |
+| max_output_tokens | 2000 |
+| temperature | 0.7 |
+| Response format | Zod structured output via `zodTextFormat` |
 
-The structured schema requires: `topicSentence`, `supportingPoints` (array), `conclusionSentence`, `analysis`, `personalizedSummary`, `dreamTitle`, `biblicalReferences` (array of `{citation, verseText}`), `tags` (array).
+**Architecture:** Uses the OpenAI Node SDK (`openai` package) with the Responses API and Zod-based structured output. The `DreamAnalysisSchema` Zod object in `lib/openai.ts` is the single source of truth for the output shape. The SDK validates responses against the schema automatically — no manual JSON parsing needed.
+
+The structured schema requires: `topicSentence`, `supportingPoints` (array), `conclusionSentence`, `analysis`, `personalizedSummary`, `dreamTitle`, `biblicalReferences` (array of `{citation, book, chapter, verse, endVerse, verseText}`), `tags` (array, 3-5 items).
 
 Reading level customization adjusts the system prompt across four tiers: Radiant Clarity (3rd grade), Celestial Insight (8th grade, default), Prophetic Wisdom (12th grade), Divine Revelation (seminary level).
 
-**Known issue:** `gpt-5-nano` is a reasoning model that burns tokens on internal chain-of-thought. Consider switching to `gpt-4.1-nano` or `gpt-4o-mini` for this use case. See `docs/devlog-001-march-2026.md`.
+**Why gpt-4.1-mini:** Fast, cost-effective, strong at instruction following + structured output. Beats gpt-4o on many benchmarks at 83% lower cost. Not a reasoning model, so no wasted tokens on internal chain-of-thought.
+
+**Key files:** `lib/openai.ts` (client, model, schemas), `app/api/openai-analysis/route.ts` (endpoint).
 
 ### FLUX — Dream Image Generation
 
@@ -243,6 +249,7 @@ Implementation: `utils/imageGeneration.ts` (`buildImagePrompt`, `generateAndStor
 | `SUPABASE_JWT_SECRET` | JWT verification |
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin access (bypasses RLS) |
 | `OPENAI_API_KEY` | OpenAI API authentication |
+| `OPENAI_MODEL` | AI model string (default: `gpt-4.1-mini`) |
 | `BFL_API_KEY` | Black Forest Labs FLUX API |
 | `VERCEL_URL` | Auto-set by Vercel |
 | `NEXT_PUBLIC_FEATURE_CLIENT_SEARCH` | Client-side search toggle (default: true) |
@@ -335,6 +342,9 @@ components/
 ├── UserAvatar.tsx
 ├── AuthDropdown.tsx
 └── header-auth.tsx
+
+lib/
+└── openai.ts                ← OpenAI client singleton, model config, Zod schemas
 
 utils/
 ├── supabase/

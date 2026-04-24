@@ -22,6 +22,10 @@ import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
+import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
+import { OPENAI_MODEL } from "@/lib/openai";
+import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
+import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -60,7 +64,7 @@ export async function GET(request: Request) {
       .from("dream_entries")
       .select("*")
       .eq("id", id);
-      
+
     if (error) {
       console.error("Error fetching dream:", error);
       return NextResponse.json(
@@ -68,11 +72,10 @@ export async function GET(request: Request) {
         { status: 404 }
       );
     }
-    
-    // Return the dream in the expected format for the client
-    return NextResponse.json({
-      dreams: data || []
-    });
+
+    const decrypted = (data || []).map((row) => decryptDreamRow({ ...row }));
+
+    return NextResponse.json({ dreams: decrypted });
   } catch (error) {
     console.error("Error processing GET request:", error);
     return NextResponse.json(
@@ -192,24 +195,49 @@ export async function POST(request: Request) {
     // Also check session to see if there's more info
     const { data: sessionData } = await supabase.auth.getSession();
     if (DEBUG) console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
-    
+
     return NextResponse.json(
       { error: "Unauthorized: You must be logged in to submit a dream" },
       { status: 401 }
     );
   }
-  
-  try {
-    // Parse request body
-    const body = await request.json();
-    const { dream_text, reading_level } = body;
-    
-    if (!dream_text || typeof dream_text !== "string" || dream_text.trim() === "") {
-      return NextResponse.json(
-        { error: "Dream text is required" },
-        { status: 400 }
+
+  // Per-user daily rate limit — prevents a single signup from draining the
+  // OpenAI/BFL budget by submitting dreams in a loop. See lib/rateLimit.ts
+  // for policy (fail-open on DB error, 24h rolling window, env-tunable cap).
+  const rl = await checkDreamSubmissionRateLimit(user.id);
+  if (!rl.allowed) {
+    if (DEBUG) {
+      console.log(
+        `API: Dream entry - rate limited user=${user.id} used=${rl.used}/${rl.limit}`
       );
     }
+    return NextResponse.json(
+      {
+        error: `Daily dream submission limit reached (${rl.limit} per 24 hours). Please try again later.`,
+        used: rl.used,
+        limit: rl.limit,
+      },
+      {
+        status: 429,
+        headers: rl.retryAfterSeconds
+          ? { "Retry-After": String(rl.retryAfterSeconds) }
+          : undefined,
+      }
+    );
+  }
+
+  try {
+    // Parse and validate request body with Zod
+    const body = await request.json();
+    const parsed = dreamEntryCreateSchema.safeParse(body);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return NextResponse.json({ error: firstError }, { status: 400 });
+    }
+
+    const { dream_text, reading_level } = parsed.data;
     
     // Generate a title - improve handling for short inputs
     let title: string;
@@ -240,9 +268,9 @@ export async function POST(request: Request) {
       .from("dream_entries")
       .insert({
         user_id: user.id,
-        original_text: dream_text,
+        original_text_enc: encrypt(dream_text),
         title
-      })
+      } as never)
       .select()
       .single();
     
@@ -362,7 +390,7 @@ export async function POST(request: Request) {
         personalized_summary: personalizedSummary || null,
         tags: tags.length > 0 ? tags : ["spiritual insight", "dream analysis"],
         bible_refs: bibleRefs,
-        raw_analysis: analysisResult,
+        raw_analysis_enc: encryptJson(analysisResult),
       };
 
       if (dreamTitle?.trim()) {
@@ -402,16 +430,16 @@ export async function POST(request: Request) {
             return { success: !updateError, error: updateError };
           }),
 
-        // 2. Insert into chatgpt_interactions
+        // 2. Insert audit-only row into chatgpt_interactions.
+        // Dream text + analysis JSON are NOT duplicated here; the encrypted
+        // copies already live in dream_entries.*_enc.
         adminSupabase
           .from("chatgpt_interactions")
           .insert({
             dream_entry_id: dreamId,
-            prompt: `Analyze dream: ${dream_text}`,
-            response: JSON.stringify(analysisResult),
-            model: "gpt-4o-mini",
+            model: OPENAI_MODEL,
             temperature: 0.7,
-          })
+          } as never)
           .then(({ error: chatgptError }) => {
             if (chatgptError) {
               console.error("Error storing ChatGPT interaction:", chatgptError);

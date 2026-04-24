@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# Dreamlink 3.0 — Fresh DB Setup (New Supabase Project)
+# DreamRiver 3.0 — Fresh DB Setup (New Supabase Project)
 # Run this from the dreamlink3.0 project directory
 # ============================================================
 
@@ -10,7 +10,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$PROJECT_DIR/.env"
 
 echo ""
-echo "🌙 Dreamlink 3.0 — Fresh Database Setup"
+echo "🌙 DreamRiver 3.0 — Fresh Database Setup"
 echo "========================================="
 echo ""
 echo "Your old Supabase project is paused. We'll create a new one"
@@ -94,7 +94,7 @@ supabase db push
 echo ""
 
 # ── Done ──────────────────────────────────────────────────────
-echo "✅ Done! Fresh Dreamlink 3.0 database is live."
+echo "✅ Done! Fresh DreamRiver 3.0 database is live."
 echo ""
 echo "Tables created:"
 echo "  • dream_entries        (analysis fields, raw_analysis JSONB)"

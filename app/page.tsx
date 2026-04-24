@@ -7,12 +7,13 @@
 // ones in a gallery format (AnimatedDreamGrid).
 //
 // Analogy:
-// This page is like the main living room of the "Dreamlink house." It's where
+// This page is like the main living room of the "DreamRiver." It's where
 // you first land after entering, see your collected dream items displayed
 // (dream gallery), and have a convenient spot to jot down new dream experiences
 // (dream input).
 
 import { createClient } from "@/utils/supabase/server";
+import { decryptDreamRow } from "@/lib/crypto";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,16 +59,29 @@ export default async function MainPage() {
   // This helps prevent timing issues with subsequent API calls
   await new Promise(resolve => setTimeout(resolve, 100));
 
+  // Check if user has completed onboarding (has a reading_level set)
+  const { data: profile } = await supabase
+    .from("profile")
+    .select("reading_level")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!profile?.reading_level) {
+    return redirect("/onboarding");
+  }
+
   // Fetch dream entries for the logged in user
-  const { data: dreams, error } = await supabase
+  const { data: dreamsRaw, error } = await supabase
     .from("dream_entries")
     .select("*")
     .eq("user_id", user.id)
     .order('created_at', { ascending: false });
-    
+
   if (error) {
     console.error("Error fetching dreams:", error.message);
   }
+
+  const dreams = (dreamsRaw || []).map((row) => decryptDreamRow({ ...row }));
 
   return (
     <div className="container py-6 sm:py-10 relative">

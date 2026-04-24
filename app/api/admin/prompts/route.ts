@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
+import { promptCreateSchema, promptRevertSchema } from "@/schema/adminPrompts";
 
 // ---------- helpers ----------
 
@@ -68,6 +69,13 @@ export async function POST(request: Request) {
   if (authError) return authError;
 
   const body = await request.json();
+  const parsed = promptCreateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    const firstError = parsed.error.errors[0]?.message || "Invalid input";
+    return NextResponse.json({ error: firstError }, { status: 400 });
+  }
+
   const {
     system_message,
     main_instructions,
@@ -78,15 +86,7 @@ export async function POST(request: Request) {
     reading_level_prophetic_wisdom,
     reading_level_divine_revelation,
     notes,
-  } = body;
-
-  // Basic validation
-  if (!system_message || !main_instructions || !format_instructions) {
-    return NextResponse.json(
-      { error: "system_message, main_instructions, and format_instructions are required" },
-      { status: 400 }
-    );
-  }
+  } = parsed.data;
 
   const admin = getAdminClient();
 
@@ -140,11 +140,15 @@ export async function PUT(request: Request) {
   const { error: authError } = await requireAdmin();
   if (authError) return authError;
 
-  const { version_id } = await request.json();
+  const putBody = await request.json();
+  const putParsed = promptRevertSchema.safeParse(putBody);
 
-  if (!version_id) {
-    return NextResponse.json({ error: "version_id is required" }, { status: 400 });
+  if (!putParsed.success) {
+    const firstError = putParsed.error.errors[0]?.message || "Invalid input";
+    return NextResponse.json({ error: firstError }, { status: 400 });
   }
+
+  const { version_id } = putParsed.data;
 
   const admin = getAdminClient();
 

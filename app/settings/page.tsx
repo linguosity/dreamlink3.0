@@ -400,18 +400,15 @@ export default function SettingsPage() {
           </CardFooter>
         </Card>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions for your account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="destructive">Delete Account</Button>
-            <p className="text-xs text-muted-foreground mt-2">
-              This will permanently delete your account and all your data.
-            </p>
-          </CardContent>
-        </Card>
+        {/*
+          Account deletion UI is intentionally omitted until the backend
+          deletion flow exists (confirmation modal, /api/auth/delete-account
+          route with cascade delete of profile + dreams + auth.users row).
+          Shipping a non-functional "Delete Account" button would both mislead
+          users and conflict with the privacy-policy promise to purge data
+          within 30 days. Users can request deletion via the contact page in
+          the meantime.
+        */}
       </div>
     </div>
   );

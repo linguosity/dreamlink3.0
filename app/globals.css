@@ -147,8 +147,25 @@
   * {
     @apply border-border;
   }
+  html, body {
+    overflow-x: clip;
+  }
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+  section[id] {
+    scroll-margin-top: 4.5rem;
+  }
   body {
     @apply bg-background text-foreground;
+  }
+  body[data-cookie-banner="visible"] {
+    padding-bottom: 8.5rem;
+  }
+  @media (min-width: 640px) {
+    body[data-cookie-banner="visible"] {
+      padding-bottom: 0;
+    }
   }
   /* Style links with white variants for footer */
   footer a:not(.no-brand-style) {
@@ -157,6 +174,33 @@
   /* Style buttons with hover state */
   .btn-primary, button[type="submit"] {
     @apply hover:bg-primary-hover transition-colors;
+  }
+}
+
+/* Accessibility + interaction utilities */
+@layer utilities {
+  .focus-ring {
+    @apply outline-none
+           focus-visible:ring-2 focus-visible:ring-offset-2
+           focus-visible:ring-blue-600
+           focus-visible:ring-offset-white
+           dark:focus-visible:ring-offset-slate-950;
+  }
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .min-w-0-children > * {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -195,3 +239,85 @@
   opacity: 0;
   animation: fadeIn 1.2s ease-out forwards;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * Hero "card on living water" animations
+ * All timings share a 5.5s period so the card bob, foam pulse,
+ * and ripple cadence stay physically coherent.
+ * ───────────────────────────────────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.animate-float { animation: float 5.5s ease-in-out infinite; }
+
+@keyframes caret {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-caret { animation: caret 700ms steps(1) infinite; }
+
+@keyframes waveBack {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-2%); }
+}
+@keyframes waveFront {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(3%); }
+}
+.animate-wave-back  { animation: waveBack 9s ease-in-out infinite; }
+.animate-wave-front { animation: waveFront 7s ease-in-out infinite; }
+
+.ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30%;
+  height: 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(191, 219, 254, 0.85);
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.ripple-1 { animation: rippleOut 5.5s ease-out infinite; }
+.ripple-2 { animation: rippleOut 5.5s ease-out infinite 2.75s; }
+
+.ripple-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20%;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(147, 197, 253, 0.95);
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+}
+
+@keyframes rippleOut {
+  0%   { transform: translate(-50%, -50%) scale(0.55); opacity: 0; }
+  10%  { opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(2.4);  opacity: 0; }
+}
+
+@keyframes rippleOnce {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0;  border-width: 2px; }
+  15%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0;  border-width: 0.5px; }
+}
+.animate-ripple-once { animation: rippleOnce 1100ms ease-out forwards; }
+
+@keyframes foamPulse {
+  0%, 100% { opacity: 0.55; transform: translate(0, -50%) scaleX(1); }
+  50%      { opacity: 0.95; transform: translate(0, -50%) scaleX(1.04); }
+}
+.animate-foam-pulse { animation: foamPulse 5.5s ease-in-out infinite; }
+
+@keyframes foamBurst {
+  0%   { opacity: 0.95; transform: translate(0, -50%) scaleX(1);    filter: blur(1.5px); }
+  40%  { opacity: 1;    transform: translate(0, -50%) scaleX(1.18); filter: blur(2.5px); }
+  100% { opacity: 0.85; transform: translate(0, -50%) scaleX(1.06); filter: blur(1.5px); }
+}
+.animate-foam-burst { animation: foamBurst 700ms ease-out forwards; }

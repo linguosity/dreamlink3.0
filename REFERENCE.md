@@ -1,4 +1,4 @@
-# Dreamlink Application Reference
+# DreamRiver Application Reference
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@
 ## 1. Project Overview
 
 ### Purpose
-Dreamlink is a dream journal application designed to help users record their dreams and gain insights through AI-powered analysis. A key feature is the integration of biblical references and symbolism into the dream interpretations. The application supports user profiles, personalized content based on preferences (e.g., reading level), and includes a subscription system for tiered access to features.
+DreamRiver is a dream journal application designed to help users record their dreams and gain insights through AI-powered analysis. A key feature is the integration of biblical references and symbolism into the dream interpretations. The application supports user profiles, personalized content based on preferences (e.g., reading level), and includes a subscription system for tiered access to features.
 
 ### Core Technologies
 *   **Frontend:** Next.js (App Router, v15), React (v19), Tailwind CSS.

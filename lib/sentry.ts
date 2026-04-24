@@ -1,5 +1,5 @@
 /**
- * Sentry configuration and initialization for Dreamlink.
+ * Sentry configuration and initialization for DreamRiver.
  *
  * SETUP REQUIRED:
  * 1. Run: npm install @sentry/nextjs
@@ -89,7 +89,7 @@ export function captureError(
     ...(context?.extra && { extra: context.extra }),
     level: context?.level || "error",
   };
-  console.error("[Dreamlink Error]", JSON.stringify(logEntry));
+  console.error("[DreamRiver Error]", JSON.stringify(logEntry));
 }
 
 /**

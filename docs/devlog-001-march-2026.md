@@ -1,4 +1,4 @@
-# Dreamlink Dev Log #001 — March 7-8, 2026
+# DreamRiver Dev Log #001 — March 7-8, 2026
 
 > **Session focus:** Debugging dream analysis pipeline, fixing profile queries, switching from pnpm to npm, creating missing pages.
 >

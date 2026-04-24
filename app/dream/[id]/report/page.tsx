@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { dreamToReportData } from '@/lib/export/dream-to-report';
 import ReportPageClient from '@/components/report-cards/report-page-client';
 import Link from 'next/link';
+import { decryptDreamRow } from '@/lib/crypto';
 
 interface ReportPageProps {
   params: Promise<{ id: string }>;
@@ -24,11 +25,15 @@ export default async function ReportPage({ params }: ReportPageProps) {
   }
 
   // Fetch dream entry
-  const { data: dreamEntry, error: dreamError } = await supabase
+  const { data: dreamEntryRaw, error: dreamError } = await supabase
     .from('dream_entries')
     .select('*')
     .eq('id', id)
     .single();
+
+  const dreamEntry = dreamEntryRaw
+    ? decryptDreamRow({ ...dreamEntryRaw })
+    : null;
 
   if (dreamError || !dreamEntry) {
     return (

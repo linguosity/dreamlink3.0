@@ -24,9 +24,11 @@ export default function Navbar() {
   const [isFocused, setIsFocused] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  
-  // Detect macOS platform
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Detect macOS platform and track mount state for hydration safety
   useEffect(() => {
+    setIsMounted(true);
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform));
   }, []);
 
@@ -96,8 +98,8 @@ export default function Navbar() {
         {/* Center: Search - takes available space */}
         <div className="flex-1 min-w-0 flex justify-center">
           <div className="w-full max-w-md">
-            {/* Search UI - Using client-side only rendering to prevent hydration mismatch */}
-            {typeof window !== 'undefined' ? (
+            {/* Search UI - isMounted guards client-only rendering to prevent hydration mismatch */}
+            {isMounted ? (
               isSearchEnabled ? (
                 <div 
                   className={cn(

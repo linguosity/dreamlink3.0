@@ -6,9 +6,9 @@ You are an expert full-stack developer specializing in Next.js 16, React 19, Sup
 - **Styling & UI:** Tailwind CSS 3.4 (using HSL variables), shadcn/ui (Radix primitives), Framer Motion, Geist font, Lucide icons, Sonner (toasts), next-themes (dark mode)
 - **Backend/API:** Node.js serverless functions, Edge Runtime (specifically for OpenAI routes)
 - **Database & Auth:** Supabase PostgreSQL (RLS strictly enforced), `@supabase/ssr` for cookie-based sessions
-- **AI Services:** OpenAI `gpt-5-nano` (reasoning, structured JSON), `FLUX.2 klein 9B` (async image generation)
+- **AI Services:** OpenAI `gpt-4.1-mini` via Responses API + Zod structured output (see AI section below), `FLUX.2 klein 9B` (async image generation)
 - **Testing:** Vitest, Testing Library, jsdom
-- **Deployment:** Vercel (60s function timeout)
+- **Deployment:** Vercel (60s function timeout), domain: dreamriver.io
 
 # Architecture & File Structure
 - Adhere strictly to the `docs/full-stack-overview.md` architecture.
@@ -31,14 +31,77 @@ You are an expert full-stack developer specializing in Next.js 16, React 19, Sup
 - **Schema Context:** The primary tables are `dream_entries`, `bible_citations`, `chatgpt_interactions`, `profile`, `subscriptions`, and `payments`.
 - **Storage:** Handle dream images via Supabase Storage buckets securely.
 
+# ⚠️ Supabase Cookie Methods — AVOID DEPRECATED PATTERN
+**NEVER use the deprecated `get`/`set`/`remove` individual cookie methods.**
+Always use `getAll`/`setAll` when creating Supabase SSR clients. The old single-cookie
+methods are deprecated, can silently break auth, and will be removed in a future
+`@supabase/ssr` release.
+
+✅ Correct:
+```ts
+const supabase = createServerClient(url, key, {
+  cookies: {
+    getAll() { return cookieStore.getAll(); },
+    setAll(cookiesToSet) {
+      cookiesToSet.forEach(({ name, value, options }) =>
+        cookieStore.set(name, value, options)
+      );
+    },
+  },
+});
+```
+
+❌ Wrong (deprecated — do NOT use):
+```ts
+cookies: {
+  get(name) { ... },
+  set(name, value, options) { ... },
+  remove(name, options) { ... },
+}
+```
+
+This applies to **every** Supabase client creation: server.ts, middleware.ts, and
+any route handler that creates its own client.
+
+# Authentication Implementation
+
+The Supabase SSR approach for Next.js 16 uses `getAll`/`setAll` cookie methods:
+
+1. **Server client** (`utils/supabase/server.ts`): `createServerClient` with `getAll`/`setAll` cookie adapter. Always `await createClient()`.
+2. **Middleware** (`utils/supabase/middleware.ts`): Session refresh on every request, manages request/response cookies via `getAll`/`setAll`, protects `/protected/*` routes.
+3. **Server actions** (`app/actions.ts`): Use server client for auth operations (signUp, signIn, etc.).
+4. **Browser client** (`utils/supabase/client.ts`): Singleton `createBrowserClient` for `"use client"` components.
+5. **Admin client**: Direct `createClient` from `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS for background writes.
+
+Notes:
+- `cookies()` can only be used in route handlers, server actions, and middleware.
+- Browser client uses singleton pattern for performance.
+
 # AI Integration Directives
-- **OpenAI (`gpt-5-nano`):**
-  - Must run on the Edge Runtime.
-  - Always enforce and expect structured JSON output for dream analysis and biblical citations.
-  - Handle reasoning model latencies gracefully in the UI.
-- **Image Generation (`FLUX.2 klein 9B`):**
-  - Image generation MUST be asynchronous and non-blocking.
-  - Never hold up the main thread or exceed the 60s Vercel timeout waiting for an image. Use webhooks or polling if necessary.
+
+## OpenAI (`gpt-4.1-mini` via Responses API)
+
+**Model:** `gpt-4.1-mini` — configured via `OPENAI_MODEL` env var, centralized in `lib/openai.ts`.
+
+**Why gpt-4.1-mini:** Fast, cost-effective, strong at instruction following + structured output. Beats gpt-4o on many benchmarks at 83% lower cost. Supports `temperature`, `max_output_tokens`, and `json_schema` structured output natively. Not a reasoning model — no wasted tokens on internal chain-of-thought.
+
+**Architecture:**
+- Uses the **OpenAI Responses API** (`/v1/responses`) — not the legacy Chat Completions API.
+- Structured output enforced via **Zod schemas** + `zodTextFormat` from `openai/helpers/zod`.
+- The `DreamAnalysisSchema` in `lib/openai.ts` is the single source of truth for the output shape.
+- The SDK handles JSON parsing, validation, and type safety automatically — no manual JSON.parse or repair logic needed.
+- Must run on the **Edge Runtime**.
+
+**Key files:**
+- `lib/openai.ts` — client singleton, model string, Zod schemas
+- `app/api/openai-analysis/route.ts` — dream analysis endpoint (Edge Runtime)
+- `app/api/dream-entries/route.ts` — imports `OPENAI_MODEL` for interaction logging
+
+**To change models:** Update `OPENAI_MODEL` in `.env` — no code changes needed. The centralized config in `lib/openai.ts` reads from `process.env.OPENAI_MODEL` with a fallback to `gpt-4.1-mini`.
+
+## Image Generation (`FLUX.2 klein 9B`)
+- Image generation MUST be asynchronous and non-blocking.
+- Never hold up the main thread or exceed the 60s Vercel timeout waiting for an image. Use webhooks or polling if necessary.
 
 # Testing Standards
 - Write unit and integration tests using Vitest and Testing Library with a `jsdom` environment.
@@ -70,28 +133,6 @@ npm run test:watch      # Tests in watch mode
 npm run test:coverage   # Tests with coverage
 ```
 
-# Authentication Implementation
-
-The Supabase SSR approach for Next.js 16 uses get/set/remove cookie methods (not getAll/setAll):
-
-1. **Server client** (`utils/supabase/server.ts`): `createServerClient` with cookie adapter. Always `await createClient()`.
-2. **Middleware** (`utils/supabase/middleware.ts`): Session refresh on every request, manages request/response cookies, protects `/protected/*` routes.
-3. **Server actions** (`app/actions.ts`): Use server client for auth operations (signUp, signIn, etc.).
-4. **Browser client** (`utils/supabase/client.ts`): Singleton `createBrowserClient` for `"use client"` components.
-5. **Admin client**: Direct `createClient` from `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS for background writes.
-
-Notes:
-- `cookies()` can only be used in route handlers, server actions, and middleware.
-- Browser client uses singleton pattern for performance.
-
-# OpenAI Model Note
-
-The app currently uses `gpt-5-nano-2025-08-07` which is a **reasoning model**. This means:
-- No custom `temperature` (only default 1.0)
-- Must use `max_completion_tokens` not `max_tokens`
-- Some completion tokens go to internal reasoning before visible output
-- Consider switching to `gpt-4.1-nano` or `gpt-4o-mini` for better fit (see devlog-001)
-
 # Known Issues & Fixes
 
 1. **404 errors for webpack static files:** Fixed with proper next.config.ts configuration.
@@ -102,4 +143,6 @@ The app currently uses `gpt-5-nano-2025-08-07` which is a **reasoning model**. T
 
 4. **Profile/subscription query (March 2026):** UserAvatar.tsx queried non-existent `profile.subscription_tier` — fixed to query `subscriptions` table. `.eq('id', user.id)` was wrong — fixed to `.eq('user_id', user.id)`.
 
-5. **Dream analysis pipeline (March 2026):** `after()` background analysis killed by Vercel timeout — made synchronous. Triple redundant OpenAI calls collapsed to single call. Fixed `max_tokens` → `max_completion_tokens` and removed unsupported `temperature` param. Reasoning model may return empty content if token budget too small — current limit: 4000.
+5. **Dream analysis pipeline (March 2026):** `after()` background analysis killed by Vercel timeout — made synchronous. Triple redundant OpenAI calls collapsed to single call.
+
+6. **OpenAI model migration (April 2026):** Migrated from `gpt-4o-mini` + raw `fetch()` to `gpt-4.1-mini` + OpenAI SDK Responses API with Zod structured output. Eliminated ~400 lines of manual JSON parsing/repair code. Model string centralized in `lib/openai.ts` and configurable via `OPENAI_MODEL` env var.

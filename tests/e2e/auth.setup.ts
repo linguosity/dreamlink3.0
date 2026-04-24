@@ -38,7 +38,7 @@ setup('authenticate', async ({ page }) => {
   await page.waitForURL('/', { timeout: 15_000 });
 
   // Verify we landed on the authenticated main page
-  await expect(page.getByText(/your dream gallery|describe your dream/i)).toBeVisible({
+  await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
     timeout: 10_000,
   });
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { FeatureFlag, isFeatureEnabled } from "@/utils/feature-flags";
+import { decryptDreamRow } from "@/lib/crypto";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -73,13 +74,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If FTS returns no results, fall back to ILIKE search
+    // If FTS returns no results, fall back to ILIKE search over
+    // the columns that are still plaintext (original_text is now encrypted
+    // and not searchable via ILIKE).
     if (!dreams || dreams.length === 0) {
       let fallbackQuery = supabase
         .from("dream_entries")
         .select("*")
         .eq("user_id", user.id)
-        .or(`original_text.ilike.%${query}%, title.ilike.%${query}%, dream_summary.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%, dream_summary.ilike.%${query}%`)
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -99,10 +102,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Return the search results
+    const decrypted = (dreams || []).map((row) => decryptDreamRow({ ...row }));
+
     return NextResponse.json({
-      results: dreams || [],
-      nextCursor: dreams && dreams.length === limit ? dreams[dreams.length - 1].id : null
+      results: decrypted,
+      nextCursor: decrypted.length === limit ? decrypted[decrypted.length - 1].id : null
     });
     
   } catch (error) {

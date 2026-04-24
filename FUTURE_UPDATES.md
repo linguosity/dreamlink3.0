@@ -1,4 +1,4 @@
-# Dreamlink Future Updates
+# DreamRiver Future Updates
 
 ## 1. Dream Journal Search System
 

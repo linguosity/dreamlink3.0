@@ -12,6 +12,7 @@
 // global styles).
 
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
@@ -99,6 +100,7 @@ export default async function RootLayout({
     pathname.includes("/sign-up") ||
     pathname.includes("/forgot-password");
   const isLandingPage = pathname.includes("/landing");
+  const isOnboardingPage = pathname.includes("/onboarding");
 
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
@@ -121,7 +123,7 @@ export default async function RootLayout({
                   <EnvVarWarning />
                 </div>
               </div>
-            ) : !isAuthPage && !isLandingPage && user ? (
+            ) : !isAuthPage && !isLandingPage && !isOnboardingPage && user ? (
               <Navbar />
             ) : null}
 
@@ -133,7 +135,9 @@ export default async function RootLayout({
                 (!user && !isAuthPage && !isLandingPage ? "flex items-center justify-center" : "")
               }
             >
-              {children}
+              <Suspense fallback={null}>
+                {children}
+              </Suspense>
             </div>
 
             {/* Global toast container */}

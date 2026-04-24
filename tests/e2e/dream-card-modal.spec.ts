@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Dream Card & Modal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText(/your dream gallery/i)).toBeVisible({
+    await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -21,7 +21,7 @@ test.describe('Dream Card & Modal', () => {
 
     if (count === 0) {
       // If no dreams, the empty state should show
-      await expect(page.getByText(/no dreams recorded yet/i)).toBeVisible();
+      await expect(page.getByText(/no dreams recorded yet/i).first()).toBeVisible();
       test.skip(true, 'No dream cards to test — submit a dream first');
     }
 

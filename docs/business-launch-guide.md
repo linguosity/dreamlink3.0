@@ -1,12 +1,12 @@
-# Dreamlink — Business Launch Guide
+# DreamRiver — Business Launch Guide
 
 *For Justin — a non-technical overview of what's built, what's left, and what it costs.*
 
 ---
 
-## What Dreamlink Does (Today)
+## What DreamRiver Does (Today)
 
-Dreamlink is an AI-powered Christian dream journal. Users write down their dreams and get:
+DreamRiver is an AI-powered Christian dream journal. Users write down their dreams and get:
 
 1. **AI Dream Analysis** — An OpenAI model reads the dream and returns a structured interpretation with themes, symbolism, and a personalized summary
 2. **Biblical References** — The AI extracts relevant Bible verses tied to the dream's themes
@@ -71,10 +71,10 @@ The pricing page exists with three tiers, but **no payment processing is connect
 
 ### 3. Domain & DNS
 
-**Current state:** The app is live at `dreamlink-iota.vercel.app` (Vercel's free subdomain).
+**Current state:** The app is live at `dreamriver-iota.vercel.app` (Vercel's free subdomain).
 
 **What you need:**
-- Buy a custom domain (e.g., `dreamlink.app` or `dreamlinkjournal.com`)
+- Buy a custom domain (e.g., `dreamriver.io` or `dreamriver-journal.com`)
 - Cost: **~$10-15/year** for a .com, ~$12-18/year for .app
 - Recommended registrar: Cloudflare (sells at cost, no markup)
 - Point it to Vercel (free, automatic SSL)

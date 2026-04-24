@@ -33,7 +33,7 @@ export function getStripe(): Stripe {
 }
 
 /**
- * Map your Dreamlink subscription plans to Stripe Price IDs.
+ * Map your DreamRiver subscription plans to Stripe Price IDs.
  * Update these after creating products in the Stripe Dashboard.
  */
 export const PLAN_PRICES: Record<string, string> = {
@@ -44,7 +44,7 @@ export const PLAN_PRICES: Record<string, string> = {
 };
 
 /**
- * Map Stripe price IDs back to Dreamlink plan names.
+ * Map Stripe price IDs back to DreamRiver plan names.
  */
 export function stripePriceToPlan(priceId: string): string {
   for (const [plan, id] of Object.entries(PLAN_PRICES)) {

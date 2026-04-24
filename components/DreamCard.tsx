@@ -373,7 +373,7 @@ type DreamEntryProps = {
 };
 
 // This would come from your API in a real implementation
-const BIBLE_VERSES = {
+const BIBLE_VERSES: Record<string, string> = {
   "Genesis 1:1": "In the beginning God created the heaven and the earth.",
   "Psalm 23": "The Lord is my shepherd; I shall not want.",
   "Psalm 23:2": "He maketh me to lie down in green pastures: he leadeth me beside the still waters.",
@@ -1134,7 +1134,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   };
   
   const getShareUrl = () => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamlink.app';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamriver.io';
     return `${baseUrl}/shared/dream/${dream.id}`;
   };
   
@@ -1148,7 +1148,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => {
+        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleCardClick();
@@ -1184,7 +1184,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
                   handleRetryImageGeneration();
                 }}

@@ -8,7 +8,7 @@
 // and consistent state.
 //
 // Analogy:
-// This is like the main telephone line for the "Dreamlink house" (the browser)
+// This is like the main telephone line for the "DreamRiver" (the browser)
 // that connects directly to the Supabase database service. The singleton pattern
 // ensures there's only one main line installed, preventing multiple messy
 // connections and ensuring all communication goes through a single, reliable

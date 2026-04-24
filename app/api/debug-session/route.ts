@@ -5,6 +5,11 @@ import { cookies } from "next/headers";
 const DEBUG = process.env.NODE_ENV === 'development';
 
 export async function GET(request: Request) {
+  // Dev-only debug endpoint — leaks cookie/session state.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   // Log the received cookies for debugging
   const cookieStore = await cookies();
   if (DEBUG) console.log("[debug-session] Cookies:", cookieStore.getAll());

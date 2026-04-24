@@ -1,4 +1,4 @@
-<h1 align="center">Dreamlink</h1>
+<h1 align="center">DreamRiver</h1>
 
 <p align="center">
  A dream journal application that leverages AI for dream analysis with biblical references
@@ -36,8 +36,8 @@ First, make sure you have a Supabase project set up with the proper environment 
 1. Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/yourusername/dreamlink.git
-cd dreamlink
+git clone https://github.com/yourusername/dreamriver.git
+cd dreamriver
 npm install
 ```
 

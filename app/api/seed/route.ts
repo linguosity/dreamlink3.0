@@ -18,6 +18,12 @@ function getSupabaseAdmin() {
 }
 
 export async function GET() {
+  // SECURITY: This route uses the service role key and writes admin-level
+  // data to the database. It must never be reachable in production.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   try {
     // Get server-side supabase client
     const supabase = await createClient();

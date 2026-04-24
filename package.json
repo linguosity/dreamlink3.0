@@ -6,7 +6,6 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "fix": "./fix-errors.sh",
     "vercel-build": "node scripts/update-version.js && next build",
     "test": "vitest run",
     "test:watch": "vitest",

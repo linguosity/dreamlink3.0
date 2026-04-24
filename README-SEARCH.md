@@ -1,6 +1,6 @@
-# Dreamlink Search Implementation
+# DreamRiver Search Implementation
 
-This document outlines the search functionality in Dreamlink, including its architecture, feature flags, and future expansion plans.
+This document outlines the search functionality in DreamRiver, including its architecture, feature flags, and future expansion plans.
 
 ## Architecture Overview
 

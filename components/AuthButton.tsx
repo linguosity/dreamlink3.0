@@ -11,7 +11,7 @@
 //
 // Analogy:
 // This component is like an intelligent welcome sign at the entrance of the
-// "Dreamlink house".
+// "DreamRiver".
 // - If the house's systems are down (missing environment variables), it displays
 //   a "Temporarily Closed - System Maintenance" notice.
 // - For recognized residents (logged-in users), it shows a personalized menu

@@ -11,7 +11,7 @@
 // Analogy:
 // This component is like the main control panel header for a logged-in user on a
 // website (e.g., a social media dashboard or online banking portal).
-// - The "Dreamlink" logo is the brand identity, always visible.
+// - The "DreamRiver" logo is the brand identity, always visible.
 // - The search bar is a common utility for finding content (though here it's just
 //   the UI part).
 // - The user's avatar/icon, when clicked, reveals a personal menu, providing
