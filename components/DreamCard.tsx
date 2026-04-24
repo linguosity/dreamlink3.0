@@ -729,6 +729,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   // Poll for dream image if it's not yet available
   useEffect(() => {
     if (!isPollingCardImage || !dream.id) return;
+    // Optimistic placeholder ids (e.g. "pending-1729..." before analysis returns)
+    // aren't real UUIDs — polling them produces a Supabase filter error / 404.
+    if (dream.id.startsWith('pending-')) return;
 
     console.log('Starting image polling for dream:', dream.id);
     let pollCount = 0;
