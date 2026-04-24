@@ -18,7 +18,14 @@ export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: NextRequest) {
   try {
-    const { dreamId, title, summary, topicSentence, aesthetic } = await request.json();
+    const {
+      dreamId,
+      title,
+      summary,
+      topicSentence,
+      aesthetic,
+      comparisonGroupId,
+    } = await request.json();
 
     if (!dreamId) {
       return NextResponse.json(
@@ -41,10 +48,20 @@ export async function POST(request: NextRequest) {
     const imageUrl = await generateAndStoreDreamImage(dreamId, imagePrompt);
 
     if (imageUrl) {
-      const { error: updateError } = await adminSupabase
+      // For matrix submissions, share the generated image across every row
+      // in the comparison group that uses the same aesthetic. The admin
+      // explicitly opted into per-aesthetic uniqueness by adding the
+      // aesthetic dimension to test mode; rows without that dimension
+      // (or non-matrix rows) get a single shared image.
+      const update = adminSupabase
         .from("dream_entries")
-        .update({ image_url: imageUrl })
-        .eq("id", dreamId);
+        .update({ image_url: imageUrl } as never);
+
+      const { error: updateError } = comparisonGroupId
+        ? await update
+            .eq("comparison_group_id", comparisonGroupId)
+            .eq("image_aesthetic_used", selectedAesthetic)
+        : await update.eq("id", dreamId);
 
       if (updateError) {
         console.error("Failed to update dream image_url:", updateError);

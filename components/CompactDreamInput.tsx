@@ -132,32 +132,52 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
 
-        // Fire off image generation in the background (non-blocking)
-        if (result.analysis) {
-          const imageBody = JSON.stringify({
-            dreamId: result.id,
-            title: result.analysis.dreamTitle || "",
-            summary: result.analysis.analysis || "",
-            topicSentence: result.analysis.topicSentence || "",
-            aesthetic: userAesthetic.current,
-          });
+        // Matrix-aware image generation: dedupe by aesthetic so we only
+        // burn one image per unique aesthetic in a comparison group.
+        // Server-side, /api/dream-image fans the resulting URL out to all
+        // rows that share that aesthetic + comparisonGroupId.
+        const entries: Array<{
+          id: string;
+          analysis: any;
+          analysis_depth?: string;
+          reading_level_used?: string;
+          image_aesthetic_used?: string;
+        }> = result.entries ?? [
+          { id: result.id, analysis: result.analysis, image_aesthetic_used: userAesthetic.current },
+        ];
+        const comparisonGroupId: string | null = result.comparisonGroupId ?? null;
+
+        const seenAesthetics = new Set<string>();
+        for (const entry of entries) {
+          if (!entry.analysis) continue;
+          const aesthetic = entry.image_aesthetic_used ?? userAesthetic.current;
+          if (seenAesthetics.has(aesthetic)) continue;
+          seenAesthetics.add(aesthetic);
+
           fetch("/api/dream-image", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: imageBody,
+            body: JSON.stringify({
+              dreamId: entry.id,
+              title: entry.analysis.dreamTitle || "",
+              summary: entry.analysis.analysis || "",
+              topicSentence: entry.analysis.topicSentence || "",
+              aesthetic,
+              comparisonGroupId,
+            }),
             keepalive: true,
           }).catch((err) => console.error("Image generation request failed:", err));
         }
 
-        // Notify the grid that analysis is ready so it can update immediately
-        window.dispatchEvent(
-          new CustomEvent("dreamriver:dream-analyzed", {
-            detail: {
-              id: result.id,
-              analysis: result.analysis,
-            },
-          })
-        );
+        // Notify the grid for each entry so any optimistic placeholder can
+        // swap to real content. For matrix mode, multiple events fire.
+        for (const entry of entries) {
+          window.dispatchEvent(
+            new CustomEvent("dreamriver:dream-analyzed", {
+              detail: { id: entry.id, analysis: entry.analysis },
+            }),
+          );
+        }
       }
 
       // Small delay to ensure DB writes have fully propagated before refresh
