@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -10,10 +10,66 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
-import { ReadingLevel } from '@/schema/profile';
+import {
+  ReadingLevel,
+  AnalysisDepth,
+  type SubscriptionPlan,
+} from '@/schema/profile';
 import { SearchFeatureToggle } from '@/components/SearchFeatureToggle';
 import { ImageAesthetic, AESTHETIC_PRESETS, getAvailableAesthetics, type AestheticTier } from '@/schema/imageAesthetic';
+
+// Tier labels for the depth selector. Order matters for the locked-tier
+// hierarchy: each level's index doubles as its plan-rank.
+const DEPTH_OPTIONS: Array<{
+  value: AnalysisDepth;
+  label: string;
+  blurb: string;
+  requiredPlan: SubscriptionPlan;
+}> = [
+  {
+    value: AnalysisDepth.SHALLOW,
+    label: "Shallow",
+    blurb: "Topic + 1–3 supporting points + summary. ~150–250 words.",
+    requiredPlan: "free",
+  },
+  {
+    value: AnalysisDepth.DEEP,
+    label: "Deep",
+    blurb: "Adds symbol-by-symbol breakdown + life application. ~400–600 words.",
+    requiredPlan: "visionary",
+  },
+  {
+    value: AnalysisDepth.PROFOUND,
+    label: "Profound",
+    blurb: "Adds three interpretive lenses + cross-references + reflection prompts. ~800–1200 words.",
+    requiredPlan: "prophet",
+  },
+];
+
+const PLAN_RANK: Record<SubscriptionPlan, number> = {
+  free: 0,
+  visionary: 1,
+  prophet: 2,
+};
+
+const READING_LEVEL_OPTIONS = [
+  { value: ReadingLevel.RADIANT_CLARITY, label: "Radiant Clarity (Simple)" },
+  { value: ReadingLevel.CELESTIAL_INSIGHT, label: "Celestial Insight (Standard)" },
+  { value: ReadingLevel.PROPHETIC_WISDOM, label: "Prophetic Wisdom (Advanced)" },
+  { value: ReadingLevel.DIVINE_REVELATION, label: "Divine Revelation (Scholarly)" },
+];
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -30,6 +86,14 @@ export default function SettingsPage() {
   const [bibleVersion, setBibleVersion] = useState<string>("KJV");
   const [imageAesthetic, setImageAesthetic] = useState<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const [userTier, setUserTier] = useState<AestheticTier>("free");
+  const [plan, setPlan] = useState<SubscriptionPlan>("free");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [analysisDepth, setAnalysisDepth] = useState<AnalysisDepth>(AnalysisDepth.SHALLOW);
+  const [testModeEnabled, setTestModeEnabled] = useState(false);
+  const [testModeDepths, setTestModeDepths] = useState<AnalysisDepth[]>([]);
+  const [testModeReadingLevels, setTestModeReadingLevels] = useState<ReadingLevel[]>([]);
+  const [testModeAesthetics, setTestModeAesthetics] = useState<ImageAesthetic[]>([]);
+  const [showTestModeConfirm, setShowTestModeConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const supabase = createClient();
 
@@ -40,12 +104,26 @@ export default function SettingsPage() {
         setUser(user);
 
         if (user) {
-          // Single query to fetch all profile columns we need
-          const { data: profile } = await supabase
-            .from('profile')
-            .select('reading_level, bible_version, image_aesthetic, preferences')
-            .eq('user_id', user.id)
-            .single();
+          const [profileRes, subRes] = await Promise.all([
+            supabase
+              .from('profile')
+              .select(
+                'reading_level, bible_version, image_aesthetic, preferences, is_admin, analysis_depth, test_mode_enabled, test_mode_depths, test_mode_reading_levels, test_mode_aesthetics'
+              )
+              .eq('user_id', user.id)
+              .single(),
+            supabase
+              .from('subscriptions')
+              .select('plan, status')
+              .eq('user_id', user.id)
+              .eq('status', 'active')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+          ]);
+
+          const profile: any = profileRes.data;
+          const sub: any = subRes.data;
 
           if (profile) {
             if (profile.reading_level) setReadingLevel(profile.reading_level);
@@ -54,7 +132,20 @@ export default function SettingsPage() {
             if (profile.preferences) {
               setPreferences(prev => ({ ...prev, ...profile.preferences }));
             }
+            if (profile.is_admin) setIsAdmin(true);
+            if (profile.analysis_depth) setAnalysisDepth(profile.analysis_depth);
+            if (profile.test_mode_enabled) setTestModeEnabled(true);
+            if (profile.test_mode_depths) setTestModeDepths(profile.test_mode_depths);
+            if (profile.test_mode_reading_levels) setTestModeReadingLevels(profile.test_mode_reading_levels);
+            if (profile.test_mode_aesthetics) setTestModeAesthetics(profile.test_mode_aesthetics);
           }
+
+          const resolvedPlan: SubscriptionPlan =
+            sub?.plan === 'visionary' || sub?.plan === 'prophet' ? sub.plan : 'free';
+          setPlan(resolvedPlan);
+          // userTier maps plan → aesthetic gating (already plumbed for the
+          // image-style picker below).
+          setUserTier(resolvedPlan as AestheticTier);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -121,6 +212,85 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Plan ceiling for the depth selector. Admins bypass the lock entirely.
+  const isDepthLocked = (option: typeof DEPTH_OPTIONS[number]) =>
+    !isAdmin && PLAN_RANK[option.requiredPlan] > PLAN_RANK[plan];
+
+  const saveAnalysisDepth = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profile')
+        .update({ analysis_depth: analysisDepth })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      toast.success('Analysis depth saved');
+    } catch (err) {
+      console.error('Error saving analysis depth:', err);
+      toast.error('Failed to save analysis depth');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Cartesian product size — shown in the confirm dialog so the admin sees
+  // up-front how many cards each future submission will produce.
+  const testModeMatrixSize = useMemo(() => {
+    if (!testModeEnabled) return 1;
+    const d = testModeDepths.length || 1;
+    const r = testModeReadingLevels.length || 1;
+    const a = testModeAesthetics.length || 1;
+    return d * r * a;
+  }, [testModeEnabled, testModeDepths, testModeReadingLevels, testModeAesthetics]);
+
+  const handleTestModeSaveClick = () => {
+    if (!isAdmin) return;
+    // If turning OFF or matrix is trivially 1, save immediately. Otherwise
+    // surface the count so the admin understands what they're committing to.
+    if (!testModeEnabled || testModeMatrixSize <= 1) {
+      void saveTestMode();
+      return;
+    }
+    setShowTestModeConfirm(true);
+  };
+
+  const saveTestMode = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    setShowTestModeConfirm(false);
+    try {
+      const { error } = await supabase
+        .from('profile')
+        .update({
+          test_mode_enabled: testModeEnabled,
+          test_mode_depths: testModeDepths,
+          test_mode_reading_levels: testModeReadingLevels,
+          test_mode_aesthetics: testModeAesthetics,
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      toast.success(
+        testModeEnabled
+          ? `Test mode enabled — ${testModeMatrixSize} card${testModeMatrixSize === 1 ? '' : 's'} per submission`
+          : 'Test mode disabled',
+      );
+    } catch (err) {
+      console.error('Error saving test mode:', err);
+      toast.error('Failed to save test mode');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleSetMember = <T extends string>(
+    set: T[],
+    value: T,
+    setter: (next: T[]) => void,
+  ) => {
+    setter(set.includes(value) ? set.filter((v) => v !== value) : [...set, value]);
   };
 
   const saveImageStyle = async () => {
@@ -346,7 +516,178 @@ export default function SettingsPage() {
             </Button>
           </CardFooter>
         </Card>
-        
+
+        {/* Analysis Depth — visible to all users; tiers above the user's plan are locked. */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Analysis Depth</CardTitle>
+            <CardDescription>
+              How much your dream interpretations should explore. Reading level
+              controls language complexity; depth controls how far the analysis
+              goes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {DEPTH_OPTIONS.map((option) => {
+              const locked = isDepthLocked(option);
+              const selected = analysisDepth === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => !locked && setAnalysisDepth(option.value)}
+                  disabled={locked}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                    selected && !locked
+                      ? "border-primary bg-primary/5 dark:bg-primary/10"
+                      : locked
+                      ? "border-border/50 opacity-60 cursor-not-allowed"
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                  }`}
+                  aria-pressed={selected}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium text-sm flex items-center gap-2">
+                      {option.label}
+                      {locked && <Lock className="h-3 w-3 text-muted-foreground" aria-label="Locked tier" />}
+                    </div>
+                    {option.requiredPlan !== "free" && (
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {option.requiredPlan}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{option.blurb}</div>
+                </button>
+              );
+            })}
+            {!isAdmin && plan !== "prophet" && (
+              <p className="text-xs text-muted-foreground">
+                <Link href="/pricing" className="text-primary hover:underline">
+                  Upgrade your plan
+                </Link>{" "}
+                to unlock deeper analyses.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button onClick={saveAnalysisDepth} disabled={loading || isSaving}>
+              {isSaving ? "Saving..." : "Save Depth"}
+            </Button>
+          </CardFooter>
+        </Card>
+
+        {/* Admin-only: Test Mode — fan one submission across multiple settings to compare side-by-side. */}
+        {isAdmin && (
+          <Card className="mb-8 border-amber-200 dark:border-amber-900/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Test Mode
+                <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                  Admin
+                </span>
+              </CardTitle>
+              <CardDescription>
+                When enabled, each dream submission fans out across the
+                selected combinations and produces one card per combo. Leave a
+                dimension empty to keep it fixed at your saved setting.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="test-mode-enabled"
+                  checked={testModeEnabled}
+                  onCheckedChange={(checked) => setTestModeEnabled(checked === true)}
+                />
+                <Label htmlFor="test-mode-enabled" className="cursor-pointer">
+                  Enable test-mode comparisons
+                </Label>
+              </div>
+
+              {testModeEnabled && (
+                <div className="space-y-5 pl-6">
+                  <fieldset className="space-y-2">
+                    <legend className="text-sm font-medium">
+                      Compare across depths
+                    </legend>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {DEPTH_OPTIONS.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded border hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={testModeDepths.includes(opt.value)}
+                            onCheckedChange={() =>
+                              toggleSetMember(testModeDepths, opt.value, setTestModeDepths)
+                            }
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="space-y-2">
+                    <legend className="text-sm font-medium">
+                      Compare across reading levels
+                    </legend>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {READING_LEVEL_OPTIONS.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded border hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={testModeReadingLevels.includes(opt.value)}
+                            onCheckedChange={() =>
+                              toggleSetMember(testModeReadingLevels, opt.value, setTestModeReadingLevels)
+                            }
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="space-y-2">
+                    <legend className="text-sm font-medium">
+                      Compare across image aesthetics
+                    </legend>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {Object.values(AESTHETIC_PRESETS).map((preset) => (
+                        <label
+                          key={preset.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded border hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={testModeAesthetics.includes(preset.id)}
+                            onCheckedChange={() =>
+                              toggleSetMember(testModeAesthetics, preset.id, setTestModeAesthetics)
+                            }
+                          />
+                          {preset.name}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <p className="text-xs text-muted-foreground">
+                    Matrix size: <strong>{testModeMatrixSize}</strong> card
+                    {testModeMatrixSize === 1 ? "" : "s"} per submission. One image is generated per unique aesthetic.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleTestModeSaveClick} disabled={loading || isSaving}>
+                {isSaving ? "Saving..." : "Save Test Mode"}
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Dream Image Style</CardTitle>
@@ -410,6 +751,30 @@ export default function SettingsPage() {
           the meantime.
         */}
       </div>
+
+      <AlertDialog open={showTestModeConfirm} onOpenChange={setShowTestModeConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm test-mode matrix</AlertDialogTitle>
+            <AlertDialogDescription>
+              With these settings, each dream submission will produce{" "}
+              <strong>{testModeMatrixSize} card{testModeMatrixSize === 1 ? "" : "s"}</strong>{" "}
+              ({testModeDepths.length || 1} depth × {testModeReadingLevels.length || 1} reading-level × {testModeAesthetics.length || 1} aesthetic).
+              <br />
+              <br />
+              One image is generated per unique aesthetic. OpenAI calls run in
+              parallel, but every submission still costs N analyses' worth of
+              tokens. Save?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={saveTestMode}>
+              Save settings
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
