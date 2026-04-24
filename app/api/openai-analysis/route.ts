@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ReadingLevel } from "@/schema/profile";
+import { ReadingLevel, AnalysisDepth } from "@/schema/profile";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { zodTextFormat } from "openai/helpers/zod";
 import {
@@ -134,6 +134,56 @@ function getReadingLevelInstructions(
   return getFallbackReadingLevelInstructions(readingLevel);
 }
 
+// ── Analysis depth helpers ─────────────────────────────────────────
+// Depth controls length and breadth, independent of reading level. Tier
+// names are water-themed: shallow (free), deep (visionary), profound (prophet).
+
+function getDepthInstructions(depth: string): string {
+  switch (depth) {
+    case AnalysisDepth.DEEP:
+      return `
+DEPTH TIER: deep
+- Provide 4 to 6 supporting points (instead of 1-3) — each grounded in a distinct biblical reference.
+- After the supporting points, include a "Dream Symbols" section that unpacks 2-4 of the most resonant images in the dream (e.g., water, bridge, animal). For each symbol, give a one-sentence biblical/typological reading.
+- Add a "How this might apply to your life right now" section with 2-3 concrete, gentle suggestions for the dreamer to consider.
+- Total length: roughly 400-600 words across all sections.`;
+
+    case AnalysisDepth.PROFOUND:
+      return `
+DEPTH TIER: profound
+- Provide 5 to 7 supporting points — each grounded in a distinct biblical reference.
+- Include a "Dream Symbols" section unpacking 3-5 of the most resonant images, each tied to scripture.
+- Include a "Three Lenses on This Dream" section that reads the dream through three frameworks:
+    * Literal lens — what concrete situation in the dreamer's life this could rehearse, with a biblical precedent.
+    * Allegorical lens — what the symbols represent in spiritual terms.
+    * Prophetic lens — what divine timing or invitation this might mark.
+  Each lens is 2-3 sentences.
+- Include 4-6 cross-reference verses for further study (book + chapter + verse, no exposition).
+- Include a "For your prayer or journal" section with 3 specific reflection questions tied to the dream's content.
+- Total length: roughly 800-1200 words. Maintain depth of insight; avoid filler.`;
+
+    case AnalysisDepth.SHALLOW:
+    default:
+      return `
+DEPTH TIER: shallow
+- Keep the response concise: topic sentence + 1 to 3 supporting points + conclusion sentence.
+- Total length: roughly 150-250 words.`;
+  }
+}
+
+// Approximate token budget per depth so we don't truncate longer outputs.
+function getMaxOutputTokensForDepth(depth: string): number {
+  switch (depth) {
+    case AnalysisDepth.PROFOUND:
+      return 4000;
+    case AnalysisDepth.DEEP:
+      return 2800;
+    case AnalysisDepth.SHALLOW:
+    default:
+      return 2000;
+  }
+}
+
 // ── Fallback response ──────────────────────────────────────────────
 
 const FALLBACK_ANALYSIS: DreamAnalysis = {
@@ -188,11 +238,12 @@ export async function POST(request: Request) {
   try {
     if (DEBUG) console.log("OpenAI Analysis: Request received");
 
-    const { dream, topic, readingLevel } = await request.json();
+    const { dream, topic, readingLevel, analysisDepth } = await request.json();
     if (DEBUG) {
       console.log(`Dream length: ${dream?.length || 0} chars`);
       console.log(`Topic: ${topic || "general spiritual meaning"}`);
       console.log(`Reading level: ${readingLevel || ReadingLevel.CELESTIAL_INSIGHT}`);
+      console.log(`Analysis depth: ${analysisDepth || AnalysisDepth.SHALLOW}`);
     }
 
     if (!dream) {
@@ -211,6 +262,10 @@ export async function POST(request: Request) {
       effectiveReadingLevel,
       dbPrompt
     );
+
+    // Build depth instructions (length / breadth, independent of reading level)
+    const effectiveDepth = analysisDepth || AnalysisDepth.SHALLOW;
+    const depthInstructions = getDepthInstructions(effectiveDepth);
 
     // Build forbidden phrases
     const forbiddenPhrases = dbPrompt?.forbidden_phrases?.length
@@ -235,6 +290,7 @@ ${dbPrompt.format_instructions}
 - Begin directly with the spiritual theme or insight without introductory phrases
 
 ${readingLevelInstructions}
+${depthInstructions}
 `
       : `
 You are a dream interpreter specializing in Christian biblical interpretation.
@@ -266,6 +322,7 @@ Additional instruction:
 - Additionally, provide the full Bible verse text for each citation as shown in the example: Genesis 1:1 -> "In the beginning God created the heaven and the earth."
 
 ${readingLevelInstructions}
+${depthInstructions}
 `;
 
     if (DEBUG) {
@@ -283,7 +340,7 @@ ${readingLevelInstructions}
         { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
-      max_output_tokens: 2000,
+      max_output_tokens: getMaxOutputTokensForDepth(effectiveDepth),
       text: {
         format: zodTextFormat(DreamAnalysisSchema, "DreamAnalysis"),
       },

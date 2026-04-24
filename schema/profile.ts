@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ImageAesthetic } from "./imageAesthetic";
 
 // Define the reading level enum
 export const ReadingLevel = {
@@ -17,15 +18,65 @@ export const readingLevelSchema = z.enum([
 
 export type ReadingLevel = z.infer<typeof readingLevelSchema>;
 
+// Analysis depth — gates analysis length / breadth by subscription plan.
+// Reading level is independent (free for everyone) and controls language
+// complexity rather than depth.
+export const AnalysisDepth = {
+  SHALLOW: "shallow", // free
+  DEEP: "deep", // visionary plan
+  PROFOUND: "profound", // prophet plan + admins
+} as const;
+
+export const analysisDepthSchema = z.enum([
+  AnalysisDepth.SHALLOW,
+  AnalysisDepth.DEEP,
+  AnalysisDepth.PROFOUND,
+]);
+
+export type AnalysisDepth = z.infer<typeof analysisDepthSchema>;
+
+export type SubscriptionPlan = "free" | "visionary" | "prophet";
+
+// Plan ceiling for analysis depth. Admins bypass this (handled in the API).
+const PLAN_DEPTH_CEILING: Record<SubscriptionPlan, AnalysisDepth> = {
+  free: AnalysisDepth.SHALLOW,
+  visionary: AnalysisDepth.DEEP,
+  prophet: AnalysisDepth.PROFOUND,
+};
+
+const DEPTH_RANK: Record<AnalysisDepth, number> = {
+  [AnalysisDepth.SHALLOW]: 0,
+  [AnalysisDepth.DEEP]: 1,
+  [AnalysisDepth.PROFOUND]: 2,
+};
+
+/**
+ * Clamp a requested depth to the user's plan ceiling. Admin callers should
+ * skip this entirely and pass the requested depth through unchanged.
+ */
+export function clampDepthToPlan(
+  requested: AnalysisDepth,
+  plan: SubscriptionPlan,
+): AnalysisDepth {
+  const ceiling = PLAN_DEPTH_CEILING[plan];
+  return DEPTH_RANK[requested] <= DEPTH_RANK[ceiling] ? requested : ceiling;
+}
+
 export const profileSchema = z.object({
-  id: z.string().uuid().optional(), // generated automatically; optional on input
+  id: z.string().uuid().optional(),
   user_id: z.string().uuid(),
   language: z.string().optional(),
   bible_version: z.string().optional(),
   reading_level: readingLevelSchema.default(ReadingLevel.CELESTIAL_INSIGHT).optional(),
-  image_aesthetic: z.string().optional(), // user's preferred image style
-  preferences: z.record(z.unknown()).optional(), // JSONB preferences object
-  created_at: z.string().optional(), // ISO string returned by DB; optional on input
+  image_aesthetic: z.string().optional(),
+  preferences: z.record(z.unknown()).optional(),
+  analysis_depth: analysisDepthSchema.default(AnalysisDepth.SHALLOW).optional(),
+  is_admin: z.boolean().optional(),
+  test_mode_enabled: z.boolean().optional(),
+  test_mode_depths: z.array(analysisDepthSchema).optional(),
+  test_mode_reading_levels: z.array(readingLevelSchema).optional(),
+  test_mode_aesthetics: z.array(z.nativeEnum(ImageAesthetic)).optional(),
+  created_at: z.string().optional(),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
