@@ -13,6 +13,7 @@
 // (dream input).
 
 import { createClient } from "@/utils/supabase/server";
+import { decryptDreamRow } from "@/lib/crypto";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -70,15 +71,17 @@ export default async function MainPage() {
   }
 
   // Fetch dream entries for the logged in user
-  const { data: dreams, error } = await supabase
+  const { data: dreamsRaw, error } = await supabase
     .from("dream_entries")
     .select("*")
     .eq("user_id", user.id)
     .order('created_at', { ascending: false });
-    
+
   if (error) {
     console.error("Error fetching dreams:", error.message);
   }
+
+  const dreams = (dreamsRaw || []).map((row) => decryptDreamRow({ ...row }));
 
   return (
     <div className="container py-6 sm:py-10 relative">
