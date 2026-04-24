@@ -151,16 +151,15 @@ DEPTH TIER: deep
     case AnalysisDepth.PROFOUND:
       return `
 DEPTH TIER: profound
-- Provide 5 to 7 supporting points — each grounded in a distinct biblical reference.
-- Include a "Dream Symbols" section unpacking 3-5 of the most resonant images, each tied to scripture.
-- Include a "Three Lenses on This Dream" section that reads the dream through three frameworks:
-    * Literal lens — what concrete situation in the dreamer's life this could rehearse, with a biblical precedent.
+- Provide 5 to 7 supporting points — each ~30-50 words and grounded in a distinct biblical reference.
+- Include a "Dream Symbols" section unpacking 3-5 resonant images. Each symbol is one sentence (~25 words) tied to scripture.
+- Include a "Three Lenses on This Dream" section reading the dream through three frameworks; each lens is exactly 2 sentences (~40 words):
+    * Literal lens — concrete situation this could rehearse, with a biblical precedent.
     * Allegorical lens — what the symbols represent in spiritual terms.
-    * Prophetic lens — what divine timing or invitation this might mark.
-  Each lens is 2-3 sentences.
-- Include 4-6 cross-reference verses for further study (book + chapter + verse, no exposition).
-- Include a "For your prayer or journal" section with 3 specific reflection questions tied to the dream's content.
-- Total length: roughly 800-1200 words. Maintain depth of insight; avoid filler.`;
+    * Prophetic lens — divine timing or invitation this might mark.
+- Include 4-6 cross-reference verses for further study — book + chapter + verse only, NO exposition or commentary.
+- Include a "For your prayer or journal" section with exactly 3 reflection questions, each one sentence (~20 words).
+- Total budget: ~1000 words across all sections. Be substantive but disciplined — no filler, no restating the dream back to the dreamer.`;
 
     case AnalysisDepth.SHALLOW:
     default:
@@ -171,13 +170,16 @@ DEPTH TIER: shallow
   }
 }
 
-// Approximate token budget per depth so we don't truncate longer outputs.
+// Per-depth output budget. Generous on top so the model never truncates
+// mid-JSON (truncation surfaces as a SyntaxError from .parse() and falls
+// back to the canned analysis). gpt-4.1-mini supports up to 32K output
+// tokens; we're well under that even on profound.
 function getMaxOutputTokensForDepth(depth: string): number {
   switch (depth) {
     case AnalysisDepth.PROFOUND:
-      return 4000;
+      return 8000;
     case AnalysisDepth.DEEP:
-      return 2800;
+      return 4500;
     case AnalysisDepth.SHALLOW:
     default:
       return 2000;
@@ -383,7 +385,20 @@ ${depthInstructions}
       tags: parsed.tags,
     });
   } catch (error: unknown) {
-    console.error("OpenAI analysis error:", error);
+    // SyntaxError from the SDK's responses.parse() almost always means the
+    // model hit max_output_tokens mid-JSON and got truncated. The fallback
+    // template will be returned below, but flag it loud so we know to bump
+    // the depth's token budget instead of chasing a phantom prompt bug.
+    const isParseError = error instanceof SyntaxError;
+    if (isParseError) {
+      console.error(
+        "OpenAI analysis parse error — output likely truncated by max_output_tokens. " +
+          "Bump getMaxOutputTokensForDepth() for the active depth tier.",
+        error,
+      );
+    } else {
+      console.error("OpenAI analysis error:", error);
+    }
 
     // Return fallback so the app keeps working even if the API call fails
     return NextResponse.json(FALLBACK_ANALYSIS);
