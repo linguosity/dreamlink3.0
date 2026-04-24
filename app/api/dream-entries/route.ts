@@ -26,6 +26,7 @@ import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 import { OPENAI_MODEL } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
+import { runDreamAnalysis } from "@/lib/dreamAnalysis";
 import {
   AnalysisDepth,
   ReadingLevel,
@@ -39,8 +40,6 @@ const DEBUG = process.env.NODE_ENV === 'development';
 // Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
 export const maxDuration = 60;
-
-import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
 
 // Simple in-memory analysis cache (LRU-style with TTL)
 const analysisCache = new Map<string, { result: any; timestamp: number }>();
@@ -188,26 +187,15 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
       if (DEBUG) console.log('✅ Analysis cache hit', { depth: combo.depth });
       analysisResult = cached.result;
     } else {
-      const analysisRequest = new NextRequest(
-        "http://internal-routing/api/openai-analysis",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            dream: dreamText,
-            topic: "dream interpretation",
-            readingLevel: combo.readingLevel,
-            analysisDepth: combo.depth,
-          }),
-        },
-      );
-
-      const analysisResponse = await openAiHandler(analysisRequest);
-      if (!analysisResponse.ok) {
-        throw new Error(`OpenAI returned ${analysisResponse.status}`);
-      }
-
-      analysisResult = JSON.parse(await analysisResponse.text());
+      // Call the shared analyzer directly. Going through the route handler
+      // with a synthetic NextRequest broke under parallel fan-out because
+      // multiple concurrent invocations corrupted each other's output.
+      analysisResult = await runDreamAnalysis({
+        dream: dreamText,
+        topic: "dream interpretation",
+        readingLevel: combo.readingLevel,
+        analysisDepth: combo.depth,
+      });
 
       if (analysisCache.size >= MAX_CACHE_SIZE) {
         const oldestKey = analysisCache.keys().next().value;
