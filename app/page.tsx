@@ -60,15 +60,30 @@ export default async function MainPage() {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   // Check if user has completed onboarding (has a reading_level set)
+  // and pull the admin/test-mode fields so we can warn admins when they're
+  // about to fan out a submission across the comparison matrix.
   const { data: profile } = await supabase
     .from("profile")
-    .select("reading_level")
+    .select(
+      "reading_level, is_admin, test_mode_enabled, test_mode_depths, test_mode_reading_levels, test_mode_aesthetics",
+    )
     .eq("user_id", user.id)
     .single();
 
   if (!profile?.reading_level) {
     return redirect("/onboarding");
   }
+
+  // Compute the matrix size the next submission will produce, so the banner
+  // can show "5 cards per submission" without the admin guessing.
+  const adminTestModeMatrixSize =
+    profile.is_admin && profile.test_mode_enabled
+      ? (profile.test_mode_depths?.length || 1) *
+        (profile.test_mode_reading_levels?.length || 1) *
+        (profile.test_mode_aesthetics?.length || 1)
+      : 1;
+  const showTestModeBanner =
+    profile.is_admin && profile.test_mode_enabled && adminTestModeMatrixSize > 1;
 
   // Fetch dream entries for the logged in user
   const { data: dreamsRaw, error } = await supabase
@@ -89,6 +104,33 @@ export default async function MainPage() {
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 relative z-10">
         {/* Visually hidden H1 for SEO and screen readers */}
         <h1 className="sr-only">DreamRiver Dream Journal</h1>
+
+        {/* Admin reminder: test mode is on. Surfaced here so an admin can't
+            accidentally fan out a submission they thought was a normal one. */}
+        {showTestModeBanner && (
+          <div
+            role="status"
+            className="rounded-xl border-2 border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-start gap-3"
+          >
+            <span aria-hidden="true" className="text-lg">🧪</span>
+            <div className="flex-1 text-sm">
+              <div className="font-medium text-amber-900 dark:text-amber-100">
+                Test mode is on
+              </div>
+              <div className="text-amber-800/80 dark:text-amber-200/80">
+                Each dream submission will generate{" "}
+                <strong>{adminTestModeMatrixSize} cards</strong> across your
+                comparison matrix. Image generation is deduped by aesthetic.
+              </div>
+            </div>
+            <Link
+              href="/settings"
+              className="text-xs font-medium text-amber-900 dark:text-amber-100 underline underline-offset-2 hover:no-underline whitespace-nowrap"
+            >
+              Disable
+            </Link>
+          </div>
+        )}
 
         {/* Dream Input Section with visual transition */}
         <div className="pb-8 sm:pb-10 border-b border-border/30">
