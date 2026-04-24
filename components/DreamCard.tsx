@@ -729,6 +729,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   // Poll for dream image if it's not yet available
   useEffect(() => {
     if (!isPollingCardImage || !dream.id) return;
+    // Optimistic placeholder ids (e.g. "pending-1729..." before analysis returns)
+    // aren't real UUIDs — polling them produces a Supabase filter error / 404.
+    if (dream.id.startsWith('pending-')) return;
 
     console.log('Starting image polling for dream:', dream.id);
     let pollCount = 0;
@@ -1317,23 +1320,21 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       {/* Detail Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
-          {/* Dream image in modal */}
+          {/* No w-full: width:auto + -mx-6 expands to full DialogContent width; w-full clamps to the padded 552px and leaves a gap on the right. */}
           {(cardImageUrl || isPollingCardImage) && (
-            <div className="w-full -mx-6 -mt-6 mb-4">
-              <div className="relative w-full h-80 bg-muted">
-                {cardImageUrl ? (
-                  <Image
-                    src={cardImageUrl}
-                    alt="Dream visualization"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 600px) 100vw, 600px"
-                    priority={true}
-                  />
-                ) : (
-                  <DreamImageShimmer />
-                )}
-              </div>
+            <div className="relative h-80 -mx-6 -mt-6 mb-4 bg-muted">
+              {cardImageUrl ? (
+                <Image
+                  src={cardImageUrl}
+                  alt="Dream visualization"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 600px"
+                  priority={true}
+                />
+              ) : (
+                <DreamImageShimmer />
+              )}
             </div>
           )}
 
@@ -1480,99 +1481,95 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             </div>
           </div>
 
-          {/* Footer with tags and biblical references */}
-          <div className="pt-4 border-t">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-wrap gap-2">
-                {dream.tags && dream.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {dream.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                
-                {dream.bible_refs && dream.bible_refs.length > 0 && isMounted && (
-                  <div className="flex flex-wrap gap-1">
-                    <TooltipProvider delayDuration={200} skipDelayDuration={0}>
-                      {dream.bible_refs.map((ref, index) => {
-                        // Get verse text using our utility function
-                        const { text: verseText, isFallback, source } = getVerseText(ref);
-                        console.log(`Badge verse for reference ${ref}: source=${source}, isFallback=${isFallback}`);
-                        
-                        console.log(`Badge reference: ${ref}, has verse text: ${verseText !== 'Verse content loading...' ? 'Yes' : 'No'}`);
-                        
-                        return (
-                          <Tooltip key={index}>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs flex items-center gap-1">
-                                <BookIcon className="h-2 w-2" />
-                                {ref}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <div className="max-w-[300px] text-xs">
-                                <div>{verseText}</div>
-                                {isFallback && (
-                                  <div className="text-[10px] italic text-muted-foreground mt-1">
-                                    Note: Using standard verse text
-                                  </div>
-                                )}
-                                {source === "missing" && (
-                                  <div className="text-[10px] italic text-red-500 mt-1">
-                                    Warning: No verse text found
-                                  </div>
-                                )}
-                                {source === "missing-range" && (
-                                  <div className="text-[10px] italic text-red-500 mt-1">
-                                    Warning: No verse text found for this range
-                                  </div>
-                                )}
-                                {source.startsWith("expanded") && (
-                                  <div className="text-[10px] italic text-blue-500 mt-1">
-                                    Note: Combined from individual verses
-                                  </div>
-                                )}
-                                {source.includes("range") && !source.includes("missing") && (
-                                  <div className="text-[10px] italic text-green-500 mt-1">
-                                    {ref}
-                                  </div>
-                                )}
-                                {(process.env.NODE_ENV === 'development' || process.env.DEBUG) && (
-                                  <div className="text-[8px] opacity-50 mt-1 border-t pt-1">
-                                    Debug: src={source}, ref={ref}
-                                  </div>
-                                )}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })}
-                    </TooltipProvider>
-                  </div>
-                )}
+          {/* Footer: tags, bible refs, actions — stacked on mobile, side-by-side on desktop */}
+          <div className="pt-4 border-t space-y-3">
+            {dream.tags && dream.tags.length > 0 && (
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Tags
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {dream.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              
-              {/* View Report Button */}
-              {!empty && dream.analysis_summary && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push(`/dream/${dream.id}/report`);
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 7h10" /><path d="M7 12h10" /><path d="M7 17h10" /></svg>
-                  View Report
-                </Button>
-              )}
+            )}
 
-              {/* Delete Button with Confirmation */}
-              {!empty && (
+            {dream.bible_refs && dream.bible_refs.length > 0 && isMounted && (
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Scripture
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <TooltipProvider delayDuration={200} skipDelayDuration={0}>
+                    {dream.bible_refs.map((ref, index) => {
+                      const { text: verseText, isFallback, source } = getVerseText(ref);
+                      return (
+                        <Tooltip key={index}>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                              <BookIcon className="h-2 w-2" />
+                              {ref}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="max-w-[300px] text-xs">
+                              <div>{verseText}</div>
+                              {isFallback && (
+                                <div className="text-[10px] italic text-muted-foreground mt-1">
+                                  Note: Using standard verse text
+                                </div>
+                              )}
+                              {source === "missing" && (
+                                <div className="text-[10px] italic text-red-500 mt-1">
+                                  Warning: No verse text found
+                                </div>
+                              )}
+                              {source === "missing-range" && (
+                                <div className="text-[10px] italic text-red-500 mt-1">
+                                  Warning: No verse text found for this range
+                                </div>
+                              )}
+                              {source.startsWith("expanded") && (
+                                <div className="text-[10px] italic text-blue-500 mt-1">
+                                  Note: Combined from individual verses
+                                </div>
+                              )}
+                              {source.includes("range") && !source.includes("missing") && (
+                                <div className="text-[10px] italic text-green-500 mt-1">
+                                  {ref}
+                                </div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </TooltipProvider>
+                </div>
+              </div>
+            )}
+
+            {!empty && (
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                {dream.analysis_summary && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push(`/dream/${dream.id}/report`);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 7h10" /><path d="M7 12h10" /><path d="M7 17h10" /></svg>
+                    View Report
+                  </Button>
+                )}
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -1594,7 +1591,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
+                      <AlertDialogAction
                         onClick={handleDeleteDream}
                         className="bg-red-500 hover:bg-red-600"
                         disabled={isDeleting}
@@ -1604,8 +1601,8 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -99,18 +99,22 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     };
   }, []);
 
-  // Clear the pending placeholder and analyzed data once real data arrives from the server
+  // Clear pending placeholder only once the real card (identified by the
+  // analyzed dream id) actually appears in the server-rendered list. Clearing
+  // based on `dreams.length > 0` races against Supabase read propagation and
+  // causes a visible gap between placeholder and real card.
+  const analyzedIdInGrid =
+    analyzedDream !== null && dreams.some((d) => d.id === analyzedDream.id);
+
   useEffect(() => {
-    if (pendingDream && dreams.length > 0) {
-      // The server data has refreshed — the real card is now in the list
-      // Give a brief moment for the animation to be smooth
+    if (pendingDream && analyzedIdInGrid) {
       const timer = setTimeout(() => {
         setPendingDream(null);
         setAnalyzedDream(null);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [dreams, pendingDream]);
+  }, [pendingDream, analyzedIdInGrid]);
 
   // Check for loading dream
   useEffect(() => {
@@ -200,13 +204,47 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
     return dream;
   });
 
+  // While the placeholder is visible, enrich it with analyzed fields as they
+  // arrive so the user sees title → summary → tags populate without the card
+  // flickering out and back.
+  const showPlaceholder = pendingDream !== null && !analyzedIdInGrid;
+  const placeholderKey =
+    analyzedDream?.id ?? pendingDream?.id ?? 'placeholder';
+
+  const placeholderDream: Dream | null = pendingDream
+    ? analyzedDream
+      ? {
+          id: analyzedDream.id,
+          original_text: pendingDream.original_text,
+          created_at: pendingDream.created_at,
+          title: analyzedDream.analysis.dreamTitle ?? pendingDream.title,
+          dream_summary: analyzedDream.analysis.analysis
+            ? analyzedDream.analysis.analysis.split('.').slice(0, 2).join('.') + '.'
+            : undefined,
+          analysis_summary: analyzedDream.analysis.analysis,
+          topic_sentence: analyzedDream.analysis.topicSentence,
+          supporting_points: analyzedDream.analysis.supportingPoints,
+          conclusion_sentence: analyzedDream.analysis.conclusionSentence,
+          formatted_analysis: analyzedDream.analysis.analysis,
+          tags:
+            analyzedDream.analysis.tags?.length > 0
+              ? analyzedDream.analysis.tags
+              : ['spiritual insight', 'dream analysis'],
+          bible_refs: (analyzedDream.analysis.biblicalReferences || [])
+            .filter((r: any) => r?.citation)
+            .map((r: any) => r.citation.trim()),
+        }
+      : pendingDream
+    : null;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
       <AnimatePresence initial={false}>
-        {/* Optimistic placeholder card — appears instantly on submit */}
-        {pendingDream && !analyzedDream && (
+        {/* Optimistic placeholder — stays visible through analysis and
+            disappears only once the real server row lands in the grid. */}
+        {showPlaceholder && placeholderDream && (
           <motion.div
-            key={pendingDream.id}
+            key={placeholderKey}
             layout
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -219,8 +257,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             className="col-span-1"
           >
             <DreamCard
-              dream={pendingDream}
-              loading={true}
+              dream={placeholderDream}
+              loading={analyzedDream === null}
             />
           </motion.div>
         )}

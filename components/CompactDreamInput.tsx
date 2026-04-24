@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Send, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,21 +15,16 @@ interface CompactDreamInputProps {
 }
 
 const MAX_CHARS = 8000;
-const MAX_HEIGHT_PX = 200; // ~8 lines, then scroll
-const BUTTON_STICK_BOTTOM_PX = 100; // switch from centered to bottom-pinned at this height
 
 export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dream, setDream] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isMac, setIsMac] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
 
-  // Fetch user's preferred image aesthetic and reading level from profile
   useEffect(() => {
     const supabase = createClient();
     supabase
@@ -43,7 +38,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       });
   }, [userId]);
 
-  // Check localStorage for persistent tip dismissal and detect platform on mount
   useEffect(() => {
     setIsMac(/Mac|iPhone|iPad/.test(navigator.userAgent ?? ''));
     const dismissed = localStorage.getItem('dreamriver-tip-dismissed');
@@ -52,27 +46,11 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     }
   }, []);
 
-  // Auto-resize textarea to fit content
-  const autoResize = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = 'auto';
-    const newHeight = Math.min(textarea.scrollHeight, MAX_HEIGHT_PX);
-    textarea.style.height = `${newHeight}px`;
-    setIsExpanded(newHeight >= BUTTON_STICK_BOTTOM_PX);
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [dream, autoResize]);
-
-  // Handle permanent tip dismissal
   const handlePermanentDismiss = () => {
     setTipDismissed(true);
     localStorage.setItem('dreamriver-tip-dismissed', 'true');
   };
 
-  // Keyboard: Cmd/Ctrl+Enter to submit
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
@@ -88,11 +66,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
     await submitDream(dream);
     setDream("");
-    // Reset textarea height and button position after clearing
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-    setIsExpanded(false);
   };
 
   // Common submission logic with retry for auth timing issues
@@ -216,12 +189,14 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   return (
     <div className="w-full sm:max-w-2xl sm:mx-auto space-y-2">
       <form onSubmit={handleSubmit}>
-        {/* Textarea container with inset send button */}
+        {/* Textarea container with inset send button.
+            `field-sizing: content` lets the browser grow the textarea
+            natively — no JS measure/resize cycle on every keystroke, so
+            keystrokes can't be dropped. */}
         <div className="relative">
           <label htmlFor="dream-input" className="sr-only">Describe your dream</label>
           <textarea
             id="dream-input"
-            ref={textareaRef}
             placeholder="Describe your dream — a word, a feeling, or the whole story…"
             value={dream}
             onChange={(e) => setDream(e.target.value)}
@@ -229,19 +204,17 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             rows={2}
             maxLength={MAX_CHARS}
             disabled={isSubmitting}
-            className="w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            style={{ maxHeight: `${MAX_HEIGHT_PX}px` }}
+            className="w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [field-sizing:content] min-h-[60px] max-h-[200px]"
           />
 
-          {/* Send button — centered when short, bottom-right when expanded */}
           <Button
             type="submit"
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute right-2.5 z-10 h-11 w-11 rounded-lg transition-all duration-200 ${
-              isExpanded ? "bottom-2.5" : "top-1/2 -translate-y-1/2"
-            } ${hasContent ? "opacity-100" : "opacity-30"}`}
+            className={`absolute right-2.5 bottom-2.5 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
+              hasContent ? "opacity-100" : "opacity-30"
+            }`}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
