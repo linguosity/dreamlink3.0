@@ -39,7 +39,37 @@ interface Dream {
   tags?: string[];
   bible_refs?: string[];
   created_at?: string;
+  // Comparison-group metadata (set on rows produced by admin test mode).
+  comparison_group_id?: string | null;
+  analysis_depth?: string | null;
+  reading_level_used?: string | null;
+  image_aesthetic_used?: string | null;
 }
+
+// Pretty labels for badges shown on comparison-group cards.
+const DEPTH_LABELS: Record<string, string> = {
+  shallow: 'Shallow',
+  deep: 'Deep',
+  profound: 'Profound',
+};
+
+const READING_LEVEL_LABELS: Record<string, string> = {
+  radiant_clarity: 'Radiant',
+  celestial_insight: 'Celestial',
+  prophetic_wisdom: 'Prophetic',
+  divine_revelation: 'Divine',
+};
+
+const AESTHETIC_LABELS: Record<string, string> = {
+  sacred_oil_painting: 'Oil Painting',
+  stained_glass: 'Stained Glass',
+  watercolor_dreamscape: 'Watercolor',
+  celestial_cosmos: 'Cosmos',
+  renaissance_fresco: 'Fresco',
+  surreal_prophetic: 'Surreal',
+  anime_sacred: 'Anime',
+  photorealistic_vision: 'Photorealistic',
+};
 
 interface AnimatedDreamGridProps {
   dreams: Dream[];
@@ -237,11 +267,38 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
       : pendingDream
     : null;
 
+  // Build the render order: walk the visible dreams once, emit either
+  // standalone cards or comparison-group sections (the first time we see
+  // a given group_id, we emit the whole group; subsequent rows in that
+  // group are skipped because they were emitted with the first one).
+  const visible = enrichedDreams.slice(0, 12);
+  const seenGroupIds = new Set<string>();
+  const renderOrder: Array<
+    | { type: 'standalone'; dream: Dream }
+    | { type: 'group'; groupId: string; dreams: Dream[] }
+  > = [];
+
+  for (const dream of visible) {
+    const groupId = dream.comparison_group_id;
+    if (groupId) {
+      if (seenGroupIds.has(groupId)) continue;
+      seenGroupIds.add(groupId);
+      const dreamsInGroup = visible.filter(
+        (d) => d.comparison_group_id === groupId,
+      );
+      renderOrder.push({ type: 'group', groupId, dreams: dreamsInGroup });
+    } else {
+      renderOrder.push({ type: 'standalone', dream });
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
       <AnimatePresence initial={false}>
         {/* Optimistic placeholder — stays visible through analysis and
-            disappears only once the real server row lands in the grid. */}
+            disappears only once the real server row lands in the grid.
+            For matrix submissions we still show one placeholder; the
+            remaining rows arrive via router.refresh. */}
         {showPlaceholder && placeholderDream && (
           <motion.div
             key={placeholderKey}
@@ -262,28 +319,140 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             />
           </motion.div>
         )}
-        {enrichedDreams.slice(0, 12).map((dream, index) => (
-          <motion.div
-            key={dream.id}
-            layout
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{
-              type: 'tween',
-              duration: 0.4,
-              ease: 'easeOut'
-            }}
-            className="col-span-1"
-          >
+        {renderOrder.map((item) =>
+          item.type === 'standalone' ? (
+            <motion.div
+              key={item.dream.id}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
+              className="col-span-1"
+            >
+              <DreamCard
+                dream={item.dream}
+                loading={item.dream.id === loadingDreamId}
+                searchTerms={isMounted && isSearchEnabled ? keywords : []}
+              />
+            </motion.div>
+          ) : (
+            <ComparisonGroup
+              key={item.groupId}
+              groupId={item.groupId}
+              dreams={item.dreams}
+              loadingDreamId={loadingDreamId}
+              searchTerms={isMounted && isSearchEnabled ? keywords : []}
+            />
+          ),
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── ComparisonGroup ──────────────────────────────────────────────────
+// Renders a labeled, framed section that spans the full grid width and
+// holds every card produced by a single admin test-mode submission. We
+// detect which dimensions vary in the group and surface those as badges
+// on each card, so the admin can read a card and know what produced it.
+//
+// Universal Design: identification is not color-only — there's a text
+// header, a visible frame, badges on every card, and an ARIA role/label
+// so assistive tech announces the set as a group.
+
+interface ComparisonGroupProps {
+  groupId: string;
+  dreams: Dream[];
+  loadingDreamId: string | null;
+  searchTerms: string[];
+}
+
+function ComparisonGroup({
+  groupId,
+  dreams,
+  loadingDreamId,
+  searchTerms,
+}: ComparisonGroupProps) {
+  const created = dreams[0]?.created_at
+    ? new Date(dreams[0].created_at)
+    : null;
+  const headerDate = created
+    ? created.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '';
+
+  // Identify the dimensions that actually vary across the group, so we
+  // only badge what's meaningful.
+  const uniqueDepths = new Set(dreams.map((d) => d.analysis_depth ?? ''));
+  const uniqueReadingLevels = new Set(
+    dreams.map((d) => d.reading_level_used ?? ''),
+  );
+  const uniqueAesthetics = new Set(
+    dreams.map((d) => d.image_aesthetic_used ?? ''),
+  );
+  const showDepthBadge = uniqueDepths.size > 1;
+  const showReadingLevelBadge = uniqueReadingLevels.size > 1;
+  const showAestheticBadge = uniqueAesthetics.size > 1;
+
+  return (
+    <motion.section
+      role="group"
+      aria-label={`Test comparison · ${dreams.length} variants${headerDate ? ` from ${headerDate}` : ''}`}
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
+      className="col-span-full rounded-xl border-2 border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 p-4"
+    >
+      <header className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            Test comparison
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {dreams.length} variant{dreams.length === 1 ? '' : 's'}
+            {headerDate && ` · ${headerDate}`}
+          </span>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {dreams.map((dream) => (
+          <div key={dream.id} className="relative">
+            {/* Variant badges — top-right of the card. Only the dimensions
+                that vary in this group are shown. */}
+            {(showDepthBadge || showReadingLevelBadge || showAestheticBadge) && (
+              <div className="absolute -top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[90%] justify-end">
+                {showDepthBadge && dream.analysis_depth && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-900 text-white shadow-sm">
+                    {DEPTH_LABELS[dream.analysis_depth] ?? dream.analysis_depth}
+                  </span>
+                )}
+                {showReadingLevelBadge && dream.reading_level_used && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-700 text-white shadow-sm">
+                    {READING_LEVEL_LABELS[dream.reading_level_used] ?? dream.reading_level_used}
+                  </span>
+                )}
+                {showAestheticBadge && dream.image_aesthetic_used && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-700 text-white shadow-sm">
+                    {AESTHETIC_LABELS[dream.image_aesthetic_used] ?? dream.image_aesthetic_used}
+                  </span>
+                )}
+              </div>
+            )}
             <DreamCard
               dream={dream}
               loading={dream.id === loadingDreamId}
-              searchTerms={isMounted && isSearchEnabled ? keywords : []}
+              searchTerms={searchTerms}
             />
-          </motion.div>
+          </div>
         ))}
-      </AnimatePresence>
-    </div>
+      </div>
+    </motion.section>
   );
 }

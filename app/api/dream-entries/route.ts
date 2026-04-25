@@ -26,6 +26,14 @@ import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 import { OPENAI_MODEL } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
+import { runDreamAnalysis } from "@/lib/dreamAnalysis";
+import {
+  AnalysisDepth,
+  ReadingLevel,
+  clampDepthToPlan,
+  type SubscriptionPlan,
+} from "@/schema/profile";
+import { ImageAesthetic } from "@/schema/imageAesthetic";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -33,15 +41,301 @@ const DEBUG = process.env.NODE_ENV === 'development';
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
 export const maxDuration = 60;
 
-import { POST as openAiHandler } from "@/app/api/openai-analysis/route";
-
 // Simple in-memory analysis cache (LRU-style with TTL)
 const analysisCache = new Map<string, { result: any; timestamp: number }>();
 const CACHE_TTL_MS = 3600000; // 1 hour
 const MAX_CACHE_SIZE = 100;
 
-function getAnalysisCacheKey(dreamText: string, readingLevel?: string): string {
-  return crypto.createHash('sha256').update(`${dreamText}:${readingLevel || 'default'}`).digest('hex');
+function getAnalysisCacheKey(
+  dreamText: string,
+  readingLevel: string,
+  analysisDepth: string,
+): string {
+  return crypto
+    .createHash('sha256')
+    .update(`${dreamText}:${readingLevel}:${analysisDepth}`)
+    .digest('hex');
+}
+
+interface MatrixCombo {
+  depth: AnalysisDepth;
+  readingLevel: ReadingLevel;
+  aesthetic: ImageAesthetic;
+}
+
+interface ProfileContext {
+  is_admin: boolean;
+  plan: SubscriptionPlan;
+  analysis_depth: AnalysisDepth;
+  reading_level: ReadingLevel;
+  image_aesthetic: ImageAesthetic;
+  test_mode_enabled: boolean;
+  test_mode_depths: AnalysisDepth[];
+  test_mode_reading_levels: ReadingLevel[];
+  test_mode_aesthetics: ImageAesthetic[];
+}
+
+async function getProfileContext(userId: string): Promise<ProfileContext> {
+  const admin = getAdminClient();
+
+  const [{ data: profile }, { data: sub }] = await Promise.all([
+    admin
+      .from("profile")
+      .select(
+        "is_admin, analysis_depth, reading_level, image_aesthetic, test_mode_enabled, test_mode_depths, test_mode_reading_levels, test_mode_aesthetics",
+      )
+      .eq("user_id", userId)
+      .single(),
+    admin
+      .from("subscriptions")
+      .select("plan, status")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const p: any = profile ?? {};
+  const s: any = sub ?? {};
+
+  const plan: SubscriptionPlan =
+    s?.plan === "visionary" || s?.plan === "prophet" ? s.plan : "free";
+
+  return {
+    is_admin: Boolean(p.is_admin),
+    plan,
+    analysis_depth:
+      (p.analysis_depth as AnalysisDepth) ?? AnalysisDepth.SHALLOW,
+    reading_level:
+      (p.reading_level as ReadingLevel) ?? ReadingLevel.CELESTIAL_INSIGHT,
+    image_aesthetic:
+      (p.image_aesthetic as ImageAesthetic) ??
+      ImageAesthetic.PHOTOREALISTIC_VISION,
+    test_mode_enabled: Boolean(p.test_mode_enabled),
+    test_mode_depths: (p.test_mode_depths ?? []) as AnalysisDepth[],
+    test_mode_reading_levels: (p.test_mode_reading_levels ?? []) as ReadingLevel[],
+    test_mode_aesthetics: (p.test_mode_aesthetics ?? []) as ImageAesthetic[],
+  };
+}
+
+function buildTitleFromText(text: string): string {
+  if (text.length <= 10) return `Dream: ${text}`;
+  if (text.length <= 50) return text;
+  const truncated = text.substring(0, 50);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return lastSpace > 30
+    ? truncated.substring(0, lastSpace) + "..."
+    : truncated + "...";
+}
+
+interface AnalyzeOneArgs {
+  adminSupabase: ReturnType<typeof getAdminClient>;
+  userId: string;
+  encryptedText: string;
+  dreamText: string;
+  baseTitle: string;
+  combo: MatrixCombo;
+  comparisonGroupId: string | null;
+}
+
+interface AnalyzeOneResult {
+  id: string | null;
+  analysis: any;
+  combo: MatrixCombo;
+}
+
+async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> {
+  const {
+    adminSupabase,
+    userId,
+    encryptedText,
+    dreamText,
+    baseTitle,
+    combo,
+    comparisonGroupId,
+  } = args;
+
+  // 1. Insert the row up-front so the client can render an optimistic
+  //    placeholder immediately, before analysis returns.
+  const { data: dreamData, error: dreamInsertError } = await adminSupabase
+    .from("dream_entries")
+    .insert({
+      user_id: userId,
+      original_text_enc: encryptedText,
+      title: baseTitle,
+      analysis_depth: combo.depth,
+      reading_level_used: combo.readingLevel,
+      image_aesthetic_used: combo.aesthetic,
+      comparison_group_id: comparisonGroupId,
+    } as never)
+    .select()
+    .single();
+
+  if (dreamInsertError || !dreamData?.id) {
+    console.error("Error saving dream:", dreamInsertError);
+    return { id: null, analysis: null, combo };
+  }
+  const dreamId: string = dreamData.id;
+
+  // 2. Run the OpenAI analysis (cache-keyed by depth + reading level).
+  let analysisResult: any = null;
+  try {
+    const cacheKey = getAnalysisCacheKey(dreamText, combo.readingLevel, combo.depth);
+    const cached = analysisCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      if (DEBUG) console.log('✅ Analysis cache hit', { depth: combo.depth });
+      analysisResult = cached.result;
+    } else {
+      // Call the shared analyzer directly. Going through the route handler
+      // with a synthetic NextRequest broke under parallel fan-out because
+      // multiple concurrent invocations corrupted each other's output.
+      analysisResult = await runDreamAnalysis({
+        dream: dreamText,
+        topic: "dream interpretation",
+        readingLevel: combo.readingLevel,
+        analysisDepth: combo.depth,
+      });
+
+      if (analysisCache.size >= MAX_CACHE_SIZE) {
+        const oldestKey = analysisCache.keys().next().value;
+        if (oldestKey) analysisCache.delete(oldestKey);
+      }
+      analysisCache.set(cacheKey, { result: analysisResult, timestamp: Date.now() });
+    }
+
+    const {
+      analysis,
+      topicSentence,
+      supportingPoints = [],
+      conclusionSentence,
+      personalizedSummary,
+      dreamTitle,
+      biblicalReferences = [],
+      tags = [],
+    } = analysisResult;
+
+    const formattedAnalysis =
+      analysis ||
+      `${topicSentence} ${supportingPoints.join(" ")} ${conclusionSentence}`;
+    const dreamSummary = analysis
+      ? analysis.split(".").slice(0, 2).join(".") + "."
+      : "";
+
+    const bibleRefs = biblicalReferences
+      .filter((r: any) => r?.citation)
+      .map((r: any) => r.citation.trim());
+
+    const updateData: any = {
+      dream_summary: dreamSummary,
+      analysis_summary: analysis,
+      topic_sentence: topicSentence,
+      supporting_points: supportingPoints,
+      conclusion_sentence: conclusionSentence,
+      formatted_analysis: formattedAnalysis,
+      personalized_summary: personalizedSummary || null,
+      tags: tags.length > 0 ? tags : ["spiritual insight", "dream analysis"],
+      bible_refs: bibleRefs,
+      raw_analysis_enc: encryptJson(analysisResult),
+    };
+    if (dreamTitle?.trim()) updateData.title = dreamTitle;
+
+    const citations = biblicalReferences.length > 0
+      ? biblicalReferences
+          .map((ref: any, index: number) => {
+            if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
+            return {
+              dream_entry_id: dreamId,
+              bible_book: ref.book.trim(),
+              chapter: ref.chapter,
+              verse: ref.verse,
+              end_verse: ref.endVerse || null,
+              full_text: ref.verseText || `Verse text not available`,
+              citation_order: index + 1,
+            };
+          })
+          .filter(Boolean)
+      : [];
+
+    await Promise.all([
+      adminSupabase
+        .from("dream_entries")
+        .update(updateData)
+        .eq("id", dreamId)
+        .then(({ error }) => {
+          if (error) console.error("Error updating dream with analysis:", error);
+        }),
+      adminSupabase
+        .from("chatgpt_interactions")
+        .insert({
+          dream_entry_id: dreamId,
+          model: OPENAI_MODEL,
+          temperature: 0.7,
+        } as never)
+        .then(({ error }) => {
+          if (error) console.error("Error storing ChatGPT interaction:", error);
+        }),
+      citations.length > 0
+        ? adminSupabase
+            .from("bible_citations")
+            .insert(citations)
+            .then(({ error }) => {
+              if (error) console.error("Error saving Bible citations:", error);
+            })
+        : Promise.resolve(),
+    ]);
+  } catch (analysisError) {
+    console.error("Analysis failed for combo:", combo, analysisError);
+    await adminSupabase
+      .from("dream_entries")
+      .update({
+        dream_summary: "Analysis could not be completed at this time.",
+      })
+      .eq("id", dreamId);
+  }
+
+  return { id: dreamId, analysis: analysisResult, combo };
+}
+
+function buildMatrix(
+  ctx: ProfileContext,
+  requestedReadingLevel: ReadingLevel | undefined,
+): MatrixCombo[] {
+  // Default reading level falls back to the saved profile preference.
+  const readingLevel = requestedReadingLevel ?? ctx.reading_level;
+
+  // Non-admins or admins with test mode off: single combo, depth clamped to plan.
+  if (!ctx.is_admin || !ctx.test_mode_enabled) {
+    return [
+      {
+        depth: clampDepthToPlan(ctx.analysis_depth, ctx.plan),
+        readingLevel,
+        aesthetic: ctx.image_aesthetic,
+      },
+    ];
+  }
+
+  // Admin test mode: cartesian product of any non-empty dimension arrays.
+  // Empty dimension → falls back to the single saved value (no fan-out on that axis).
+  const depths = ctx.test_mode_depths.length
+    ? ctx.test_mode_depths
+    : [ctx.analysis_depth];
+  const readingLevels = ctx.test_mode_reading_levels.length
+    ? ctx.test_mode_reading_levels
+    : [readingLevel];
+  const aesthetics = ctx.test_mode_aesthetics.length
+    ? ctx.test_mode_aesthetics
+    : [ctx.image_aesthetic];
+
+  const combos: MatrixCombo[] = [];
+  for (const depth of depths) {
+    for (const lvl of readingLevels) {
+      for (const aesthetic of aesthetics) {
+        combos.push({ depth, readingLevel: lvl, aesthetic });
+      }
+    }
+  }
+  return combos;
 }
 
 export async function GET(request: Request) {
@@ -202,29 +496,35 @@ export async function POST(request: Request) {
     );
   }
 
+  // Resolve the user's profile + plan up-front so we know whether to bypass
+  // the rate limit (admins) and how to build the analysis matrix.
+  const profileCtx = await getProfileContext(user.id);
+
   // Per-user daily rate limit — prevents a single signup from draining the
-  // OpenAI/BFL budget by submitting dreams in a loop. See lib/rateLimit.ts
-  // for policy (fail-open on DB error, 24h rolling window, env-tunable cap).
-  const rl = await checkDreamSubmissionRateLimit(user.id);
-  if (!rl.allowed) {
-    if (DEBUG) {
-      console.log(
-        `API: Dream entry - rate limited user=${user.id} used=${rl.used}/${rl.limit}`
+  // OpenAI/BFL budget by submitting dreams in a loop. Admins bypass it so
+  // test-mode comparisons can fan out without locking themselves out.
+  if (!profileCtx.is_admin) {
+    const rl = await checkDreamSubmissionRateLimit(user.id);
+    if (!rl.allowed) {
+      if (DEBUG) {
+        console.log(
+          `API: Dream entry - rate limited user=${user.id} used=${rl.used}/${rl.limit}`
+        );
+      }
+      return NextResponse.json(
+        {
+          error: `Daily dream submission limit reached (${rl.limit} per 24 hours). Please try again later.`,
+          used: rl.used,
+          limit: rl.limit,
+        },
+        {
+          status: 429,
+          headers: rl.retryAfterSeconds
+            ? { "Retry-After": String(rl.retryAfterSeconds) }
+            : undefined,
+        }
       );
     }
-    return NextResponse.json(
-      {
-        error: `Daily dream submission limit reached (${rl.limit} per 24 hours). Please try again later.`,
-        used: rl.used,
-        limit: rl.limit,
-      },
-      {
-        status: 429,
-        headers: rl.retryAfterSeconds
-          ? { "Retry-After": String(rl.retryAfterSeconds) }
-          : undefined,
-      }
-    );
   }
 
   try {
@@ -238,267 +538,70 @@ export async function POST(request: Request) {
     }
 
     const { dream_text, reading_level } = parsed.data;
-    
-    // Generate a title - improve handling for short inputs
-    let title: string;
-    
-    if (dream_text.length <= 10) {
-      // For very short inputs, create a descriptive title
-      title = `Dream: ${dream_text}`;
-    } else if (dream_text.length <= 50) {
-      // For medium length, use the full text as title
-      title = dream_text;
-    } else {
-      // For long text, truncate at a word boundary if possible
-      const truncated = dream_text.substring(0, 50);
-      const lastSpace = truncated.lastIndexOf(' ');
-      if (lastSpace > 30) {
-        title = truncated.substring(0, lastSpace) + "...";
-      } else {
-        title = truncated + "...";
-      }
-    }
-    
-    // Insert dream into database using admin client to bypass RLS.
-    // Auth is already verified above via getUser(), and the regular
-    // server client can fail if the session cookie JWT isn't properly
-    // forwarded to the database RLS context.
-    const adminSupabaseForInsert = getAdminClient();
-    const { data: dreamData, error: dreamInsertError } = await adminSupabaseForInsert
-      .from("dream_entries")
-      .insert({
-        user_id: user.id,
-        original_text_enc: encrypt(dream_text),
-        title
-      } as never)
-      .select()
-      .single();
-    
-    if (DEBUG) console.log("Dream insert response:", { data: dreamData, error: dreamInsertError });
 
-    if (dreamInsertError) {
-      console.error("Error saving dream:", dreamInsertError);
-      
-      // Return detailed error for debugging
-      return NextResponse.json(
-        { 
-          error: "Failed to save dream entry", 
-          details: dreamInsertError,
-          request: {
-            user_id: user.id,
-            title: title,
-            text_length: dream_text.length
-          }
-        },
-        { status: 500 }
-      );
-    }
-
-    // Begin analysis in background - ensure ID exists
-    if (!dreamData || !dreamData.id) {
-      console.error("Dream saved but no ID returned");
-      return NextResponse.json(
-        { error: "Dream saved but no ID was returned" },
-        { status: 500 }
+    // Build the matrix of (depth × reading-level × aesthetic) combinations.
+    // 1 entry for normal users, N entries when an admin has test mode on.
+    const matrix = buildMatrix(profileCtx, reading_level as ReadingLevel | undefined);
+    const comparisonGroupId = matrix.length > 1 ? crypto.randomUUID() : null;
+    if (DEBUG) {
+      console.log(
+        `Matrix size=${matrix.length}${comparisonGroupId ? ` group=${comparisonGroupId}` : ''}`,
       );
     }
     
-    const dreamId = dreamData.id;
+    const baseTitle = buildTitleFromText(dream_text);
 
-    // ── Synchronous analysis ────────────────────────────────
-    // Run the OpenAI analysis inline so the response includes
-    // the full result.  This avoids the after() timeout problem
-    // on Vercel Hobby (10 s cap).  A single OpenAI call typically
-    // finishes in 3-8 s.
-    // ────────────────────────────────────────────────────────
-
-    // Admin client for DB writes (bypasses RLS) — singleton
+    // Admin client for all DB writes (bypasses RLS) — singleton.
     const adminSupabase = getAdminClient();
+    const encryptedText = encrypt(dream_text);
 
-    let analysisResult: any = null;
+    // Run each combo end-to-end in parallel: insert row → call OpenAI → update.
+    // Bounded by the slowest call (~15s), well within the 60s function timeout.
+    const entryResults = await Promise.all(
+      matrix.map((combo) =>
+        analyzeOneCombo({
+          adminSupabase,
+          userId: user.id,
+          encryptedText,
+          dreamText: dream_text,
+          baseTitle,
+          combo,
+          comparisonGroupId,
+        }),
+      ),
+    );
 
-    try {
-      // ── 0. Check analysis cache ──────────────────────────────
-      const cacheKey = getAnalysisCacheKey(dream_text, reading_level);
-      const cached = analysisCache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-        if (DEBUG) console.log('✅ Analysis cache hit');
-        analysisResult = cached.result;
-      } else {
-        // ── 1. Call OpenAI (single call) ──────────────────────
-        const analysisRequest = new NextRequest(
-          "http://internal-routing/api/openai-analysis",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              dream: dream_text,
-              topic: "dream interpretation",
-              readingLevel: reading_level || undefined,
-            }),
-          }
-        );
-
-        const analysisResponse = await openAiHandler(analysisRequest);
-
-        if (!analysisResponse.ok) {
-          throw new Error(`OpenAI returned ${analysisResponse.status}`);
-        }
-
-        analysisResult = JSON.parse(await analysisResponse.text());
-        if (DEBUG) console.log("✅ Analysis complete:", Object.keys(analysisResult).join(", "));
-
-        // ── Store in cache ──────────────────────────────────────
-        // Evict oldest if at capacity
-        if (analysisCache.size >= MAX_CACHE_SIZE) {
-          const oldestKey = analysisCache.keys().next().value;
-          if (oldestKey) analysisCache.delete(oldestKey);
-        }
-        analysisCache.set(cacheKey, { result: analysisResult, timestamp: Date.now() });
-      }
-
-      // ── 2. Build the DB update payload ────────────────────
-      const {
-        analysis,
-        topicSentence,
-        supportingPoints = [],
-        conclusionSentence,
-        personalizedSummary,
-        dreamTitle,
-        biblicalReferences = [],
-        tags = [],
-      } = analysisResult;
-
-      const formattedAnalysis =
-        analysis ||
-        `${topicSentence} ${supportingPoints.join(" ")} ${conclusionSentence}`;
-      const dreamSummary = analysis
-        ? analysis.split(".").slice(0, 2).join(".") + "."
-        : "";
-
-      const bibleRefs = biblicalReferences
-        .filter((r: any) => r?.citation)
-        .map((r: any) => r.citation.trim());
-
-      const updateData: any = {
-        dream_summary: dreamSummary,
-        analysis_summary: analysis,
-        topic_sentence: topicSentence,
-        supporting_points: supportingPoints,
-        conclusion_sentence: conclusionSentence,
-        formatted_analysis: formattedAnalysis,
-        personalized_summary: personalizedSummary || null,
-        tags: tags.length > 0 ? tags : ["spiritual insight", "dream analysis"],
-        bible_refs: bibleRefs,
-        raw_analysis_enc: encryptJson(analysisResult),
-      };
-
-      if (dreamTitle?.trim()) {
-        updateData.title = dreamTitle;
-      }
-
-      // ── 3-5. Run DB operations in parallel ────────────────
-      // Prepare bible citations data upfront for parallel execution
-      const citations = biblicalReferences.length > 0
-        ? biblicalReferences
-            .map((ref: any, index: number) => {
-              if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
-              return {
-                dream_entry_id: dreamId,
-                bible_book: ref.book.trim(),
-                chapter: ref.chapter,
-                verse: ref.verse,
-                end_verse: ref.endVerse || null,
-                full_text: ref.verseText || `Verse text not available`,
-                citation_order: index + 1,
-              };
-            })
-            .filter(Boolean)
-        : [];
-
-      // Execute all three DB operations in parallel
-      const results = await Promise.all([
-        // 1. Update dream_entries with analysis data
-        adminSupabase
-          .from("dream_entries")
-          .update(updateData)
-          .eq("id", dreamId)
-          .then(({ error: updateError }) => {
-            if (updateError) {
-              console.error("Error updating dream with analysis:", updateError);
-            }
-            return { success: !updateError, error: updateError };
-          }),
-
-        // 2. Insert audit-only row into chatgpt_interactions.
-        // Dream text + analysis JSON are NOT duplicated here; the encrypted
-        // copies already live in dream_entries.*_enc.
-        adminSupabase
-          .from("chatgpt_interactions")
-          .insert({
-            dream_entry_id: dreamId,
-            model: OPENAI_MODEL,
-            temperature: 0.7,
-          } as never)
-          .then(({ error: chatgptError }) => {
-            if (chatgptError) {
-              console.error("Error storing ChatGPT interaction:", chatgptError);
-            }
-            return { success: !chatgptError, error: chatgptError };
-          }),
-
-        // 3. Insert into bible_citations (if there are citations)
-        citations.length > 0
-          ? adminSupabase
-              .from("bible_citations")
-              .insert(citations)
-              .then(({ error: bibleError }) => {
-                if (bibleError) {
-                  console.error("Error saving Bible citations:", bibleError);
-                }
-                return { success: !bibleError, error: bibleError };
-              })
-          : Promise.resolve({ success: true, error: null }),
-      ]);
-
-      // Log results (all operations attempted, errors logged individually above)
-      const operationNames = [
-        "dream_entries update",
-        "chatgpt_interactions insert",
-        "bible_citations insert",
-      ];
-      results.forEach((result, index) => {
-        if (result.success) {
-          if (DEBUG) console.log(`✅ ${operationNames[index]} succeeded`);
-        } else {
-          console.warn(`⚠️ ${operationNames[index]} failed: ${result.error?.message}`);
-        }
-      });
-
-      // ── 6. Image gen is triggered client-side via /api/dream-image ─
-      // (after() was killed by Vercel Hobby 10s timeout, so the client
-      //  fires a separate request to /api/dream-image instead)
-    } catch (analysisError) {
-      console.error("Analysis failed:", analysisError);
-      // Mark the dream so the UI knows analysis failed
-      await adminSupabase
-        .from("dream_entries")
-        .update({
-          dream_summary: "Analysis could not be completed at this time.",
-        })
-        .eq("id", dreamId);
+    // Filter out any combo that failed at the insert step (we still continue
+    // with others). If the entire matrix failed, return 500.
+    const successful = entryResults.filter((r) => r.id);
+    if (successful.length === 0) {
+      return NextResponse.json(
+        { error: "Failed to save any dream entries" },
+        { status: 500 },
+      );
     }
 
-    // Return dream ID + analysis result so the client can render immediately
+    const primary = successful[0];
     return NextResponse.json({
       success: true,
-      message: analysisResult
-        ? "Dream recorded and analyzed"
-        : "Dream recorded but analysis failed",
-      id: dreamId,
-      analysis: analysisResult,
+      message:
+        successful.length === matrix.length
+          ? "Dream recorded and analyzed"
+          : `Dream partially recorded (${successful.length}/${matrix.length} variants)`,
+      // Legacy fields point at the first successful entry for client compatibility
+      id: primary.id,
+      analysis: primary.analysis,
+      // Matrix metadata for clients that want to render comparison groups
+      comparisonGroupId,
+      entries: successful.map((r) => ({
+        id: r.id,
+        analysis: r.analysis,
+        analysis_depth: r.combo.depth,
+        reading_level_used: r.combo.readingLevel,
+        image_aesthetic_used: r.combo.aesthetic,
+      })),
     });
-    
+
   } catch (error) {
     console.error("Error processing dream submission:", error);
     return NextResponse.json(
