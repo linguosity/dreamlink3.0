@@ -4,8 +4,12 @@ import { getAdminClient } from "@/utils/supabase/admin";
 
 export const runtime = "nodejs";
 
+// Source must be a known value so the source column stays clean for
+// downstream segmentation (e.g. emailing only coming-soon signups).
+const SOURCE_VALUES = ["landing_footer", "coming_soon"] as const;
 const BodySchema = z.object({
   email: z.string().trim().toLowerCase().email(),
+  source: z.enum(SOURCE_VALUES).optional().default("landing_footer"),
 });
 
 export async function POST(request: Request) {
@@ -24,13 +28,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const { email } = parsed.data;
+  const { email, source } = parsed.data;
   const admin = getAdminClient();
 
   // Cast until Supabase types are generated; the admin client is untyped.
   const { error } = await admin
     .from("newsletter_signups")
-    .insert({ email, source: "landing_footer" } as never);
+    .insert({ email, source } as never);
 
   // 23505 = unique_violation → treat as success so we don't leak membership.
   if (error && error.code !== "23505") {

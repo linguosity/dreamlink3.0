@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { encodedRedirect } from "@/utils/utils";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { signUpSchema, signInSchema, forgotPasswordSchema, resetPasswordSchema } from "@/schema/auth";
+import { getComingSoonEnabled, isAllowedAdminEmail } from "@/lib/siteSettings";
 
 // --- Sign Up ---
 export const signUpAction = async (formData: FormData) => {
@@ -23,6 +24,19 @@ export const signUpAction = async (formData: FormData) => {
     }
 
     const { email, password } = parsed.data;
+
+    // Coming-soon gate: block public sign-ups during pre-launch unless the
+    // email is on the admin allowlist (the dev's brother, etc.). The flag
+    // flips on/off via the admin UI; allowlist comes from
+    // ADMIN_EMAIL_ALLOWLIST env var.
+    if (await getComingSoonEnabled()) {
+      if (!isAllowedAdminEmail(email)) {
+        return {
+          error:
+            "DreamRiver isn't open to new accounts yet. Join the waitlist on dreamriver.io and we'll let you know when we launch.",
+        };
+      }
+    }
 
     const supabase = await createClient();
 
@@ -49,12 +63,18 @@ export const signUpAction = async (formData: FormData) => {
       return { error: error.message };
     }
 
-    // Create a profile row for the new user so downstream queries don't fail
+    // Create a profile row for the new user so downstream queries don't fail.
+    // Allowlisted emails (e.g. the dev's brother) are auto-marked as admin so
+    // they bypass the coming-soon gate without manual SQL.
     if (signUpData?.user) {
+      const isAllowlistedAdmin = isAllowedAdminEmail(email);
       const { error: profileError } = await supabase
         .from("profile")
         .upsert(
-          { user_id: signUpData.user.id },
+          {
+            user_id: signUpData.user.id,
+            ...(isAllowlistedAdmin ? { is_admin: true } : {}),
+          },
           { onConflict: "user_id" }
         );
       if (profileError) {
@@ -105,6 +125,30 @@ export const signInAction = async (formData: FormData) => {
       redirect(
         "/sign-in?error=Authentication succeeded but no session was created. Please try again."
       );
+    }
+
+    // Coming-soon gate: even if Supabase auth succeeded, only admins should
+    // hold a session during pre-launch. We check (allowlist OR is_admin)
+    // and tear down the session if neither matches.
+    if (await getComingSoonEnabled()) {
+      const userEmail = data.user?.email ?? null;
+      let bypass = isAllowedAdminEmail(userEmail);
+      if (!bypass && data.user) {
+        const { data: profile } = await supabase
+          .from("profile")
+          .select("is_admin")
+          .eq("user_id", data.user.id)
+          .single();
+        bypass = Boolean((profile as { is_admin?: boolean } | null)?.is_admin);
+      }
+      if (!bypass) {
+        await supabase.auth.signOut();
+        redirect(
+          `/sign-in?error=${encodeURIComponent(
+            "DreamRiver isn't open yet — only invited admins can sign in during pre-launch.",
+          )}`,
+        );
+      }
     }
 
     // Small delay for cookie processing
