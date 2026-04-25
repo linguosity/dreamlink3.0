@@ -27,6 +27,7 @@ import { OPENAI_MODEL } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 import { runDreamAnalysis } from "@/lib/dreamAnalysis";
+import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
 import {
   AnalysisDepth,
   ReadingLevel,
@@ -222,9 +223,41 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
       ? analysis.split(".").slice(0, 2).join(".") + "."
       : "";
 
-    const bibleRefs = biblicalReferences
-      .filter((r: any) => r?.citation)
-      .map((r: any) => r.citation.trim());
+    // Hydrate model-emitted citations against canonical KJV. The model returns
+    // citation strings only; book/chapter/verse/text come from lib/bibleLookup.
+    // Misses are logged but do not block persistence — we keep the original
+    // citation in bible_refs so the prose still references it.
+    interface HydratedRef {
+      index: number;
+      original: { citation?: string } | null;
+      lookup: VerseLookupResult;
+    }
+    const hydratedRefs: HydratedRef[] = biblicalReferences.map(
+      (ref: { citation?: string } | null, index: number) => ({
+        index,
+        original: ref,
+        lookup: lookupVerse(ref?.citation ?? ""),
+      }),
+    );
+
+    const lookupMisses = hydratedRefs.filter(
+      (h: HydratedRef) => h.lookup.status === "not_found",
+    );
+    if (lookupMisses.length > 0) {
+      console.warn(
+        `Citation lookup miss (depth=${combo.depth}, dream=${dreamId}, n=${lookupMisses.length}/${hydratedRefs.length}): ${lookupMisses
+          .map((h: HydratedRef) => `"${(h.original?.citation ?? "").trim()}"`)
+          .join(", ")}`,
+      );
+    }
+
+    const bibleRefs = hydratedRefs
+      .map(({ original, lookup }: HydratedRef) =>
+        lookup.status === "not_found"
+          ? (original?.citation ?? "").trim()
+          : lookup.normalizedRef,
+      )
+      .filter(Boolean);
 
     const updateData: any = {
       dream_summary: dreamSummary,
@@ -240,22 +273,22 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     };
     if (dreamTitle?.trim()) updateData.title = dreamTitle;
 
-    const citations = biblicalReferences.length > 0
-      ? biblicalReferences
-          .map((ref: any, index: number) => {
-            if (!ref?.citation || !ref?.book || !ref?.chapter || !ref?.verse) return null;
-            return {
-              dream_entry_id: dreamId,
-              bible_book: ref.book.trim(),
-              chapter: ref.chapter,
-              verse: ref.verse,
-              end_verse: ref.endVerse || null,
-              full_text: ref.verseText || `Verse text not available`,
-              citation_order: index + 1,
-            };
-          })
-          .filter(Boolean)
-      : [];
+    // Only persist citation rows we could resolve against KJV. Hallucinated
+    // citations (status === "not_found") are intentionally skipped here so
+    // we never store known-bad verse text — they remain in bible_refs above
+    // so the prose context survives, but the lookup route will fall through
+    // to its placeholder for them.
+    const citations = hydratedRefs
+      .filter(({ lookup }: HydratedRef) => lookup.status !== "not_found")
+      .map(({ index, lookup }: HydratedRef) => ({
+        dream_entry_id: dreamId,
+        bible_book: lookup.book,
+        chapter: lookup.chapter,
+        verse: lookup.verse,
+        end_verse: lookup.endVerse,
+        full_text: lookup.text,
+        citation_order: index + 1,
+      }));
 
     await Promise.all([
       adminSupabase
@@ -278,7 +311,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
       citations.length > 0
         ? adminSupabase
             .from("bible_citations")
-            .insert(citations)
+            .insert(citations as never)
             .then(({ error }) => {
               if (error) console.error("Error saving Bible citations:", error);
             })

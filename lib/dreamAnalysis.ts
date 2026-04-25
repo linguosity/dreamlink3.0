@@ -13,7 +13,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import {
   getOpenAIClient,
   OPENAI_MODEL,
-  DreamAnalysisSchema,
+  getDreamAnalysisSchemaForDepth,
   type DreamAnalysis,
   type BiblicalReference,
 } from "@/lib/openai";
@@ -31,6 +31,11 @@ interface PromptData {
   reading_level_celestial_insight: string;
   reading_level_prophetic_wisdom: string;
   reading_level_divine_revelation: string;
+  // Tier-specific instructions (added in citation-hydration refactor).
+  // Optional on the type because legacy rows pre-date the column.
+  depth_shallow: string | null;
+  depth_deep: string | null;
+  depth_profound: string | null;
 }
 
 interface CachedPrompt {
@@ -55,7 +60,7 @@ async function getActivePrompt(): Promise<PromptData | null> {
     const { data, error } = await supabase
       .from("dream_prompts")
       .select(
-        "system_message, main_instructions, format_instructions, forbidden_phrases, reading_level_radiant_clarity, reading_level_celestial_insight, reading_level_prophetic_wisdom, reading_level_divine_revelation",
+        "system_message, main_instructions, format_instructions, forbidden_phrases, reading_level_radiant_clarity, reading_level_celestial_insight, reading_level_prophetic_wisdom, reading_level_divine_revelation, depth_shallow, depth_deep, depth_profound",
       )
       .eq("is_active", true)
       .single();
@@ -135,34 +140,56 @@ function getReadingLevelInstructions(
 
 // ── Analysis depth helpers ─────────────────────────────────────────
 
-function getDepthInstructions(depth: string): string {
+function getFallbackDepthInstructions(depth: string): string {
   switch (depth) {
     case AnalysisDepth.DEEP:
       return `
 DEPTH TIER: deep
-- Provide 4 to 6 supporting points (instead of 1-3) — each grounded in a distinct biblical reference.
-- After the supporting points, include a "Dream Symbols" section that unpacks 2-4 of the most resonant images in the dream (e.g., water, bridge, animal). For each symbol, give a one-sentence biblical/typological reading.
-- Add a "How this might apply to your life right now" section with 2-3 concrete, gentle suggestions for the dreamer to consider.
-- Total length: roughly 400-600 words across all sections.`;
+- supportingPoints must contain exactly 3 items.
+- biblicalReferences must contain exactly 3 items, one per supportingPoint, in the same order.
+- tags must contain exactly 3 items.
+- Provide a fuller but still focused interpretation. Aim for ~400-600 words across the analysis prose.
+- After the supporting points (within the analysis prose), you may include a "Dream Symbols" section unpacking 2-4 of the most resonant images, and a "How this might apply to your life right now" section with 2-3 gentle suggestions.`;
     case AnalysisDepth.PROFOUND:
       return `
 DEPTH TIER: profound
-- Provide 5 to 7 supporting points — each ~30-50 words and grounded in a distinct biblical reference.
-- Include a "Dream Symbols" section unpacking 3-5 resonant images. Each symbol is one sentence (~25 words) tied to scripture.
-- Include a "Three Lenses on This Dream" section reading the dream through three frameworks; each lens is exactly 2 sentences (~40 words):
-    * Literal lens — concrete situation this could rehearse, with a biblical precedent.
-    * Allegorical lens — what the symbols represent in spiritual terms.
-    * Prophetic lens — divine timing or invitation this might mark.
-- Include 4-6 cross-reference verses for further study — book + chapter + verse only, NO exposition or commentary.
-- Include a "For your prayer or journal" section with exactly 3 reflection questions, each one sentence (~20 words).
-- Total budget: ~1000 words across all sections. Be substantive but disciplined — no filler, no restating the dream back to the dreamer.`;
+- supportingPoints must contain exactly 4 items, each ~30-50 words.
+- biblicalReferences must contain exactly 4 items, one per supportingPoint, in the same order.
+- tags must contain exactly 5 items.
+- Aim for ~800-1100 words across the analysis prose. Within the analysis you may include:
+    * A "Dream Symbols" section unpacking 3-5 resonant images — one sentence each, tied to scripture.
+    * A "Three Lenses on This Dream" section reading the dream through Literal, Allegorical, and Prophetic lenses (~2 sentences each).
+    * A "For your prayer or journal" section with exactly 3 reflection questions.
+- Be substantive but disciplined — no filler, no restating the dream back to the dreamer.`;
     case AnalysisDepth.SHALLOW:
     default:
       return `
 DEPTH TIER: shallow
-- Keep the response concise: topic sentence + 1 to 3 supporting points + conclusion sentence.
-- Total length: roughly 150-250 words.`;
+- supportingPoints must contain exactly 2 items.
+- biblicalReferences must contain exactly 2 items, one per supportingPoint, in the same order.
+- tags must contain exactly 3 items.
+- Keep the analysis prose concise: ~150-250 words covering topic, supporting points, and conclusion.`;
   }
+}
+
+function getDepthInstructions(
+  depth: string,
+  dbPrompt: PromptData | null,
+): string {
+  if (dbPrompt) {
+    switch (depth) {
+      case AnalysisDepth.SHALLOW:
+        if (dbPrompt.depth_shallow) return dbPrompt.depth_shallow;
+        break;
+      case AnalysisDepth.DEEP:
+        if (dbPrompt.depth_deep) return dbPrompt.depth_deep;
+        break;
+      case AnalysisDepth.PROFOUND:
+        if (dbPrompt.depth_profound) return dbPrompt.depth_profound;
+        break;
+    }
+  }
+  return getFallbackDepthInstructions(depth);
 }
 
 function getMaxOutputTokensForDepth(depth: string): number {
@@ -179,50 +206,30 @@ function getMaxOutputTokensForDepth(depth: string): number {
 
 // ── Fallback response ──────────────────────────────────────────────
 
+// Citation-only fallback. Verse text is hydrated downstream via lib/bibleLookup
+// in the dream-entries route, so this object only needs to satisfy the post-
+// refactor schema: { citation: string }. Server-side hydration fills in the
+// canonical book/chapter/verse/text.
 const FALLBACK_ANALYSIS: DreamAnalysis = {
   topicSentence: "Your dream contains spiritual symbolism.",
   supportingPoints: [
-    "The imagery suggests a journey of faith (Psalm 23:4).",
+    "The imagery suggests a journey of faith (Psalms 23:4).",
     "The elements in your dream reflect divine guidance (Proverbs 3:5-6).",
     "There are signs of spiritual growth and renewal (2 Corinthians 5:17).",
   ],
   conclusionSentence:
     "Consider how these insights might apply to your current life circumstances.",
   analysis:
-    "Your dream contains spiritual symbolism. The imagery suggests a journey of faith (Psalm 23:4). The elements in your dream reflect divine guidance (Proverbs 3:5-6). There are signs of spiritual growth and renewal (2 Corinthians 5:17). Consider how these insights might apply to your current life circumstances.",
+    "Your dream contains spiritual symbolism. The imagery suggests a journey of faith (Psalms 23:4). The elements in your dream reflect divine guidance (Proverbs 3:5-6). There are signs of spiritual growth and renewal (2 Corinthians 5:17). Consider how these insights might apply to your current life circumstances.",
   personalizedSummary:
     "Your dream reveals important spiritual insights for your journey.",
   dreamTitle: "Sacred Journey Vision",
   biblicalReferences: [
-    {
-      citation: "Psalm 23:4",
-      book: "Psalm",
-      chapter: 23,
-      verse: 4,
-      endVerse: null,
-      verseText:
-        "Even though I walk through the darkest valley, I will fear no evil, for you are with me; your rod and your staff, they comfort me.",
-    },
-    {
-      citation: "Proverbs 3:5-6",
-      book: "Proverbs",
-      chapter: 3,
-      verse: 5,
-      endVerse: 6,
-      verseText:
-        "Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.",
-    },
-    {
-      citation: "2 Corinthians 5:17",
-      book: "2 Corinthians",
-      chapter: 5,
-      verse: 17,
-      endVerse: null,
-      verseText:
-        "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!",
-    },
+    { citation: "Psalms 23:4" },
+    { citation: "Proverbs 3:5-6" },
+    { citation: "2 Corinthians 5:17" },
   ],
-  tags: ["spiritual journey", "divine guidance", "faith", "transformation", "trust"],
+  tags: ["spiritual journey", "divine guidance", "faith"],
 };
 
 // ── Public entry point ─────────────────────────────────────────────
@@ -266,7 +273,7 @@ export async function runDreamAnalysis(
     );
 
     const effectiveDepth = analysisDepth || AnalysisDepth.SHALLOW;
-    const depthInstructions = getDepthInstructions(effectiveDepth);
+    const depthInstructions = getDepthInstructions(effectiveDepth, dbPrompt);
 
     const forbiddenPhrases = dbPrompt?.forbidden_phrases?.length
       ? dbPrompt.forbidden_phrases.map((p) => `"${p}"`).join(", ")
@@ -287,6 +294,8 @@ ${dbPrompt.format_instructions}
 - Focus analysis on theme: ${topic || "general spiritual meaning"}
 - NEVER start with ${forbiddenPhrases}
 - Begin directly with the spiritual theme or insight without introductory phrases
+- For each supporting point, include exactly one Bible citation in the supportingPoints prose (e.g., "(Genesis 1:1)" or "(1 Peter 5:8)"). Use full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
+- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation only — do not include verse text. The application retrieves verse text from a canonical KJV source.
 
 ${readingLevelInstructions}
 ${depthInstructions}
@@ -299,29 +308,29 @@ Analyze the following dream, connecting it to biblical themes, symbols, and scri
 
 Format your analysis using this exact structure:
 1. Start with a topic sentence that captures the main spiritual theme without using phrases like "This dream is about" or "Your dream is about". Instead, directly state what the dream reveals, represents, or contains.
-2. Provide 1-3 supporting points based on what best explains the dream's meaning (not always exactly 3). Each point should include a direct Bible citation in parentheses.
+2. Follow the depth tier instructions below for the exact number of supporting points. Each point includes a direct Bible citation in parentheses.
 3. End with a concluding sentence that provides guidance based on the dream's meaning.
 4. Create a personalized summary that addresses the dreamer directly about their dream's significance using vivid language - just one compelling sentence.
 5. Generate a clever, memorable title (3-6 words) that captures the essence of the dream and its spiritual meaning, making it easy for the dreamer to identify this dream later (e.g., "Walking on Sacred Waters", "The Golden Key Vision", "Angels in the Storm").
-6. Generate 3-5 meaningful tags that capture the dream's key themes, symbols, emotions, or spiritual concepts (e.g., "transformation", "divine guidance", "fear", "water symbolism", "spiritual growth").
+6. Follow the depth tier instructions below for the exact number of tags.
 
 Additional instruction:
 - Focus analysis on theme: ${topic || "general spiritual meaning"}
 - Keep each supporting point brief but insightful
-- Include biblical references (one per supporting point)
 - NEVER start with ${forbiddenPhrases}
 - Begin directly with the spiritual theme or insight without introductory phrases
 - Ensure each supporting point has logical connection to the dream content
-- Use parenthetical citations (Book Chapter:Verse)
+- Use parenthetical citations (Book Chapter:Verse) with full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
 - Make the concluding sentence actionable but gentle
 - Personalize the one-sentence summary to speak directly to the dreamer about their spiritual journey
-- Additionally, provide the full Bible verse text for each citation as shown in the example: Genesis 1:1 -> "In the beginning God created the heaven and the earth."
+- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide only the citation string — do not include verse text. The application retrieves verse text from a canonical KJV source.
 
 ${readingLevelInstructions}
 ${depthInstructions}
 `;
 
     const client = getOpenAIClient();
+    const schemaForDepth = getDreamAnalysisSchemaForDepth(effectiveDepth);
 
     const response = await client.responses.parse({
       model: OPENAI_MODEL,
@@ -332,7 +341,7 @@ ${depthInstructions}
       temperature: 0.7,
       max_output_tokens: getMaxOutputTokensForDepth(effectiveDepth),
       text: {
-        format: zodTextFormat(DreamAnalysisSchema, "DreamAnalysis"),
+        format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
       },
     });
 
