@@ -47,7 +47,7 @@ const FEATURES = [
     icon: BookOpen,
     title: "Biblical References",
     desc: "Every interpretation grounded in scripture, not speculation.",
-    color: "text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40",
+    color: "text-gold bg-accent dark:text-gold dark:bg-accent",
     href: "/sign-up",
   },
   {
@@ -119,10 +119,10 @@ export default function LandingPage() {
                 <Link
                   href="/sign-up"
                   className="inline-flex items-center justify-center h-12 px-7 rounded-full
-                             bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:translate-y-px
-                             text-white text-base font-semibold
+                             bg-primary hover:bg-primary-hover active:translate-y-px
+                             text-primary-foreground text-base font-semibold
                              transition-[background-color,box-shadow,transform] duration-150
-                             hover:shadow-lg hover:shadow-blue-600/30
+                             hover:shadow-lg hover:shadow-primary/30
                              focus-ring"
                 >
                   Start Your Dream Journal &mdash; Free
@@ -150,7 +150,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Social Proof Bar ───────────────────────────────────────── */}
-      <section className="bg-blue-50 dark:bg-blue-950/40 border-y border-blue-100 dark:border-blue-900/60">
+      <section className="bg-accent/40 dark:bg-accent/20 border-y border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <div className="flex gap-0.5" aria-hidden="true">
@@ -162,7 +162,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <p className="text-blue-900 dark:text-blue-100 text-sm sm:text-base font-medium text-center">
+            <p className="text-foreground text-sm sm:text-base font-medium text-center">
               Join 2,000+ believers exploring God&apos;s messages in their
               dreams.
             </p>
@@ -197,24 +197,23 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 relative">
             <div className="hidden md:block absolute top-8 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)]">
               <div className="flex items-center justify-between px-4">
-                <ChevronRight className="w-5 h-5 text-blue-400" aria-hidden="true" />
-                <div className="flex-1 h-px bg-blue-200 dark:bg-blue-800 mx-1" />
-                <ChevronRight className="w-5 h-5 text-blue-400" aria-hidden="true" />
+                <ChevronRight className="w-5 h-5 text-primary/60" aria-hidden="true" />
+                <div className="flex-1 h-px bg-border mx-1" />
+                <ChevronRight className="w-5 h-5 text-primary/60" aria-hidden="true" />
               </div>
             </div>
 
             {STEPS.map(({ step, title, desc, Icon }) => (
               <div key={step} className="flex flex-col items-center text-center">
                 <div className="relative w-16 h-16 rounded-full flex items-center justify-center
-                                bg-gradient-to-br from-blue-100 to-indigo-100
-                                dark:from-blue-900/40 dark:to-indigo-900/40
-                                text-blue-700 dark:text-blue-200
-                                ring-1 ring-blue-200/60 dark:ring-blue-800/60 mb-4">
+                                bg-gradient-to-br from-accent to-accent/60
+                                text-gold
+                                ring-1 ring-accent mb-4">
                   <Icon className="w-7 h-7" aria-hidden="true" />
                   <span
                     aria-hidden="true"
                     className="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-full
-                               bg-blue-600 text-white text-[11px] font-bold
+                               bg-primary text-primary-foreground text-[11px] font-bold
                                flex items-center justify-center"
                   >
                     {step}
@@ -242,7 +241,7 @@ export default function LandingPage() {
           <div className="bg-gray-50 dark:bg-slate-900 rounded-2xl p-8 sm:p-10 lg:p-12">
             <h2 className="sr-only">Example interpretation</h2>
 
-            <div className="text-blue-600 dark:text-blue-400 text-6xl sm:text-7xl font-serif leading-none mb-4" aria-hidden="true">
+            <div className="text-gold text-6xl sm:text-7xl font-serif leading-none mb-4" aria-hidden="true">
               &ldquo;
             </div>
 
@@ -268,9 +267,9 @@ export default function LandingPage() {
                   key={verse}
                   href={`/sign-up?verse=${encodeURIComponent(verse)}`}
                   className="tap inline-flex items-center px-3 rounded-full
-                             bg-blue-100 dark:bg-blue-900/40
-                             text-blue-800 dark:text-blue-200 text-sm font-medium
-                             hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors
+                             bg-accent dark:bg-accent
+                             text-accent-foreground text-sm font-medium
+                             hover:bg-accent/70 transition-colors
                              focus-ring"
                 >
                   {verse}
@@ -357,10 +356,10 @@ export default function LandingPage() {
           <Link
             href="/sign-up"
             className="inline-flex items-center justify-center h-12 px-8 rounded-full
-                       bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-                       text-white text-base font-semibold
+                       bg-primary hover:bg-primary-hover
+                       text-primary-foreground text-base font-semibold
                        transition-[background-color,box-shadow,transform] duration-150
-                       hover:shadow-lg hover:shadow-blue-600/30
+                       hover:shadow-lg hover:shadow-primary/30
                        active:translate-y-px
                        focus-ring focus-visible:ring-offset-slate-900"
           >

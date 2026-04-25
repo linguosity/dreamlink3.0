@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Import Blanka font */
+/* Blanka — wordmark font only. Use via .font-blanka. */
 @font-face {
   font-family: 'Blanka';
   src: url('/fonts/Blanka.otf') format('opentype');
@@ -10,54 +10,81 @@
 }
 
 /*
- * Tailwind v4 theme — replaces tailwind.config.ts
- * All custom design tokens are defined here via @theme.
+ * Tailwind v4 theme — DreamRiver warm palette
+ *
+ * Color tokens are stored as CSS variables in :root (light) / .dark below
+ * and exposed to Tailwind via `@theme inline` so utilities like
+ * `bg-primary`, `bg-primary/50`, `text-gold`, `dark:bg-card` all work.
+ *
+ * Two layers of tokens:
+ *   1. Semantic (shadcn pattern): primary, secondary, accent, muted, etc.
+ *      Use these for most components — they swap correctly in dark mode.
+ *   2. Brand (DreamRiver-specific): cream, gold, amber, blue-deep, blue-soft.
+ *      Use sparingly for sacred / scripture / hero accents.
  */
-@theme {
+@theme inline {
   /* Container */
   --container-2xl: 1400px;
 
-  /* Custom colors (shadcn/ui pattern using CSS variables) */
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
+  /* Base surfaces */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-primary-hover: hsl(var(--primary-hover));
+  /* Cards / popovers */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  /* Semantic tokens */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
 
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
+  /* Brand-specific (DreamRiver palette) */
+  --color-cream: var(--cream);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-amber-warm: var(--amber);
+  --color-blue-deep: var(--blue-deep);
+  --color-blue-soft: var(--blue-soft);
 
-  --color-chart-1: hsl(var(--chart-1));
-  --color-chart-2: hsl(var(--chart-2));
-  --color-chart-3: hsl(var(--chart-3));
-  --color-chart-4: hsl(var(--chart-4));
-  --color-chart-5: hsl(var(--chart-5));
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Typography
+   * --font-sans  → DM Sans (body)
+   * --font-serif → DM Serif Display (headlines, hero text)
+   * --font-blanka → Blanka (wordmark only — apply via .font-blanka)
+   */
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-serif: var(--font-dm-serif), Georgia, serif;
 
   /* Border radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  /* Animations (replaces tailwindcss-animate plugin) */
+  /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-shimmer: shimmer 2s infinite;
@@ -81,65 +108,107 @@
 /* Dark mode variant for class-based toggling (next-themes) */
 @variant dark (&:is(.dark *));
 
-/*
- * CSS variable definitions for light/dark themes.
- * These feed into the @theme color tokens above via hsl(var(--xxx)).
- */
+/* ─────────────────────────────────────────────────────────────
+ * DreamRiver palette — light mode (oklch)
+ * Lightness chosen for WCAG AA on body text.
+ * ───────────────────────────────────────────────────────────── */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
-  --primary: 210 100% 59%;
-  --primary-hover: 212 69% 48%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
+  /* Surfaces — warm-tinted, parchment-feel */
+  --background: oklch(0.975 0.006 70);
+  --foreground: oklch(0.22 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 250);
+
+  /* Primary — deep warm blue (sacred, calm, trustworthy) */
+  --primary: oklch(0.45 0.12 245);
+  --primary-foreground: oklch(0.98 0.005 75);
+  --primary-hover: oklch(0.40 0.13 245);
+
+  /* Secondary — soft warm gray */
+  --secondary: oklch(0.93 0.01 75);
+  --secondary-foreground: oklch(0.22 0.02 250);
+
+  /* Accent — sacred gold tint (subtle, used for highlights / scripture chips) */
+  --accent: oklch(0.95 0.04 75);
+  --accent-foreground: oklch(0.50 0.14 75);
+
+  /* Muted — de-emphasized text + subtle backgrounds */
+  --muted: oklch(0.94 0.008 75);
+  --muted-foreground: oklch(0.55 0.02 250);
+
+  /* Destructive */
+  --destructive: oklch(0.62 0.20 25);
+  --destructive-foreground: oklch(0.98 0.005 75);
+
+  /* Border / input / ring */
+  --border: oklch(0.90 0.01 75);
+  --input: oklch(0.90 0.01 75);
+  --ring: oklch(0.45 0.12 245);
   --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+
+  /* Brand-specific */
+  --cream: oklch(0.955 0.015 75);
+  --gold: oklch(0.72 0.14 75);
+  --gold-light: oklch(0.82 0.10 78);
+  --amber: oklch(0.65 0.16 60);
+  --blue-deep: oklch(0.45 0.12 245);
+  --blue-soft: oklch(0.70 0.08 235);
+
+  /* Charts (warm-aligned) */
+  --chart-1: oklch(0.45 0.12 245);
+  --chart-2: oklch(0.72 0.14 75);
+  --chart-3: oklch(0.65 0.16 60);
+  --chart-4: oklch(0.70 0.08 235);
+  --chart-5: oklch(0.55 0.10 200);
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * DreamRiver palette — dark mode
+ * Warm-tinted dark instead of pure black. Lightness inverted but
+ * hue preserved so the brand identity carries over.
+ * ───────────────────────────────────────────────────────────── */
 .dark {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 210 100% 59%;
-  --primary-hover: 212 69% 48%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 0 0% 14.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 0 0% 83.1%;
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --background: oklch(0.18 0.012 250);
+  --foreground: oklch(0.96 0.008 75);
+  --card: oklch(0.22 0.015 250);
+  --card-foreground: oklch(0.96 0.008 75);
+  --popover: oklch(0.22 0.015 250);
+  --popover-foreground: oklch(0.96 0.008 75);
+
+  --primary: oklch(0.65 0.13 240);
+  --primary-foreground: oklch(0.18 0.012 250);
+  --primary-hover: oklch(0.70 0.14 240);
+
+  --secondary: oklch(0.28 0.015 250);
+  --secondary-foreground: oklch(0.96 0.008 75);
+
+  --accent: oklch(0.30 0.04 75);
+  --accent-foreground: oklch(0.85 0.13 75);
+
+  --muted: oklch(0.28 0.015 250);
+  --muted-foreground: oklch(0.70 0.015 75);
+
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.96 0.008 75);
+
+  --border: oklch(0.30 0.015 250);
+  --input: oklch(0.30 0.015 250);
+  --ring: oklch(0.65 0.13 240);
+
+  --cream: oklch(0.30 0.015 75);
+  --gold: oklch(0.78 0.13 75);
+  --gold-light: oklch(0.85 0.10 78);
+  --amber: oklch(0.72 0.15 60);
+  --blue-deep: oklch(0.65 0.13 240);
+  --blue-soft: oklch(0.75 0.07 235);
+
+  --chart-1: oklch(0.65 0.13 240);
+  --chart-2: oklch(0.78 0.13 75);
+  --chart-3: oklch(0.72 0.15 60);
+  --chart-4: oklch(0.75 0.07 235);
+  --chart-5: oklch(0.62 0.09 200);
 }
 
 /* Base styles */
@@ -158,6 +227,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
   }
   body[data-cookie-banner="visible"] {
     padding-bottom: 8.5rem;
@@ -167,11 +237,11 @@
       padding-bottom: 0;
     }
   }
-  /* Style links with white variants for footer */
+  /* Footer link styling (kept) */
   footer a:not(.no-brand-style) {
     @apply text-gray-100 hover:text-white transition-colors;
   }
-  /* Style buttons with hover state */
+  /* Buttons with hover state */
   .btn-primary, button[type="submit"] {
     @apply hover:bg-primary-hover transition-colors;
   }
@@ -182,9 +252,8 @@
   .focus-ring {
     @apply outline-none
            focus-visible:ring-2 focus-visible:ring-offset-2
-           focus-visible:ring-blue-600
-           focus-visible:ring-offset-white
-           dark:focus-visible:ring-offset-slate-950;
+           focus-visible:ring-primary
+           focus-visible:ring-offset-background;
   }
   .tap {
     min-height: 44px;

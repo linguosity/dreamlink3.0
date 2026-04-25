@@ -28,7 +28,7 @@ export default function AboutPage() {
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
             Your dreams are personal. All entries are private to your account
             and are never shared with other users. Read our{" "}
-            <Link href="/privacy" className="text-blue-600 dark:text-blue-400 underline">
+            <Link href="/privacy" className="text-primary underline">
               Privacy Policy
             </Link>{" "}
             for full details.

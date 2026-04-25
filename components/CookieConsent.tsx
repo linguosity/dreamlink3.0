@@ -54,7 +54,7 @@ export default function CookieConsent() {
         agree to our{" "}
         <Link
           href="/privacy"
-          className="underline text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus-ring rounded"
+          className="underline text-primary hover:text-primary-hover focus-ring rounded"
         >
           Privacy Policy
         </Link>
@@ -63,7 +63,7 @@ export default function CookieConsent() {
       <div className="flex items-center gap-3 mt-3">
         <button
           onClick={accept}
-          className="tap inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors focus-ring"
+          className="tap inline-flex items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-colors focus-ring"
         >
           Got it
         </button>

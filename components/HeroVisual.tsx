@@ -101,10 +101,10 @@ export default function HeroVisual() {
                     className={`mt-3 flex gap-2 transition-opacity duration-500
                                 ${showPills ? "opacity-100" : "opacity-0"}`}
                   >
-                    <span className="text-[9px] bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">
+                    <span className="text-[9px] bg-accent text-gold px-2 py-1 rounded-full font-medium">
                       Isaiah 43:2
                     </span>
-                    <span className="text-[9px] bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">
+                    <span className="text-[9px] bg-accent text-gold px-2 py-1 rounded-full font-medium">
                       Psalm 23:4
                     </span>
                   </div>
@@ -113,8 +113,8 @@ export default function HeroVisual() {
                     <button
                       type="button"
                       disabled={!showPills}
-                      className={`w-full h-9 rounded-full text-xs font-semibold text-white
-                                  bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                      className={`w-full h-9 rounded-full text-xs font-semibold text-primary-foreground
+                                  bg-primary hover:bg-primary-hover
                                   transition-[background-color,opacity] duration-200
                                   disabled:cursor-not-allowed
                                   ${showPills ? "opacity-100" : "opacity-60"}`}

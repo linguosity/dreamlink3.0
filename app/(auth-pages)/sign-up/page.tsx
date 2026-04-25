@@ -53,7 +53,7 @@ export default function Signup() {
             Start Your Free Trial
           </Badge>
           <h1 className="text-3xl font-bold mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-soft">
               Join DreamRiver
             </span>
           </h1>
@@ -64,7 +64,7 @@ export default function Signup() {
 
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm mb-6">
           <CardHeader className="text-center pb-4">
-            <Moon className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+            <Moon className="w-12 h-12 mx-auto mb-4 text-primary" />
             <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
             <CardDescription>
               7 days free &bull; No credit card required &bull; Cancel anytime
@@ -139,7 +139,7 @@ export default function Signup() {
         </Card>
 
         {/* Benefits reminder */}
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-none">
+        <Card className="bg-gradient-to-r from-accent/40 to-secondary border-none">
           <CardContent className="p-4">
             <h3 className="font-semibold mb-3 text-center">What you'll get:</h3>
             <div className="space-y-2 text-sm">

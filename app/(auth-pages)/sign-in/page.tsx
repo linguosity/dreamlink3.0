@@ -34,7 +34,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
             Welcome Back
           </Badge>
           <h1 className="text-3xl font-bold mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-soft">
               Sign in to DreamRiver
             </span>
           </h1>
@@ -45,7 +45,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
         
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
-            <Moon className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+            <Moon className="w-12 h-12 mx-auto mb-4 text-primary" />
             <CardTitle className="text-xl">Welcome Back</CardTitle>
             <CardDescription>
               Sign in to access your dream journal and interpretations

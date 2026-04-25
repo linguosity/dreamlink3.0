@@ -94,7 +94,7 @@ export default function ReportSectionCard({
         hover:shadow-md hover:scale-[1.02]
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
         ${isDragging ? 'opacity-50 scale-95 shadow-lg' : 'shadow-sm'}
-        ${isPending ? 'focus-visible:ring-amber-400' : 'focus-visible:ring-blue-400'}
+        ${isPending ? 'focus-visible:ring-amber-warm' : 'focus-visible:ring-primary'}
       `}
       style={{
         borderColor,

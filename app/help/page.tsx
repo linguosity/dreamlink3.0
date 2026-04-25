@@ -38,7 +38,7 @@ export default function HelpPage() {
             <h2 className="text-xl font-semibold">Need More Help?</h2>
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
               If you have questions or run into issues, reach out through our{" "}
-              <Link href="/contact" className="text-blue-600 dark:text-blue-400 underline">
+              <Link href="/contact" className="text-primary underline">
                 Contact page
               </Link>
               .

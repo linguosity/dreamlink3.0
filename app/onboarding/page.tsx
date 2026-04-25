@@ -170,7 +170,7 @@ export default function OnboardingPage() {
   // ── Render ────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-accent/30 via-background to-accent/30 px-4 py-8">
       <div className="w-full max-w-md">
         {/* Back button (steps 2-4) */}
         {step > 1 && step < 5 && (
@@ -191,9 +191,9 @@ export default function OnboardingPage() {
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i + 1 === step
-                  ? "w-8 bg-blue-600"
+                  ? "w-8 bg-primary"
                   : i + 1 < step
-                    ? "w-4 bg-blue-400"
+                    ? "w-4 bg-primary/60"
                     : "w-4 bg-gray-200 dark:bg-slate-700"
               }`}
             />
@@ -220,7 +220,7 @@ export default function OnboardingPage() {
             <Button
               onClick={() => setStep(2)}
               size="lg"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-6 text-base font-semibold"
+              className="w-full bg-primary hover:bg-primary-hover text-primary-foreground rounded-full py-6 text-base font-semibold"
             >
               Get Started.
             </Button>
@@ -245,7 +245,7 @@ export default function OnboardingPage() {
                   onClick={() => setReadingLevel(value)}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     readingLevel === value
-                      ? "border-blue-600 bg-blue-50 dark:bg-blue-900/30"
+                      ? "border-primary bg-accent/40"
                       : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500"
                   }`}
                 >
@@ -262,14 +262,14 @@ export default function OnboardingPage() {
             <Button
               onClick={() => setStep(3)}
               size="lg"
-              className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full py-6 text-base font-semibold"
+              className="w-full mt-8 bg-primary hover:bg-primary-hover text-primary-foreground rounded-full py-6 text-base font-semibold"
             >
               Continue
             </Button>
 
             <button
               onClick={() => setStep(3)}
-              className="block w-full text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 mt-4"
+              className="block w-full text-center text-sm text-primary hover:text-primary-hover mt-4"
             >
               Skip for now
             </button>
@@ -290,7 +290,7 @@ export default function OnboardingPage() {
                   onClick={() => setBibleVersion(value)}
                   className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                     bibleVersion === value
-                      ? "border-blue-600 bg-blue-50 dark:bg-blue-900/30"
+                      ? "border-primary bg-accent/40"
                       : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500"
                   }`}
                 >
@@ -298,12 +298,12 @@ export default function OnboardingPage() {
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       bibleVersion === value
-                        ? "border-blue-600"
+                        ? "border-primary"
                         : "border-gray-300 dark:border-slate-500"
                     }`}
                   >
                     {bibleVersion === value && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                     )}
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
               }}
               disabled={saving}
               size="lg"
-              className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full py-6 text-base font-semibold"
+              className="w-full mt-8 bg-primary hover:bg-primary-hover text-primary-foreground rounded-full py-6 text-base font-semibold"
             >
               {saving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -334,7 +334,7 @@ export default function OnboardingPage() {
                 await savePreferences();
                 setStep(4);
               }}
-              className="block w-full text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 mt-4"
+              className="block w-full text-center text-sm text-primary hover:text-primary-hover mt-4"
             >
               Skip for now
             </button>
@@ -358,7 +358,7 @@ export default function OnboardingPage() {
               onChange={(e) => setDreamText(e.target.value)}
               placeholder="I was walking through a garden with tall trees and blooming flowers..."
               rows={6}
-              className="w-full resize-none rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 p-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full resize-none rounded-xl border border-border bg-secondary p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               maxLength={8000}
             />
 
@@ -366,7 +366,7 @@ export default function OnboardingPage() {
               onClick={submitDream}
               disabled={analyzing || dreamText.trim().length < 10}
               size="lg"
-              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full py-6 text-base font-semibold disabled:opacity-50"
+              className="w-full mt-6 bg-primary hover:bg-primary-hover text-primary-foreground rounded-full py-6 text-base font-semibold disabled:opacity-50"
             >
               {analyzing ? (
                 <span className="flex items-center gap-2">
@@ -380,7 +380,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={finish}
-              className="block w-full text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 mt-4"
+              className="block w-full text-center text-sm text-primary hover:text-primary-hover mt-4"
             >
               Skip for now
             </button>
@@ -446,7 +446,7 @@ export default function OnboardingPage() {
             <Button
               onClick={finish}
               size="lg"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-6 text-base font-semibold"
+              className="w-full bg-primary hover:bg-primary-hover text-primary-foreground rounded-full py-6 text-base font-semibold"
             >
               Go to My Journal
             </Button>

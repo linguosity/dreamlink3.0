@@ -17,7 +17,7 @@ export default function ContactPage() {
             <p className="text-gray-600 dark:text-gray-300">
               <a
                 href="mailto:brandon@linguosity.ai"
-                className="text-blue-600 dark:text-blue-400 underline"
+                className="text-primary underline"
               >
                 brandon@linguosity.ai
               </a>

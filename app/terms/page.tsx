@@ -149,7 +149,7 @@ export default function TermsPage() {
               If you have questions about these Terms, please contact us at{" "}
               <a
                 href="mailto:brandon@linguosity.ai"
-                className="text-blue-600 dark:text-blue-400 underline"
+                className="text-primary underline"
               >
                 brandon@linguosity.ai
               </a>
