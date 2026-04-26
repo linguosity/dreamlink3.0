@@ -29,29 +29,42 @@ const defaultUrl = process.env.VERCEL_URL
 export default async function MainPage() {
   const supabase = await createClient();
 
-  // Check if user is logged in (more secure method)
+  // Check if user is logged in (validates against Supabase auth backend)
   const { data, error: userError } = await supabase.auth.getUser();
   const user = data?.user;
 
-  // Also check session for more information
-  const { data: sessionData } = await supabase.auth.getSession();
-  
   if (userError) {
     console.error("Authentication error:", userError.message);
-    // Don't redirect if it's a JWT error - the middleware should handle it
-    // Only redirect for other types of errors
-    if (!userError.message.includes('JWT') && !userError.message.includes('token')) {
-      return redirect("/landing");
+
+    const msg = userError.message.toLowerCase();
+
+    // Genuine "not signed in" — Supabase tells us with this exact phrase.
+    // Falls through to the !user check below, which redirects to /landing.
+    const isMissingSession = msg.includes("auth session missing");
+
+    // Session exists but is stale. Middleware refreshes on next request, so
+    // bouncing to /sign-in lets the user re-auth cleanly without a loop.
+    const isStaleSession =
+      msg.includes("jwt") ||
+      msg.includes("token") ||
+      msg.includes("expired") ||
+      msg.includes("invalid claim");
+
+    // Anything else is a backend / network / config problem (e.g. "No API key
+    // found", DNS failure, Supabase outage). Silently redirecting to /landing
+    // creates a loop with no visible cause — render a clear error state
+    // instead so the failure mode is obvious.
+    if (!isMissingSession && !isStaleSession) {
+      return <AuthBackendError message={userError.message} />;
     }
+
+    if (isStaleSession) {
+      return redirect("/sign-in?error=" + encodeURIComponent("Session expired. Please sign in again."));
+    }
+    // isMissingSession falls through to the !user check below.
   }
-  
+
   if (!user) {
-    console.error("No user in session - redirecting to landing page");
-    
-    // Add a small delay to ensure cookies are properly processed
-    // This can help with issues related to cookie propagation
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
     return redirect("/landing");
   }
 
@@ -139,7 +152,23 @@ export default async function MainPage() {
 
         {/* Animated Dream Grid */}
         <div className="mt-6 sm:mt-8">
-          <h2 className="text-lg font-semibold mb-4">Your Dream Gallery</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-lg font-semibold text-foreground">
+              Your Dream Gallery
+            </h2>
+            {dreams.length > 0 && (
+              <span
+                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                style={{
+                  background: "oklch(0.92 0.04 75 / 0.5)",
+                  color: "oklch(0.65 0.16 60)",
+                }}
+                aria-label={`${dreams.length} ${dreams.length === 1 ? "dream" : "dreams"} in gallery`}
+              >
+                {dreams.length} {dreams.length === 1 ? "dream" : "dreams"}
+              </span>
+            )}
+          </div>
           <AnimatedDreamGrid dreams={dreams || []} />
         </div>
         
@@ -213,6 +242,64 @@ export default async function MainPage() {
             </p>
           </div>
         </footer>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Visible error state for auth-backend failures (e.g. "No API key found",
+ * Supabase unreachable). Renders instead of silently redirecting to /landing
+ * so the user sees the actual failure mode and can act on it (refresh, sign
+ * in again, contact support) rather than getting stuck in a redirect loop.
+ *
+ * In dev this typically means env vars are missing or stale — the message
+ * is shown verbatim so the developer can debug.
+ */
+function AuthBackendError({ message }: { message: string }) {
+  const isDev = process.env.NODE_ENV !== "production";
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="max-w-md w-full text-center space-y-6">
+        <div className="text-5xl" aria-hidden="true">⚠️</div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold text-foreground">
+            We couldn&apos;t verify your session
+          </h1>
+          <p className="text-muted-foreground leading-relaxed">
+            Something went wrong while checking your sign-in status. This is
+            usually temporary.
+          </p>
+        </div>
+
+        {isDev && (
+          <div className="text-left text-xs font-mono bg-muted text-muted-foreground p-3 rounded-md border border-border break-words">
+            {message}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center h-11 px-5 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
+          >
+            Try again
+          </Link>
+          <Link
+            href="/sign-in"
+            className="inline-flex items-center justify-center h-11 px-5 rounded-full border border-border text-foreground hover:bg-muted font-medium focus-ring"
+          >
+            Sign in again
+          </Link>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          If this keeps happening, contact{" "}
+          <a href="mailto:brandon@linguosity.ai" className="underline">
+            brandon@linguosity.ai
+          </a>
+          .
+        </p>
       </div>
     </div>
   );

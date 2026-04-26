@@ -46,7 +46,7 @@ export default async function AuthLayout({
           .filter(([_, value]) => value !== undefined)
           .map(([key, value]) => [key, value!.toString()])
       ).toString() : "";
-      
+
       return redirect(params ? `/?${params}` : "/");
     }
   } catch (err) {
