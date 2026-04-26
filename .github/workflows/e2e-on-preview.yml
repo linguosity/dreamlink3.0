@@ -3,8 +3,12 @@
 # protection separately).
 #
 # Required GitHub repo secrets:
-#   TEST_USER_EMAIL    — Supabase test user email
-#   TEST_USER_PASSWORD — Supabase test user password
+#   TEST_USER_EMAIL            — Supabase test user email
+#   TEST_USER_PASSWORD         — Supabase test user password
+#   VERCEL_PROTECTION_BYPASS   — Vercel "Protection Bypass for Automation"
+#                                token (Vercel project Settings → Deployment
+#                                Protection). Lets CI bypass the auth wall
+#                                on preview URLs.
 #
 # Scope notes:
 #   - Chromium only. Firefox/WebKit/mobile are valuable but triple runtime;
@@ -34,13 +38,79 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
 
+      # We can't use patrickedqvist/wait-for-vercel-preview here: it polls
+      # the preview URL and fails fast on the 401 that Vercel Deployment
+      # Protection serves. Instead, watch the GitHub deployments API for a
+      # 'success' Preview deployment on this PR's head SHA, then verify
+      # reachability with the bypass header.
       - name: Wait for Vercel preview deployment
         id: wait
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
+        uses: actions/github-script@v7
+        env:
+          VERCEL_PROTECTION_BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 600
-          check_interval: 10
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.payload.pull_request.head.sha;
+
+            const timeoutMs = 10 * 60 * 1000;
+            const intervalMs = 10 * 1000;
+            const start = Date.now();
+            let url = null;
+
+            core.info(`Looking for Preview deployment for ${sha}`);
+
+            while (Date.now() - start < timeoutMs) {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner, repo, sha, per_page: 50,
+              });
+              for (const d of deployments) {
+                if (d.environment !== 'Preview') continue;
+                const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                  owner, repo, deployment_id: d.id, per_page: 5,
+                });
+                const ready = statuses.find(
+                  (s) => s.state === 'success' && s.environment_url,
+                );
+                if (ready) {
+                  url = ready.environment_url;
+                  break;
+                }
+                const failed = statuses.find((s) =>
+                  ['failure', 'error'].includes(s.state),
+                );
+                if (failed) {
+                  core.setFailed(`Preview deployment failed: ${failed.description ?? failed.state}`);
+                  return;
+                }
+              }
+              if (url) break;
+              await new Promise((r) => setTimeout(r, intervalMs));
+            }
+
+            if (!url) {
+              core.setFailed(`Timed out waiting for Preview deployment for ${sha}`);
+              return;
+            }
+
+            // Verify the preview is reachable through the bypass header.
+            // Without this we can't tell if the bypass secret is wrong vs.
+            // the deployment genuinely being broken.
+            const res = await fetch(url, {
+              headers: { 'x-vercel-protection-bypass': process.env.VERCEL_PROTECTION_BYPASS },
+              redirect: 'manual',
+            });
+            // 2xx or 3xx are fine; 401/403 means the bypass header didn't work.
+            if (res.status === 401 || res.status === 403) {
+              core.setFailed(
+                `Preview returned ${res.status} with bypass header — VERCEL_PROTECTION_BYPASS may be wrong or expired.`,
+              );
+              return;
+            }
+
+            core.info(`Preview ready: ${url} (${res.status})`);
+            core.setOutput('url', url);
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -59,6 +129,10 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ steps.wait.outputs.url }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          # Forwarded so playwright.config.ts can attach the bypass header
+          # to every request — otherwise navigating to the preview returns
+          # 401 from Vercel Deployment Protection.
+          VERCEL_PROTECTION_BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
           CI: "1"
         run: npx playwright test --project=setup --project=chromium
 
