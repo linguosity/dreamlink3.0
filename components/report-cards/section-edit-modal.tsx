@@ -448,7 +448,7 @@ function SubsectionBlock({
             type="text"
             value={heading}
             onChange={(e) => onHeadingChange(e.target.value)}
-            className="text-sm font-semibold italic bg-transparent border-b border-transparent focus:border-blue-400 outline-none flex-1 px-1"
+            className="text-sm font-semibold italic bg-transparent border-b border-transparent focus:border-primary outline-none flex-1 px-1"
             style={{ color: REPORT_COLORS.navy }}
           />
         )}

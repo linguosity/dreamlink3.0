@@ -10,7 +10,7 @@ export default function NotFound() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-soft bg-clip-text text-transparent">
             404
           </h1>
           <h2 className="text-xl font-semibold text-foreground">

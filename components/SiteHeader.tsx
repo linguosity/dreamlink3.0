@@ -45,7 +45,7 @@ export default function SiteHeader() {
   const navLinkClass = (id: string) =>
     `relative text-sm font-medium transition-colors focus-ring rounded px-1 py-0.5
      after:content-[''] after:absolute after:left-1 after:right-1 after:-bottom-1
-     after:h-0.5 after:bg-blue-600 after:origin-left after:transition-transform
+     after:h-0.5 after:bg-primary after:origin-left after:transition-transform
      ${
        active === id
          ? "text-gray-900 dark:text-white after:scale-x-100"
@@ -83,7 +83,7 @@ export default function SiteHeader() {
           </Link>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center h-10 px-6 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors focus-ring"
+            className="inline-flex items-center justify-center h-10 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium transition-colors focus-ring"
           >
             Sign Up
           </Link>
@@ -155,7 +155,7 @@ export default function SiteHeader() {
           <Link
             href="/sign-up"
             onClick={() => setOpen(false)}
-            className="mt-2 inline-flex items-center justify-center w-full h-11 px-6 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors focus-ring"
+            className="mt-2 inline-flex items-center justify-center w-full h-11 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium transition-colors focus-ring"
           >
             Sign Up
           </Link>

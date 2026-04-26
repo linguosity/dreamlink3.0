@@ -16,7 +16,7 @@ import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { Geist } from "next/font/google";
+import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -54,10 +54,21 @@ export const metadata: Metadata = {
   },
 };
 
-// Load the Geist font with Latin subset
-const geistSans = Geist({
-  display: "swap",
+// DM Sans for body, DM Serif Display for headlines.
+// Both expose CSS variables consumed by --font-sans / --font-serif in globals.css.
+// Blanka stays wired via @font-face for the wordmark only (font-blanka utility).
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700"],
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-serif",
+  weight: ["400"],
 });
 
 export default async function RootLayout({
@@ -103,7 +114,11 @@ export default async function RootLayout({
   const isOnboardingPage = pathname.includes("/onboarding");
 
   return (
-    <html lang="en" className={geistSans.className} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${dmSerifDisplay.variable}`}
+      suppressHydrationWarning
+    >
       <body className="text-foreground">
       <LazyWaterBackground />
         <Providers>

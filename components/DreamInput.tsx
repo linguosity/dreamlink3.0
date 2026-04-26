@@ -46,7 +46,7 @@ export default function DreamInput() {
           </div>
           <button
             type="submit"
-            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="mt-2 bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary-hover"
           >
             Submit Dream
           </button>

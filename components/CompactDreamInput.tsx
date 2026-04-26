@@ -257,22 +257,22 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       {/* Gentle hint for short dreams */}
       {hasContent && dream.trim().length < 20 && !tipDismissed && (
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20">
+        <div className="flex items-start gap-3 p-3 rounded-lg border border-accent bg-accent/30">
           <div className="flex-shrink-0 mt-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 dark:text-blue-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
               <circle cx="12" cy="12" r="10"/>
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </div>
-          <p className="flex-1 text-sm text-blue-600 dark:text-blue-300 leading-relaxed">
+          <p className="flex-1 text-sm text-foreground leading-relaxed">
             <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
           </p>
           <button
             onClick={handlePermanentDismiss}
-            className="flex-shrink-0 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+            className="flex-shrink-0 p-1 rounded-full hover:bg-accent transition-colors group"
             aria-label="Dismiss tip permanently"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400 group-hover:text-blue-600 dark:text-blue-500 dark:group-hover:text-blue-300">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-foreground">
               <path d="m18 6-12 12"/>
               <path d="m6 6 12 12"/>
             </svg>

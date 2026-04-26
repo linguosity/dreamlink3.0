@@ -61,7 +61,7 @@ const plans = [
     ],
     cta: "Become a Prophet",
     popular: false,
-    color: "bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20"
+    color: "bg-gradient-to-br from-accent/40 to-secondary"
   }
 ];
 

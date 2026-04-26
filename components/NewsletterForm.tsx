@@ -52,8 +52,8 @@ export default function NewsletterForm() {
         type="submit"
         disabled={submitting}
         className="tap inline-flex items-center justify-center rounded-full
-                   bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-                   text-white text-sm font-medium px-5 transition-colors
+                   bg-primary hover:bg-primary-hover
+                   text-primary-foreground text-sm font-medium px-5 transition-colors
                    disabled:opacity-60 disabled:cursor-not-allowed
                    focus-ring focus-visible:ring-offset-slate-950"
       >

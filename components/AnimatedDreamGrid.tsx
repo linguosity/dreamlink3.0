@@ -434,7 +434,7 @@ function ComparisonGroup({
                   </span>
                 )}
                 {showReadingLevelBadge && dream.reading_level_used && (
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-700 text-white shadow-sm">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground shadow-sm">
                     {READING_LEVEL_LABELS[dream.reading_level_used] ?? dream.reading_level_used}
                   </span>
                 )}

@@ -151,7 +151,7 @@ export default function PrivacyPage() {
               contact us at{" "}
               <a
                 href="mailto:brandon@linguosity.ai"
-                className="text-blue-600 dark:text-blue-400 underline"
+                className="text-primary underline"
               >
                 brandon@linguosity.ai
               </a>
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
               at{" "}
               <a
                 href="mailto:brandon@linguosity.ai"
-                className="text-blue-600 dark:text-blue-400 underline"
+                className="text-primary underline"
               >
                 brandon@linguosity.ai
               </a>
@@ -237,7 +237,7 @@ export default function PrivacyPage() {
               your data rights, contact us at{" "}
               <a
                 href="mailto:brandon@linguosity.ai"
-                className="text-blue-600 dark:text-blue-400 underline"
+                className="text-primary underline"
               >
                 brandon@linguosity.ai
               </a>
