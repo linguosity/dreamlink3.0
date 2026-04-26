@@ -15,7 +15,8 @@ import {
   BookOpenCheck,
   ChevronDown,
 } from "lucide-react";
-import HeroVisual from "@/components/HeroVisual";
+import IOSDevice from "@/components/IOSDevice";
+import SplashPhoneMockup from "@/components/SplashPhoneMockup";
 import SiteHeader from "@/components/SiteHeader";
 import Wordmark from "@/components/Wordmark";
 import SocialLinks from "@/components/SocialLinks";
@@ -104,7 +105,7 @@ export default function LandingPage() {
             {/* Copy */}
             <div className="text-center lg:text-left">
               <h1
-                className="font-extrabold leading-[1.1] tracking-tight text-gray-900 dark:text-white text-balance
+                className="font-serif leading-[1.12] tracking-tight text-foreground text-balance
                            text-[clamp(2rem,8vw,3.5rem)] break-words hyphens-auto"
               >
                 Discover What God Is Saying Through Your Dreams
@@ -144,7 +145,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <HeroVisual />
+            <div className="flex justify-center lg:justify-end">
+              <div className="animate-phone-float">
+                <IOSDevice width={300} height={640}>
+                  <SplashPhoneMockup />
+                </IOSDevice>
+              </div>
+            </div>
           </div>
         </div>
       </section>

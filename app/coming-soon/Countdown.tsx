@@ -5,13 +5,15 @@ import { useEffect, useState } from "react";
 interface CountdownProps {
   /** ISO target date, e.g. "2026-06-01T00:00:00". */
   target: string;
+  /** Override for the unit-label color. Defaults to muted-foreground. */
+  mutedColor?: string;
 }
 
 /**
  * Live countdown ticker. From Claude Design splash handoff. Ticks every
  * second; clamps at zero (no negative values once target passes).
  */
-export default function Countdown({ target }: CountdownProps) {
+export default function Countdown({ target, mutedColor }: CountdownProps) {
   const [now, setNow] = useState<number | null>(null);
 
   // Defer the initial Date.now() to client-mount so SSR and first client
@@ -44,7 +46,10 @@ export default function Countdown({ target }: CountdownProps) {
           <div className="text-3xl font-bold leading-none tabular-nums text-foreground">
             {String(u.value).padStart(2, "0")}
           </div>
-          <div className="text-[11px] font-medium tracking-wider uppercase text-muted-foreground mt-1">
+          <div
+            className="text-[11px] font-medium tracking-wider uppercase mt-1"
+            style={mutedColor ? { color: mutedColor } : undefined}
+          >
             {u.label}
           </div>
         </div>

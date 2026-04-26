@@ -17,11 +17,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ComingSoonForm from "./ComingSoonForm";
 import Countdown from "./Countdown";
-import IOSDevice from "./IOSDevice";
-import PhoneMockup from "./PhoneMockup";
+import IOSDevice from "@/components/IOSDevice";
+import SplashPhoneMockup from "@/components/SplashPhoneMockup";
 
 const LAUNCH_TARGET_ISO = "2026-06-01T00:00:00";
 const LAUNCH_LABEL = "Coming June 2026";
+
+// Darker than --muted-foreground so secondary copy stays readable against the
+// saturated lower portion of the water gradient. ~AA contrast on the
+// blue tint at the bottom of the canvas.
+const SPLASH_MUTED = "oklch(0.30 0.02 250)";
 
 export const metadata: Metadata = {
   title: "DreamRiver — Coming Soon",
@@ -63,7 +68,10 @@ export default function ComingSoonPage() {
           <span className="font-blanka tracking-[0.15em] text-[18px] text-foreground">
             DREAMRIVER
           </span>
-          <span className="text-[13px] font-medium text-muted-foreground">
+          <span
+            className="text-[13px] font-medium"
+            style={{ color: SPLASH_MUTED }}
+          >
             {LAUNCH_LABEL}
           </span>
         </header>
@@ -76,7 +84,7 @@ export default function ComingSoonPage() {
             <div className="flex justify-center md:order-2 md:col-start-2">
               <div className="animate-phone-float">
                 <IOSDevice width={270} height={580}>
-                  <PhoneMockup />
+                  <SplashPhoneMockup />
                 </IOSDevice>
               </div>
             </div>
@@ -101,7 +109,10 @@ export default function ComingSoonPage() {
               </h1>
 
               {/* Subhead */}
-              <p className="text-[17px] leading-relaxed text-muted-foreground max-w-[420px] mx-auto md:mx-0 mb-8">
+              <p
+                className="text-[17px] leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-8"
+                style={{ color: SPLASH_MUTED }}
+              >
                 AI-powered biblical dream interpretation. Journal your dreams,
                 receive scripture-backed insights in seconds. Be the first to
                 experience it.
@@ -112,17 +123,23 @@ export default function ComingSoonPage() {
                 <ComingSoonForm />
               </div>
 
-              <p className="text-[12px] text-muted-foreground/70 mt-3">
+              <p
+                className="text-[12px] mt-3"
+                style={{ color: SPLASH_MUTED, opacity: 0.85 }}
+              >
                 Free to start. No spam, ever. Unsubscribe anytime.
               </p>
 
               {/* Countdown */}
               <div className="mt-10">
-                <div className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 text-center md:text-left">
+                <div
+                  className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3 text-center md:text-left"
+                  style={{ color: SPLASH_MUTED }}
+                >
                   Launching in
                 </div>
                 <div className="flex justify-center md:justify-start">
-                  <Countdown target={LAUNCH_TARGET_ISO} />
+                  <Countdown target={LAUNCH_TARGET_ISO} mutedColor={SPLASH_MUTED} />
                 </div>
               </div>
             </div>
@@ -130,7 +147,10 @@ export default function ComingSoonPage() {
         </main>
 
         {/* Footer */}
-        <footer className="px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-muted-foreground">
+        <footer
+          className="px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px]"
+          style={{ color: SPLASH_MUTED }}
+        >
           <span>© {new Date().getFullYear()} DreamRiver. All rights reserved.</span>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-foreground transition-colors">

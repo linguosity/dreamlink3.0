@@ -32,7 +32,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       .select('image_aesthetic, reading_level')
       .eq('user_id', userId)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: { data: { image_aesthetic?: string; reading_level?: string } | null }) => {
         if (data?.image_aesthetic) userAesthetic.current = data.image_aesthetic;
         if (data?.reading_level) userReadingLevel.current = data.reading_level;
       });
@@ -208,32 +208,75 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
   return (
     <div className="w-full sm:max-w-2xl sm:mx-auto space-y-2">
-      <form onSubmit={handleSubmit}>
-        {/* Textarea container with inset send button.
-            `field-sizing: content` lets the browser grow the textarea
-            natively — no JS measure/resize cycle on every keystroke, so
-            keystrokes can't be dropped. */}
-        <div className="relative">
-          <label htmlFor="dream-input" className="sr-only">Describe your dream</label>
-          <textarea
-            id="dream-input"
-            placeholder="Describe your dream — a word, a feeling, or the whole story…"
-            value={dream}
-            onChange={(e) => setDream(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={2}
-            maxLength={MAX_CHARS}
-            disabled={isSubmitting}
-            className="w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [field-sizing:content] min-h-[60px] max-h-[200px]"
-          />
+      {/* Card-shell per the dashboard UX-rec: white frost background,
+          gold "edit" pen icon header, and a subtle warm border. The
+          textarea sits inside; the submit button moves into the footer
+          row so the input area itself is uncluttered. */}
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-2xl p-5 backdrop-blur-sm shadow-[0_2px_12px_oklch(0.5_0.04_75/0.06)]"
+        style={{
+          background: "oklch(1 0 0 / 0.7)",
+          border: "1.5px solid oklch(0.90 0.02 75)",
+        }}
+      >
+        <div
+          className="flex items-center gap-2 mb-3 text-[13px] font-semibold"
+          style={{ color: "oklch(0.45 0.02 250)" }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="oklch(0.65 0.16 60)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          </svg>
+          New dream entry
+        </div>
+
+        <label htmlFor="dream-input" className="sr-only">
+          Describe your dream
+        </label>
+        <textarea
+          id="dream-input"
+          placeholder="Describe your dream — a word, a feeling, or the whole story…"
+          value={dream}
+          onChange={(e) => setDream(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={2}
+          maxLength={MAX_CHARS}
+          disabled={isSubmitting}
+          className="w-full resize-none overflow-y-auto rounded-xl border px-4 py-3 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 [field-sizing:content] min-h-[60px] max-h-[200px]"
+          style={{
+            background: "oklch(0.975 0.005 75)",
+            borderColor: "oklch(0.92 0.01 75)",
+          }}
+        />
+
+        {/* Footer row: shortcut hint left, char count + submit button right */}
+        <div className="flex items-center justify-between mt-3 gap-3">
+          <div className="flex items-center gap-3 text-xs" style={{ color: "oklch(0.45 0.02 250)" }}>
+            <span className="opacity-60">
+              {isMac ? "⌘↵ to submit" : "Ctrl+↵ to submit"}
+            </span>
+            <span className={`transition-opacity ${hasContent ? "opacity-60" : "opacity-0"}`}>
+              {dream.length}/{MAX_CHARS}
+            </span>
+          </div>
 
           <Button
             type="submit"
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute right-2.5 bottom-2.5 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
-              hasContent ? "opacity-100" : "opacity-30"
+            className={`h-9 w-9 rounded-lg transition-opacity duration-200 ${
+              hasContent ? "opacity-100" : "opacity-40"
             }`}
           >
             {isSubmitting ? (
@@ -242,16 +285,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               <Send className="h-4 w-4" />
             )}
           </Button>
-        </div>
-
-        {/* Footer row: char count + submit hint */}
-        <div className="flex items-center justify-between px-1">
-          <span className={`text-xs transition-opacity ${hasContent ? "opacity-60" : "opacity-0"}`}>
-            {dream.length}/{MAX_CHARS}
-          </span>
-          <span className="text-xs text-muted-foreground opacity-50">
-            {isMac ? '⌘↵ to submit' : 'Ctrl+↵ to submit'}
-          </span>
         </div>
       </form>
 

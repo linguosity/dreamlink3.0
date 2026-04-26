@@ -36,6 +36,7 @@ interface Dream {
   supporting_points?: string[];
   conclusion_sentence?: string;
   formatted_analysis?: string;
+  personalized_summary?: string;
   tags?: string[];
   bible_refs?: string[];
   created_at?: string;
@@ -214,7 +215,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   }
 
   // Enrich dreams with client-side analysis data if available (before server refresh)
-  const enrichedDreams = filteredDreams.map((dream) => {
+  const enrichedDreams: Dream[] = filteredDreams.map((dream): Dream => {
     if (analyzedDream && analyzedDream.id === dream.id && !dream.dream_summary) {
       const a = analyzedDream.analysis;
       return {
@@ -319,33 +320,49 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             />
           </motion.div>
         )}
-        {renderOrder.map((item) =>
-          item.type === 'standalone' ? (
-            <motion.div
-              key={item.dream.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
-              className="col-span-1"
-            >
-              <DreamCard
-                dream={item.dream}
-                loading={item.dream.id === loadingDreamId}
+        {(() => {
+          // Featured-first layout per the dashboard UX-rec: the first
+          // standalone dream card spans 2 columns at sm/lg breakpoints,
+          // giving the most-recent dream visual hierarchy. Comparison
+          // groups already span the full row, so they're never "featured."
+          let featuredAssigned = false;
+          return renderOrder.map((item) => {
+            if (item.type === 'standalone') {
+              const isFeatured = !featuredAssigned;
+              if (isFeatured) featuredAssigned = true;
+              return (
+                <motion.div
+                  key={item.dream.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
+                  className={
+                    isFeatured
+                      ? 'col-span-1 sm:col-span-2 lg:col-span-2'
+                      : 'col-span-1'
+                  }
+                >
+                  <DreamCard
+                    dream={item.dream}
+                    loading={item.dream.id === loadingDreamId}
+                    searchTerms={isMounted && isSearchEnabled ? keywords : []}
+                  />
+                </motion.div>
+              );
+            }
+            return (
+              <ComparisonGroup
+                key={item.groupId}
+                groupId={item.groupId}
+                dreams={item.dreams}
+                loadingDreamId={loadingDreamId}
                 searchTerms={isMounted && isSearchEnabled ? keywords : []}
               />
-            </motion.div>
-          ) : (
-            <ComparisonGroup
-              key={item.groupId}
-              groupId={item.groupId}
-              dreams={item.dreams}
-              loadingDreamId={loadingDreamId}
-              searchTerms={isMounted && isSearchEnabled ? keywords : []}
-            />
-          ),
-        )}
+            );
+          });
+        })()}
       </AnimatePresence>
     </div>
   );
