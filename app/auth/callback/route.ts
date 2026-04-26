@@ -14,6 +14,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { getComingSoonEnabled, isAllowedAdminEmail } from "@/lib/siteSettings";
 
 /**
  * Whitelist of safe internal paths that `redirect_to` is allowed to point at.
@@ -63,6 +64,26 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
+
+    // Coming-soon gate: tear down the session if a non-admin made it through
+    // OAuth or email-verification while the splash is up. Mirrors the gate
+    // in app/actions.ts:signInAction so all auth paths converge.
+    if (await getComingSoonEnabled()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      let bypass = isAllowedAdminEmail(user?.email ?? null);
+      if (!bypass && user) {
+        const { data: profile } = await supabase
+          .from("profile")
+          .select("is_admin")
+          .eq("user_id", user.id)
+          .single();
+        bypass = Boolean((profile as { is_admin?: boolean } | null)?.is_admin);
+      }
+      if (!bypass) {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/coming-soon`);
+      }
+    }
   }
 
   const target = safeRedirectPath(redirectTo);

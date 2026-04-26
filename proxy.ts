@@ -11,11 +11,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // Skip auth checks for signin/signup pages to avoid redirect loops
+  // Skip auth checks for signin/signup, the coming-soon splash itself, and
+  // auth callbacks to avoid redirect loops. The sign-in / sign-up server
+  // actions enforce their own admin gate when coming-soon mode is on.
   if (
     request.nextUrl.pathname === '/sign-in' ||
     request.nextUrl.pathname === '/sign-up' ||
     request.nextUrl.pathname === '/forgot-password' ||
+    request.nextUrl.pathname === '/coming-soon' ||
     request.nextUrl.pathname.startsWith('/auth/')
   ) {
     // Still needs to process cookies for these pages, but won't redirect

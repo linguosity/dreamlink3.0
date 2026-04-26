@@ -390,3 +390,112 @@
   100% { opacity: 0.85; transform: translate(0, -50%) scaleX(1.06); filter: blur(1.5px); }
 }
 .animate-foam-burst { animation: foamBurst 700ms ease-out forwards; }
+
+/* ─────────────────────────────────────────────────────────────
+ * /coming-soon splash — water-inspired animated background.
+ * Lightweight: no Three.js, no JS animation loop, just CSS.
+ * Source: Claude Design handoff (DreamRiver Splash Page.html).
+ * ───────────────────────────────────────────────────────────── */
+
+.water-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(
+    175deg,
+    oklch(0.96 0.008 75) 0%,
+    oklch(0.93 0.02 220) 35%,
+    oklch(0.85 0.06 225) 60%,
+    oklch(0.75 0.09 235) 100%
+  );
+}
+
+.water-bg::before,
+.water-bg::after {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  opacity: 0.35;
+}
+
+.water-bg::before {
+  background:
+    radial-gradient(ellipse at 30% 80%, oklch(0.80 0.10 75 / 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, oklch(0.85 0.08 235 / 0.4) 0%, transparent 45%);
+  animation: waterDrift 18s ease-in-out infinite;
+}
+
+.water-bg::after {
+  background:
+    radial-gradient(ellipse at 60% 40%, oklch(0.90 0.05 80 / 0.3) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 30%, oklch(0.80 0.06 240 / 0.25) 0%, transparent 45%);
+  animation: waterDrift 24s ease-in-out infinite reverse;
+}
+
+@keyframes waterDrift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33%      { transform: translate(2%, 1%) rotate(0.5deg); }
+  66%      { transform: translate(-1%, 2%) rotate(-0.3deg); }
+}
+
+.ripple-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 10%,
+    oklch(1 0 0 / 0.12) 30%,
+    oklch(1 0 0 / 0.18) 50%,
+    oklch(1 0 0 / 0.12) 70%,
+    transparent 90%
+  );
+  animation: rippleSlide 8s ease-in-out infinite;
+}
+
+@keyframes rippleSlide {
+  0%, 100% { transform: translateX(-3%); opacity: 0.4; }
+  50%      { transform: translateX(3%);  opacity: 0.8; }
+}
+
+.shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    oklch(0.95 0.04 75 / 0.15) 45%,
+    oklch(0.98 0.02 80 / 0.25) 50%,
+    oklch(0.95 0.04 75 / 0.15) 55%,
+    transparent 60%
+  );
+  background-size: 300% 300%;
+  animation: shimmerMove 8s ease-in-out infinite;
+}
+
+@keyframes shimmerMove {
+  0%   { background-position: 200% 200%; }
+  100% { background-position: -100% -100%; }
+}
+
+/* Phone-mockup gentle bob, mirrors the splash design's `float 6s`.
+ * Distinct from .animate-float (5.5s) used by the hero card on the
+ * marketing landing — kept separate so each animation can tune
+ * independently. */
+@keyframes phoneFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.animate-phone-float { animation: phoneFloat 6s ease-in-out infinite; }
+
+/* Caret blink for the typewriter inside the phone mockup. */
+@keyframes splashCaret {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-splash-caret { animation: splashCaret 0.7s steps(1) infinite; }

@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getComingSoonEnabled, isAllowedAdminEmail } from '@/lib/siteSettings'
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -35,13 +36,16 @@ export async function updateSession(request: NextRequest) {
     // This will refresh session if expired, if the user is logged in
     const { data: { user } } = await supabase.auth.getUser()
 
+    const pathname = request.nextUrl.pathname
+
     // Handle protected routes
-    if (request.nextUrl.pathname.startsWith('/protected') && !user) {
+    if (pathname.startsWith('/protected') && !user) {
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
 
     // Handle admin routes — must be authenticated AND have is_admin flag
-    if (request.nextUrl.pathname.startsWith('/admin')) {
+    let cachedIsAdmin: boolean | null = null
+    if (pathname.startsWith('/admin')) {
       if (!user) {
         return NextResponse.redirect(new URL('/sign-in', request.url))
       }
@@ -53,9 +57,45 @@ export async function updateSession(request: NextRequest) {
         .eq('user_id', user.id)
         .single()
 
-      if (!profile?.is_admin) {
+      cachedIsAdmin = Boolean(profile?.is_admin)
+
+      if (!cachedIsAdmin) {
         // Non-admin users get redirected to home
         return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
+
+    // Coming-soon gate: when site_settings.coming_soon_enabled is true,
+    // redirect non-admin HTML traffic to /coming-soon. Skips:
+    // - /api/* (let APIs handle their own auth; /api/subscribe must work)
+    // - /admin/* (already gated above; admin reaching here is admin)
+    // - /coming-soon itself (already skipped in proxy.ts; defensive)
+    const isApiRoute = pathname.startsWith('/api/')
+    const isAdminRoute = pathname.startsWith('/admin')
+    const isComingSoonRoute = pathname === '/coming-soon'
+
+    if (!isApiRoute && !isAdminRoute && !isComingSoonRoute) {
+      const comingSoonOn = await getComingSoonEnabled()
+      if (comingSoonOn) {
+        let isAdminUser = false
+        if (user) {
+          if (isAllowedAdminEmail(user.email)) {
+            isAdminUser = true
+          } else if (cachedIsAdmin !== null) {
+            isAdminUser = cachedIsAdmin
+          } else {
+            const { data: profile } = await supabase
+              .from('profile')
+              .select('is_admin')
+              .eq('user_id', user.id)
+              .single()
+            isAdminUser = Boolean(profile?.is_admin)
+          }
+        }
+
+        if (!isAdminUser) {
+          return NextResponse.redirect(new URL('/coming-soon', request.url))
+        }
       }
     }
 

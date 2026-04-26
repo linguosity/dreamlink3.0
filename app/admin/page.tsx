@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminOverviewCharts } from "./components/AdminOverviewCharts";
+import SiteSettingsCard from "./components/SiteSettingsCard";
 
 interface DashboardMetrics {
   totalUsers: number;
@@ -251,6 +252,9 @@ export default async function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Site Settings — admin-toggleable runtime flags */}
+      <SiteSettingsCard />
 
       {/* System Status */}
       <Card>
