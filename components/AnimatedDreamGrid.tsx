@@ -169,7 +169,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
         <div className="bg-muted rounded-full p-8 mb-6">
           <Search className="h-12 w-12 text-muted-foreground" />
         </div>
-        <h3 className="text-2xl font-semibold mb-3">No dreams recorded yet</h3>
+        <h3 className="text-2xl mb-3">No dreams recorded yet</h3>
         <p className="text-muted-foreground max-w-md mb-6">
           Your dream journal is empty. Start by recording your first dream above to receive AI-powered spiritual interpretations and biblical insights.
         </p>
@@ -187,7 +187,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
         <div className="bg-muted rounded-full p-6 mb-4">
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-medium mb-2">No dreams found</h3>
+        <h3 className="text-lg mb-2">No dreams found</h3>
         <p className="text-muted-foreground max-w-md">
           We couldn't find any dreams matching all of:{' '}
           {keywords.map((kw, i) => (

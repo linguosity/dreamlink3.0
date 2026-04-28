@@ -104,8 +104,8 @@ export default function LandingPage() {
             {/* Copy */}
             <div className="text-center lg:text-left">
               <h1
-                className="font-extrabold leading-[1.1] tracking-tight text-gray-900 dark:text-white text-balance
-                           text-[clamp(2rem,8vw,3.5rem)] break-words hyphens-auto"
+                className="leading-[1.05] tracking-tight text-gray-900 dark:text-white text-balance
+                           text-[clamp(2.25rem,8vw,4rem)] break-words hyphens-auto"
               >
                 Discover What God Is Saying Through Your Dreams
               </h1>
@@ -190,7 +190,7 @@ export default function LandingPage() {
         className="py-16 sm:py-20 lg:py-24 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
             How It Works
           </h2>
 
@@ -220,7 +220,7 @@ export default function LandingPage() {
                   </span>
                   <span className="sr-only">Step {step}:</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg text-gray-900 dark:text-white mb-2">
                   {title}
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
@@ -286,7 +286,7 @@ export default function LandingPage() {
         className="py-16 sm:py-20 lg:py-24 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm"
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
             Features
           </h2>
 
@@ -305,7 +305,7 @@ export default function LandingPage() {
                 >
                   <Icon className="w-7 h-7" aria-hidden="true" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg text-gray-900 dark:text-white mb-2">
                   {title}
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -320,7 +320,7 @@ export default function LandingPage() {
       {/* ── FAQ ────────────────────────────────────────────────────── */}
       <section id="faq" className="py-16 sm:py-20 bg-white dark:bg-slate-950">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 dark:text-white mb-10">
+          <h2 className="text-3xl sm:text-4xl text-center text-gray-900 dark:text-white mb-10">
             Frequently asked
           </h2>
           <div className="divide-y divide-gray-200 dark:divide-slate-800 border-y border-gray-200 dark:border-slate-800">
@@ -349,7 +349,7 @@ export default function LandingPage() {
       {/* ── Final CTA ──────────────────────────────────────────────── */}
       <section className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl text-white mb-6">
             Begin Your Spiritual Dream Journey Today.
           </h2>
 
