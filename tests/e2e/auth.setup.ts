@@ -42,6 +42,15 @@ setup('authenticate', async ({ page }) => {
     timeout: 10_000,
   });
 
+  // Pre-dismiss the cookie consent banner so it doesn't appear in any test.
+  // The banner has role="dialog" and was making `getByRole('dialog')` matchers
+  // ambiguous (the dream-detail modal and the cookie banner both matched).
+  // Storing the dismissal flag in localStorage lets storageState carry it
+  // across to every test project that reuses this session.
+  await page.evaluate(() =>
+    localStorage.setItem('dreamriver-cookie-consent', 'accepted'),
+  );
+
   // Save signed-in state for reuse
   await page.context().storageState({ path: authFile });
 });
