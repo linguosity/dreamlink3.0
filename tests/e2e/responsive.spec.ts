@@ -11,14 +11,18 @@ import { test, expect } from '@playwright/test';
 test.describe('Responsive Layout', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Mobile/tablet emulation cold-start can exceed 10s. 20s keeps us well
+    // within the 60s per-test budget while removing first-hit flakes.
     await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 
   test('header elements are visible', async ({ page }) => {
-    // Brand name should always be visible (or its abbreviated form)
-    await expect(page.getByText(/dreamriver/i).first()).toBeVisible();
+    // Brand link should be visible at every viewport. The link uses
+    // `aria-label="DreamRiver"` so the accessible name is stable even when
+    // the visible label collapses to the "DR" abbreviation on mobile.
+    await expect(page.getByRole('link', { name: /^dreamriver$/i }).first()).toBeVisible();
 
     // Search bar should be visible
     await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();

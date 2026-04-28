@@ -9,8 +9,12 @@ import { test, expect } from '@playwright/test';
 test.describe('Dream Card & Modal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Slower mobile/tablet device emulation can take longer than 10s for the
+    // first authenticated render (cold start + decryption + grid hydration).
+    // 20s is still well within the per-test 60s budget but tolerates the
+    // first hit on iPad / Pixel / iPhone projects that previously flaked.
     await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 

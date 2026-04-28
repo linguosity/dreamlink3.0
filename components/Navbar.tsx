@@ -82,9 +82,13 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: Logo - flexible width on mobile */}
         <div className="flex-shrink-0 flex items-center gap-2">
-          <Link href="/" className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style">
+          <Link
+            href="/"
+            aria-label="DreamRiver"
+            className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style"
+          >
             <span className="hidden sm:inline">DreamRiver</span>
-            <span className="sm:hidden">DR</span>
+            <span className="sm:hidden" aria-hidden="true">DR</span>
           </Link>
           {isAdmin && (
             <Link href="/admin">
