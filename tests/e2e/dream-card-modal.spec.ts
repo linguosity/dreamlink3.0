@@ -9,8 +9,12 @@ import { test, expect } from '@playwright/test';
 test.describe('Dream Card & Modal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Slower mobile/tablet device emulation can take longer than 10s for the
+    // first authenticated render (cold start + decryption + grid hydration).
+    // 20s is still well within the per-test 60s budget but tolerates the
+    // first hit on iPad / Pixel / iPhone projects that previously flaked.
     await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 
@@ -74,12 +78,12 @@ test.describe('Dream Card & Modal', () => {
     const modal = page.getByRole('dialog');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
-    // Check that the modal has overflow-y-auto (scrollable)
-    const dialogContent = modal.locator('[class*="overflow-y-auto"]').first();
-    await expect(dialogContent).toBeVisible();
+    // The DialogContent itself is the scrollable container — `max-h-[85vh]
+    // overflow-y-auto` is on the dialog element, not a descendant.
+    await expect(modal).toHaveClass(/overflow-y-auto/);
 
-    // Verify we can scroll the modal content
-    const box = await dialogContent.boundingBox();
+    // Verify we can scroll within the modal
+    const box = await modal.boundingBox();
     if (box) {
       // Scroll down within the modal
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

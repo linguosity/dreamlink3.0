@@ -8,8 +8,10 @@ import { test, expect } from '@playwright/test';
 test.describe('Search', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Mobile/tablet emulation cold-start can exceed 10s. 20s keeps us well
+    // within the 60s per-test budget while removing first-hit flakes.
     await expect(page.getByRole('heading', { name: /your dream gallery/i }).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 20_000,
     });
   });
 
@@ -18,7 +20,16 @@ test.describe('Search', () => {
     await expect(searchInput).toBeVisible();
   });
 
-  test('Cmd/Ctrl+K focuses the search bar', async ({ page, browserName }) => {
+  test('Cmd/Ctrl+K focuses the search bar', async ({ page, browserName }, testInfo) => {
+    // Touch-only mobile devices (iPhone-14, Pixel 7) don't have a physical
+    // Cmd or Ctrl key, so the shortcut is meaningless there. The shortcut
+    // hint UI is also `hidden sm:inline` (only shown on >=640px viewports).
+    // Skip these projects rather than paper over with flaky retries.
+    test.skip(
+      testInfo.project.name === 'mobile-safari' || testInfo.project.name === 'mobile-chrome',
+      'Cmd/Ctrl+K is keyboard-only — not applicable on touch viewports',
+    );
+
     const modifier = browserName === 'firefox' ? 'Control' : 'Meta';
     await page.keyboard.press(`${modifier}+k`);
 

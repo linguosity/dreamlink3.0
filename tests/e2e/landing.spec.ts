@@ -12,19 +12,38 @@ test.describe('Landing Page', () => {
   test('renders brand name and CTA', async ({ page }) => {
     await page.goto('/landing');
 
-    // Brand name visible
-    await expect(page.getByText(/dreamriver/i).first()).toBeVisible();
+    // Brand link in the SiteHeader. The Wordmark composes "DreamRiver"
+    // from multiple decorative <span>s but the parent <span> has
+    // aria-label="DreamRiver", so the wrapping <a> exposes accessible
+    // name "DreamRiver" at every viewport.
+    await expect(
+      page.getByRole('link', { name: /^dreamriver$/i }).first(),
+    ).toBeVisible();
 
-    // Has a call-to-action button (sign up / get started / try free)
-    const cta = page.getByRole('link', { name: /sign up|get started|try/i }).first();
+    // Has a primary call-to-action that points at sign-up. We accept
+    // multiple verbs because the hero CTA reads "Start Your Dream
+    // Journal — Free" while the desktop nav shows "Sign Up". On mobile
+    // viewports the desktop "Sign Up" button is collapsed behind the
+    // hamburger, but the hero CTA is always visible — so "start" must
+    // be in the regex.
+    const cta = page.getByRole('link', { name: /sign up|get started|start your|try/i }).first();
     await expect(cta).toBeVisible();
   });
 
   test('navigates to sign-in page', async ({ page }) => {
     await page.goto('/landing');
 
-    // Click sign-in link
-    const signInLink = page.getByRole('link', { name: /sign in|log in/i }).first();
+    // On <md viewports the SiteHeader collapses Sign In into a hamburger
+    // drawer. If the desktop link isn't immediately visible, open the
+    // mobile menu first so the same test exercises the same UX intent
+    // across all viewports.
+    const desktopSignIn = page.getByRole('link', { name: /^sign in$|^log in$/i });
+    if (!(await desktopSignIn.first().isVisible().catch(() => false))) {
+      const menuToggle = page.getByRole('button', { name: /open menu|close menu/i });
+      await menuToggle.click();
+    }
+
+    const signInLink = page.getByRole('link', { name: /^sign in$|^log in$/i }).first();
     await expect(signInLink).toBeVisible();
     await signInLink.click();
 
