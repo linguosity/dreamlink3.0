@@ -93,7 +93,12 @@ export default function LandingPage() {
 
       {/* ── Hero Section ───────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-white/70 dark:from-slate-900/50 dark:to-slate-950/70" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0
+                     bg-[linear-gradient(135deg,var(--cream)_0%,oklch(0.96_0.02_75)_30%,oklch(0.92_0.04_240)_100%)]
+                     dark:bg-[linear-gradient(135deg,oklch(0.20_0.015_250)_0%,oklch(0.18_0.012_250)_50%,oklch(0.22_0.02_245)_100%)]"
+        />
 
         <div
           className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8
