@@ -28,7 +28,7 @@ export default function HeroVisual() {
       className="flex justify-center lg:justify-end"
     >
       <div
-        className="relative w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[420px] mx-auto lg:mx-0"
+        className="relative w-full max-w-[240px] sm:max-w-[280px] lg:max-w-[320px] mx-auto lg:mx-0"
         style={{ perspective: "1000px" }}
       >
         <div
@@ -38,8 +38,8 @@ export default function HeroVisual() {
           }}
         >
           <div className="animate-float">
-            <div className="bg-gray-900 rounded-[2.5rem] p-3 shadow-xl">
-              <div className="bg-cream rounded-[2rem] overflow-hidden">
+            <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl">
+              <div className="bg-cream rounded-[1.875rem] overflow-hidden">
                 <div className="px-5 py-3 border-b border-black/5">
                   <span className="font-blanka tracking-[0.12em] text-[11px] text-gray-900">
                     DREAMRIVER
