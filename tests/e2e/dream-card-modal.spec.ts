@@ -19,17 +19,24 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('dream gallery displays cards', async ({ page }) => {
-    // At least one dream card should be visible (assuming test account has dreams)
+    // Wait for either cards to render or the empty state to appear. Calling
+    // .count() eagerly returns 0 before the gallery has hydrated, leading
+    // the test to incorrectly enter the empty-state branch. We race both
+    // possibilities so the test is correct regardless of how slow the
+    // network is on this run.
     const cards = page.locator('[class*="aspect-square"]');
-    const count = await cards.count();
+    const emptyState = page.getByText(/no dreams recorded yet/i).first();
 
-    if (count === 0) {
-      // If no dreams, the empty state should show
-      await expect(page.getByText(/no dreams recorded yet/i).first()).toBeVisible();
+    await Promise.race([
+      cards.first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => null),
+      emptyState.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => null),
+    ]);
+
+    if ((await cards.count()) === 0) {
+      await expect(emptyState).toBeVisible();
       test.skip(true, 'No dream cards to test — submit a dream first');
     }
 
-    // First card should be visible
     await expect(cards.first()).toBeVisible();
   });
 
