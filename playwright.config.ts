@@ -17,6 +17,16 @@ dotenv.config();
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 
+// When CI runs against a Vercel preview URL guarded by Deployment Protection,
+// every request needs the x-vercel-protection-bypass header. The secret is
+// forwarded from GitHub Actions via VERCEL_PROTECTION_BYPASS. Locally this
+// is undefined, so the header is omitted and tests run against a normal dev
+// server unimpeded.
+const VERCEL_BYPASS = process.env.VERCEL_PROTECTION_BYPASS;
+const extraHTTPHeaders = VERCEL_BYPASS
+  ? { 'x-vercel-protection-bypass': VERCEL_BYPASS }
+  : undefined;
+
 export default defineConfig({
   testDir: './tests/e2e',
   outputDir: './test-results',
@@ -57,6 +67,10 @@ export default defineConfig({
 
     /* Ignore HTTPS errors (e.g. Vercel preview cert issues) */
     ignoreHTTPSErrors: true,
+
+    /* Bypass Vercel Deployment Protection on preview URLs in CI. No-op
+       when VERCEL_PROTECTION_BYPASS isn't set (i.e. local runs). */
+    extraHTTPHeaders,
   },
 
   /* Configure projects for cross-browser and responsive testing */
