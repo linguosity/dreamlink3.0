@@ -81,7 +81,8 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts/,
     },
 
-    // ── Desktop browsers ───────────────────────────────────
+    // dream-submission.spec.ts hits OpenAI on every run, so we restrict it
+    // to chromium to keep CI cost bounded. All other specs run cross-browser.
     {
       name: 'chromium',
       use: {
@@ -92,6 +93,7 @@ export default defineConfig({
     },
     {
       name: 'firefox',
+      testIgnore: /dream-submission\.spec\.ts/,
       use: {
         ...devices['Desktop Firefox'],
         storageState: './tests/e2e/.auth/user.json',
@@ -100,16 +102,16 @@ export default defineConfig({
     },
     {
       name: 'webkit',
+      testIgnore: /dream-submission\.spec\.ts/,
       use: {
         ...devices['Desktop Safari'],
         storageState: './tests/e2e/.auth/user.json',
       },
       dependencies: ['setup'],
     },
-
-    // ── Mobile viewports ───────────────────────────────────
     {
       name: 'mobile-chrome',
+      testIgnore: /dream-submission\.spec\.ts/,
       use: {
         ...devices['Pixel 7'],
         storageState: './tests/e2e/.auth/user.json',
@@ -118,16 +120,16 @@ export default defineConfig({
     },
     {
       name: 'mobile-safari',
+      testIgnore: /dream-submission\.spec\.ts/,
       use: {
         ...devices['iPhone 14'],
         storageState: './tests/e2e/.auth/user.json',
       },
       dependencies: ['setup'],
     },
-
-    // ── Tablet ─────────────────────────────────────────────
     {
       name: 'tablet',
+      testIgnore: /dream-submission\.spec\.ts/,
       use: {
         ...devices['iPad (gen 7)'],
         storageState: './tests/e2e/.auth/user.json',
