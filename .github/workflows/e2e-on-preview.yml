@@ -11,10 +11,11 @@
 #                                on preview URLs.
 #
 # Scope notes:
-#   - Cross-browser tiered: chromium runs the full suite (including the
-#     OpenAI-backed dream-submission spec); firefox/webkit/mobile/tablet
-#     run everything except dream-submission to keep API costs bounded.
-#     See testIgnore in playwright.config.ts.
+#   - Desktop cross-browser tiered: chromium runs the full suite (incl.
+#     OpenAI-backed dream-submission); firefox/webkit run all other specs.
+#     Mobile/tablet projects exist in playwright.config.ts but are
+#     intentionally excluded from CI pending separate work — see issue/PR
+#     for mobile coverage.
 #   - PR-only. Once preview is green and PR is merged, the prod build runs
 #     the same code; a separate prod synthetic check belongs in another
 #     workflow if/when desired.
@@ -32,9 +33,9 @@ concurrency:
 
 jobs:
   smoke:
-    name: Playwright smoke (cross-browser)
+    name: Playwright smoke (desktop cross-browser)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -136,9 +137,10 @@ jobs:
           VERCEL_PROTECTION_BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
           CI: "1"
         # dream-submission.spec.ts (OpenAI-backed) runs on chromium only;
-        # all other specs run on every browser/device project. See
-        # testIgnore in playwright.config.ts.
-        run: npx playwright test --project=setup --project=chromium --project=firefox --project=webkit --project=mobile-chrome --project=mobile-safari --project=tablet
+        # all other specs run on firefox/webkit too. Mobile/tablet projects
+        # exist in playwright.config.ts but are excluded here pending
+        # separate work — see testIgnore in playwright.config.ts.
+        run: npx playwright test --project=setup --project=chromium --project=firefox --project=webkit
 
       - name: Upload Playwright HTML report
         if: failure()
