@@ -103,27 +103,29 @@ export default function LandingPage() {
         <div
           className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8
                      pt-[calc(theme(spacing.16)+env(safe-area-inset-top))]
-                     pb-12 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20"
+                     pb-28 sm:pt-24 sm:pb-16 lg:pt-28 lg:pb-20"
         >
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center [&>*]:min-w-0">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-12 xl:gap-16 items-center [&>*]:min-w-0">
             {/* Copy */}
             <div className="text-center lg:text-left">
               <h1
                 className="leading-[1.05] tracking-tight text-gray-900 dark:text-white text-balance
-                           text-[clamp(2.25rem,8vw,4rem)] break-words hyphens-auto"
+                           text-[clamp(2rem,5.5vw,4rem)]
+                           max-w-[14ch] mx-auto lg:mx-0 lg:max-w-[18ch]"
               >
                 Discover What God Is Saying Through Your Dreams
               </h1>
 
-              <p className="mt-6 text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              <p className="mt-6 text-base sm:text-lg lg:text-xl text-gray-700 dark:text-gray-300 max-w-prose mx-auto lg:mx-0 leading-relaxed">
                 AI-powered biblical dream interpretation. Journal your dreams,
                 receive scripture-backed insights in seconds.
               </p>
 
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center lg:justify-start">
                 <Link
                   href="/sign-up"
-                  className="inline-flex items-center justify-center h-12 px-7 rounded-full
+                  className="w-full sm:w-auto whitespace-nowrap
+                             inline-flex items-center justify-center h-12 px-7 rounded-full
                              bg-primary hover:bg-primary-hover active:translate-y-px
                              text-primary-foreground text-base font-semibold
                              transition-[background-color,box-shadow,transform] duration-150
@@ -134,7 +136,8 @@ export default function LandingPage() {
                 </Link>
                 <a
                   href="#sample-interpretation"
-                  className="inline-flex items-center justify-center h-12 px-7 rounded-full
+                  className="w-full sm:w-auto whitespace-nowrap
+                             inline-flex items-center justify-center h-12 px-7 rounded-full
                              border border-gray-300 dark:border-slate-700
                              text-gray-800 dark:text-gray-100 text-base font-medium
                              hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors
@@ -147,43 +150,49 @@ export default function LandingPage() {
               <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
                 Free forever. No credit card required.
               </p>
+
+              {/* Social proof, promoted from bottom strip into the hero so the
+                  desktop column doesn't leave a vertical hole next to the
+                  ~590px-tall phone mock. */}
+              <div className="mt-8 flex items-center gap-3 justify-center lg:justify-start">
+                <div className="flex -space-x-2" aria-hidden="true">
+                  {[
+                    "bg-gradient-to-br from-sky-300 to-sky-500",
+                    "bg-gradient-to-br from-fuchsia-300 to-fuchsia-500",
+                    "bg-gradient-to-br from-rose-300 to-rose-500",
+                    "bg-gradient-to-br from-amber-300 to-amber-500",
+                  ].map((bg, i) => (
+                    <div
+                      key={i}
+                      className={`w-8 h-8 ${bg} rounded-full ring-2 ring-white dark:ring-slate-950`}
+                    />
+                  ))}
+                </div>
+                <div className="flex flex-col items-start">
+                  <div
+                    className="flex gap-0.5 text-amber-400"
+                    aria-label="5 out of 5 stars"
+                  >
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-4 h-4 fill-amber-400"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Joined by{" "}
+                    <span className="font-semibold text-gray-800 dark:text-gray-100">
+                      2,000+ believers
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <HeroVisual />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Social Proof Bar ───────────────────────────────────────── */}
-      <section className="bg-accent/40 dark:bg-accent/20 border-y border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <div className="flex gap-0.5" aria-hidden="true">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className="w-5 h-5 text-amber-400 fill-amber-400"
-                />
-              ))}
-            </div>
-
-            <p className="text-foreground text-sm sm:text-base font-medium text-center">
-              Join 2,000+ believers exploring God&apos;s messages in their
-              dreams.
-            </p>
-
-            <div className="flex -space-x-2" aria-hidden="true">
-              {[
-                "bg-gradient-to-br from-sky-300 to-sky-500",
-                "bg-gradient-to-br from-fuchsia-300 to-fuchsia-500",
-                "bg-gradient-to-br from-rose-300 to-rose-500",
-                "bg-gradient-to-br from-amber-300 to-amber-500",
-              ].map((bg, i) => (
-                <div
-                  key={i}
-                  className={`w-8 h-8 ${bg} rounded-full ring-2 ring-white dark:ring-slate-950`}
-                />
-              ))}
+            <div className="mt-4 lg:mt-0 flex justify-center lg:justify-end">
+              <HeroVisual />
             </div>
           </div>
         </div>

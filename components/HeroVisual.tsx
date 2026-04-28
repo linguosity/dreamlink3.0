@@ -38,15 +38,15 @@ export default function HeroVisual() {
           }}
         >
           <div className="animate-float">
-            <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl">
-              <div className="bg-cream rounded-[1.875rem] overflow-hidden">
+            <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
+              <div className="bg-cream rounded-[1.875rem] overflow-hidden h-full flex flex-col">
                 <div className="px-5 py-3 border-b border-black/5">
                   <span className="font-blanka tracking-[0.12em] text-[11px] text-gray-900">
                     DREAMRIVER
                   </span>
                 </div>
 
-                <div className="px-5 py-4">
+                <div className="px-5 py-4 flex-1 flex flex-col">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em]">
                     Dream journal
                   </p>
