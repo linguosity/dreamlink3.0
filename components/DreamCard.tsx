@@ -1555,21 +1555,6 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
             {!empty && (
               <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                {dream.analysis_summary && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push(`/dream/${dream.id}/report`);
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 7h10" /><path d="M7 12h10" /><path d="M7 17h10" /></svg>
-                    View Report
-                  </Button>
-                )}
-
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
