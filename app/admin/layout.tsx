@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { AdminSidebar } from "./_components/sidebar";
 
 export const metadata = {
   title: "DreamRiver Admin",
@@ -17,83 +17,31 @@ export default async function AdminLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/sign-in");
-  }
+  if (!user) redirect("/sign-in");
 
-  // Double-check admin status (middleware also checks, but defense in depth)
   const { data: profile } = await supabase
     .from("profile")
     .select("is_admin")
     .eq("user_id", user.id)
     .single();
 
-  if (!profile?.is_admin) {
-    redirect("/");
-  }
+  if (!profile?.is_admin) redirect("/");
+
+  // process.env.npm_package_version is set by Node at runtime; falls back to
+  // the literal string when missing (e.g. in production where npm doesn't run).
+  const version = process.env.npm_package_version ?? "3.0.0";
+  const branch = process.env.VERCEL_GIT_COMMIT_REF ?? "local";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Admin top bar */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-6">
-            <Link
-              href="/admin"
-              className="text-lg font-semibold tracking-tight"
-            >
-              DreamRiver Admin
-            </Link>
-            <nav className="hidden md:flex items-center gap-4 text-sm">
-              <Link
-                href="/admin"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Overview
-              </Link>
-              <Link
-                href="/admin/users"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Users
-              </Link>
-              <Link
-                href="/admin/dreams"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Dreams
-              </Link>
-              <Link
-                href="/admin/revenue"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Revenue
-              </Link>
-              <Link
-                href="/admin/prompts"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Prompts
-              </Link>
-              <Link
-                href="/admin/system"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                System
-              </Link>
-            </nav>
-          </div>
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Back to App
-          </Link>
-        </div>
-      </div>
-
-      {/* Page content */}
-      <main className="container px-4 py-8">{children}</main>
+    <div className="min-h-screen bg-background grid grid-cols-[240px_1fr]">
+      <AdminSidebar
+        buildVersion={version}
+        buildBranch={branch}
+        buildHealthy={true}
+      />
+      <main className="overflow-x-hidden">
+        <div className="px-8 py-7 max-w-[1400px]">{children}</div>
+      </main>
     </div>
   );
 }

@@ -1,8 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminOverviewCharts } from "./components/AdminOverviewCharts";
+import {
+  Users,
+  Droplet,
+  CreditCard,
+  Sparkles,
+  Clock,
+  BarChart3,
+} from "lucide-react";
+import { KpiCard } from "./_components/kpi-card";
+import { DreamsBarChart } from "./_components/bar-chart";
+import { RecentSignups, type SignupItem } from "./_components/recent-signups";
+import { RecentIssues } from "./_components/recent-issues";
+import { SystemStatus } from "./_components/system-status";
 import SiteSettingsCard from "./components/SiteSettingsCard";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface DashboardMetrics {
   totalUsers: number;
@@ -10,367 +22,376 @@ interface DashboardMetrics {
   dreamsToday: number;
   dreamsThisWeek: number;
   activeSubscriptions: number;
-  totalRevenue: number;
-  avgDreamsPerUser: number;
   aiCallsToday: number;
-  recentSignups: Array<{
-    user_id: string;
-    created_at: string;
-  }>;
-  dreamsByDay: Array<{
-    date: string;
-    count: number;
-  }>;
+  avgDreamsPerUser: number;
+  recentSignups: SignupItem[];
+  dreamsByDay: Array<{ date: string; count: number }>;
   recentErrors: Array<{
     id: string;
     error_type: string;
     error_message: string;
-    error_context: Record<string, unknown>;
     user_agent: string | null;
     created_at: string;
     user_id: string | null;
   }>;
+  // 7-day trends
+  usersTrend: number;
+  dreamsTrend: number;
+  subsTrend: number;
+  aiCallsTrend: number;
+  // Sparkline data (last 7 days)
+  usersSparkline: number[];
+  subsSparkline: number[];
+  aiCallsSparkline: number[];
+}
+
+// Compute % change between (last 7d sum) vs (prior 7d sum). Returns 0 when
+// prior == 0 to avoid Infinity surfaces.
+function computeTrend(last7: number, prior7: number): number {
+  if (prior7 === 0) return last7 === 0 ? 0 : 100;
+  return Math.round(((last7 - prior7) / prior7) * 100);
+}
+
+// Bucket created_at timestamps into the last N days starting today.
+function bucketByDay(
+  createdAts: string[],
+  days: number,
+): { sparkline: number[]; total: number } {
+  const buckets = new Array<number>(days).fill(0);
+  const now = Date.now();
+  const start = now - days * DAY_MS;
+  let total = 0;
+  for (const ts of createdAts) {
+    const t = new Date(ts).getTime();
+    if (t < start) continue;
+    const idx = Math.floor((t - start) / DAY_MS);
+    if (idx >= 0 && idx < days) {
+      buckets[idx]++;
+      total++;
+    }
+  }
+  return { sparkline: buckets, total };
 }
 
 async function getMetrics(): Promise<DashboardMetrics> {
   const admin = getAdminClient();
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).toISOString();
+  const weekAgo = new Date(now.getTime() - 7 * DAY_MS).toISOString();
+  const fortnightAgo = new Date(now.getTime() - 14 * DAY_MS).toISOString();
 
-  // Run all queries in parallel for speed
   const [
-    usersResult,
-    dreamsResult,
-    dreamsTodayResult,
-    dreamsWeekResult,
-    subscriptionsResult,
-    aiCallsTodayResult,
-    recentSignupsResult,
-    recentErrorsResult,
+    usersTotal,
+    dreamsTotal,
+    dreamsToday,
+    dreamsThisWeek,
+    activeSubs,
+    aiCallsToday,
+    recentSignupsRes,
+    recentSignupSubs,
+    recentErrorsRes,
+    profileCreatedRecent,
+    subscriptionsCreatedRecent,
+    aiCallsCreatedRecent,
+    dreamsCreatedRecent,
   ] = await Promise.all([
-    // Total users
     admin.from("profile").select("id", { count: "exact", head: true }),
-    // Total dreams
     admin.from("dream_entries").select("id", { count: "exact", head: true }),
-    // Dreams today
     admin
       .from("dream_entries")
       .select("id", { count: "exact", head: true })
       .gte("created_at", todayStart),
-    // Dreams this week
     admin
       .from("dream_entries")
       .select("id", { count: "exact", head: true })
       .gte("created_at", weekAgo),
-    // Active subscriptions
     admin
       .from("subscriptions")
       .select("id", { count: "exact", head: true })
       .eq("status", "active"),
-    // AI calls today
     admin
       .from("chatgpt_interactions")
       .select("id", { count: "exact", head: true })
       .gte("created_at", todayStart),
-    // Recent signups (last 10)
     admin
       .from("profile")
       .select("user_id, created_at")
       .order("created_at", { ascending: false })
-      .limit(10),
-    // Recent client errors (last 20)
+      .limit(8),
+    // Plan-by-user lookup for the recent signups list
+    admin
+      .from("subscriptions")
+      .select("user_id, plan, status")
+      .eq("status", "active"),
     admin
       .from("client_error_logs")
-      .select("id, error_type, error_message, error_context, user_agent, created_at, user_id")
+      .select(
+        "id, error_type, error_message, user_agent, created_at, user_id",
+      )
       .order("created_at", { ascending: false })
-      .limit(20),
+      .limit(8),
+    // Last 14 days of timestamps — used for both sparklines and trend math
+    admin
+      .from("profile")
+      .select("created_at")
+      .gte("created_at", fortnightAgo),
+    admin
+      .from("subscriptions")
+      .select("created_at, status")
+      .gte("created_at", fortnightAgo),
+    admin
+      .from("chatgpt_interactions")
+      .select("created_at")
+      .gte("created_at", fortnightAgo),
+    admin
+      .from("dream_entries")
+      .select("created_at")
+      .gte("created_at", fortnightAgo)
+      .order("created_at", { ascending: true }),
   ]);
 
-  // Get dreams by day for the last 14 days
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: recentDreams } = await admin
-    .from("dream_entries")
-    .select("created_at")
-    .gte("created_at", twoWeeksAgo)
-    .order("created_at", { ascending: true });
+  // Daily buckets for last 14 days, then split into last 7 / prior 7
+  const usersTimestamps = (profileCreatedRecent.data ?? []).map(
+    (r: any) => r.created_at,
+  );
+  const subsTimestamps = (subscriptionsCreatedRecent.data ?? [])
+    .filter((r: any) => r.status === "active")
+    .map((r: any) => r.created_at);
+  const aiTimestamps = (aiCallsCreatedRecent.data ?? []).map(
+    (r: any) => r.created_at,
+  );
+  const dreamsTimestamps = (dreamsCreatedRecent.data ?? []).map(
+    (r: any) => r.created_at,
+  );
 
-  // Aggregate dreams by day
-  const dreamsByDayMap = new Map<string, number>();
+  const usersBuckets14 = bucketByDay(usersTimestamps, 14);
+  const subsBuckets14 = bucketByDay(subsTimestamps, 14);
+  const aiBuckets14 = bucketByDay(aiTimestamps, 14);
+  const dreamsBuckets14 = bucketByDay(dreamsTimestamps, 14);
+
+  const sumLast7 = (arr: number[]) =>
+    arr.slice(7).reduce((a, b) => a + b, 0);
+  const sumPrior7 = (arr: number[]) =>
+    arr.slice(0, 7).reduce((a, b) => a + b, 0);
+
+  const usersSparkline = usersBuckets14.sparkline.slice(7);
+  const subsSparkline = subsBuckets14.sparkline.slice(7);
+  const aiCallsSparkline = aiBuckets14.sparkline.slice(7);
+
+  // 14-day series for the bar chart with explicit dates
+  const dreamsByDay: Array<{ date: string; count: number }> = [];
   for (let i = 13; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const key = d.toISOString().split("T")[0];
-    dreamsByDayMap.set(key, 0);
+    const d = new Date(now.getTime() - i * DAY_MS);
+    const date = d.toISOString().split("T")[0];
+    const idx = 13 - i;
+    dreamsByDay.push({ date, count: dreamsBuckets14.sparkline[idx] ?? 0 });
   }
-  recentDreams?.forEach((dream) => {
-    const key = dream.created_at.split("T")[0];
-    if (dreamsByDayMap.has(key)) {
-      dreamsByDayMap.set(key, (dreamsByDayMap.get(key) || 0) + 1);
-    }
-  });
 
-  const totalUsers = usersResult.count || 0;
-  const totalDreams = dreamsResult.count || 0;
+  // Plan map for signup list
+  const planByUser = new Map<string, "visionary" | "prophet">();
+  for (const row of (recentSignupSubs.data ?? []) as Array<{
+    user_id: string;
+    plan: string;
+  }>) {
+    if (row.plan === "visionary" || row.plan === "prophet") {
+      planByUser.set(row.user_id, row.plan);
+    }
+  }
+
+  const recentSignups: SignupItem[] = (
+    (recentSignupsRes.data ?? []) as Array<{
+      user_id: string;
+      created_at: string;
+    }>
+  ).map((s) => ({
+    user_id: s.user_id,
+    created_at: s.created_at,
+    plan: planByUser.get(s.user_id) ?? "free",
+  }));
+
+  const totalUsers = usersTotal.count ?? 0;
+  const totalDreams = dreamsTotal.count ?? 0;
 
   return {
     totalUsers,
     totalDreams,
-    dreamsToday: dreamsTodayResult.count || 0,
-    dreamsThisWeek: dreamsWeekResult.count || 0,
-    activeSubscriptions: subscriptionsResult.count || 0,
-    totalRevenue: 0, // Populated once Stripe is connected
-    avgDreamsPerUser: totalUsers > 0 ? Math.round((totalDreams / totalUsers) * 10) / 10 : 0,
-    aiCallsToday: aiCallsTodayResult.count || 0,
-    recentSignups: recentSignupsResult.data || [],
-    recentErrors: (recentErrorsResult.data || []) as DashboardMetrics["recentErrors"],
-    dreamsByDay: Array.from(dreamsByDayMap.entries()).map(([date, count]) => ({
-      date,
-      count,
-    })),
+    dreamsToday: dreamsToday.count ?? 0,
+    dreamsThisWeek: dreamsThisWeek.count ?? 0,
+    activeSubscriptions: activeSubs.count ?? 0,
+    aiCallsToday: aiCallsToday.count ?? 0,
+    avgDreamsPerUser:
+      totalUsers > 0 ? Math.round((totalDreams / totalUsers) * 10) / 10 : 0,
+    recentSignups,
+    dreamsByDay,
+    recentErrors: (recentErrorsRes.data ?? []) as DashboardMetrics["recentErrors"],
+    usersTrend: computeTrend(
+      sumLast7(usersBuckets14.sparkline),
+      sumPrior7(usersBuckets14.sparkline),
+    ),
+    dreamsTrend: computeTrend(
+      sumLast7(dreamsBuckets14.sparkline),
+      sumPrior7(dreamsBuckets14.sparkline),
+    ),
+    subsTrend: computeTrend(
+      sumLast7(subsBuckets14.sparkline),
+      sumPrior7(subsBuckets14.sparkline),
+    ),
+    aiCallsTrend: computeTrend(
+      sumLast7(aiBuckets14.sparkline),
+      sumPrior7(aiBuckets14.sparkline),
+    ),
+    usersSparkline,
+    subsSparkline,
+    aiCallsSparkline,
   };
 }
+
+const SYSTEM_ITEMS = [
+  {
+    label: "Database",
+    detail: "Supabase PostgreSQL",
+    status: "operational" as const,
+  },
+  {
+    label: "AI Analysis",
+    detail: "OpenAI gpt-4.1-mini · Edge",
+    status: "operational" as const,
+  },
+  {
+    label: "Image Generation",
+    detail: "FLUX.2 klein 9B",
+    status: "operational" as const,
+  },
+  {
+    label: "Payments",
+    detail: "Stripe — not connected",
+    status: "pending" as const,
+  },
+  {
+    label: "Error Monitoring",
+    detail: "Sentry + client_error_logs",
+    status: "operational" as const,
+  },
+  { label: "Email", detail: "Not configured", status: "pending" as const },
+];
 
 export default async function AdminDashboard() {
-  const metrics = await getMetrics();
+  const m = await getMetrics();
+  const lastUpdated = new Date().toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Overview of DreamRiver activity and health
-        </p>
-      </div>
-
-      {/* Key Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total Users"
-          value={metrics.totalUsers.toLocaleString()}
-          subtitle="All registered accounts"
-        />
-        <MetricCard
-          title="Dreams Analyzed"
-          value={metrics.totalDreams.toLocaleString()}
-          subtitle={`${metrics.dreamsToday} today · ${metrics.dreamsThisWeek} this week`}
-        />
-        <MetricCard
-          title="Active Subscriptions"
-          value={metrics.activeSubscriptions.toLocaleString()}
-          subtitle="Paid plans"
-        />
-        <MetricCard
-          title="AI Calls Today"
-          value={metrics.aiCallsToday.toLocaleString()}
-          subtitle={`Avg ${metrics.avgDreamsPerUser} dreams/user`}
-        />
-      </div>
-
-      {/* Charts and Recent Activity */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Dreams Analyzed (14 days)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AdminOverviewCharts data={metrics.dreamsByDay} />
-            </CardContent>
-          </Card>
+    <div className="space-y-5">
+      {/* Topbar */}
+      <div className="flex items-center justify-between gap-4 mb-2">
+        <div>
+          <h1 className="font-serif text-[28px] leading-[1.1]">Overview</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            DreamRiver activity and health · last 14 days
+          </p>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent Signups</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.recentSignups.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No signups yet</p>
-            ) : (
-              <div className="space-y-3">
-                {metrics.recentSignups.map((signup) => (
-                  <div
-                    key={signup.user_id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span className="font-mono text-xs text-muted-foreground truncate max-w-[140px]">
-                      {signup.user_id.slice(0, 8)}...
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatRelativeTime(signup.created_at)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-card border rounded-lg text-[12.5px]">
+            <Clock className="w-3 h-3 text-muted-foreground" />
+            <span className="text-muted-foreground">Updated</span>
+            <span className="font-medium">{lastUpdated}</span>
+          </div>
+          <button
+            type="button"
+            disabled
+            title="Export coming soon"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[12.5px] bg-card hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <BarChart3 className="w-3.5 h-3.5" /> Export
+          </button>
+        </div>
       </div>
 
-      {/* Recent Issues */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            Recent Issues
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {metrics.recentErrors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No errors logged — all clear!</p>
-          ) : (
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {metrics.recentErrors.map((err) => (
-                <div
-                  key={err.id}
-                  className="flex flex-col gap-1 p-3 rounded-lg border border-red-200/50 bg-red-50/30 dark:border-red-900/30 dark:bg-red-950/10"
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <KpiCard
+          label="Total Users"
+          value={m.totalUsers.toLocaleString()}
+          sub="vs. last week"
+          trend={m.usersTrend}
+          trendData={m.usersSparkline}
+          Icon={Users}
+        />
+        <KpiCard
+          label="Dreams Analyzed"
+          value={m.totalDreams.toLocaleString()}
+          sub={`${m.dreamsToday} today · ${m.dreamsThisWeek} this week`}
+          trend={m.dreamsTrend}
+          trendData={m.dreamsByDay.map((d) => d.count)}
+          Icon={Droplet}
+        />
+        <KpiCard
+          label="Active Subscriptions"
+          value={m.activeSubscriptions.toLocaleString()}
+          sub="vs. last week"
+          trend={m.subsTrend}
+          trendData={m.subsSparkline}
+          Icon={CreditCard}
+          variant="gold"
+        />
+        <KpiCard
+          label="AI Calls Today"
+          value={m.aiCallsToday.toLocaleString()}
+          sub={`Avg ${m.avgDreamsPerUser} dreams/user`}
+          trend={m.aiCallsTrend}
+          trendData={m.aiCallsSparkline}
+          Icon={Sparkles}
+          variant="gold"
+        />
+      </div>
+
+      {/* Chart + signups */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        <div className="lg:col-span-2 rounded-[var(--radius-lg)] border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-[13px] font-semibold">Dreams analyzed</div>
+              <div className="text-[11.5px] text-muted-foreground mt-0.5">
+                Last 14 days
+              </div>
+            </div>
+            <div className="flex gap-1 p-0.5 bg-muted rounded-lg text-xs">
+              {(["14d", "30d", "90d"] as const).map((t, i) => (
+                <span
+                  key={t}
+                  className={`px-2.5 py-1 rounded-md ${
+                    i === 0
+                      ? "bg-card font-semibold shadow-sm"
+                      : "text-muted-foreground"
+                  }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">
-                      {err.error_type}
-                    </span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatRelativeTime(err.created_at)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground line-clamp-2">
-                    {err.error_message}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    {err.user_id && (
-                      <span className="font-mono">{err.user_id.slice(0, 8)}…</span>
-                    )}
-                    {err.user_agent && (
-                      <span className="truncate max-w-[200px]">
-                        {parseUserAgent(err.user_agent)}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  {t}
+                </span>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Site Settings — admin-toggleable runtime flags */}
-      <SiteSettingsCard />
-
-      {/* System Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">System Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatusItem
-              label="Database"
-              status="operational"
-              detail="Supabase PostgreSQL"
-            />
-            <StatusItem
-              label="AI Analysis"
-              status="operational"
-              detail="OpenAI gpt-4o-mini"
-            />
-            <StatusItem
-              label="Image Generation"
-              status="operational"
-              detail="FLUX.2 klein 9B"
-            />
-            <StatusItem
-              label="Payments"
-              status="pending"
-              detail="Stripe not connected"
-            />
-            <StatusItem
-              label="Error Monitoring"
-              status="operational"
-              detail="Sentry + client_error_logs"
-            />
-            <StatusItem
-              label="Email"
-              status="pending"
-              detail="Not configured"
-            />
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          <DreamsBarChart data={m.dreamsByDay} />
+        </div>
 
-function MetricCard({
-  title,
-  value,
-  subtitle,
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatusItem({
-  label,
-  status,
-  detail,
-}: {
-  label: string;
-  status: "operational" | "degraded" | "pending";
-  detail: string;
-}) {
-  const colors = {
-    operational: "bg-green-500",
-    degraded: "bg-yellow-500",
-    pending: "bg-gray-400",
-  };
-
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`w-2 h-2 rounded-full ${colors[status]}`} />
-      <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{detail}</p>
+        <RecentSignups items={m.recentSignups} />
       </div>
+
+      {/* Issues + Site settings */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        <div className="lg:col-span-2">
+          <RecentIssues items={m.recentErrors} />
+        </div>
+        <SiteSettingsCard />
+      </div>
+
+      {/* System status */}
+      <SystemStatus items={SYSTEM_ITEMS} />
     </div>
   );
-}
-
-function parseUserAgent(ua: string): string {
-  if (ua.includes("iPhone")) return "iPhone";
-  if (ua.includes("iPad")) return "iPad";
-  if (ua.includes("Android")) return "Android";
-  if (ua.includes("Mac")) return "Mac";
-  if (ua.includes("Windows")) return "Windows";
-  if (ua.includes("Linux")) return "Linux";
-  return "Unknown device";
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
 }
