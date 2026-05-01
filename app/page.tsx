@@ -139,7 +139,7 @@ export default async function MainPage() {
 
         {/* Animated Dream Grid */}
         <div className="mt-6 sm:mt-8">
-          <h2 className="text-lg font-semibold mb-4">Your Dream Gallery</h2>
+          <h2 className="text-lg mb-4">Your Dream Gallery</h2>
           <AnimatedDreamGrid dreams={dreams || []} />
         </div>
         
@@ -147,12 +147,12 @@ export default async function MainPage() {
         <footer className="border-t pt-8 mt-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">DreamRiver</h3>
+              <h3 className="text-lg mb-3 text-gray-900 dark:text-gray-100">DreamRiver</h3>
 
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Quick Links</h3>
+              <h3 className="text-lg mb-3 text-gray-900 dark:text-gray-100">Quick Links</h3>
               <ul className="space-y-1">
                 <li><Link href="/account" className="no-brand-style inline-flex items-center min-h-[44px] text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Account</Link></li>
                 <li><Link href="/settings" className="no-brand-style inline-flex items-center min-h-[44px] text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">Settings</Link></li>
@@ -164,7 +164,7 @@ export default async function MainPage() {
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-gray-100">Connect</h3>
+              <h3 className="text-lg mb-3 text-gray-900 dark:text-gray-100">Connect</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                 Have questions or feedback?
               </p>
@@ -173,7 +173,7 @@ export default async function MainPage() {
                   <Button variant="outline" size="sm" className="bg-white text-gray-900 hover:bg-gray-100 h-11">Contact Us</Button>
                 </Link>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Share:</h4>
+                  <h4 className="text-sm mb-2 text-gray-700 dark:text-gray-300">Share:</h4>
                   {/* Social share buttons with accessible labels and 44px touch targets */}
                   <div className="flex items-center space-x-3">
                     <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(defaultUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" className="inline-flex items-center justify-center w-11 h-11 rounded-full opacity-50 hover:opacity-100 transition-opacity">

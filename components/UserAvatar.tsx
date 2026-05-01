@@ -22,7 +22,6 @@ interface UserAvatarProps {
 export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initials, setInitials] = useState("");
   const [subscription, setSubscription] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
@@ -57,11 +56,6 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
         setUser(data.user);
         
         if (data.user) {
-          // Set initials from email if no user metadata
-          const email = data.user.email || "";
-          const emailInitials = email.split('@')[0].substring(0, 2).toUpperCase();
-          setInitials(emailInitials);
-          
           try {
             // Fetch subscription data from the subscriptions table (not profile)
             const { data: subData, error: subError } = await supabase
@@ -132,15 +126,16 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none" aria-label="Open account menu">
-        <div className={`rounded-full bg-primary text-primary-foreground font-medium flex items-center justify-center ${sizeClasses[size]}`}>
+        <div className={`rounded-full bg-primary text-primary-foreground font-medium flex items-center justify-center overflow-hidden ${sizeClasses[size]}`}>
           {user.user_metadata?.avatar_url ? (
-            <img 
+            <img
               src={user.user_metadata.avatar_url}
               alt="User avatar"
-              className="rounded-full h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <span>{initials}</span>
+            <UserIcon className="h-1/2 w-1/2 opacity-90" aria-hidden="true" />
           )}
         </div>
       </DropdownMenuTrigger>

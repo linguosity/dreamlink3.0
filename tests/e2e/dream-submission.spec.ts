@@ -71,9 +71,12 @@ test.describe('Dream Submission', () => {
       page.getByRole('button', { name: /processing/i }).first()
     ).toBeVisible({ timeout: 3_000 });
 
-    // Success toast should appear (analysis is synchronous, may take 5-15s)
+    // Success toast should appear. Generous ceiling because the route runs
+    // on Node serverless (cold start 2–5s) + a synchronous gpt-4.1-mini
+    // call (5–15s) + several Supabase round-trips. A future migration to
+    // Edge runtime + Web Crypto would cut this materially.
     await expect(page.getByText(/dream recorded/i).first()).toBeVisible({
-      timeout: 30_000,
+      timeout: 45_000,
     });
 
     // Textarea should be cleared after successful submission

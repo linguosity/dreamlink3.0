@@ -121,10 +121,13 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.02 250);
 
-  /* Primary — deep warm blue (sacred, calm, trustworthy) */
-  --primary: oklch(0.45 0.12 245);
+  /* Primary — warm deep blue (sacred, calm, trustworthy)
+   * Matches the deep navy of the landing-hero CTA pill. Hue shifted from
+   * 245 → 252 to read warmer (further from cyan) and lightness lowered
+   * for the "deep" quality. */
+  --primary: oklch(0.40 0.13 252);
   --primary-foreground: oklch(0.98 0.005 75);
-  --primary-hover: oklch(0.40 0.13 245);
+  --primary-hover: oklch(0.35 0.14 252);
 
   /* Secondary — soft warm gray */
   --secondary: oklch(0.93 0.01 75);
@@ -145,7 +148,7 @@
   /* Border / input / ring */
   --border: oklch(0.90 0.01 75);
   --input: oklch(0.90 0.01 75);
-  --ring: oklch(0.45 0.12 245);
+  --ring: oklch(0.40 0.13 252);
   --radius: 0.5rem;
 
   /* Brand-specific */
@@ -153,11 +156,11 @@
   --gold: oklch(0.72 0.14 75);
   --gold-light: oklch(0.82 0.10 78);
   --amber: oklch(0.65 0.16 60);
-  --blue-deep: oklch(0.45 0.12 245);
-  --blue-soft: oklch(0.70 0.08 235);
+  --blue-deep: oklch(0.40 0.13 252);
+  --blue-soft: oklch(0.72 0.07 245);
 
   /* Charts (warm-aligned) */
-  --chart-1: oklch(0.45 0.12 245);
+  --chart-1: oklch(0.40 0.13 252);
   --chart-2: oklch(0.72 0.14 75);
   --chart-3: oklch(0.65 0.16 60);
   --chart-4: oklch(0.70 0.08 235);
@@ -177,9 +180,9 @@
   --popover: oklch(0.22 0.015 250);
   --popover-foreground: oklch(0.96 0.008 75);
 
-  --primary: oklch(0.65 0.13 240);
+  --primary: oklch(0.62 0.14 252);
   --primary-foreground: oklch(0.18 0.012 250);
-  --primary-hover: oklch(0.70 0.14 240);
+  --primary-hover: oklch(0.68 0.15 252);
 
   --secondary: oklch(0.28 0.015 250);
   --secondary-foreground: oklch(0.96 0.008 75);
@@ -195,16 +198,16 @@
 
   --border: oklch(0.30 0.015 250);
   --input: oklch(0.30 0.015 250);
-  --ring: oklch(0.65 0.13 240);
+  --ring: oklch(0.62 0.14 252);
 
   --cream: oklch(0.30 0.015 75);
   --gold: oklch(0.78 0.13 75);
   --gold-light: oklch(0.85 0.10 78);
   --amber: oklch(0.72 0.15 60);
-  --blue-deep: oklch(0.65 0.13 240);
-  --blue-soft: oklch(0.75 0.07 235);
+  --blue-deep: oklch(0.62 0.14 252);
+  --blue-soft: oklch(0.76 0.06 245);
 
-  --chart-1: oklch(0.65 0.13 240);
+  --chart-1: oklch(0.62 0.14 252);
   --chart-2: oklch(0.78 0.13 75);
   --chart-3: oklch(0.72 0.15 60);
   --chart-4: oklch(0.75 0.07 235);
@@ -228,6 +231,16 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+  }
+  /* Headings default to DM Serif Display for warmth + character.
+   * Components that need a different family (e.g. wordmark uses Blanka)
+   * win via class specificity. DM Serif Display ships only weight 400,
+   * so we normalize letter-spacing instead of asking for a bold variant
+   * that would synthesize. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
   body[data-cookie-banner="visible"] {
     padding-bottom: 8.5rem;

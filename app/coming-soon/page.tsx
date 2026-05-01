@@ -75,7 +75,7 @@ export default function ComingSoonPage() {
                 Desktop reorders to the right column via grid placement. */}
             <div className="flex justify-center md:order-2 md:col-start-2">
               <div className="animate-phone-float">
-                <IOSDevice width={270} height={580}>
+                <IOSDevice width={260} height={640}>
                   <PhoneMockup />
                 </IOSDevice>
               </div>
