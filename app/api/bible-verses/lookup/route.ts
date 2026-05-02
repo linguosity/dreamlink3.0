@@ -98,7 +98,20 @@ export async function GET(request: Request) {
     if (DEBUG) console.log(`Retrieved ${citations.length} citations for dream ${dreamId}`);
 
     // Create an array to capture all verses for debugging
-    const verseMapping = [];
+    interface VerseMapping {
+      reference: string;
+      normalizedReference?: string;
+      text?: string;
+      book?: string;
+      chapter?: number;
+      verse?: number;
+      found: boolean;
+      source: string;
+      index?: number;
+      expandedCount?: number;
+      totalInRange?: number;
+    }
+    const verseMapping: VerseMapping[] = [];
     
     // First, create a map of normalized references to citation objects for easier lookup
     const citationMap = new Map();
