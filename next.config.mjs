@@ -25,6 +25,13 @@ export default withSentryConfig(nextConfig, {
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  // Tree-shake Sentry SDK debug/logger statements out of the production bundle.
+  // Replaces the deprecated top-level `disableLogger` option (removed in @sentry/nextjs 10.46+).
+  // Note: Turbopack does not yet honor this hook (nor did it honor `disableLogger`),
+  // so under Next.js 16's Turbopack bundler this is effectively a webpack-only optimization.
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });
