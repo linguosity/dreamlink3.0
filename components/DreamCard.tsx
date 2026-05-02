@@ -355,20 +355,23 @@ type DreamEntryProps = {
   empty?: boolean;
   loading?: boolean;
   searchTerms?: string[];
+  // Mirrors `dream_entries` row nullability from `lib/database.types.ts` so
+  // server-fetched rows can flow in without lossy casts. Read sites in this
+  // component handle null with `??`/`|| ""` guards.
   dream: {
     id: string;
-    original_text: string;
-    title?: string;
-    dream_summary?: string;
-    personalized_summary?: string;
-    analysis_summary?: string;
-    topic_sentence?: string;
-    supporting_points?: string[];
-    conclusion_sentence?: string;
-    formatted_analysis?: string;
-    tags?: string[];
-    bible_refs?: string[];
-    created_at?: string;
+    original_text: string | null;
+    title?: string | null;
+    dream_summary?: string | null;
+    personalized_summary?: string | null;
+    analysis_summary?: string | null;
+    topic_sentence?: string | null;
+    supporting_points?: string[] | null;
+    conclusion_sentence?: string | null;
+    formatted_analysis?: string | null;
+    tags?: string[] | null;
+    bible_refs?: string[] | null;
+    created_at?: string | null;
     image_url?: string | null;
   };
 };
@@ -1300,7 +1303,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 "text-xs line-clamp-2",
                 cardImageUrl ? "text-white/80" : "text-muted-foreground"
               )}>
-                {highlightMatches(dream.original_text, searchTerms)}
+                {highlightMatches(dream.original_text ?? "", searchTerms)}
               </div>
             )}
 
@@ -1384,11 +1387,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
                   {dream.formatted_analysis ? (
                     <div className="text-sm text-muted-foreground">
-                      {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
+                      {formatBibleCitations(dream.formatted_analysis, dream.bible_refs ?? undefined)}
                     </div>
                   ) : dream.analysis_summary ? (
                     <div className="text-sm text-muted-foreground">
-                      {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
+                      {formatBibleCitations(dream.analysis_summary, dream.bible_refs ?? undefined)}
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -1400,7 +1403,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                       {dream.supporting_points && dream.supporting_points.length > 0 && (
                         <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
                           {dream.supporting_points.map((point, index) => (
-                            <li key={index}>{formatBibleCitations(point, dream.bible_refs)}</li>
+                            <li key={index}>{formatBibleCitations(point, dream.bible_refs ?? undefined)}</li>
                           ))}
                         </ul>
                       )}
@@ -1417,7 +1420,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <TabsContent value="original" className="space-y-4 p-1 min-h-0">
                 <div ref={originalContentRef} className="text-sm whitespace-pre-wrap">
                   {searchTerms.length > 0
-                    ? highlightMatches(dream.original_text, searchTerms)
+                    ? highlightMatches(dream.original_text ?? "", searchTerms)
                     : dream.original_text
                   }
                 </div>
