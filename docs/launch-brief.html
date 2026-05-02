@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>DreamRiver · Launch Brief</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  @page { size: Letter; margin: 0.45in 0.55in; }
+
+  :root{
+    --ink:        #1a2238;
+    --ink-soft:   #4a5470;
+    --muted:      #8590a8;
+    --rule:       #d9dee9;
+    --tint:       #f3f5fa;
+    --accent:     #2e4a8a;   /* warm deep blue */
+    --accent-2:   #c89b3c;   /* warm gold */
+    --done:       #2e7d4f;
+    --wip:        #b88416;
+    --open:       #6b7280;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
+    color: var(--ink);
+    font-size: 9.4pt;
+    line-height: 1.42;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .serif{ font-family:'DM Serif Display', Georgia, serif; font-weight:400; letter-spacing:-0.005em; }
+
+  /* --- Header strip --- */
+  header{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom: 1.2pt solid var(--ink);
+    padding-bottom: 8pt; margin-bottom: 12pt;
+  }
+  .brand{ font-family:'DM Serif Display', serif; font-size: 18pt; line-height:1; letter-spacing:-0.01em; }
+  .brand .dot{ color: var(--accent-2); }
+  .kicker{ font-size: 7.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .kicker .strong{ color: var(--ink); font-weight: 600; }
+  .target{ text-align:right; }
+  .target .big{ font-family:'DM Serif Display', serif; font-size: 13.5pt; line-height:1; }
+  .target .small{ font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-top:3pt; }
+
+  /* --- Timeline --- */
+  .timeline{
+    position: relative;
+    margin: 4pt 0 14pt;
+    padding: 0 2pt;
+  }
+  .track{
+    position: absolute; left: 1%; right: 1%; top: 11pt; height: 1.5pt;
+    background: var(--rule);
+  }
+  .track .fill{
+    position:absolute; left:0; top:0; height:100%; width:2%;
+    background: var(--accent);
+  }
+  .stops{ display:flex; justify-content: space-between; position:relative; }
+  .stop{ text-align:center; flex: 0 0 auto; width: 22%; }
+  .stop .node{
+    width: 9pt; height: 9pt; border-radius: 50%;
+    background: white; border: 1.5pt solid var(--accent);
+    margin: 7pt auto 5pt;
+  }
+  .stop.now .node{ background: var(--accent); box-shadow: 0 0 0 2.5pt rgba(46,74,138,0.18); }
+  .stop .label{ font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); font-weight:600; }
+  .stop .date{ font-size: 8.2pt; color: var(--muted); margin-top: 1pt; }
+
+  /* --- Phases --- */
+  .phases{ display:grid; grid-template-columns: 1fr; gap: 9pt; }
+  .phase{
+    border: 0.6pt solid var(--rule);
+    border-radius: 4pt;
+    padding: 8pt 11pt 9pt;
+  }
+  .phase header.row{
+    display:flex; justify-content: space-between; align-items: baseline;
+    border:0; padding:0; margin: 0 0 6pt 0;
+  }
+  .phase h2{
+    font-family:'DM Serif Display', serif; font-weight: 400;
+    font-size: 12pt; margin: 0; letter-spacing: -0.005em;
+  }
+  .phase h2 .num{ color: var(--accent-2); margin-right: 4pt; }
+  .phase .meta{ font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .phase .meta .hours{ color: var(--ink); font-weight: 600; }
+
+  ul.tasks{ list-style:none; margin:0; padding:0; columns: 2; column-gap: 16pt; }
+  ul.tasks li{
+    display:grid; grid-template-columns: 12pt 1fr auto; gap: 5pt;
+    padding: 1.5pt 0;
+    break-inside: avoid;
+    align-items: baseline;
+  }
+  .box{
+    width: 9pt; height: 9pt; border: 1pt solid var(--ink-soft);
+    display:inline-block; border-radius: 1.5pt;
+    transform: translateY(1pt);
+  }
+  .box.done{ background: var(--done); border-color: var(--done); position:relative; }
+  .box.done::after{
+    content:""; position:absolute; left:1.6pt; top:-0.5pt;
+    width:3pt; height:6pt; border:1.4pt solid white; border-top:0; border-left:0;
+    transform: rotate(42deg);
+  }
+  .box.wip{
+    background: linear-gradient(90deg, var(--wip) 50%, white 50%);
+    border-color: var(--wip);
+  }
+  li.done .label{ color: var(--ink-soft); text-decoration: line-through; text-decoration-color: var(--muted); text-decoration-thickness: 0.6pt; }
+  .label{ }
+  .est{ font-variant-numeric: tabular-nums; font-size: 8.4pt; color: var(--muted); }
+
+  /* --- Footer --- */
+  footer{
+    margin-top: 11pt; padding-top: 7pt;
+    border-top: 0.6pt solid var(--rule);
+    display:flex; justify-content: space-between; align-items: baseline;
+    font-size: 7.6pt; color: var(--muted); letter-spacing: 0.04em;
+  }
+  .legend{ display:flex; gap: 14pt; align-items: baseline; }
+  .legend .swatch{ display:inline-flex; align-items:baseline; gap:5pt; }
+  .legend .box{ transform: translateY(1.5pt); }
+  .totals{ color: var(--ink); }
+  .totals .big{ font-family:'DM Serif Display', serif; font-size: 11pt; }
+
+  /* --- Critical path callout --- */
+  .callout{
+    margin: 0 0 10pt;
+    padding: 7pt 11pt;
+    background: var(--tint);
+    border-left: 2.5pt solid var(--accent);
+    border-radius: 2pt;
+    display:flex; gap: 10pt; align-items: baseline;
+    font-size: 8.6pt;
+  }
+  .callout .tag{
+    font-size: 7pt; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; flex: 0 0 auto;
+  }
+  .callout .body{ color: var(--ink); }
+  .callout strong{ color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">DreamRiver<span class="dot">.</span></div>
+    <div class="kicker"><span class="strong">Launch Brief</span> &nbsp;·&nbsp; v1 &nbsp;·&nbsp; 29 Apr 2026</div>
+  </div>
+  <div class="target">
+    <div class="big">T &minus; 27 days</div>
+    <div class="small">Public launch &nbsp;·&nbsp; Tue 26 May 2026</div>
+  </div>
+</header>
+
+<!-- Timeline -->
+<div class="timeline">
+  <div class="track"><div class="fill"></div></div>
+  <div class="stops">
+    <div class="stop now">
+      <div class="label">Today</div>
+      <div class="node"></div>
+      <div class="date">29 Apr · T&minus;27</div>
+    </div>
+    <div class="stop">
+      <div class="label">Waitlist Live</div>
+      <div class="node"></div>
+      <div class="date">5 May · T&minus;21</div>
+    </div>
+    <div class="stop">
+      <div class="label">Private Beta</div>
+      <div class="node"></div>
+      <div class="date">16 May · T&minus;10</div>
+    </div>
+    <div class="stop">
+      <div class="label">Public Launch</div>
+      <div class="node"></div>
+      <div class="date">26 May · T&minus;0</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="tag">Critical&nbsp;path</div>
+  <div class="body">Waitlist must ship by <strong>5 May</strong> to seed list before launch. Stripe live-mode + onboarding gate <strong>16 May</strong>; everything after is content &amp; polish.</div>
+</div>
+
+<!-- Phases -->
+<div class="phases">
+
+  <section class="phase">
+    <header class="row">
+      <h2><span class="num">01</span>Stabilize &nbsp;<span style="color:var(--muted); font-weight:400; font-size:9pt; letter-spacing:0;">— ship the waitlist</span></h2>
+      <div class="meta">T&minus;27 → T&minus;21 &nbsp;·&nbsp; <span class="hours">≈ 12 h</span></div>
+    </header>
+    <ul class="tasks">
+      <li><span class="box"></span><span class="label">Waitlist table + <code>/api/subscribe</code> hardening</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">DNS cutover &nbsp;dreamriver.io → Vercel</span><span class="est">1 h</span></li>
+      <li><span class="box"></span><span class="label">Privacy &amp; Terms — final copy pass</span><span class="est">3 h</span></li>
+      <li><span class="box"></span><span class="label">PostHog (or Plausible) install + events</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">Rate-limit subscribe &amp; analysis routes</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">RLS policy review on production tables</span><span class="est">2 h</span></li>
+    </ul>
+  </section>
+
+  <section class="phase">
+    <header class="row">
+      <h2><span class="num">02</span>Admin &amp; Payments &nbsp;<span style="color:var(--muted); font-weight:400; font-size:9pt; letter-spacing:0;">— ready to charge</span></h2>
+      <div class="meta">T&minus;21 → T&minus;10 &nbsp;·&nbsp; <span class="hours">≈ 18 h</span></div>
+    </header>
+    <ul class="tasks">
+      <li><span class="box"></span><span class="label">Admin dashboard — KPIs + signup chart</span><span class="est">5 h</span></li>
+      <li><span class="box"></span><span class="label">Stripe live mode + webhook smoke test</span><span class="est">4 h</span></li>
+      <li><span class="box"></span><span class="label">Onboarding flow — empty state &amp; first dream</span><span class="est">5 h</span></li>
+      <li><span class="box"></span><span class="label">Resend transactional — confirm + receipt</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">Pricing page — final copy &amp; FAQ</span><span class="est">2 h</span></li>
+    </ul>
+  </section>
+
+  <section class="phase">
+    <header class="row">
+      <h2><span class="num">03</span>Content &amp; SEO &nbsp;<span style="color:var(--muted); font-weight:400; font-size:9pt; letter-spacing:0;">— compounding traffic</span></h2>
+      <div class="meta">T&minus;10 → T&minus;3 &nbsp;·&nbsp; <span class="hours">≈ 15 h</span></div>
+    </header>
+    <ul class="tasks">
+      <li><span class="box"></span><span class="label">3 pillar posts — Bible &amp; dream symbolism</span><span class="est">8 h</span></li>
+      <li><span class="box"></span><span class="label">2 “Alternative to” comparison pages</span><span class="est">3 h</span></li>
+      <li><span class="box"></span><span class="label">OG cards, structured data, sitemap audit</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">Demo loop GIF + landing screenshots</span><span class="est">2 h</span></li>
+    </ul>
+  </section>
+
+  <section class="phase">
+    <header class="row">
+      <h2><span class="num">04</span>Launch Ready &nbsp;<span style="color:var(--muted); font-weight:400; font-size:9pt; letter-spacing:0;">— last mile</span></h2>
+      <div class="meta">T&minus;3 → T&minus;0 &nbsp;·&nbsp; <span class="hours">≈ 10 h</span></div>
+    </header>
+    <ul class="tasks">
+      <li><span class="box"></span><span class="label">Cross-browser + Lighthouse pass (≥90 LCP)</span><span class="est">3 h</span></li>
+      <li><span class="box"></span><span class="label">Email sequence — Welcome / D3 / D7</span><span class="est">3 h</span></li>
+      <li><span class="box"></span><span class="label">Reddit + Christian-community target list</span><span class="est">2 h</span></li>
+      <li><span class="box"></span><span class="label">Launch-day announcement copy + tweets</span><span class="est">2 h</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<footer>
+  <div class="legend">
+    <span class="swatch"><span class="box"></span> Open</span>
+    <span class="swatch"><span class="box wip"></span> In&nbsp;progress</span>
+    <span class="swatch"><span class="box done"></span> Shipped</span>
+  </div>
+  <div class="totals">
+    <span class="big">≈ 55 h</span> &nbsp;total &nbsp;·&nbsp; ~2 h / day pace &nbsp;·&nbsp; solo dev
+  </div>
+</footer>
+
+</body>
+</html>
