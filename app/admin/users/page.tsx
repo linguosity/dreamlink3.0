@@ -36,9 +36,11 @@ async function getUsers(): Promise<{
     .from("dream_entries")
     .select("user_id, created_at");
 
-  // Aggregate dream data per user
+  // Aggregate dream data per user. Skip orphan rows (no user_id) and rows
+  // missing created_at — both are required to be useful in this view.
   const userDreamMap = new Map<string, { count: number; lastDream: string | null }>();
   dreamCounts?.forEach((d) => {
+    if (!d.user_id || !d.created_at) return;
     const existing = userDreamMap.get(d.user_id);
     if (!existing) {
       userDreamMap.set(d.user_id, { count: 1, lastDream: d.created_at });
@@ -58,18 +60,25 @@ async function getUsers(): Promise<{
     if (data.lastDream && data.lastDream >= weekAgo) activeThisWeek++;
   });
 
-  const users: UserRow[] = (profiles || []).map((p) => {
-    const dreamData = userDreamMap.get(p.user_id);
-    return {
-      user_id: p.user_id,
-      created_at: p.created_at,
-      reading_level: p.reading_level,
-      image_aesthetic: p.image_aesthetic,
-      is_admin: p.is_admin,
-      dream_count: dreamData?.count || 0,
-      last_dream: dreamData?.lastDream || null,
-    };
-  });
+  // Filter out orphan profile rows (missing user_id or created_at) — they
+  // can't be displayed meaningfully and would only surface as broken entries.
+  const users: UserRow[] = (profiles || [])
+    .filter(
+      (p): p is typeof p & { user_id: string; created_at: string } =>
+        p.user_id !== null && p.created_at !== null,
+    )
+    .map((p) => {
+      const dreamData = userDreamMap.get(p.user_id);
+      return {
+        user_id: p.user_id,
+        created_at: p.created_at,
+        reading_level: p.reading_level,
+        image_aesthetic: p.image_aesthetic,
+        is_admin: p.is_admin,
+        dream_count: dreamData?.count || 0,
+        last_dream: dreamData?.lastDream || null,
+      };
+    });
 
   return {
     users,
