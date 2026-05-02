@@ -4,6 +4,7 @@ import { useState, useEffect, KeyboardEvent as ReactKeyboardEvent } from "react"
 import Link from "next/link";
 import { Search, X } from "lucide-react";
 import UserAvatar from "./UserAvatar";
+import { FeatureHint } from "./feature-hint";
 import { useSearch } from "@/context/search-context";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -209,9 +210,17 @@ export default function Navbar() {
         </div>
 
         {/* Right: Profile Avatar with Dropdown */}
-        <div className="flex-shrink-0">
-          <UserAvatar />
-        </div>
+        <FeatureHint
+          id="depth-tier"
+          title="Try Deep or Profound interpretations"
+          body="Open Settings from your avatar to choose how thorough each analysis is. Deep adds biblical context; Profound adds scholarly depth."
+          side="bottom"
+          align="end"
+        >
+          <div className="flex-shrink-0">
+            <UserAvatar />
+          </div>
+        </FeatureHint>
       </div>
     </nav>
   );

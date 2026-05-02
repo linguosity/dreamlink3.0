@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { highlightMatches } from "@/utils/highlight";
 import { toast } from "sonner";
 import { logClientError } from "@/utils/errorLogger";
+import { FeatureHint } from "@/components/feature-hint";
 
 // Instead of direct import, use fallback icon components
 const MessageSquareIcon = ({ className }: { className?: string }) => (
@@ -1365,7 +1366,15 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="analysis" className="flex items-center gap-1 data-[state=active]:shadow-sm"><PuzzleIcon className="h-3 w-3" />Analysis</TabsTrigger>
-              <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
+              <FeatureHint
+                id="dream-tabs"
+                title="Read your original dream"
+                body="Flip to ‘Original Dream’ anytime to see exactly what you wrote, before interpretation."
+                side="bottom"
+                align="center"
+              >
+                <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
+              </FeatureHint>
             </TabsList>
 
             <div>
@@ -1417,6 +1426,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           </Tabs>
           
           {/* Social Share Row */}
+          <FeatureHint
+            id="share-dream"
+            title="Share your interpretation"
+            body="Send a link, post to social, or copy. Each share opens a public read-only view of this dream."
+            side="top"
+            align="end"
+          >
           <div className="flex justify-end items-center mb-4">
             <div className="text-xs text-muted-foreground mr-2">Share:</div>
             <div className="flex items-center space-x-2">
@@ -1480,6 +1496,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </TooltipProvider>
             </div>
           </div>
+          </FeatureHint>
 
           {/* Footer: tags, bible refs, actions — stacked on mobile, side-by-side on desktop */}
           <div className="pt-4 border-t space-y-3">
