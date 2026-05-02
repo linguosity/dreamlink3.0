@@ -280,13 +280,11 @@ function WaterPlane({ invalidate, scrollY }: WaterPlaneProps) {
           tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
         }
       ),
-      alphaMap: undefined,
       sunDirection: new THREE.Vector3(0.0, 1.0, 0.0).normalize(),
       sunColor: 0xd4dde3,
       waterColor: 0x8fa5ab,
       distortionScale: 1.2,
       fog: true,
-      format: THREE.RGBAFormat,
     });
 
     water.rotation.x = -Math.PI / 2;
