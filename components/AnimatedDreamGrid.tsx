@@ -26,19 +26,28 @@ const DreamCard = dynamic(() => import('./DreamCard'), {
   loading: () => <div className="h-64 w-full bg-muted animate-pulse rounded-md"></div>
 });
 
+// Aligns with `dream_entries` row shape from `lib/database.types.ts`.
+// Nullable here matches the DB's true nullability — keep this in sync
+// with the typed Supabase Row so server-fetched rows assign cleanly.
 interface Dream {
   id: string;
-  original_text: string;
-  title?: string;
-  dream_summary?: string;
-  analysis_summary?: string;
-  topic_sentence?: string;
-  supporting_points?: string[];
-  conclusion_sentence?: string;
-  formatted_analysis?: string;
-  tags?: string[];
-  bible_refs?: string[];
-  created_at?: string;
+  user_id?: string | null;
+  original_text: string | null;
+  title?: string | null;
+  dream_summary?: string | null;
+  personalized_summary?: string | null;
+  analysis_summary?: string | null;
+  topic_sentence?: string | null;
+  supporting_points?: string[] | null;
+  conclusion_sentence?: string | null;
+  formatted_analysis?: string | null;
+  gematria_interpretation?: string | null;
+  color_symbolism?: string | null;
+  image_url?: string | null;
+  tags?: string[] | null;
+  bible_refs?: string[] | null;
+  created_at?: string | null;
+  raw_analysis?: unknown;
   // Comparison-group metadata (set on rows produced by admin test mode).
   comparison_group_id?: string | null;
   analysis_depth?: string | null;
@@ -214,7 +223,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
   }
 
   // Enrich dreams with client-side analysis data if available (before server refresh)
-  const enrichedDreams = filteredDreams.map((dream) => {
+  const enrichedDreams: Dream[] = filteredDreams.map((dream): Dream => {
     if (analyzedDream && analyzedDream.id === dream.id && !dream.dream_summary) {
       const a = analyzedDream.analysis;
       return {

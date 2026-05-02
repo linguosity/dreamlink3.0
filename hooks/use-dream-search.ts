@@ -1,19 +1,20 @@
 import { useMemo, useState, useEffect } from 'react';
 
-// Dream type definition matching what we use in AnimatedDreamGrid
+// Dream type definition matching what we use in AnimatedDreamGrid.
+// Mirrors `dream_entries` row nullability from `lib/database.types.ts`.
 interface Dream {
   id: string;
-  original_text: string;
-  title?: string;
-  dream_summary?: string;
-  analysis_summary?: string;
-  topic_sentence?: string;
-  supporting_points?: string[];
-  conclusion_sentence?: string;
-  formatted_analysis?: string;
-  tags?: string[];
-  bible_refs?: string[];
-  created_at?: string;
+  original_text: string | null;
+  title?: string | null;
+  dream_summary?: string | null;
+  analysis_summary?: string | null;
+  topic_sentence?: string | null;
+  supporting_points?: string[] | null;
+  conclusion_sentence?: string | null;
+  formatted_analysis?: string | null;
+  tags?: string[] | null;
+  bible_refs?: string[] | null;
+  created_at?: string | null;
 }
 
 /**
