@@ -519,10 +519,6 @@ export async function POST(request: Request) {
   if (!user) {
     console.error("API: Dream entry - No user in session");
 
-    // Also check session to see if there's more info
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (DEBUG) console.log("API: Dream entry - Session check:", sessionData?.session ? "Has session" : "No session");
-
     return NextResponse.json(
       { error: "Unauthorized: You must be logged in to submit a dream" },
       { status: 401 }

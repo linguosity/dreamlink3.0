@@ -32,21 +32,21 @@ export default async function AuthLayout({
   try {
     const supabase = await createClient();
     const {
-      data: { session },
+      data: { user },
       error
-    } = await supabase.auth.getSession();
+    } = await supabase.auth.getUser();
 
     // If we have a JWT error, don't redirect - just show the login page
     if (error && (error.message.includes('JWT') || error.message.includes('expired') || error.message.includes('token'))) {
       console.log("JWT expired, showing login page");
-    } else if (session) {
+    } else if (user) {
       // If already logged in, send them home—preserve any ?success=… query
       const params = searchParams ? new URLSearchParams(
         Object.entries(searchParams)
           .filter(([_, value]) => value !== undefined)
           .map(([key, value]) => [key, value!.toString()])
       ).toString() : "";
-      
+
       return redirect(params ? `/?${params}` : "/");
     }
   } catch (err) {

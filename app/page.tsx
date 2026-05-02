@@ -33,9 +33,6 @@ export default async function MainPage() {
   const { data, error: userError } = await supabase.auth.getUser();
   const user = data?.user;
 
-  // Also check session for more information
-  const { data: sessionData } = await supabase.auth.getSession();
-  
   if (userError) {
     console.error("Authentication error:", userError.message);
     // Don't redirect if it's a JWT error - the middleware should handle it
