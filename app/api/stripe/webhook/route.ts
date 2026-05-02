@@ -60,8 +60,12 @@ export async function POST(request: NextRequest) {
         const subscription = await stripe.subscriptions.retrieve(
           session.subscription as string
         );
-        const priceId = subscription.items.data[0]?.price?.id || "";
+        const firstItem = subscription.items.data[0];
+        const priceId = firstItem?.price?.id || "";
         const plan = stripePriceToPlan(priceId);
+        // In API version 2026-02-25.clover, period fields moved from
+        // Subscription to SubscriptionItem.
+        const periodEnd = firstItem?.current_period_end;
 
         await admin.from("subscriptions").upsert(
           {
@@ -69,9 +73,9 @@ export async function POST(request: NextRequest) {
             stripe_subscription_id: subscription.id,
             status: subscription.status,
             plan,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
+            current_period_end: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
@@ -81,17 +85,21 @@ export async function POST(request: NextRequest) {
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        const priceId = subscription.items.data[0]?.price?.id || "";
+        const firstItem = subscription.items.data[0];
+        const priceId = firstItem?.price?.id || "";
         const plan = stripePriceToPlan(priceId);
+        // In API version 2026-02-25.clover, period fields moved from
+        // Subscription to SubscriptionItem.
+        const periodEnd = firstItem?.current_period_end;
 
         await admin
           .from("subscriptions")
           .update({
             status: subscription.status,
             plan,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
+            current_period_end: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
@@ -113,7 +121,11 @@ export async function POST(request: NextRequest) {
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        if (!invoice.subscription) break;
+        // In API version 2026-02-25.clover, Invoice.subscription was replaced
+        // by Invoice.parent.subscription_details.subscription.
+        const subscriptionRef =
+          invoice.parent?.subscription_details?.subscription;
+        if (!subscriptionRef) break;
 
         // Record payment
         await admin.from("payments").insert({
