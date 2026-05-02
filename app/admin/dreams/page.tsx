@@ -178,7 +178,7 @@ export default async function DreamsPage() {
                           )}
                         </td>
                         <td className="py-3 px-2 text-muted-foreground text-xs">
-                          {new Date(dream.created_at).toLocaleDateString()}
+                          {new Date(dream.created_at ?? 0).toLocaleDateString()}
                         </td>
                       </tr>
                     ))}

@@ -80,21 +80,21 @@ export async function POST() {
 
         results.push({
           dreamId: dream.id,
-          title: dream.title,
+          title: dream.title ?? undefined,
           status: "success",
           imageUrl,
         });
       } else {
         results.push({
           dreamId: dream.id,
-          title: dream.title,
+          title: dream.title ?? undefined,
           status: "no_image",
         });
       }
     } catch (err) {
       results.push({
         dreamId: dream.id,
-        title: dream.title,
+        title: dream.title ?? undefined,
         status: "error",
         error: err instanceof Error ? err.message : String(err),
       });
