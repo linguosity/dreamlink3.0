@@ -83,31 +83,28 @@ export default async function RootLayout({
 
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error: userError } = await supabase.auth.getUser();
 
-    if (session) {
-      const { data, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        if (userError.message.includes("User from sub claim")) {
-          // kick into our sign-out handler, with a message
-          const msg = encodeURIComponent("Session expired. Please sign in again.");
-          redirect(`/api/auth/signout?redirect_to=/sign-in?error=${msg}`);
-        }
-        else if (userError.message !== "Auth session missing!") {
-          console.error("Error fetching user:", userError.message);
-        }
-      } else {
-        user = data.user;
-        const { data: profileRow } = await supabase
-          .from("profile")
-          .select("dismissed_hints")
-          .eq("user_id", user.id)
-          .single();
-        const raw = (profileRow?.dismissed_hints as string[] | null) ?? [];
-        dismissedHints = raw.filter((id): id is HintId =>
-          (HINT_IDS as readonly string[]).includes(id),
-        );
+    if (userError) {
+      if (userError.message.includes("User from sub claim")) {
+        // kick into our sign-out handler, with a message
+        const msg = encodeURIComponent("Session expired. Please sign in again.");
+        redirect(`/api/auth/signout?redirect_to=/sign-in?error=${msg}`);
       }
+      else if (userError.message !== "Auth session missing!") {
+        console.error("Error fetching user:", userError.message);
+      }
+    } else if (data.user) {
+      user = data.user;
+      const { data: profileRow } = await supabase
+        .from("profile")
+        .select("dismissed_hints")
+        .eq("user_id", user.id)
+        .single();
+      const raw = (profileRow?.dismissed_hints as string[] | null) ?? [];
+      dismissedHints = raw.filter((id): id is HintId =>
+        (HINT_IDS as readonly string[]).includes(id),
+      );
     }
   } catch (err: unknown) {
     // re-throw Next.js redirects so they become real HTTP 3xxs
