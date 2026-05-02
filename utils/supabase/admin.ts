@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
-let adminInstance: ReturnType<typeof createClient> | null = null;
+let adminInstance: ReturnType<typeof createClient<Database>> | null = null;
 
 export function getAdminClient() {
   if (adminInstance) return adminInstance;
@@ -12,6 +13,6 @@ export function getAdminClient() {
     throw new Error("Missing Supabase admin credentials");
   }
 
-  adminInstance = createClient(url, key);
+  adminInstance = createClient<Database>(url, key);
   return adminInstance;
 }
