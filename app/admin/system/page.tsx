@@ -1,5 +1,8 @@
 import { getAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/utils/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResetHintsCard } from "./ResetHintsCard";
+import { HINT_IDS, type HintId } from "@/lib/hints/types";
 
 async function getSystemMetrics() {
   const admin = getAdminClient();
@@ -75,8 +78,28 @@ async function getSystemMetrics() {
   };
 }
 
+async function getMyDismissedHints(): Promise<HintId[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("profile")
+    .select("dismissed_hints")
+    .eq("user_id", user.id)
+    .single();
+  const raw = (data?.dismissed_hints as string[] | null) ?? [];
+  return raw.filter((id): id is HintId =>
+    (HINT_IDS as readonly string[]).includes(id),
+  );
+}
+
 export default async function SystemPage() {
-  const metrics = await getSystemMetrics();
+  const [metrics, dismissedHints] = await Promise.all([
+    getSystemMetrics(),
+    getMyDismissedHints(),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -211,6 +234,9 @@ export default async function SystemPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Onboarding hints — admin self-service reset */}
+      <ResetHintsCard initialDismissed={dismissedHints} />
     </div>
   );
 }

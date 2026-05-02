@@ -28,6 +28,8 @@ import { Providers } from './providers';
 import { LazyWaterBackground } from '@/components/LazyWaterBackground';
 import { VersionChecker } from '@/components/VersionChecker';
 import CookieConsent from '@/components/CookieConsent';
+import { HintsProvider } from '@/lib/hints/dismissed-context';
+import { HINT_IDS, type HintId } from '@/lib/hints/types';
 
 // Determine the base URL for metadata and redirects
 const defaultUrl = process.env.VERCEL_URL
@@ -77,6 +79,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   let user = null;
+  let dismissedHints: HintId[] = [];
 
   try {
     const supabase = await createClient();
@@ -95,6 +98,15 @@ export default async function RootLayout({
         }
       } else {
         user = data.user;
+        const { data: profileRow } = await supabase
+          .from("profile")
+          .select("dismissed_hints")
+          .eq("user_id", user.id)
+          .single();
+        const raw = (profileRow?.dismissed_hints as string[] | null) ?? [];
+        dismissedHints = raw.filter((id): id is HintId =>
+          (HINT_IDS as readonly string[]).includes(id),
+        );
       }
     }
   } catch (err: unknown) {
@@ -122,6 +134,7 @@ export default async function RootLayout({
       <body className="text-foreground">
       <LazyWaterBackground />
         <Providers>
+          <HintsProvider initialDismissed={dismissedHints}>
           <VersionChecker />
           {/* Skip-to-content link for keyboard/screen-reader users */}
           <a
@@ -173,6 +186,7 @@ export default async function RootLayout({
               </footer>
             )}
           </main>
+          </HintsProvider>
         </Providers>
       </body>
     </html>
