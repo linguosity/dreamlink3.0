@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getAdminClient } from "@/utils/supabase/admin";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { encodedRedirect } from "@/utils/utils";
@@ -63,23 +64,26 @@ export const signUpAction = async (formData: FormData) => {
       return { error: error.message };
     }
 
-    // Create a profile row for the new user so downstream queries don't fail.
-    // Allowlisted emails (e.g. the dev's brother) are auto-marked as admin so
-    // they bypass the coming-soon gate without manual SQL.
-    if (signUpData?.user) {
-      const isAllowlistedAdmin = isAllowedAdminEmail(email);
-      const { error: profileError } = await supabase
-        .from("profile")
-        .upsert(
-          {
-            user_id: signUpData.user.id,
-            ...(isAllowlistedAdmin ? { is_admin: true } : {}),
-          },
-          { onConflict: "user_id" }
-        );
+    // The base profile row is created by the on_auth_user_created trigger
+    // (see migration 20260308000001). For allowlisted emails (e.g. the dev's
+    // brother) we additionally promote them to admin so they bypass the
+    // coming-soon gate without manual SQL.
+    //
+    // We MUST use the admin client here: at this point the auth cookie hasn't
+    // been written back to the browser yet, so the session-bound `supabase`
+    // client has no authenticated user — and profile RLS blocks anonymous
+    // updates. The service role bypasses RLS by design.
+    if (signUpData?.user && isAllowedAdminEmail(email)) {
+      // Cast: getAdminClient() isn't schema-typed (no generated Database type
+      // in the repo), so .update() resolves to `never`. Same workaround as
+      // the Stripe webhook admin writes.
+      const { error: profileError } = await (getAdminClient().from("profile") as any)
+        .update({ is_admin: true })
+        .eq("user_id", signUpData.user.id);
       if (profileError) {
-        console.error("Failed to create profile for new user:", profileError.message);
-        // Non-fatal — the user is still signed up
+        console.error("Failed to mark allowlisted user as admin:", profileError.message);
+        // Non-fatal — the user is still signed up; an admin can flip the flag
+        // manually in Supabase if this ever fails.
       }
     }
 
