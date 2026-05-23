@@ -28,6 +28,7 @@ import { highlightMatches } from "@/utils/highlight";
 import { toast } from "sonner";
 import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
+import { buildDreamCost, formatUsd } from "@/utils/pricing";
 
 // Instead of direct import, use fallback icon components
 const MessageSquareIcon = ({ className }: { className?: string }) => (
@@ -355,6 +356,8 @@ type DreamEntryProps = {
   empty?: boolean;
   loading?: boolean;
   searchTerms?: string[];
+  /** Server-driven flag — gates the cost footer at the bottom of the card. */
+  isAdmin?: boolean;
   dream: {
     id: string;
     original_text: string;
@@ -370,6 +373,13 @@ type DreamEntryProps = {
     bible_refs?: string[];
     created_at?: string;
     image_url?: string | null;
+    /** Admin-only usage row joined from chatgpt_interactions. */
+    _admin_usage?: {
+      input_tokens: number | null;
+      output_tokens: number | null;
+      image_generated: boolean | null;
+      image_cost_usd: number | null;
+    } | null;
   };
 };
 
@@ -385,7 +395,7 @@ const BIBLE_VERSES: Record<string, string> = {
   "1 Kings 6:19": "And the oracle he prepared in the house within, to set there the ark of the covenant of the LORD."
 };
 
-export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [] }: DreamEntryProps) {
+export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
@@ -1316,6 +1326,46 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             )}
           </CardContent>
         </div>
+
+        {/* Admin-only cost footer.
+            Renders as an absolute-positioned strip across the bottom of the card
+            so it doesn't reflow the existing layout or break the square aspect
+            ratio. Shows input/output tokens, image cost, and an estimated USD
+            total computed in utils/pricing.ts. Pending rows (no usage logged yet)
+            show a dim placeholder so admins know data is on the way. */}
+        {isAdmin && (() => {
+          const usage = initialDream._admin_usage;
+          // If we have nothing at all to show (no row joined), skip it.
+          if (!usage) return null;
+          const cost = buildDreamCost(usage);
+          const hasOpenAi = cost.inputTokens != null || cost.outputTokens != null;
+          if (!hasOpenAi && !cost.imageGenerated) return null;
+          return (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-0 inset-x-0 z-20 px-2 py-1 bg-black/70 text-white/90 backdrop-blur-sm flex items-center justify-between gap-2 text-[10px] font-mono tabular-nums select-text cursor-default"
+              title={`OpenAI: ${formatUsd(cost.openAiCostUsd)} · Image: ${formatUsd(cost.imageGenerated ? (cost.imageCostUsd ?? 0) : 0)}`}
+            >
+              <span className="truncate">
+                {hasOpenAi ? (
+                  <>
+                    in <span className="text-emerald-300">{cost.inputTokens ?? 0}</span>
+                    {" / out "}
+                    <span className="text-amber-300">{cost.outputTokens ?? 0}</span>
+                  </>
+                ) : (
+                  <span className="text-white/50">tokens pending…</span>
+                )}
+                {cost.imageGenerated && (
+                  <span className="ml-2 text-violet-300">+img</span>
+                )}
+              </span>
+              <span className="font-semibold whitespace-nowrap">
+                {formatUsd(cost.totalCostUsd)}
+              </span>
+            </div>
+          );
+        })()}
       </Card>
 
       {/* Detail Dialog */}

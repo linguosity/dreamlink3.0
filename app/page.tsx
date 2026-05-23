@@ -93,7 +93,50 @@ export default async function MainPage() {
     console.error("Error fetching dreams:", error.message);
   }
 
-  const dreams = (dreamsRaw || []).map((row) => decryptDreamRow({ ...row }));
+  const decryptedDreams = (dreamsRaw || []).map((row) => decryptDreamRow({ ...row }));
+
+  // Admins also get a per-dream cost block (input/output tokens + image cost)
+  // for the DreamCard footer. RLS already lets admins read all
+  // chatgpt_interactions; for non-admins we skip this query entirely so we
+  // don't pay for it on every page load.
+  type AdminUsage = {
+    input_tokens: number | null;
+    output_tokens: number | null;
+    image_generated: boolean | null;
+    image_cost_usd: number | null;
+  };
+  const usageByDream = new Map<string, AdminUsage>();
+  if (profile.is_admin && decryptedDreams.length > 0) {
+    const dreamIds = decryptedDreams.map((d) => d.id).filter((id): id is string => Boolean(id));
+    const { data: usageRows } = await supabase
+      .from("chatgpt_interactions")
+      .select(
+        "dream_entry_id, input_tokens, output_tokens, image_generated, image_cost_usd",
+      )
+      .in("dream_entry_id", dreamIds);
+
+    for (const row of usageRows ?? []) {
+      if (!row.dream_entry_id) continue;
+      // A dream may have multiple interaction rows (retries, etc.). The first
+      // one we see wins — that's the original analysis call we want to inspect.
+      if (!usageByDream.has(row.dream_entry_id)) {
+        usageByDream.set(row.dream_entry_id, {
+          input_tokens: row.input_tokens,
+          output_tokens: row.output_tokens,
+          image_generated: row.image_generated,
+          image_cost_usd: row.image_cost_usd,
+        });
+      }
+    }
+  }
+
+  // Attach _admin_usage onto each dream — using `any` for the same reason the
+  // grid downstream uses a loose Dream shape: the Supabase row type carries 25+
+  // nullable fields the grid doesn't care about.
+  const dreams: any[] = decryptedDreams.map((d) => ({
+    ...d,
+    _admin_usage: profile.is_admin ? (usageByDream.get(d.id) ?? null) : undefined,
+  }));
 
   return (
     <div className="container py-6 sm:py-10 relative">
@@ -137,7 +180,7 @@ export default async function MainPage() {
         {/* Animated Dream Grid */}
         <div className="mt-6 sm:mt-8">
           <h2 className="text-lg mb-4">Your Dream Gallery</h2>
-          <AnimatedDreamGrid dreams={dreams || []} />
+          <AnimatedDreamGrid dreams={dreams || []} isAdmin={Boolean(profile.is_admin)} />
         </div>
         
         {/* Footer Section */}

@@ -11,6 +11,7 @@ import {
   generateAndStoreDreamImage,
 } from "@/utils/imageGeneration";
 import { ImageAesthetic, imageAestheticSchema } from "@/schema/imageAesthetic";
+import { FLUX_IMAGE_COST_USD } from "@/utils/pricing";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -69,6 +70,38 @@ export async function POST(request: NextRequest) {
           { error: "Image generated but DB update failed" },
           { status: 500 }
         );
+      }
+
+      // Stamp the image cost onto the chatgpt_interactions row(s) for this
+      // dream entry so the admin DreamCard footer can show end-to-end cost.
+      // For matrix submissions that share an image across an aesthetic, we
+      // update every interaction row in the comparison group with the same
+      // aesthetic — mirrors the image_url update above.
+      const interactionUpdate = adminSupabase
+        .from("chatgpt_interactions")
+        .update({
+          image_generated: true,
+          image_cost_usd: FLUX_IMAGE_COST_USD,
+        } as never);
+
+      const { error: interactionError } = comparisonGroupId
+        ? await interactionUpdate.in(
+            "dream_entry_id",
+            // Pull the IDs of every dream in the group that uses this aesthetic;
+            // the chatgpt_interactions rows for those are the ones to stamp.
+            (
+              await adminSupabase
+                .from("dream_entries")
+                .select("id")
+                .eq("comparison_group_id", comparisonGroupId)
+                .eq("image_aesthetic_used", selectedAesthetic)
+            ).data?.map((r: { id: string }) => r.id) ?? [dreamId],
+          )
+        : await interactionUpdate.eq("dream_entry_id", dreamId);
+
+      if (interactionError) {
+        // Don't fail the request — the image already saved, this is observability.
+        console.error("Failed to log image cost on chatgpt_interactions:", interactionError);
       }
 
       return NextResponse.json({ imageUrl });

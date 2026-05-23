@@ -180,23 +180,34 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
   const dreamId: string = dreamData.id;
 
   // 2. Run the OpenAI analysis (cache-keyed by depth + reading level).
+  // `runDreamAnalysis` now returns { analysis, usage }. We cache only the
+  // analysis — token usage describes a specific API call, so a cache hit
+  // should report zero tokens (no billable call happened).
   let analysisResult: any = null;
+  let analysisUsage: { inputTokens: number | null; outputTokens: number | null } = {
+    inputTokens: null,
+    outputTokens: null,
+  };
   try {
     const cacheKey = getAnalysisCacheKey(dreamText, combo.readingLevel, combo.depth);
     const cached = analysisCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       if (DEBUG) console.log('✅ Analysis cache hit', { depth: combo.depth });
       analysisResult = cached.result;
+      // Cache hit: no OpenAI call was made for this dream entry.
+      analysisUsage = { inputTokens: 0, outputTokens: 0 };
     } else {
       // Call the shared analyzer directly. Going through the route handler
       // with a synthetic NextRequest broke under parallel fan-out because
       // multiple concurrent invocations corrupted each other's output.
-      analysisResult = await runDreamAnalysis({
+      const { analysis: fresh, usage } = await runDreamAnalysis({
         dream: dreamText,
         topic: "dream interpretation",
         readingLevel: combo.readingLevel,
         analysisDepth: combo.depth,
       });
+      analysisResult = fresh;
+      analysisUsage = usage;
 
       if (analysisCache.size >= MAX_CACHE_SIZE) {
         const oldestKey = analysisCache.keys().next().value;
@@ -304,6 +315,8 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
           dream_entry_id: dreamId,
           model: OPENAI_MODEL,
           temperature: 0.7,
+          input_tokens: analysisUsage.inputTokens,
+          output_tokens: analysisUsage.outputTokens,
         } as never)
         .then(({ error }) => {
           if (error) console.error("Error storing ChatGPT interaction:", error);

@@ -242,19 +242,35 @@ export interface DreamAnalysisArgs {
 }
 
 /**
+ * Token usage from the OpenAI Responses API. Null on the fallback path
+ * (network/parse errors) where no usable response was returned.
+ */
+export interface DreamAnalysisUsage {
+  inputTokens: number | null;
+  outputTokens: number | null;
+}
+
+export interface DreamAnalysisResult {
+  analysis: DreamAnalysis;
+  usage: DreamAnalysisUsage;
+}
+
+/**
  * Run the OpenAI dream analysis. Safe to call concurrently — there is no
  * shared mutable state per call beyond the prompt cache (which is read-only
  * after first fetch).
  *
- * Always returns a DreamAnalysis; on error returns FALLBACK_ANALYSIS.
+ * Always returns a DreamAnalysisResult; on error the analysis falls back to
+ * FALLBACK_ANALYSIS and usage tokens are null (we never made a billable call,
+ * or we couldn't read the usage block).
  */
 export async function runDreamAnalysis(
   args: DreamAnalysisArgs,
-): Promise<DreamAnalysis> {
+): Promise<DreamAnalysisResult> {
   const { dream, topic, readingLevel, analysisDepth } = args;
 
   if (!dream) {
-    return FALLBACK_ANALYSIS;
+    return { analysis: FALLBACK_ANALYSIS, usage: { inputTokens: null, outputTokens: null } };
   }
 
   if (DEBUG) {
@@ -351,15 +367,22 @@ ${depthInstructions}
       );
     }
 
+    const usage: DreamAnalysisUsage = {
+      inputTokens: response.usage?.input_tokens ?? null,
+      outputTokens: response.usage?.output_tokens ?? null,
+    };
+
     const parsed = response.output_parsed;
     if (!parsed) {
       console.error(
         `runDreamAnalysis depth=${effectiveDepth}: null parsed output, status=${response.status}`,
       );
-      return FALLBACK_ANALYSIS;
+      // Tokens may still have been billed even though parsing failed — preserve
+      // the usage block so the admin footer doesn't undercount cost.
+      return { analysis: FALLBACK_ANALYSIS, usage };
     }
 
-    return parsed;
+    return { analysis: parsed, usage };
   } catch (error: unknown) {
     if (error instanceof SyntaxError) {
       console.error(
@@ -369,7 +392,7 @@ ${depthInstructions}
     } else {
       console.error(`runDreamAnalysis depth=${analysisDepth}: error`, error);
     }
-    return FALLBACK_ANALYSIS;
+    return { analysis: FALLBACK_ANALYSIS, usage: { inputTokens: null, outputTokens: null } };
   }
 }
 

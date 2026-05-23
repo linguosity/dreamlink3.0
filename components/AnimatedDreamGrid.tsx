@@ -44,6 +44,14 @@ interface Dream {
   analysis_depth?: string | null;
   reading_level_used?: string | null;
   image_aesthetic_used?: string | null;
+  // Admin-only cost breakdown joined from chatgpt_interactions on the server.
+  // Non-admins never see this populated.
+  _admin_usage?: {
+    input_tokens: number | null;
+    output_tokens: number | null;
+    image_generated: boolean | null;
+    image_cost_usd: number | null;
+  } | null;
 }
 
 // Pretty labels for badges shown on comparison-group cards.
@@ -74,9 +82,11 @@ const AESTHETIC_LABELS: Record<string, string> = {
 interface AnimatedDreamGridProps {
   dreams: Dream[];
   maxRowItems?: number;
+  /** Set by the server based on profile.is_admin — gates the cost footer on each card. */
+  isAdmin?: boolean;
 }
 
-export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedDreamGridProps) {
+export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = false }: AnimatedDreamGridProps) {
   // Access search context
   const { keywords, isLoading, isSearchEnabled } = useSearch();
 
@@ -316,6 +326,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
             <DreamCard
               dream={placeholderDream}
               loading={analyzedDream === null}
+              isAdmin={isAdmin}
             />
           </motion.div>
         )}
@@ -334,6 +345,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
                 dream={item.dream}
                 loading={item.dream.id === loadingDreamId}
                 searchTerms={isMounted && isSearchEnabled ? keywords : []}
+                isAdmin={isAdmin}
               />
             </motion.div>
           ) : (
@@ -343,6 +355,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3 }: AnimatedD
               dreams={item.dreams}
               loadingDreamId={loadingDreamId}
               searchTerms={isMounted && isSearchEnabled ? keywords : []}
+              isAdmin={isAdmin}
             />
           ),
         )}
@@ -366,6 +379,7 @@ interface ComparisonGroupProps {
   dreams: Dream[];
   loadingDreamId: string | null;
   searchTerms: string[];
+  isAdmin?: boolean;
 }
 
 function ComparisonGroup({
@@ -373,6 +387,7 @@ function ComparisonGroup({
   dreams,
   loadingDreamId,
   searchTerms,
+  isAdmin = false,
 }: ComparisonGroupProps) {
   const created = dreams[0]?.created_at
     ? new Date(dreams[0].created_at)
@@ -449,6 +464,7 @@ function ComparisonGroup({
               dream={dream}
               loading={dream.id === loadingDreamId}
               searchTerms={searchTerms}
+              isAdmin={isAdmin}
             />
           </div>
         ))}

@@ -28,12 +28,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await runDreamAnalysis({
+  const { analysis, usage } = await runDreamAnalysis({
     dream,
     topic,
     readingLevel,
     analysisDepth,
   });
 
-  return NextResponse.json(result);
+  // Preserve the previous response shape (analysis fields at the top level)
+  // and add a `_usage` block so callers that care about token counts can read
+  // it without breaking older consumers that don't.
+  return NextResponse.json({ ...analysis, _usage: usage });
 }

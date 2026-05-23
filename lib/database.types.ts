@@ -94,7 +94,11 @@ export type Database = {
           created_at: string | null
           dream_entry_id: string | null
           id: string
+          image_cost_usd: number | null
+          image_generated: boolean
+          input_tokens: number | null
           model: string | null
+          output_tokens: number | null
           prompt: string | null
           response: string | null
           temperature: number | null
@@ -103,7 +107,11 @@ export type Database = {
           created_at?: string | null
           dream_entry_id?: string | null
           id?: string
+          image_cost_usd?: number | null
+          image_generated?: boolean
+          input_tokens?: number | null
           model?: string | null
+          output_tokens?: number | null
           prompt?: string | null
           response?: string | null
           temperature?: number | null
@@ -112,7 +120,11 @@ export type Database = {
           created_at?: string | null
           dream_entry_id?: string | null
           id?: string
+          image_cost_usd?: number | null
+          image_generated?: boolean
+          input_tokens?: number | null
           model?: string | null
+          output_tokens?: number | null
           prompt?: string | null
           response?: string | null
           temperature?: number | null
