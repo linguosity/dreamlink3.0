@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Please update your browser — DreamRiver</title>
+<meta name="robots" content="noindex,nofollow">
+
+<!--
+  Brand-consistent old-browser landing page.
+
+  Served by middleware.ts when the request comes from a browser that can't
+  parse the modern JS bundles Next.js 16 + React 19 emit (Safari < 14,
+  Chrome < 80, Firefox < 72, Edge < 80, any IE).
+
+  Hard constraints:
+    - NO JavaScript (Safari 12 syntax-errors on optional chaining / nullish
+      coalescing, which is in every modern JS bundle including ours).
+    - NO modern CSS (no oklch, no color-mix, no CSS nesting, no :is).
+    - Hex colors only; pre-2020 CSS only.
+    - Self-contained — single HTML file, no external CSS or scripts.
+-->
+
+<style>
+  /* DreamRiver palette — converted from oklch() to hex for Safari 12 */
+  /* :root custom properties have been supported since Safari 9.1, so this is safe. */
+  :root {
+    --bg:           #f8f5ec; /* warm cream / parchment */
+    --bg-deep:      #ece6d5; /* slightly deeper parchment for gradient */
+    --fg:           #1f2433; /* dark navy ink */
+    --fg-muted:     #5d6273; /* muted body text */
+    --card:         #ffffff;
+    --border:       #e5dfd0;
+    --primary:      #384e89; /* sacred deep blue — matches landing CTA */
+    --primary-dark: #2a3c6e;
+    --gold:         #c4923f;
+    --gold-soft:    #f3e6c8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+
+  body {
+    /* Linear gradient is fine — supported since Safari 5.1 */
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+    min-height: 100vh;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    max-width: 560px;
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 48px 44px 40px;
+    box-shadow: 0 12px 40px rgba(31, 36, 51, 0.08);
+    text-align: center;
+  }
+
+  /* Wordmark — use brand font if it loads, fall back to serif so this
+     never looks broken even when /fonts/Blanka.otf is blocked. */
+  @font-face {
+    font-family: 'Blanka';
+    src: url('/fonts/Blanka.otf') format('opentype');
+    font-display: swap;
+  }
+  .wordmark {
+    font-family: 'Blanka', Georgia, "Times New Roman", serif;
+    font-size: 28px;
+    letter-spacing: 0.18em;
+    color: var(--fg);
+    margin: 0 0 32px;
+    /* Split rendering with a vertical bar uses the same DREAMR|I|VER pattern
+       as the live nav, but rendered with a CSS pseudo-element instead of JSX. */
+  }
+  .wordmark .divider {
+    color: var(--gold);
+    margin: 0 2px;
+  }
+
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    line-height: 1.2;
+    font-weight: 400;
+    margin: 0 0 16px;
+    color: var(--fg);
+  }
+
+  p {
+    color: var(--fg-muted);
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+  p.lead {
+    font-size: 17px;
+    color: var(--fg);
+    margin-bottom: 28px;
+  }
+
+  /* Browser-info card showing what we detected, so the user knows we're
+     not just guessing. Populated server-side via query params (?b=safari&v=12)
+     which the middleware injects when rewriting. */
+  .detected {
+    background: var(--gold-soft);
+    border: 1px solid #e8d8a8;
+    color: #6b4f1d;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 0 0 28px;
+    display: inline-block;
+  }
+
+  .cta-row {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0 16px;
+  }
+
+  a.btn {
+    display: inline-block;
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 14px 26px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+  a.btn-primary {
+    background: var(--primary);
+    color: #ffffff;
+  }
+  a.btn-primary:hover {
+    background: var(--primary-dark);
+  }
+  a.btn-secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--border);
+  }
+  a.btn-secondary:hover {
+    background: var(--gold-soft);
+  }
+
+  .alternatives {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--fg-muted);
+  }
+  .alternatives strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .alternatives a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  .alternatives a:hover {
+    text-decoration: underline;
+  }
+
+  .footnote {
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    opacity: 0.75;
+  }
+
+  /* Subtle decorative gold sparkle above the headline — pure CSS, no SVG. */
+  .sparkle {
+    display: inline-block;
+    color: var(--gold);
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 36px 24px 32px; border-radius: 14px; }
+    h1 { font-size: 24px; }
+    p.lead { font-size: 15px; }
+    a.btn { padding: 12px 20px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<main class="container">
+
+  <div class="wordmark">DREAMR<span class="divider">|</span>I<span class="divider">|</span>VER</div>
+
+  <div class="sparkle">&#10038;</div>
+
+  <h1>Your browser needs an update</h1>
+
+  <p class="lead">
+    DreamRiver uses modern web technology that your current browser can't run.
+    A quick update will get you in.
+  </p>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://www.google.com/chrome/">Install Chrome (free)</a>
+    <a class="btn btn-secondary" href="https://support.apple.com/en-us/HT201541">Update Safari</a>
+  </div>
+
+  <p>
+    Chrome works on every Mac from the last 15 years and updates itself
+    automatically. Most users find it the easiest fix &mdash; takes about
+    five minutes.
+  </p>
+
+  <div class="alternatives">
+    <p style="margin-bottom: 8px;"><strong>Other supported browsers:</strong></p>
+    <p style="margin: 0;">
+      <a href="https://www.mozilla.org/firefox/">Firefox</a> &nbsp;&middot;&nbsp;
+      <a href="https://www.microsoft.com/edge">Microsoft Edge</a> &nbsp;&middot;&nbsp;
+      <a href="https://brave.com/">Brave</a>
+    </p>
+  </div>
+
+  <p class="footnote">
+    Already on a modern browser and seeing this message?
+    <br>
+    Email <a style="color: inherit;" href="mailto:brandon@linguosity.ai">brandon@linguosity.ai</a> and we'll help.
+  </p>
+
+</main>
+
+</body>
+</html>
