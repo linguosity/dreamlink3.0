@@ -16,7 +16,7 @@ import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, DM_Serif_Display } from "next/font/google";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -37,10 +37,28 @@ const defaultUrl = process.env.VERCEL_URL
   : "http://localhost:3000";
 
 // ① Next.js Metadata API
+// F13/F14 (v2 Moonwater): wire the new icon set + og:image. Icons live in
+// /public/brand and were rendered from the same SVG paths the React mark
+// uses, so the raster matches the in-app vector exactly. og:image points
+// at /og — a dynamic route that stamps the Night/Moonwater social card.
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "DreamRiver – Dream Journal",
   description: "Track and analyze your dreams with AI-powered insights",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/icon-master.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
+    other: [
+      { rel: "mask-icon", url: "/brand/icon-master.svg", color: "#0E1A30" },
+    ],
+  },
+  themeColor: "#0E1A30",
   openGraph: {
     title: "DreamRiver – Dream Journal",
     description: "Track and analyze your dreams with AI-powered insights",
@@ -48,11 +66,13 @@ export const metadata: Metadata = {
     siteName: "DreamRiver",
     locale: "en_US",
     type: "website",
+    images: [{ url: "/og", width: 1200, height: 630, alt: "DreamRiver" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "DreamRiver – Dream Journal",
     description: "Track and analyze your dreams with AI-powered insights",
+    images: ["/og"],
   },
 };
 
@@ -71,6 +91,18 @@ const dmSerifDisplay = DM_Serif_Display({
   display: "swap",
   variable: "--font-dm-serif",
   weight: ["400"],
+});
+
+// v2 Moonwater wordmark — italic serif "DreamRiver" per the brand audit.
+// Loaded as a CSS variable so the .wordmark class in globals.css can pick
+// it up. Italic 500 is the canonical weight; we load roman 500 too in case
+// any tertiary surface needs the upright form.
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-cormorant",
+  weight: ["500"],
+  style: ["italic", "normal"],
 });
 
 export default async function RootLayout({
@@ -125,7 +157,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable}`}
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable}`}
       suppressHydrationWarning
     >
       <body className="text-foreground">

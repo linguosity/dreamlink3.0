@@ -11,6 +11,7 @@ import {
   Server,
   type LucideIcon,
 } from "lucide-react";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 const ADMIN_NAV: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/admin", label: "Overview", Icon: LayoutDashboard },
@@ -35,16 +36,12 @@ export function AdminSidebar({
   return (
     <aside className="bg-card/40 border-r border-border flex flex-col p-4 sticky top-0 h-screen overflow-y-auto">
       <div className="flex items-center gap-2.5 px-2 pb-4">
-        <div
-          className="w-8 h-8 rounded-lg grid place-items-center shrink-0"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--blue-deep), var(--blue-soft))",
-          }}
-          aria-hidden
-        >
-          <Droplet className="w-4 h-4 text-white" />
-        </div>
+        {/* v2 Moonwater (F06): contained app-icon squircle in the sidebar.
+            Replaces the blue-soft → blue-deep droplet placeholder so the
+            sidebar mark matches social, splash, and the iOS icon. */}
+        <AppIcon size={32} radius={22}>
+          <MoonwaterMark size={20} />
+        </AppIcon>
         <div>
           <div className="font-serif text-base font-semibold leading-none">
             DreamRiver
@@ -67,9 +64,10 @@ export function AdminSidebar({
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
+              // F08 (v2 Moonwater): active row has a 3px gold-deep left edge.
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-colors ${
                 active
-                  ? "bg-primary/10 text-primary font-medium"
+                  ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-[var(--gold-deep)] pl-[calc(0.75rem-3px)]"
                   : "text-foreground hover:bg-muted"
               }`}
             >

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -62,8 +63,13 @@ export default function SiteHeader() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link
           href="/landing"
-          className="focus-ring rounded text-xl text-gray-900 dark:text-white"
+          aria-label="DreamRiver — home"
+          className="inline-flex items-center gap-2 focus-ring rounded text-xl text-gray-900 dark:text-white"
         >
+          {/* v2 Moonwater lockup — squircle + wordmark */}
+          <AppIcon size={32} radius={22}>
+            <MoonwaterMark size={20} />
+          </AppIcon>
           <Wordmark />
         </Link>
 

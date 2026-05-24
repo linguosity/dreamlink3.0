@@ -41,8 +41,8 @@ export default function HeroVisual() {
             <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
               <div className="bg-cream rounded-[1.875rem] overflow-hidden h-full flex flex-col">
                 <div className="px-5 py-3 border-b border-black/5">
-                  <span className="font-blanka tracking-[0.12em] text-[11px] text-gray-900">
-                    DREAMRIVER
+                  <span className="wordmark text-[13px] text-gray-900">
+                    DreamRiver
                   </span>
                 </div>
 
@@ -67,10 +67,25 @@ export default function HeroVisual() {
                     className={`mt-3 flex gap-2 transition-opacity duration-500
                                 ${showPills ? "opacity-100" : "opacity-0"}`}
                   >
-                    <span className="text-[9px] bg-accent text-amber-warm px-2.5 py-1 rounded-full font-medium">
+                    {/* F05: scripture pills — cream + gold-deep + hairline gold border */}
+                    <span
+                      className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
+                      style={{
+                        background: "var(--cream)",
+                        color: "var(--gold-deep)",
+                        border: "1px solid oklch(0.85 0.08 75)",
+                      }}
+                    >
                       Isaiah 43:2
                     </span>
-                    <span className="text-[9px] bg-accent text-amber-warm px-2.5 py-1 rounded-full font-medium">
+                    <span
+                      className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
+                      style={{
+                        background: "var(--cream)",
+                        color: "var(--gold-deep)",
+                        border: "1px solid oklch(0.85 0.08 75)",
+                      }}
+                    >
                       Psalm 23:4
                     </span>
                   </div>
