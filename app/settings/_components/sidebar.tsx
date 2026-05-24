@@ -37,7 +37,11 @@ const PLAN_LABEL: Record<SubscriptionPlan, string> = {
 };
 
 function planBadgeClass(plan: SubscriptionPlan) {
-  if (plan === "prophet") return "bg-accent text-accent-foreground";
+  // F09 (v2 Moonwater): premium tier badge picks up the "gold on night"
+  // motif — Prophet renders as gold-light text on a Night pill, the same
+  // sacred-night-and-gold pairing that anchors the brand mark. Visionary
+  // stays on pale-gold; Free stays neutral.
+  if (plan === "prophet") return "bg-[var(--night)] text-[var(--gold-light)]";
   if (plan === "visionary") return "bg-primary/10 text-primary";
   return "bg-muted text-muted-foreground";
 }
@@ -67,8 +71,11 @@ export function ProfileCard({
         <div
           className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold font-serif text-lg shrink-0"
           style={{
+            // F10 (v2 Moonwater): default-avatar gradient was blue-deep →
+            // blue-soft. Repoint to night-soft → gold so it matches the
+            // brand's "night and gold" pairing.
             background:
-              "linear-gradient(135deg, var(--blue-deep), var(--blue-soft))",
+              "linear-gradient(135deg, var(--night-soft), var(--gold))",
           }}
           aria-hidden
         >
@@ -135,9 +142,14 @@ export function SidebarNav({
             type="button"
             onClick={() => onSelect(id)}
             aria-current={active ? "page" : undefined}
+            // F08 (v2 Moonwater): active sidebar rows get a 3px gold-deep
+            // left edge in addition to the pale-gold background. The vertical
+            // edge is the brand's recurring accent — appears on scripture
+            // quotes and gold CTAs too. The pale background alone is too
+            // low-contrast without the edge.
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-colors text-left ${
               active
-                ? "bg-primary/10 text-primary font-medium"
+                ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-[var(--gold-deep)] pl-[calc(0.75rem-3px)]"
                 : "text-foreground hover:bg-muted"
             }`}
           >

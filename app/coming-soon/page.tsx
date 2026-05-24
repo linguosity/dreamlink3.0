@@ -19,6 +19,7 @@ import ComingSoonForm from "./ComingSoonForm";
 import Countdown from "./Countdown";
 import IOSDevice from "./IOSDevice";
 import PhoneMockup from "./PhoneMockup";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 const LAUNCH_TARGET_ISO = "2026-06-01T00:00:00";
 const LAUNCH_LABEL = "Coming June 2026";
@@ -38,9 +39,16 @@ export const metadata: Metadata = {
 
 export default function ComingSoonPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Animated water background — five horizontal ripples + shimmer */}
-      <div className="water-bg" aria-hidden="true">
+    // F02 (v2 Moonwater): splash moves from a light sky gradient to Night.
+    // Same atmosphere as the app icon — they reinforce each other on social.
+    // The `water-bg-night` class swaps the gradient base; ripple-lines stay
+    // visible because they're white-on-translucent. Foreground type goes cream.
+    <div
+      className="relative min-h-screen overflow-hidden"
+      style={{ color: "var(--cream)" }}
+    >
+      {/* Animated water background — Night gradient + ripples */}
+      <div className="water-bg water-bg-night" aria-hidden="true">
         <div className="shimmer-overlay" aria-hidden="true" />
         {[35, 48, 62, 75, 88].map((top, i) => (
           <div
@@ -58,12 +66,23 @@ export default function ComingSoonPage() {
 
       {/* Foreground content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
+        {/* Header — F01: free-floating Moonwater + wordmark in cream */}
         <header className="px-6 sm:px-8 py-5 flex items-center justify-between">
-          <span className="font-blanka tracking-[0.15em] text-[18px] text-foreground">
-            DREAMRIVER
-          </span>
-          <span className="text-[13px] font-medium text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <AppIcon size={28} radius={22}>
+              <MoonwaterMark size={18} />
+            </AppIcon>
+            <span
+              className="font-blanka tracking-[0.15em] text-[18px]"
+              style={{ color: "var(--cream)" }}
+            >
+              DREAMRIVER
+            </span>
+          </div>
+          <span
+            className="text-[13px] font-medium"
+            style={{ color: "oklch(0.78 0.05 75)" }}
+          >
             {LAUNCH_LABEL}
           </span>
         </header>
@@ -83,25 +102,31 @@ export default function ComingSoonPage() {
 
             {/* Copy + form + countdown */}
             <div className="md:order-1 md:col-start-1 text-center md:text-left">
-              {/* Eyebrow pill */}
+              {/* Eyebrow pill — F02: gold-on-translucent-night */}
               <div
                 className="inline-flex items-center px-4 py-1.5 rounded-full mb-5 text-[13px] font-semibold tracking-wide backdrop-blur-sm"
                 style={{
-                  background: "oklch(0.92 0.04 75 / 0.6)",
-                  border: "1px solid oklch(0.82 0.06 75 / 0.4)",
-                  color: "oklch(0.65 0.16 60)",
+                  background: "oklch(0.3 0.06 252 / 0.55)",
+                  border: "1px solid oklch(0.65 0.13 75 / 0.5)",
+                  color: "var(--gold-light)",
                 }}
               >
                 ✦ Launching June 1, 2026
               </div>
 
-              {/* Headline — 48px (md+), scales down on mobile */}
-              <h1 className="font-serif leading-[1.12] text-foreground text-balance mb-4 text-[clamp(2rem,7vw,3rem)]">
+              {/* Headline — 48px (md+), scales down on mobile. Cream on Night. */}
+              <h1
+                className="font-serif leading-[1.12] text-balance mb-4 text-[clamp(2rem,7vw,3rem)]"
+                style={{ color: "var(--cream)" }}
+              >
                 Discover What God Is Saying Through Your Dreams
               </h1>
 
-              {/* Subhead */}
-              <p className="text-[17px] leading-relaxed text-muted-foreground max-w-[420px] mx-auto md:mx-0 mb-8">
+              {/* Subhead — muted cream */}
+              <p
+                className="text-[17px] leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-8"
+                style={{ color: "oklch(0.82 0.04 75)" }}
+              >
                 AI-powered biblical dream interpretation. Journal your dreams,
                 receive scripture-backed insights in seconds. Be the first to
                 experience it.
@@ -112,13 +137,19 @@ export default function ComingSoonPage() {
                 <ComingSoonForm />
               </div>
 
-              <p className="text-[12px] text-muted-foreground/70 mt-3">
+              <p
+                className="text-[12px] mt-3"
+                style={{ color: "oklch(0.72 0.04 75 / 0.75)" }}
+              >
                 Free to start. No spam, ever. Unsubscribe anytime.
               </p>
 
               {/* Countdown */}
               <div className="mt-10">
-                <div className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 text-center md:text-left">
+                <div
+                  className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3 text-center md:text-left"
+                  style={{ color: "oklch(0.78 0.05 75)" }}
+                >
                   Launching in
                 </div>
                 <div className="flex justify-center md:justify-start">
@@ -129,19 +160,28 @@ export default function ComingSoonPage() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-muted-foreground">
+        {/* Footer — muted cream so it stays subordinate on Night */}
+        <footer
+          className="px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px]"
+          style={{ color: "oklch(0.72 0.04 75 / 0.7)" }}
+        >
           <span>© {new Date().getFullYear()} DreamRiver. All rights reserved.</span>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
+            <Link
+              href="/privacy"
+              className="transition-colors hover:text-[var(--cream)]"
+            >
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-[var(--cream)]"
+            >
               Terms
             </Link>
             <Link
               href="/sign-in"
-              className="hover:text-foreground transition-colors opacity-50"
+              className="transition-colors opacity-60 hover:opacity-100 hover:text-[var(--cream)]"
             >
               Sign in
             </Link>

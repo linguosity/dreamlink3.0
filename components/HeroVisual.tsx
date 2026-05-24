@@ -67,10 +67,25 @@ export default function HeroVisual() {
                     className={`mt-3 flex gap-2 transition-opacity duration-500
                                 ${showPills ? "opacity-100" : "opacity-0"}`}
                   >
-                    <span className="text-[9px] bg-accent text-amber-warm px-2.5 py-1 rounded-full font-medium">
+                    {/* F05: scripture pills — cream + gold-deep + hairline gold border */}
+                    <span
+                      className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
+                      style={{
+                        background: "var(--cream)",
+                        color: "var(--gold-deep)",
+                        border: "1px solid oklch(0.85 0.08 75)",
+                      }}
+                    >
                       Isaiah 43:2
                     </span>
-                    <span className="text-[9px] bg-accent text-amber-warm px-2.5 py-1 rounded-full font-medium">
+                    <span
+                      className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
+                      style={{
+                        background: "var(--cream)",
+                        color: "var(--gold-deep)",
+                        border: "1px solid oklch(0.85 0.08 75)",
+                      }}
+                    >
                       Psalm 23:4
                     </span>
                   </div>

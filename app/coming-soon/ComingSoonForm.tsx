@@ -74,11 +74,14 @@ export default function ComingSoonForm() {
   return (
     <form
       onSubmit={onSubmit}
+      // F02 (v2 Moonwater): pill is reframed for the Night background.
+      // Translucent dark fill + warm gold hairline reads as a frosted
+      // night-water surface rather than the daytime sky frosted-glass.
       className="flex w-full max-w-[440px] rounded-full overflow-hidden backdrop-blur-md"
       style={{
-        border: "1.5px solid oklch(0.80 0.04 235 / 0.4)",
-        background: "oklch(1 0 0 / 0.7)",
-        boxShadow: "0 2px 16px oklch(0.5 0.08 235 / 0.08)",
+        border: "1.5px solid oklch(0.65 0.13 75 / 0.4)",
+        background: "oklch(0.2 0.05 252 / 0.45)",
+        boxShadow: "0 2px 24px oklch(0.1 0.05 252 / 0.4)",
       }}
     >
       <label className="sr-only" htmlFor="coming-soon-email">
@@ -92,13 +95,25 @@ export default function ComingSoonForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
-        className="flex-1 min-w-0 px-5 py-3.5 bg-transparent text-foreground placeholder:text-muted-foreground text-[15px] outline-none"
+        className="flex-1 min-w-0 px-5 py-3.5 bg-transparent text-[15px] outline-none"
+        style={{
+          color: "var(--cream)",
+          // placeholder color via inline style requires the ::placeholder
+          // selector — we set it via a CSS variable consumed in globals.css
+          // (see .coming-soon-input::placeholder). Falls back acceptably
+          // without the rule.
+        }}
       />
       <button
         type="submit"
         disabled={submitting}
-        className="px-7 py-3.5 text-[14px] font-semibold tracking-wide text-white whitespace-nowrap transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
-        style={{ background: "oklch(0.45 0.12 245)" }}
+        // F03 (v2 Moonwater): CTA repainted from sacred-blue to gold with
+        // night-deep text. Same brand pairing as the app icon.
+        className="px-7 py-3.5 text-[14px] font-bold tracking-wide whitespace-nowrap transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+        style={{
+          background: "var(--gold)",
+          color: "var(--night-deep)",
+        }}
       >
         {submitting ? "Joining…" : "Join Waitlist"}
       </button>

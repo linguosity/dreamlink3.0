@@ -232,7 +232,10 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            className={`absolute right-2.5 bottom-2.5 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
+            // Vertically center the send button on the right edge of the
+            // textarea: top-1/2 + -translate-y-1/2 keeps it centered no
+            // matter how tall the textarea grows (field-sizing: content).
+            className={`absolute right-2.5 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
               hasContent ? "opacity-100" : "opacity-30"
             }`}
           >

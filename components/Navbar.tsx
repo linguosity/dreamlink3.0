@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, X } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 import { FeatureHint } from "./feature-hint";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 import { useSearch } from "@/context/search-context";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -81,13 +82,18 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-background px-3 py-3 sm:px-4 sm:py-4">
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3">
-        {/* Left: Logo - flexible width on mobile */}
+        {/* Left: Logo - flexible width on mobile.
+            v2 Moonwater: contained app-icon squircle + wordmark. The squircle
+            keeps the brand mark consistent with social, app-store, and splash. */}
         <div className="flex-shrink-0 flex items-center gap-2">
           <Link
             href="/"
             aria-label="DreamRiver"
-            className="text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style"
+            className="inline-flex items-center gap-2 text-lg sm:text-xl font-blanka tracking-wider text-gray-900 dark:text-gray-100 no-brand-style"
           >
+            <AppIcon size={32} radius={22}>
+              <MoonwaterMark size={20} />
+            </AppIcon>
             <span className="hidden sm:inline">DreamRiver</span>
             <span className="sm:hidden" aria-hidden="true">DR</span>
           </Link>

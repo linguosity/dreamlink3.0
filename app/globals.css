@@ -56,9 +56,17 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 
-  /* Brand-specific (DreamRiver palette) */
+  /* Brand-specific (DreamRiver v2 Moonwater palette)
+   * Night family — dark navy. Used on splash/marketing/app icon (Decision A).
+   * Cream/Gold family — primary palette throughout. Gold is the new CTA color.
+   * Blue family — kept around for informational/secondary accents only (see F07). */
+  --color-night: var(--night);
+  --color-night-deep: var(--night-deep);
+  --color-night-soft: var(--night-soft);
   --color-cream: var(--cream);
+  --color-cream-soft: var(--cream-soft);
   --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
   --color-gold-light: var(--gold-light);
   --color-amber-warm: var(--amber);
   --color-blue-deep: var(--blue-deep);
@@ -121,13 +129,16 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.02 250);
 
-  /* Primary — warm deep blue (sacred, calm, trustworthy)
-   * Matches the deep navy of the landing-hero CTA pill. Hue shifted from
-   * 245 → 252 to read warmer (further from cyan) and lightness lowered
-   * for the "deep" quality. */
-  --primary: oklch(0.40 0.13 252);
-  --primary-foreground: oklch(0.98 0.005 75);
-  --primary-hover: oklch(0.35 0.14 252);
+  /* Primary — Gold (v2 Moonwater).
+   * Was sacred-blue (oklch 0.40 0.13 252) — retired per audit F07/F03.
+   * Gold (#D4A247 ≈ oklch 0.72 0.14 75) cascades to all buttons, focus
+   * rings, link colors, switch on-states, and active-row highlights.
+   * Foreground is Night-Deep so labels read with strong contrast.
+   * The old blue is preserved as --blue-deep below for one purpose only:
+   * secondary informational badges where Gold would over-signal. */
+  --primary: oklch(0.72 0.14 75);
+  --primary-foreground: oklch(0.15 0.015 250);
+  --primary-hover: oklch(0.66 0.15 75);
 
   /* Secondary — soft warm gray */
   --secondary: oklch(0.93 0.01 75);
@@ -145,19 +156,27 @@
   --destructive: oklch(0.62 0.20 25);
   --destructive-foreground: oklch(0.98 0.005 75);
 
-  /* Border / input / ring */
+  /* Border / input / ring — ring matches new gold primary */
   --border: oklch(0.90 0.01 75);
   --input: oklch(0.90 0.01 75);
-  --ring: oklch(0.40 0.13 252);
+  --ring: oklch(0.72 0.14 75);
   --radius: 0.5rem;
 
-  /* Brand-specific */
-  --cream: oklch(0.955 0.015 75);
-  --gold: oklch(0.72 0.14 75);
-  --gold-light: oklch(0.82 0.10 78);
-  --amber: oklch(0.65 0.16 60);
-  --blue-deep: oklch(0.40 0.13 252);
-  --blue-soft: oklch(0.72 0.07 245);
+  /* Brand-specific — v2 Moonwater palette.
+   * Hex equivalents kept in comments to match the audit's reference card. */
+  --night:      oklch(0.22 0.06 250);   /* #0E1A30 */
+  --night-deep: oklch(0.18 0.06 250);   /* #08111F */
+  --night-soft: oklch(0.30 0.07 252);   /* #1A2748 */
+  --cream:      oklch(0.955 0.015 75);  /* #F5ECD6 */
+  --cream-soft: oklch(0.97 0.012 75);   /* #FAF4E2 */
+  --gold:       oklch(0.72 0.14 75);    /* #D4A247 */
+  --gold-deep:  oklch(0.60 0.12 75);    /* #B08436 */
+  --gold-light: oklch(0.82 0.10 78);    /* #E6C073 */
+  --amber:      oklch(0.65 0.16 60);
+  /* Old sacred-blue — kept for secondary/informational accents only (F07).
+   * Do NOT use for primary actions; --primary above is now gold. */
+  --blue-deep:  oklch(0.40 0.13 252);
+  --blue-soft:  oklch(0.72 0.07 245);
 
   /* Charts (warm-aligned) */
   --chart-1: oklch(0.40 0.13 252);
@@ -180,9 +199,11 @@
   --popover: oklch(0.22 0.015 250);
   --popover-foreground: oklch(0.96 0.008 75);
 
-  --primary: oklch(0.62 0.14 252);
-  --primary-foreground: oklch(0.18 0.012 250);
-  --primary-hover: oklch(0.68 0.15 252);
+  /* Dark mode primary — gold, slightly lifted so it pops against Night.
+   * Foreground stays Night-Deep for legibility on gold. */
+  --primary: oklch(0.78 0.13 75);
+  --primary-foreground: oklch(0.15 0.015 250);
+  --primary-hover: oklch(0.84 0.12 75);
 
   --secondary: oklch(0.28 0.015 250);
   --secondary-foreground: oklch(0.96 0.008 75);
@@ -198,14 +219,21 @@
 
   --border: oklch(0.30 0.015 250);
   --input: oklch(0.30 0.015 250);
-  --ring: oklch(0.62 0.14 252);
+  --ring: oklch(0.78 0.13 75);
 
-  --cream: oklch(0.30 0.015 75);
-  --gold: oklch(0.78 0.13 75);
+  /* Dark-mode brand palette — Night family compressed because the page
+   * itself already sits on Night. Cream/Gold lifted slightly for contrast. */
+  --night:      oklch(0.22 0.06 250);
+  --night-deep: oklch(0.16 0.06 250);
+  --night-soft: oklch(0.32 0.07 252);
+  --cream:      oklch(0.92 0.02 75);
+  --cream-soft: oklch(0.30 0.015 75);
+  --gold:       oklch(0.78 0.13 75);
+  --gold-deep:  oklch(0.66 0.13 75);
   --gold-light: oklch(0.85 0.10 78);
-  --amber: oklch(0.72 0.15 60);
-  --blue-deep: oklch(0.62 0.14 252);
-  --blue-soft: oklch(0.76 0.06 245);
+  --amber:      oklch(0.72 0.15 60);
+  --blue-deep:  oklch(0.62 0.14 252);
+  --blue-soft:  oklch(0.76 0.06 245);
 
   --chart-1: oklch(0.62 0.14 252);
   --chart-2: oklch(0.78 0.13 75);
@@ -224,6 +252,14 @@
   }
   html {
     scroll-padding-top: 4.5rem;
+    /* Reserve space for the vertical scrollbar at all times so opening
+     * a Radix overlay (Dialog, DropdownMenu) — which locks body scroll
+     * and adds `padding-right` to compensate for the disappearing
+     * scrollbar — doesn't cause the navbar or dialog to shift left.
+     * Fixes:
+     *   • Avatar dropdown nudging navbar contents leftward.
+     *   • Dream analysis dialog appearing slightly off-center horizontally. */
+    scrollbar-gutter: stable;
   }
   section[id] {
     scroll-margin-top: 4.5rem;
@@ -422,6 +458,28 @@
     oklch(0.85 0.06 225) 60%,
     oklch(0.75 0.09 235) 100%
   );
+}
+
+/* v2 Moonwater (F02): Night variant for the splash and any "atmospheric"
+ * surface (og:image template, marketing screenshots). Same ripple animations
+ * sit on top — they're white-on-translucent so they read on either ground. */
+.water-bg-night {
+  background: linear-gradient(
+    170deg,
+    var(--night-deep) 0%,
+    var(--night) 45%,
+    var(--night-soft) 100%
+  );
+}
+.water-bg-night::before {
+  background:
+    radial-gradient(ellipse at 30% 80%, oklch(0.55 0.12 75 / 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 30%, oklch(0.55 0.10 75 / 0.14) 0%, transparent 50%);
+}
+.water-bg-night::after {
+  background:
+    radial-gradient(ellipse at 60% 60%, oklch(0.65 0.14 75 / 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 20%, oklch(0.45 0.08 252 / 0.30) 0%, transparent 55%);
 }
 
 .water-bg::before,

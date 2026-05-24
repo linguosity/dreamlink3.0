@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 const FULL_DREAM_TEXT =
   "I was walking across a bridge over a river of golden light…";
@@ -39,16 +40,28 @@ export default function PhoneMockup() {
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      {/* App nav */}
+      {/* App nav.
+          F01: free-floating Moonwater mark (no squircle — the phone chrome is
+          already a container at this size). Wordmark stays in Blanka.
+          F10: avatar gradient repointed from blue-soft → gold to
+          night-soft → gold so it matches the brand palette. */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-[oklch(0.88_0.01_70)]">
-        <span className="font-blanka tracking-[0.12em] text-[11px] text-foreground">
-          DREAMRIVER
-        </span>
+        <div className="flex items-center gap-1.5">
+          <MoonwaterMark
+            size={14}
+            moonColor="var(--night)"
+            waveTop="var(--night)"
+            waveBottom="var(--gold)"
+          />
+          <span className="font-blanka tracking-[0.12em] text-[11px] text-foreground">
+            DREAMRIVER
+          </span>
+        </div>
         <div
           className="w-[22px] h-[22px] rounded-full"
           style={{
             background:
-              "linear-gradient(135deg, oklch(0.70 0.08 235), oklch(0.72 0.14 75))",
+              "linear-gradient(135deg, var(--night-soft), var(--gold))",
           }}
           aria-hidden="true"
         />
@@ -88,10 +101,14 @@ export default function PhoneMockup() {
           {["Isaiah 43:2", "Psalm 23:4"].map((v) => (
             <span
               key={v}
+              // F05: scripture pills move to cream + gold-deep text + hairline
+              // gold border. Reads as a quoted reference rather than a tag —
+              // the right vocabulary for scripture.
               className="text-[8px] px-2 py-0.5 rounded-full font-semibold"
               style={{
-                background: "oklch(0.93 0.04 75)",
-                color: "oklch(0.65 0.16 60)",
+                background: "var(--cream)",
+                color: "var(--gold-deep)",
+                border: "1px solid oklch(0.85 0.08 75)",
               }}
             >
               {v}
@@ -99,12 +116,13 @@ export default function PhoneMockup() {
           ))}
         </div>
 
-        {/* CTA */}
+        {/* CTA — F04: gold pill with Night-Deep text. Replaces the old
+            sacred-blue. Bottom-nav active state below also moves to gold. */}
         <div
-          className="rounded-full text-center py-2 text-[11px] font-semibold transition-opacity duration-300"
+          className="rounded-full text-center py-2 text-[11px] font-bold transition-opacity duration-300"
           style={{
-            background: "oklch(0.45 0.12 245)",
-            color: "white",
+            background: "var(--gold)",
+            color: "var(--night-deep)",
             opacity: showPills ? 1 : 0.5,
           }}
         >
@@ -143,16 +161,15 @@ export default function PhoneMockup() {
               <div
                 className="w-[18px] h-[18px] rounded-md mx-auto mb-0.5"
                 style={{
-                  background: active
-                    ? "oklch(0.45 0.12 245)"
-                    : "oklch(0.88 0.01 70)",
+                  // F04: active nav icon picks up gold; inactive stays neutral.
+                  background: active ? "var(--gold)" : "oklch(0.88 0.01 70)",
                 }}
                 aria-hidden="true"
               />
               <div
                 className="text-[7px]"
                 style={{
-                  color: active ? "oklch(0.45 0.12 245)" : "oklch(0.55 0.02 250)",
+                  color: active ? "var(--gold-deep)" : "oklch(0.55 0.02 250)",
                 }}
               >
                 {label}

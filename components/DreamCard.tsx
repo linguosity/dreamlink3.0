@@ -1577,7 +1577,18 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                       return (
                         <Tooltip key={index}>
                           <TooltipTrigger asChild>
-                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                            {/* F05 (v2 Moonwater): scripture chip reads as a
+                                quoted reference — cream surface, gold-deep
+                                text, hairline gold border. */}
+                            <Badge
+                              variant="outline"
+                              className="text-xs flex items-center gap-1 font-semibold"
+                              style={{
+                                background: "var(--cream)",
+                                color: "var(--gold-deep)",
+                                borderColor: "oklch(0.85 0.08 75)",
+                              }}
+                            >
                               <BookIcon className="h-2 w-2" />
                               {ref}
                             </Badge>
