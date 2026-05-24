@@ -16,7 +16,7 @@ import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, DM_Serif_Display } from "next/font/google";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -93,6 +93,18 @@ const dmSerifDisplay = DM_Serif_Display({
   weight: ["400"],
 });
 
+// v2 Moonwater wordmark — italic serif "DreamRiver" per the brand audit.
+// Loaded as a CSS variable so the .wordmark class in globals.css can pick
+// it up. Italic 500 is the canonical weight; we load roman 500 too in case
+// any tertiary surface needs the upright form.
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-cormorant",
+  weight: ["500"],
+  style: ["italic", "normal"],
+});
+
 export default async function RootLayout({
   children,
 }: {
@@ -145,7 +157,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable}`}
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable}`}
       suppressHydrationWarning
     >
       <body className="text-foreground">

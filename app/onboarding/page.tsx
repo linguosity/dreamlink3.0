@@ -203,8 +203,8 @@ export default function OnboardingPage() {
         {/* ── Step 1: Welcome ──────────────────────────────────── */}
         {step === 1 && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 text-center animate-fade-in">
-            {/* Logo */}
-            <p className="font-blanka tracking-wider text-2xl text-gray-900 dark:text-white mb-6">
+            {/* v2 Moonwater wordmark */}
+            <p className="wordmark text-3xl text-gray-900 dark:text-white mb-6">
               DreamRiver
             </p>
 

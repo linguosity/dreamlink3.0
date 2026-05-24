@@ -66,17 +66,17 @@ export default function ComingSoonPage() {
 
       {/* Foreground content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header — F01: free-floating Moonwater + wordmark in cream */}
+        {/* Header — F01: contained Moonwater + italic-serif wordmark on cream */}
         <header className="px-6 sm:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <AppIcon size={28} radius={22}>
               <MoonwaterMark size={18} />
             </AppIcon>
             <span
-              className="font-blanka tracking-[0.15em] text-[18px]"
+              className="wordmark text-[22px]"
               style={{ color: "var(--cream)" }}
             >
-              DREAMRIVER
+              DreamRiver
             </span>
           </div>
           <span

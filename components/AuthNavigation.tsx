@@ -44,7 +44,7 @@ export default function AuthNavigation({ variant = 'compact' }: AuthNavigationPr
   if (variant === 'compact') {
     return (
       <div className="space-y-4">
-        <h1 className="font-blanka text-2xl tracking-wider text-center text-foreground">
+        <h1 className="wordmark text-3xl text-center text-foreground">
           DreamRiver
         </h1>
         <Card className="p-1 bg-muted/50 backdrop-blur-sm">

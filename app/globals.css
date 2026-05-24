@@ -322,8 +322,22 @@
   }
 }
 
+/* Legacy Blanka utility — superseded by .wordmark for the brand wordmark.
+ * Kept for now in case any decorative surface still references it; safe to
+ * delete once a grep confirms no remaining consumers. */
 .font-blanka {
   font-family: 'Blanka', sans-serif;
+}
+
+/* v2 Moonwater wordmark — italic Cormorant Garamond per brand audit.
+ * Mixed-case "DreamRiver" with a touch of letter-spacing to settle the
+ * italic forms. Use the <Wordmark/> component rather than this class
+ * directly when possible — that keeps the lockup consistent. */
+.wordmark {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.005em;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

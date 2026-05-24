@@ -1,17 +1,28 @@
-export default function Wordmark({ className = "" }: { className?: string }) {
+// components/Wordmark.tsx
+//
+// The DreamRiver wordmark — v2 Moonwater spec.
+//
+// Renders "DreamRiver" in Cormorant Garamond italic 500, mixed case. Pairs
+// with the contained Moonwater squircle (see <AppIcon><MoonwaterMark/>) to
+// form the canonical brand lockup. Use the .wordmark utility class for
+// one-off inline cases (e.g. in marketing prose); use this component for
+// every navigational/UI usage so the type is consistent.
+//
+// Previously: Blanka all-caps `DREAMR-I-VER` composition. Retired with
+// the v2 audit rollout; the italic serif reads as "sacred / journaling"
+// rather than "modern / techy" and matches the brand audit's reference.
+
+export default function Wordmark({
+  className = "",
+}: {
+  className?: string;
+}) {
   return (
     <span
-      className={`inline-flex items-baseline gap-0 font-blanka tracking-wider ${className}`}
+      className={`wordmark inline-block ${className}`}
       aria-label="DreamRiver"
     >
-      <span>DREAMR</span>
-      <span
-        aria-hidden="true"
-        className="not-italic [text-shadow:0_0_0.5px_currentColor]"
-      >
-        I
-      </span>
-      <span>VER</span>
+      DreamRiver
     </span>
   );
 }

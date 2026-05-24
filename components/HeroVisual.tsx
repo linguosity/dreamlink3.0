@@ -41,8 +41,8 @@ export default function HeroVisual() {
             <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
               <div className="bg-cream rounded-[1.875rem] overflow-hidden h-full flex flex-col">
                 <div className="px-5 py-3 border-b border-black/5">
-                  <span className="font-blanka tracking-[0.12em] text-[11px] text-gray-900">
-                    DREAMRIVER
+                  <span className="wordmark text-[13px] text-gray-900">
+                    DreamRiver
                   </span>
                 </div>
 

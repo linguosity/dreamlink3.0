@@ -53,8 +53,8 @@ export default function PhoneMockup() {
             waveTop="var(--night)"
             waveBottom="var(--gold)"
           />
-          <span className="font-blanka tracking-[0.12em] text-[11px] text-foreground">
-            DREAMRIVER
+          <span className="wordmark text-[13px] text-foreground">
+            DreamRiver
           </span>
         </div>
         <div
