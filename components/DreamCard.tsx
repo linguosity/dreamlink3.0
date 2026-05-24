@@ -1178,7 +1178,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
           </div>
         ) : isPollingCardImage ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-blue-soft overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 overflow-hidden">
             <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex items-center gap-2 text-white/60 text-xs">

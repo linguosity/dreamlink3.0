@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Coming Soon</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+<style>
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --warm-white: oklch(0.975 0.006 70);
+    --warm-cream: oklch(0.955 0.015 75);
+    --warm-dark: oklch(0.22 0.02 250);
+    --warm-muted: oklch(0.55 0.02 250);
+    --blue-deep: oklch(0.45 0.12 245);
+    --blue-mid: oklch(0.55 0.14 240);
+    --blue-soft: oklch(0.70 0.08 235);
+    --blue-pale: oklch(0.92 0.03 235);
+    --gold: oklch(0.72 0.14 75);
+    --gold-light: oklch(0.82 0.10 78);
+    --gold-glow: oklch(0.88 0.06 80);
+    --amber: oklch(0.65 0.16 60);
+  }
+
+  html { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--warm-white);
+    color: var(--warm-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Water-inspired animated background */
+  .water-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: linear-gradient(
+      175deg,
+      oklch(0.96 0.008 75) 0%,
+      oklch(0.93 0.02 220) 35%,
+      oklch(0.85 0.06 225) 60%,
+      oklch(0.75 0.09 235) 100%
+    );
+  }
+
+  .water-bg::before,
+  .water-bg::after {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    opacity: 0.35;
+  }
+
+  .water-bg::before {
+    background: radial-gradient(ellipse at 30% 80%, oklch(0.80 0.10 75 / 0.5) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, oklch(0.85 0.08 235 / 0.4) 0%, transparent 45%);
+    animation: waterDrift 18s ease-in-out infinite;
+  }
+
+  .water-bg::after {
+    background: radial-gradient(ellipse at 60% 40%, oklch(0.90 0.05 80 / 0.3) 0%, transparent 40%),
+                radial-gradient(ellipse at 20% 30%, oklch(0.80 0.06 240 / 0.25) 0%, transparent 45%);
+    animation: waterDrift 24s ease-in-out infinite reverse;
+  }
+
+  @keyframes waterDrift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, 1%) rotate(0.5deg); }
+    66% { transform: translate(-1%, 2%) rotate(-0.3deg); }
+  }
+
+  /* Ripple lines */
+  .ripple-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 10%, oklch(1 0 0 / 0.12) 30%, oklch(1 0 0 / 0.18) 50%, oklch(1 0 0 / 0.12) 70%, transparent 90%);
+    animation: rippleSlide 8s ease-in-out infinite;
+  }
+
+  @keyframes rippleSlide {
+    0%, 100% { transform: translateX(-3%); opacity: 0.4; }
+    50% { transform: translateX(3%); opacity: 0.8; }
+  }
+
+  /* Light shimmer overlay */
+  .shimmer-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      transparent 40%,
+      oklch(0.95 0.04 75 / 0.15) 45%,
+      oklch(0.98 0.02 80 / 0.25) 50%,
+      oklch(0.95 0.04 75 / 0.15) 55%,
+      transparent 60%
+    );
+    background-size: 300% 300%;
+    animation: shimmerMove 8s ease-in-out infinite;
+  }
+
+  @keyframes shimmerMove {
+    0% { background-position: 200% 200%; }
+    100% { background-position: -100% -100%; }
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#c8913a",
+  "headlineSize": 48,
+  "showCountdown": true,
+  "showPhoneMockup": true
+}/*EDITMODE-END*/;
+
+const { useState, useEffect, useRef, useMemo } = React;
+
+/* ── Brand Mark ──────────────────────────────────────────────
+   Sun · Arch · River — same mark used across the brand. */
+function BrandMark({ size = 32, color = 'currentColor', stroke = 1.5 }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
+      <circle cx="24" cy="8" r="1.8" fill={color} stroke="none" />
+      <path d="M9 26 A15 15 0 0 1 39 26" />
+      <line x1="9" y1="26" x2="9" y2="29" />
+      <line x1="39" y1="26" x2="39" y2="29" />
+      <path d="M5 33 Q13 30 20 33 T35 33 Q40 31 43 33" />
+      <path d="M7 39 Q14 36 21 39 T36 39 Q40 37.5 41 39" />
+    </svg>
+  );
+}
+
+/* ── Countdown Timer ──────────────────────────────────────── */
+function Countdown({ target }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const diff = Math.max(0, new Date(target).getTime() - now);
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+
+  const units = [
+    { label: 'Days', value: days },
+    { label: 'Hours', value: hours },
+    { label: 'Min', value: minutes },
+    { label: 'Sec', value: seconds },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+      {units.map(u => (
+        <div key={u.label} style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: 28, fontWeight: 700, lineHeight: 1.1,
+            fontVariantNumeric: 'tabular-nums',
+            color: 'var(--warm-dark)',
+          }}>
+            {String(u.value).padStart(2, '0')}
+          </div>
+          <div style={{
+            fontSize: 11, fontWeight: 500, letterSpacing: '0.06em',
+            color: 'var(--warm-muted)', textTransform: 'uppercase', marginTop: 2,
+          }}>
+            {u.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Email Signup Form ────────────────────────────────────── */
+function EmailForm() {
+  const [email, setEmail] = useState('');
+  const [state, setState] = useState('idle'); // idle | submitting | success | error
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setState('submitting');
+    setTimeout(() => {
+      setState('success');
+      setEmail('');
+    }, 1200);
+  };
+
+  if (state === 'success') {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center',
+        padding: '14px 24px', borderRadius: 100,
+        background: 'oklch(0.94 0.04 145 / 0.5)',
+        border: '1px solid oklch(0.80 0.08 145 / 0.4)',
+      }}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="10" fill="oklch(0.55 0.15 150)"/>
+          <path d="M6 10.5l2.5 2.5 5.5-5.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span style={{ fontSize: 15, fontWeight: 600, color: 'oklch(0.35 0.06 150)' }}>
+          You're on the list! We'll be in touch.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{
+      display: 'flex', gap: 0, maxWidth: 440, width: '100%',
+      borderRadius: 100, overflow: 'hidden',
+      border: '1.5px solid oklch(0.80 0.04 235 / 0.4)',
+      background: 'oklch(1 0 0 / 0.7)',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 2px 16px oklch(0.5 0.08 235 / 0.08)',
+      transition: 'box-shadow 0.2s',
+    }}>
+      <input
+        type="email"
+        required
+        placeholder="your@email.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{
+          flex: 1, padding: '14px 20px', border: 'none', outline: 'none',
+          fontSize: 15, fontFamily: 'inherit', background: 'transparent',
+          color: 'var(--warm-dark)', minWidth: 0,
+        }}
+      />
+      <button
+        type="submit"
+        disabled={state === 'submitting'}
+        style={{
+          padding: '14px 28px', border: 'none', cursor: 'pointer',
+          fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+          background: 'var(--blue-deep)', color: 'white',
+          letterSpacing: '0.02em',
+          transition: 'background 0.2s',
+          opacity: state === 'submitting' ? 0.7 : 1,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {state === 'submitting' ? 'Joining…' : 'Join Waitlist'}
+      </button>
+    </form>
+  );
+}
+
+/* ── Phone Mockup Content ─────────────────────────────────── */
+function PhoneMockupContent() {
+  const [typed, setTyped] = useState('');
+  const fullText = "I was walking across a bridge over a river of golden light…";
+  const [showPills, setShowPills] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setTyped(fullText.slice(0, i));
+      if (i >= fullText.length) {
+        clearInterval(id);
+        setTimeout(() => setShowPills(true), 400);
+      }
+    }, 35);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'var(--warm-cream)',
+      display: 'flex', flexDirection: 'column',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      {/* Nav */}
+      <div style={{
+        padding: '10px 14px', display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid oklch(0.88 0.01 70)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <BrandMark size={14} color="var(--warm-dark)" stroke={1.7} />
+          <span style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 500,
+            fontSize: 14, letterSpacing: '0.005em',
+            color: 'var(--warm-dark)', lineHeight: 1,
+          }}>DreamRiver</span>
+        </div>
+        <div style={{
+          width: 26, height: 26, borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--blue-soft), var(--gold))',
+        }}></div>
+      </div>
+
+      {/* Dream input area */}
+      <div style={{ padding: 16, flex: 1 }}>
+        <div style={{
+          fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
+          color: 'var(--warm-muted)', textTransform: 'uppercase', marginBottom: 4,
+        }}>Dream Journal</div>
+        <div style={{
+          fontSize: 14, fontWeight: 700, color: 'var(--warm-dark)', marginBottom: 12,
+        }}>New Entry</div>
+
+        <div style={{
+          background: 'oklch(1 0 0 / 0.6)', borderRadius: 12, padding: 12,
+          minHeight: 72, marginBottom: 12,
+          border: '1px solid oklch(0.88 0.02 235 / 0.3)',
+        }}>
+          <div style={{ fontSize: 11, color: 'var(--warm-dark)', lineHeight: 1.5 }}>
+            {typed}
+            <span style={{
+              display: 'inline-block', width: 1, height: 12, background: 'var(--warm-dark)',
+              marginLeft: 1, verticalAlign: '-1px',
+              animation: 'blink 0.7s steps(1) infinite',
+            }}></span>
+          </div>
+        </div>
+
+        {/* Scripture pills */}
+        <div style={{
+          display: 'flex', gap: 6, marginBottom: 14,
+          opacity: showPills ? 1 : 0, transition: 'opacity 0.5s',
+        }}>
+          {['Isaiah 43:2', 'Psalm 23:4'].map(v => (
+            <span key={v} style={{
+              fontSize: 9, padding: '4px 10px', borderRadius: 100,
+              background: 'oklch(0.93 0.04 75)', color: 'var(--amber)',
+              fontWeight: 600,
+            }}>{v}</span>
+          ))}
+        </div>
+
+        {/* CTA button */}
+        <div style={{
+          background: 'var(--blue-deep)', color: 'white',
+          borderRadius: 100, textAlign: 'center', padding: '10px 0',
+          fontSize: 12, fontWeight: 600,
+          opacity: showPills ? 1 : 0.5, transition: 'opacity 0.4s',
+        }}>Get Interpretation</div>
+
+        {/* Interpretation preview */}
+        <div style={{
+          marginTop: 14, padding: 12, borderRadius: 12,
+          background: 'linear-gradient(135deg, oklch(0.95 0.03 75), oklch(0.94 0.02 235))',
+          opacity: showPills ? 1 : 0, transition: 'opacity 0.6s 0.3s',
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--amber)', marginBottom: 4 }}>
+            ✦ Your Interpretation
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--warm-dark)', lineHeight: 1.5, opacity: 0.8 }}>
+            Your dream of crossing a bridge over golden light speaks to a season of divine transition…
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-around', padding: '10px 0',
+        borderTop: '1px solid oklch(0.88 0.01 70)',
+      }}>
+        {['Journal', 'Search', 'Settings'].map((label, i) => (
+          <div key={label} style={{ textAlign: 'center' }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 6, margin: '0 auto 3px',
+              background: i === 0 ? 'var(--blue-deep)' : 'oklch(0.88 0.01 70)',
+            }}></div>
+            <div style={{ fontSize: 8, color: i === 0 ? 'var(--blue-deep)' : 'var(--warm-muted)' }}>{label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main App ─────────────────────────────────────────────── */
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  return (
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* Animated water background */}
+      <div className="water-bg">
+        <div className="shimmer-overlay"></div>
+        {[35, 48, 62, 75, 88].map((top, i) => (
+          <div
+            key={i}
+            className="ripple-line"
+            style={{
+              top: `${top}%`,
+              animationDelay: `${i * 1.6}s`,
+              animationDuration: `${7 + i * 1.2}s`,
+            }}
+          ></div>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{
+        position: 'relative', zIndex: 1,
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <header style={{
+          padding: '20px 32px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BrandMark size={26} color="var(--warm-dark)" stroke={1.6} />
+            <div style={{
+              fontSize: 24, letterSpacing: '0.005em', fontWeight: 500,
+              fontStyle: 'italic',
+              color: 'var(--warm-dark)', lineHeight: 1,
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+            }}>
+              DreamRiver
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--warm-muted)', fontWeight: 500 }}>
+            Coming June 2026
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '40px 24px 80px',
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 520px) minmax(0, 320px)',
+            gap: 64, alignItems: 'center',
+            maxWidth: 960,
+            width: '100%',
+          }}>
+            {/* Left: Copy + Form */}
+            <div>
+              <div style={{
+                display: 'inline-block',
+                padding: '6px 16px', borderRadius: 100, marginBottom: 20,
+                background: 'oklch(0.92 0.04 75 / 0.6)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid oklch(0.82 0.06 75 / 0.4)',
+                fontSize: 13, fontWeight: 600, color: 'var(--amber)',
+                letterSpacing: '0.02em',
+              }}>
+                ✦ Launching June 1, 2026
+              </div>
+
+              <h1 style={{
+                fontFamily: "'DM Serif Display', Georgia, serif",
+                fontSize: tweaks.headlineSize,
+                lineHeight: 1.12,
+                color: 'var(--warm-dark)',
+                marginBottom: 16,
+                textWrap: 'balance',
+              }}>
+                Discover What God Is Saying Through Your Dreams
+              </h1>
+
+              <p style={{
+                fontSize: 17, lineHeight: 1.6, color: 'var(--warm-muted)',
+                maxWidth: 420, marginBottom: 32,
+              }}>
+                AI-powered biblical dream interpretation. Journal your dreams, receive scripture-backed insights in seconds. Be the first to experience it.
+              </p>
+
+              <EmailForm />
+
+              <p style={{
+                fontSize: 12, color: 'var(--warm-muted)', marginTop: 12, opacity: 0.7,
+              }}>
+                Free to start. No spam, ever. Unsubscribe anytime.
+              </p>
+
+              {/* Countdown */}
+              {tweaks.showCountdown && (
+                <div style={{ marginTop: 40 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, letterSpacing: '0.1em',
+                    color: 'var(--warm-muted)', textTransform: 'uppercase', marginBottom: 12,
+                    textAlign: 'left',
+                  }}>
+                    Launching in
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <Countdown target="2026-06-01T00:00:00" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Phone mockup */}
+            {tweaks.showPhoneMockup && (
+              <div style={{
+                display: 'flex', justifyContent: 'center',
+                animation: 'float 6s ease-in-out infinite',
+              }}>
+                <div style={{ width: 270 }}>
+                  <IOSDevice
+                    screenWidth={270}
+                  >
+                    <PhoneMockupContent />
+                  </IOSDevice>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer style={{
+          padding: '20px 32px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontSize: 12, color: 'var(--warm-muted)',
+        }}>
+          <span>© 2026 DreamRiver. All rights reserved.</span>
+          <div style={{ display: 'flex', gap: 20 }}>
+            <span style={{ cursor: 'pointer', opacity: 0.7 }}>Privacy</span>
+            <span style={{ cursor: 'pointer', opacity: 0.7 }}>Terms</span>
+          </div>
+        </footer>
+      </div>
+
+      {/* Tweaks Panel */}
+      <TweaksPanel>
+        <TweakSection label="Layout">
+          <TweakSlider label="Headline Size" tweakKey="headlineSize" min={32} max={64} step={2} value={tweaks.headlineSize} onChange={v => setTweak('headlineSize', v)} />
+          <TweakToggle label="Countdown Timer" tweakKey="showCountdown" value={tweaks.showCountdown} onChange={v => setTweak('showCountdown', v)} />
+          <TweakToggle label="Phone Mockup" tweakKey="showPhoneMockup" value={tweaks.showPhoneMockup} onChange={v => setTweak('showPhoneMockup', v)} />
+        </TweakSection>
+      </TweaksPanel>
+
+      <style>{`
+        @keyframes blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+
+        @media (max-width: 768px) {
+          main > div {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+            text-align: center;
+          }
+          main > div > div:first-child {
+            order: 1;
+          }
+          main > div > div:last-child {
+            order: 0;
+          }
+          main > div > div:first-child form {
+            margin: 0 auto;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

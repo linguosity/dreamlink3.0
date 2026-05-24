@@ -1,14 +1,5 @@
 @import "tailwindcss";
 
-/* Blanka — wordmark font only. Use via .font-blanka. */
-@font-face {
-  font-family: 'Blanka';
-  src: url('/fonts/Blanka.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /*
  * Tailwind v4 theme — DreamRiver warm palette
  *
@@ -80,9 +71,9 @@
   --color-chart-5: var(--chart-5);
 
   /* Typography
-   * --font-sans  → DM Sans (body)
-   * --font-serif → DM Serif Display (headlines, hero text)
-   * --font-blanka → Blanka (wordmark only — apply via .font-blanka)
+   * --font-sans      → DM Sans (body)
+   * --font-serif     → DM Serif Display (headlines, hero text)
+   * --font-cormorant → Cormorant Garamond italic (wordmark — apply via .wordmark)
    */
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --font-serif: var(--font-dm-serif), Georgia, serif;
@@ -269,10 +260,10 @@
     font-family: var(--font-sans);
   }
   /* Headings default to DM Serif Display for warmth + character.
-   * Components that need a different family (e.g. wordmark uses Blanka)
-   * win via class specificity. DM Serif Display ships only weight 400,
-   * so we normalize letter-spacing instead of asking for a bold variant
-   * that would synthesize. */
+   * Components that need a different family (e.g. wordmark uses Cormorant
+   * Garamond italic via .wordmark) win via class specificity. DM Serif
+   * Display ships only weight 400, so we normalize letter-spacing instead
+   * of asking for a bold variant that would synthesize. */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
     font-weight: 400;
@@ -320,13 +311,6 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Legacy Blanka utility — superseded by .wordmark for the brand wordmark.
- * Kept for now in case any decorative surface still references it; safe to
- * delete once a grep confirms no remaining consumers. */
-.font-blanka {
-  font-family: 'Blanka', sans-serif;
 }
 
 /* v2 Moonwater wordmark — italic Cormorant Garamond per brand audit.

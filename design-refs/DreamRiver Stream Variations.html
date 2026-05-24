@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Stream Variations</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --warm-white: oklch(0.975 0.006 70);
+    --warm-cream: oklch(0.955 0.015 75);
+    --warm-paper: oklch(0.97 0.012 75);
+    --parchment: oklch(0.93 0.025 75);
+    --parchment-deep: oklch(0.88 0.04 75);
+    --warm-dark: oklch(0.22 0.02 250);
+    --warm-darker: oklch(0.15 0.015 250);
+    --warm-muted: oklch(0.55 0.02 250);
+    --warm-line: oklch(0.88 0.01 75);
+    --night: oklch(0.18 0.02 250);
+    --blue-deep: oklch(0.45 0.12 245);
+    --blue-mid: oklch(0.55 0.14 240);
+    --gold: oklch(0.72 0.14 75);
+    --gold-light: oklch(0.82 0.10 78);
+    --amber: oklch(0.65 0.16 60);
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--warm-white);
+    color: var(--warm-dark);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--warm-muted);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ────────────────────────────────────────────────────────────
+   Stream variations — eight directions on the same form.
+   Each mark on a 48×48 viewBox unless noted.
+   `stroke` controls the ink color. `accent` is a secondary
+   (used for source dots, banks, etc).
+   ──────────────────────────────────────────────────────────── */
+
+// 01 — Single: one clean sine wave, nothing else
+function S01Single({ size = 130, stroke = 'var(--warm-darker)', accent }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={size > 40 ? 2.4 : 2.6} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <path d="M4 24 C 12 12, 16 12, 24 24 C 32 36, 36 36, 44 24" />
+    </svg>
+  );
+}
+
+// 02 — Twin: two parallel sines, second is a quieter echo (the deployed version)
+function S02Twin({ size = 130, stroke = 'var(--warm-darker)', accent }) {
+  const sw = size > 40 ? 2.4 : 2.6;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={sw} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <path d="M4 20 C 12 8, 16 8, 24 20 C 32 32, 36 32, 44 20" />
+      <path d="M4 30 C 12 22, 18 22, 24 30 C 30 38, 36 38, 44 30" strokeWidth={sw * 0.55} opacity="0.55" />
+    </svg>
+  );
+}
+
+// 03 — Cascade: three phase-shifted waves stacked
+function S03Cascade({ size = 130, stroke = 'var(--warm-darker)', accent }) {
+  const sw = size > 40 ? 1.9 : 2.4;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={sw} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <path d="M4 14 C 12 6, 16 6, 24 14 C 32 22, 36 22, 44 14" opacity="0.7" />
+      <path d="M4 24 C 12 32, 16 32, 24 24 C 32 16, 36 16, 44 24" />
+      <path d="M4 34 C 12 26, 16 26, 24 34 C 32 42, 36 42, 44 34" opacity="0.55" />
+    </svg>
+  );
+}
+
+// 04 — Vertical: a single sine flowing top to bottom
+function S04Vertical({ size = 130, stroke = 'var(--warm-darker)', accent = 'var(--gold-light)' }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={size > 40 ? 2.4 : 2.6} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      {/* gentle source dot */}
+      <circle cx="24" cy="5" r={size > 40 ? 1.6 : 2} fill={accent} stroke="none" />
+      <path d="M24 9 C 12 17, 12 21, 24 28 C 36 35, 36 39, 24 46" />
+    </svg>
+  );
+}
+
+// 05 — Spring: horizontal stream + a single point of light above the source
+function S05Spring({ size = 130, stroke = 'var(--warm-darker)', accent = 'var(--gold-light)' }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={size > 40 ? 2.4 : 2.6} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <circle cx="24" cy="10" r={size > 40 ? 2 : 2.4} fill={accent} stroke="none" />
+      <path d="M4 28 C 12 18, 16 18, 24 28 C 32 38, 36 38, 44 28" />
+      <path d="M4 36 C 12 30, 18 30, 24 36 C 30 42, 36 42, 44 36" strokeWidth={1.2} opacity="0.45" />
+    </svg>
+  );
+}
+
+// 06 — Meander: a winding river path traced as on a map
+function S06Meander({ size = 130, stroke = 'var(--warm-darker)', accent = 'var(--gold)' }) {
+  const sw = size > 40 ? 2.2 : 2.6;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <path d="M6 6
+               C 6 14, 18 12, 18 20
+               C 18 28, 6 28, 8 36
+               C 10 42, 22 40, 30 38
+               C 38 36, 42 40, 42 44" />
+      {/* small dot at the river's mouth (sea) */}
+      <circle cx="42" cy="44" r={size > 40 ? 1.6 : 2} fill={accent} stroke="none" />
+    </svg>
+  );
+}
+
+// 07 — Calligraphic: thicker brushstroke, slightly tapered ends (single wave)
+function S07Calligraphic({ size = 130, stroke = 'var(--warm-darker)', accent }) {
+  // Drawn as a filled shape — top edge offset from bottom edge so the form
+  // has slight weight variation along its length, like a brush.
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill={stroke} stroke="none"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <path d="M4 23
+               C 12 11, 16 11, 24 21
+               C 32 31, 36 31, 44 21
+               C 44.2 21, 44.4 21.2, 44.5 21.6
+               C 44.7 22.2, 44.5 22.8, 44 23
+               C 36 33, 32 33, 24 23
+               C 16 13, 12 13, 4.5 24.4
+               C 4 24.6, 3.6 24.4, 3.6 23.8
+               C 3.6 23.4, 3.8 23.1, 4 23 Z" />
+    </svg>
+  );
+}
+
+// 08 — Currents: five parallel sines at varying opacities — layered depth
+function S08Currents({ size = 130, stroke = 'var(--warm-darker)', accent }) {
+  const sw = size > 40 ? 1.5 : 2.0;
+  const lines = [
+    { y: 8,  o: 0.25, dx: 0 },
+    { y: 16, o: 0.55, dx: 4 },
+    { y: 24, o: 1.0,  dx: 0 },
+    { y: 32, o: 0.55, dx: 4 },
+    { y: 40, o: 0.25, dx: 0 },
+  ];
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={stroke} strokeWidth={sw} strokeLinecap="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      {lines.map(({ y, o, dx }, i) => (
+        <path
+          key={i}
+          d={`M${2 + dx} ${y} C ${10 + dx} ${y - 6}, ${14 + dx} ${y - 6}, ${22 + dx} ${y} C ${30 + dx} ${y + 6}, ${34 + dx} ${y + 6}, ${42 + dx} ${y}`}
+          opacity={o}
+        />
+      ))}
+    </svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Direction card
+   ──────────────────────────────────────────────────────────── */
+function VariationCard({ number, name, concept, Mark, hero = {} }) {
+  const heroOpts = {
+    bg: 'var(--parchment)',
+    stroke: 'var(--warm-darker)',
+    accent: 'var(--gold)',
+    ...hero,
+  };
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'white',
+      display: 'flex', flexDirection: 'column',
+      color: 'var(--warm-dark)',
+    }}>
+      {/* hero panel — parchment, ink on paper */}
+      <div style={{
+        background: heroOpts.bg,
+        flex: '0 0 240px',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        borderBottom: '1px solid var(--warm-line)',
+        backgroundImage: 'radial-gradient(circle at 30% 30%, oklch(0.96 0.018 75) 0%, transparent 60%), radial-gradient(circle at 80% 70%, oklch(0.90 0.05 75 / 0.4) 0%, transparent 50%)',
+      }}>
+        <Mark size={150} stroke={heroOpts.stroke} accent={heroOpts.accent} />
+        <div className="font-mono" style={{
+          position: 'absolute', bottom: 12, left: 16,
+          fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
+          color: 'oklch(0.45 0.04 75 / 0.7)',
+        }}>{number}</div>
+      </div>
+
+      {/* lockup */}
+      <div style={{
+        padding: '20px 24px 14px',
+        display: 'flex', alignItems: 'center', gap: 12,
+        borderBottom: '1px dashed var(--warm-line)',
+      }}>
+        <Mark size={28} stroke="var(--warm-darker)" accent="var(--gold)" />
+        <span className="wordmark" style={{ fontSize: 26, color: 'var(--warm-darker)', lineHeight: 1 }}>
+          DreamRiver
+        </span>
+      </div>
+
+      {/* name + concept */}
+      <div style={{ padding: '14px 24px 4px' }}>
+        <div className="font-serif" style={{
+          fontSize: 22, lineHeight: 1.1,
+          color: 'var(--warm-darker)', marginBottom: 8,
+        }}>{name}</div>
+        <p style={{
+          fontSize: 12.5, lineHeight: 1.55,
+          color: 'var(--warm-muted)',
+          textWrap: 'pretty',
+        }}>{concept}</p>
+      </div>
+
+      {/* size scale + app icon */}
+      <div style={{ marginTop: 'auto', padding: '14px 24px 22px', display: 'flex', alignItems: 'flex-end', gap: 14 }}>
+        {[40, 28, 20, 14].map(s => (
+          <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+            <Mark size={s} stroke="var(--warm-darker)" accent="var(--gold)" />
+            <div className="font-mono" style={{ fontSize: 9, color: 'var(--warm-muted)' }}>{s}</div>
+          </div>
+        ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: 'var(--blue-deep)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 6px oklch(0.18 0.02 250 / 0.25)',
+          }}>
+            <Mark size={26} stroke="white" accent="var(--gold-light)" />
+          </div>
+          <div className="font-mono" style={{ fontSize: 9, color: 'var(--warm-muted)' }}>app</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Brief card
+   ──────────────────────────────────────────────────────────── */
+function Brief() {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      padding: 32,
+      background: 'linear-gradient(165deg, var(--parchment) 0%, var(--parchment-deep) 100%)',
+      display: 'flex', flexDirection: 'column', gap: 14,
+      color: 'var(--warm-dark)',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* hero sine in corner */}
+      <div style={{ position: 'absolute', top: 20, right: -40, opacity: 0.13 }}>
+        <S02Twin size={260} stroke="var(--warm-darker)" />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="eyebrow">Round 3 · Stream direction</div>
+        <h2 className="font-serif" style={{
+          fontSize: 30, lineHeight: 1.08, color: 'var(--warm-darker)',
+          fontWeight: 400, textWrap: 'balance',
+          marginTop: 14, marginBottom: 16,
+        }}>
+          Eight ways to draw the same river.
+        </h2>
+        <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--warm-muted)', textWrap: 'pretty' }}>
+          Stream is the most abstract option — almost calligraphic. These variations push on what the line <em>does</em>: alone vs. echoed, horizontal vs. vertical, on its own vs. accompanied by a source-star, brushed thick or drawn as many layered currents.
+        </p>
+
+        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 12 }}>
+          {[
+            ['01', 'Single', 'one wave'],
+            ['05', 'Spring', '+ source dot'],
+            ['02', 'Twin', 'wave + echo'],
+            ['06', 'Meander', 'mapped river'],
+            ['03', 'Cascade', 'three layers'],
+            ['07', 'Calligraphic', 'brushed'],
+            ['04', 'Vertical', 'top→bottom'],
+            ['08', 'Currents', 'five layers'],
+          ].map(([n, name, sub]) => (
+            <div key={n} style={{ color: 'var(--warm-muted)', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span className="font-mono" style={{ color: 'var(--gold)', fontSize: 11 }}>{n}</span>
+              <span style={{ color: 'var(--warm-darker)' }}>{name}</span>
+              <span style={{ fontSize: 11, opacity: 0.7 }}>{sub}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          marginTop: 'auto', paddingTop: 14,
+          borderTop: '1px solid oklch(0.78 0.04 75 / 0.6)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          fontSize: 11, color: 'var(--warm-muted)',
+        }}>
+          <span>Same wordmark · Cormorant Garamond italic 500</span>
+          <span className="font-mono" style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>Stream · v3</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   App
+   ──────────────────────────────────────────────────────────── */
+function App() {
+  const cardW = 340;
+  const cardH = 560;
+
+  return (
+    <DesignCanvas>
+      <DCSection id="brief" title="Stream · 8 variations" subtitle="The same fluid line, drawn in different registers">
+        <DCArtboard id="brief" label="Brief" width={460} height={cardH}>
+          <Brief />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="variations" title="The line, in different postures" subtitle="Solo · echoed · layered · vertical · accompanied · meandering · brushed">
+        <DCArtboard id="s01" label="01 · Single" width={cardW} height={cardH}>
+          <VariationCard
+            number="01 · Single"
+            name="Single"
+            concept="One clean sine wave, nothing else. The most reduced expression — almost a typographic tilde. Everything depends on the wordmark beside it, which is the right delegation for a literary brand."
+            Mark={S01Single}
+          />
+        </DCArtboard>
+        <DCArtboard id="s02" label="02 · Twin" width={cardW} height={cardH}>
+          <VariationCard
+            number="02 · Twin"
+            name="Twin (deployed)"
+            concept="The original — one bold wave above, one quieter wave below. The echo suggests depth, surface vs. undertow. Reads as river before it reads as line. This is what's on the site now."
+            Mark={S02Twin}
+          />
+        </DCArtboard>
+        <DCArtboard id="s03" label="03 · Cascade" width={cardW} height={cardH}>
+          <VariationCard
+            number="03 · Cascade"
+            name="Cascade"
+            concept="Three sines, phase-shifted so they interlock. Suggests current — water moving against itself, the layered nature of a real stream. Most decorative; pairs with a thinner wordmark weight."
+            Mark={S03Cascade}
+          />
+        </DCArtboard>
+        <DCArtboard id="s04" label="04 · Vertical" width={cardW} height={cardH}>
+          <VariationCard
+            number="04 · Vertical"
+            name="Vertical Flow"
+            concept="The stream rotated — flowing top to bottom. Gives the line a sense of falling water, of revelation descending. The small gold dot at the top is the source. Doesn't sit on a horizontal lockup as cleanly."
+            Mark={S04Vertical}
+          />
+        </DCArtboard>
+        <DCArtboard id="s05" label="05 · Spring" width={cardW} height={cardH}>
+          <VariationCard
+            number="05 · Spring"
+            name="Spring"
+            concept="The stream paired with a single point of light above it — a source, a star, the moment of revelation that the river carries downstream. The gold dot earns the second brand color its keep. Strong narrative."
+            Mark={S05Spring}
+          />
+        </DCArtboard>
+        <DCArtboard id="s06" label="06 · Meander" width={cardW} height={cardH}>
+          <VariationCard
+            number="06 · Meander"
+            name="Meander"
+            concept="A winding line traced as if on a cartographer's map — bends, oxbows, finally arriving at a small dot (the sea, the gold). Most literal as a river, most ownable as a shape. Loses readability below ~18px."
+            Mark={S06Meander}
+          />
+        </DCArtboard>
+        <DCArtboard id="s07" label="07 · Calligraphic" width={cardW} height={cardH}>
+          <VariationCard
+            number="07 · Calligraphic"
+            name="Calligraphic"
+            concept="The single wave rendered as a filled brushstroke, with the slight weight variation of a wet brush moving across paper. Most directly evokes ink, illuminated manuscript, devotional journaling. Heaviest visual presence."
+            Mark={S07Calligraphic}
+          />
+        </DCArtboard>
+        <DCArtboard id="s08" label="08 · Currents" width={cardW} height={cardH}>
+          <VariationCard
+            number="08 · Currents"
+            name="Currents"
+            concept="Five sines stacked at varying opacities — top and bottom dim, the centerline strong. Reads as deep water seen in cross-section. Most cinematic at large scale; needs at least 32px to keep all five layers distinct."
+            Mark={S08Currents}
+          />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

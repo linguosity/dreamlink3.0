@@ -76,9 +76,8 @@ export const metadata: Metadata = {
   },
 };
 
-// DM Sans for body, DM Serif Display for headlines.
-// Both expose CSS variables consumed by --font-sans / --font-serif in globals.css.
-// Blanka stays wired via @font-face for the wordmark only (font-blanka utility).
+// DM Sans for body, DM Serif Display for headlines, Cormorant Garamond for the wordmark.
+// All three expose CSS variables consumed by --font-sans / --font-serif / --font-cormorant in globals.css.
 const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",

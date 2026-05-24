@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Brand Audit · v2 Moonwater rollout</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --night:        #0e1a30;
+    --night-deep:   #08111f;
+    --night-soft:   #1a2748;
+    --cream:        #f5ecd6;
+    --cream-soft:   #faf4e2;
+    --gold:         #d4a247;
+    --gold-deep:    #b08436;
+    --gold-light:   #e6c073;
+
+    --warm-white:   oklch(0.975 0.006 70);
+    --warm-paper:   oklch(0.97 0.012 75);
+    --warm-cream:   oklch(0.955 0.015 75);
+    --warm-line:    oklch(0.88 0.01 75);
+    --warm-dark:    oklch(0.22 0.02 250);
+    --warm-darker:  oklch(0.15 0.015 250);
+    --warm-muted:   oklch(0.55 0.02 250);
+
+    /* old palette being phased out */
+    --old-blue:     oklch(0.45 0.12 245);
+    --old-blue-pale: oklch(0.92 0.03 245);
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--warm-white);
+    color: var(--warm-darker);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--warm-muted);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ── The Moonwater mark — same component as Brand.html ─────── */
+function MoonwaterMark({ size = 64, moonColor = 'var(--gold)', waveTop = 'var(--cream)', waveBottom = 'var(--gold)', stroke = 2.5, fullness = 9, tilt = 15, invertWaves = false }) {
+  const crescent = `M32 11 A14 14 0 1 0 32 39 A${fullness} 14 0 1 1 32 11 Z`;
+  const sw = Math.max(1.4, Math.min(3.2, (stroke * size) / 80));
+  const top = "M10 48 C 18 42, 22 42, 30 48 C 38 54, 42 54, 54 48";
+  const bottom = invertWaves
+    ? "M14 56 C 22 62, 26 62, 32 56 C 38 50, 42 50, 50 56"
+    : "M14 56 C 22 50, 26 50, 32 56 C 38 62, 42 62, 50 56";
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} fill="none" style={{ display: 'block', overflow: 'visible' }}>
+      <g transform={`rotate(${tilt} 32 25)`}>
+        <path d={crescent} fill={moonColor} />
+      </g>
+      <path d={bottom} stroke={waveBottom} strokeWidth={sw} strokeLinecap="round" />
+      <path d={top}    stroke={waveTop}    strokeWidth={sw} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AppIcon({ size = 64, radius = 22, bg = 'var(--night)', children }) {
+  return (
+    <div style={{
+      width: size, height: size,
+      borderRadius: `${size * radius / 100}px`,
+      background: bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden',
+      flexShrink: 0,
+      boxShadow: '0 4px 12px oklch(0.18 0.02 250 / 0.15)',
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(circle at 50% 0%, oklch(0.45 0.06 250 / 0.5) 0%, transparent 65%)',
+      }} />
+      <div style={{ position: 'relative' }}>{children}</div>
+    </div>
+  );
+}
+
+/* The old Sun-Arch mark — kept here to show "current" state on findings */
+function SunArchMark({ size = 32, color = 'currentColor', stroke = 1.5 }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}>
+      <circle cx="24" cy="8" r="1.8" fill={color} stroke="none" />
+      <path d="M9 26 A15 15 0 0 1 39 26" />
+      <line x1="9" y1="26" x2="9" y2="29" />
+      <line x1="39" y1="26" x2="39" y2="29" />
+      <path d="M5 33 Q13 30 20 33 T35 33 Q40 31 43 33" />
+      <path d="M7 39 Q14 36 21 39 T36 39 Q40 37.5 41 39" />
+    </svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Utility components
+   ──────────────────────────────────────────────────────────── */
+
+function PriorityBadge({ p }) {
+  const map = {
+    P0: { bg: 'oklch(0.95 0.05 25)', fg: 'oklch(0.50 0.18 25)', label: 'P0 · critical' },
+    P1: { bg: 'oklch(0.95 0.06 75)', fg: 'oklch(0.50 0.15 75)', label: 'P1 · important' },
+    P2: { bg: 'oklch(0.94 0.025 245)', fg: 'oklch(0.45 0.10 245)', label: 'P2 · polish' },
+  };
+  const s = map[p] || map.P2;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: s.bg, color: s.fg,
+      padding: '3px 9px', borderRadius: 100,
+      fontSize: 10.5, fontWeight: 700,
+      letterSpacing: '0.04em', textTransform: 'uppercase',
+      whiteSpace: 'nowrap',
+    }}>{s.label}</span>
+  );
+}
+
+function SurfaceBadge({ name }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: 'oklch(0.95 0.01 75)', color: 'var(--warm-dark)',
+      border: '1px solid var(--warm-line)',
+      padding: '3px 9px', borderRadius: 100,
+      fontSize: 10.5, fontWeight: 600,
+      letterSpacing: '0.04em',
+    }}>{name}</span>
+  );
+}
+
+function Status({ kind, children }) {
+  const map = {
+    ok:    { bg: 'oklch(0.96 0.05 155)', fg: 'oklch(0.42 0.13 155)', icon: '✓' },
+    partial:{ bg: 'oklch(0.96 0.06 75)',  fg: 'oklch(0.50 0.15 75)',  icon: '◐' },
+    fail:  { bg: 'oklch(0.96 0.05 25)',  fg: 'oklch(0.50 0.18 25)',  icon: '✕' },
+    info:  { bg: 'oklch(0.96 0.025 245)',fg: 'oklch(0.45 0.10 245)', icon: '?' },
+  };
+  const s = map[kind];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      background: s.bg, color: s.fg,
+      padding: '3px 10px', borderRadius: 100,
+      fontSize: 11, fontWeight: 600,
+    }}><span style={{ fontSize: 12 }}>{s.icon}</span>{children}</span>
+  );
+}
+
+function Section({ id, eyebrow, title, desc, children }) {
+  return (
+    <section id={id} data-screen-label={title} style={{ marginBottom: 72 }}>
+      <div style={{ marginBottom: 28, maxWidth: 720 }}>
+        <div className="eyebrow" style={{ marginBottom: 10 }}>{eyebrow}</div>
+        <h2 className="font-serif" style={{
+          fontSize: 36, lineHeight: 1.12, color: 'var(--warm-darker)',
+          marginBottom: 10, fontWeight: 400,
+        }}>{title}</h2>
+        {desc && <p style={{ color: 'var(--warm-muted)', fontSize: 15, lineHeight: 1.6, textWrap: 'pretty' }}>{desc}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Finding({ id, priority, surfaces, title, current, target, recommendation, swatch }) {
+  return (
+    <article style={{
+      background: 'white',
+      border: '1px solid var(--warm-line)',
+      borderRadius: 16,
+      padding: 28,
+      marginBottom: 16,
+    }}>
+      {/* header */}
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        gap: 16, marginBottom: 16,
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <span className="font-mono" style={{
+              fontSize: 11, color: 'var(--warm-muted)', letterSpacing: '0.1em',
+            }}>{id}</span>
+            <PriorityBadge p={priority} />
+            {surfaces.map(s => <SurfaceBadge key={s} name={s} />)}
+          </div>
+          <h3 className="font-serif" style={{
+            fontSize: 22, lineHeight: 1.2, color: 'var(--warm-darker)', fontWeight: 400,
+          }}>{title}</h3>
+        </div>
+      </div>
+
+      {/* current vs target */}
+      {(current || target) && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+          marginBottom: 18,
+        }}>
+          <div style={{
+            background: 'oklch(0.97 0.012 75)',
+            border: '1px solid var(--warm-line)',
+            borderRadius: 10, padding: 18,
+            minHeight: 140,
+          }}>
+            <div className="font-mono" style={{ fontSize: 9.5, color: 'oklch(0.50 0.18 25)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+              ✕ Current
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80 }}>
+              {current}
+            </div>
+          </div>
+          <div style={{
+            background: 'oklch(0.97 0.025 75)',
+            border: '1px solid oklch(0.85 0.06 75)',
+            borderRadius: 10, padding: 18,
+            minHeight: 140,
+            boxShadow: '0 0 0 1px var(--gold)',
+          }}>
+            <div className="font-mono" style={{ fontSize: 9.5, color: 'var(--gold-deep)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+              ✓ Target
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80 }}>
+              {target}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        display: 'flex', gap: 14, alignItems: 'flex-start',
+        background: 'oklch(0.97 0.012 75)',
+        border: '1px dashed var(--warm-line)',
+        borderRadius: 10, padding: 16,
+      }}>
+        <div className="font-mono" style={{
+          fontSize: 9, color: 'var(--gold-deep)', letterSpacing: '0.12em',
+          textTransform: 'uppercase', flexShrink: 0, marginTop: 2,
+        }}>Fix</div>
+        <p style={{ fontSize: 13.5, lineHeight: 1.55, color: 'var(--warm-dark)', textWrap: 'pretty' }}>
+          {recommendation}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Mockups — current vs target snippets
+   ──────────────────────────────────────────────────────────── */
+
+/* Color swatch row */
+function Swatches({ items }) {
+  return (
+    <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden' }}>
+      {items.map((it, i) => (
+        <div key={i} style={{
+          background: it.c, padding: '14px 12px',
+          minWidth: 70, color: it.fg || 'white',
+          fontSize: 10, fontFamily: 'JetBrains Mono, monospace',
+          lineHeight: 1.3,
+        }}>
+          <div style={{ fontWeight: 600, opacity: 0.9 }}>{it.l}</div>
+          <div style={{ opacity: 0.7, marginTop: 2 }}>{it.h}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* Splash header — current state (light gradient + blue CTA) */
+function CurrentSplashHeader() {
+  return (
+    <div style={{
+      borderRadius: 8, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'linear-gradient(175deg, oklch(0.96 0.008 75) 0%, oklch(0.85 0.06 225) 100%)',
+      width: '100%',
+    }}>
+      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <SunArchMark size={18} color="var(--warm-darker)" stroke={1.7} />
+          <span className="wordmark" style={{ fontSize: 14, color: 'var(--warm-darker)' }}>DreamRiver</span>
+        </div>
+        <span style={{ fontSize: 9, color: 'var(--warm-muted)' }}>Coming June 2026</span>
+      </div>
+      <div style={{ padding: '14px 14px 18px' }}>
+        <div className="font-serif" style={{ fontSize: 14, color: 'var(--warm-darker)', maxWidth: 180, marginBottom: 10, lineHeight: 1.2 }}>
+          Discover what God is saying through your dreams.
+        </div>
+        <span style={{ padding: '5px 10px', background: 'var(--old-blue)', color: 'white', borderRadius: 100, fontSize: 9, fontWeight: 600 }}>Join Waitlist</span>
+      </div>
+    </div>
+  );
+}
+
+function TargetSplashHeader() {
+  return (
+    <div style={{
+      borderRadius: 8, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'linear-gradient(175deg, var(--night) 0%, var(--night-deep) 100%)',
+      width: '100%',
+    }}>
+      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <MoonwaterMark size={18} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+          <span className="wordmark" style={{ fontSize: 14, color: 'var(--cream)' }}>DreamRiver</span>
+        </div>
+        <span style={{ fontSize: 9, color: 'oklch(0.7 0.04 75)' }}>Coming June 2026</span>
+      </div>
+      <div style={{ padding: '14px 14px 18px' }}>
+        <div className="font-serif" style={{ fontSize: 14, color: 'var(--cream)', maxWidth: 180, marginBottom: 10, lineHeight: 1.2 }}>
+          Discover what God is saying through your dreams.
+        </div>
+        <span style={{ padding: '5px 10px', background: 'var(--gold)', color: 'var(--night-deep)', borderRadius: 100, fontSize: 9, fontWeight: 700 }}>Join Waitlist</span>
+      </div>
+    </div>
+  );
+}
+
+/* Dashboard sidebar — current */
+function CurrentDashSidebar() {
+  return (
+    <div style={{
+      width: 160,
+      background: 'oklch(0.99 0.004 75)',
+      border: '1px solid var(--warm-line)',
+      borderRadius: 8, padding: '12px 10px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+        <SunArchMark size={18} color="var(--old-blue)" stroke={1.7} />
+        <span className="wordmark" style={{ fontSize: 13 }}>DreamRiver</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ padding: '5px 8px', background: 'var(--old-blue-pale)', color: 'var(--old-blue)', borderRadius: 5, fontSize: 10, fontWeight: 600 }}>● Account</div>
+        <div style={{ padding: '5px 8px', color: 'var(--warm-muted)', fontSize: 10 }}>○ Preferences</div>
+        <div style={{ padding: '5px 8px', color: 'var(--warm-muted)', fontSize: 10 }}>○ Analysis</div>
+      </div>
+    </div>
+  );
+}
+
+function TargetDashSidebar() {
+  return (
+    <div style={{
+      width: 160,
+      background: 'var(--cream-soft)',
+      border: '1px solid var(--warm-line)',
+      borderRadius: 8, padding: '12px 10px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <AppIcon size={22} radius={22}>
+          <MoonwaterMark size={14} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+        </AppIcon>
+        <span className="wordmark" style={{ fontSize: 13 }}>DreamRiver</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ padding: '5px 8px', background: 'oklch(0.95 0.05 75)', color: 'var(--gold-deep)', borderRadius: 5, fontSize: 10, fontWeight: 600, borderLeft: '2px solid var(--gold)' }}>● Account</div>
+        <div style={{ padding: '5px 8px', color: 'var(--warm-muted)', fontSize: 10 }}>○ Preferences</div>
+        <div style={{ padding: '5px 8px', color: 'var(--warm-muted)', fontSize: 10 }}>○ Analysis</div>
+      </div>
+    </div>
+  );
+}
+
+/* CTA button comparison */
+function CtaPair({ kind = 'current' }) {
+  if (kind === 'current') {
+    return (
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <span style={{ padding: '7px 14px', background: 'var(--old-blue)', color: 'white', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>Get Interpretation</span>
+        <span style={{ padding: '7px 14px', border: '1px solid var(--warm-line)', borderRadius: 6, fontSize: 12, fontWeight: 500 }}>Cancel</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+      <span style={{ padding: '7px 14px', background: 'var(--gold)', color: 'var(--night-deep)', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>Get Interpretation</span>
+      <span style={{ padding: '7px 14px', border: '1px solid var(--warm-line)', borderRadius: 6, fontSize: 12, fontWeight: 500 }}>Cancel</span>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   App
+   ──────────────────────────────────────────────────────────── */
+function App() {
+  return (
+    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '56px 40px 120px' }}>
+
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <header style={{ marginBottom: 56 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <AppIcon size={32} radius={22}>
+              <MoonwaterMark size={20} />
+            </AppIcon>
+            <span className="wordmark" style={{ fontSize: 22 }}>DreamRiver</span>
+          </div>
+          <span className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Brand Audit · v2 Moonwater · May 2026
+          </span>
+        </div>
+
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Audit</div>
+        <h1 className="font-serif" style={{ fontSize: 64, lineHeight: 1.04, color: 'var(--warm-darker)', maxWidth: 860, marginBottom: 18, fontWeight: 400, textWrap: 'balance' }}>
+          Where the app stands against the new brand.
+        </h1>
+        <p style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--warm-muted)', maxWidth: 680, textWrap: 'pretty' }}>
+          Surface-by-surface walkthrough of <span className="wordmark" style={{ fontSize: 16, color: 'var(--warm-darker)' }}>DreamRiver</span> against the v2 Moonwater system. What's already aligned, what's mid-flight, and what still needs to move. 14 findings, ranked.
+        </p>
+      </header>
+
+      {/* ── Exec summary ──────────────────────────────────────── */}
+      <section style={{
+        background: 'linear-gradient(165deg, var(--night) 0%, var(--night-deep) 100%)',
+        borderRadius: 18, padding: '40px 40px',
+        marginBottom: 48, color: 'var(--cream)',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -60, right: -60, opacity: 0.18 }}>
+          <MoonwaterMark size={240} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+        </div>
+
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 32 }}>
+          <div>
+            <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'oklch(0.7 0.06 75)', marginBottom: 8 }}>Headline</div>
+            <div className="font-serif" style={{ fontSize: 26, lineHeight: 1.18, color: 'var(--cream)' }}>
+              The wordmark is right. The mark and the palette aren't.
+            </div>
+          </div>
+          <div>
+            <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'oklch(0.7 0.06 75)', marginBottom: 8 }}>Aligned</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13.5, color: 'oklch(0.85 0.03 75)' }}>
+              <li>✓ Cormorant Garamond italic wordmark</li>
+              <li>✓ DM Serif Display / DM Sans typography</li>
+              <li>✓ Warm parchment surface</li>
+              <li>✓ Title-case treatment</li>
+            </ul>
+          </div>
+          <div>
+            <div className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'oklch(0.7 0.06 75)', marginBottom: 8 }}>Diverged</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13.5, color: 'oklch(0.85 0.03 75)' }}>
+              <li>✕ Sun-Arch mark used everywhere</li>
+              <li>✕ Sacred-blue primary (now gold)</li>
+              <li>✕ No app icon / squircle system</li>
+              <li>✕ Splash uses light gradient, not night</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: 32, paddingTop: 24,
+          borderTop: '1px solid oklch(0.4 0.04 250 / 0.6)',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
+        }}>
+          {[
+            { n: '14', l: 'findings total' },
+            { n: '4',  l: 'P0 · critical' },
+            { n: '7',  l: 'P1 · important' },
+            { n: '3',  l: 'P2 · polish' },
+          ].map(s => (
+            <div key={s.l}>
+              <div className="font-serif" style={{ fontSize: 36, color: 'var(--gold)', lineHeight: 1 }}>{s.n}</div>
+              <div className="font-mono" style={{ fontSize: 11, color: 'oklch(0.75 0.04 75)', marginTop: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Brand reference card ──────────────────────────────── */}
+      <section style={{
+        background: 'white',
+        border: '1px solid var(--warm-line)',
+        borderRadius: 16, padding: 32,
+        marginBottom: 56,
+      }}>
+        <div className="eyebrow" style={{ marginBottom: 16 }}>v2 reference · the bar we're measuring against</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 32, alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <AppIcon size={88} radius={22}>
+              <MoonwaterMark size={56} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+            </AppIcon>
+            <div>
+              <div className="wordmark" style={{ fontSize: 32, color: 'var(--warm-darker)', lineHeight: 1 }}>DreamRiver</div>
+              <div className="font-mono" style={{ fontSize: 11, color: 'var(--warm-muted)', marginTop: 6, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Moonwater · v2</div>
+            </div>
+          </div>
+          <div>
+            <Swatches items={[
+              { c: 'var(--night)', l: 'Night', h: '#0E1A30' },
+              { c: 'var(--night-soft)', l: 'Night-Soft', h: '#1A2748' },
+              { c: 'var(--cream)', l: 'Cream', h: '#F5ECD6', fg: 'var(--warm-darker)' },
+              { c: 'var(--gold)', l: 'Gold', h: '#D4A247', fg: 'var(--night-deep)' },
+              { c: 'var(--gold-deep)', l: 'Gold-Deep', h: '#B08436' },
+            ]} />
+            <div style={{ marginTop: 14, display: 'flex', gap: 16, fontSize: 12, color: 'var(--warm-muted)' }}>
+              <span><strong style={{ color: 'var(--warm-darker)' }}>Wordmark:</strong> Cormorant Garamond Italic 500</span>
+              <span><strong style={{ color: 'var(--warm-darker)' }}>Body:</strong> DM Sans</span>
+              <span><strong style={{ color: 'var(--warm-darker)' }}>Headline:</strong> DM Serif Display</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Scorecard ─────────────────────────────────────────── */}
+      <Section id="scorecard"
+               eyebrow="00 — Scorecard"
+               title="Surface-by-surface alignment"
+               desc="Snapshot of where each surface sits against the four brand pillars. Mark, palette, container/icon, and typography. Detail follows below.">
+
+        <div style={{
+          background: 'white', border: '1px solid var(--warm-line)',
+          borderRadius: 14, overflow: 'hidden',
+        }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'oklch(0.96 0.012 75)', textAlign: 'left' }}>
+                <th style={{ padding: '14px 18px', fontWeight: 600 }}>Surface</th>
+                <th style={{ padding: '14px 18px', fontWeight: 600 }}>Mark</th>
+                <th style={{ padding: '14px 18px', fontWeight: 600 }}>Palette</th>
+                <th style={{ padding: '14px 18px', fontWeight: 600 }}>Container</th>
+                <th style={{ padding: '14px 18px', fontWeight: 600 }}>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { s: 'Splash Page', m: 'fail', p: 'fail', c: 'fail', t: 'ok' },
+                { s: 'User Dashboard', m: 'fail', p: 'partial', c: 'fail', t: 'ok' },
+                { s: 'Admin Console', m: 'fail', p: 'partial', c: 'fail', t: 'ok' },
+                { s: 'UX Recs (this doc family)', m: 'fail', p: 'fail', c: 'fail', t: 'ok' },
+                { s: 'Print export', m: 'fail', p: 'partial', c: 'fail', t: 'ok' },
+                { s: 'iOS app icon', m: 'fail', p: 'fail', c: 'fail', t: 'info' },
+              ].map((row, i) => (
+                <tr key={row.s} style={{ borderTop: '1px solid var(--warm-line)' }}>
+                  <td style={{ padding: '14px 18px', fontWeight: 500 }}>{row.s}</td>
+                  <td style={{ padding: '14px 18px' }}><Status kind={row.m}>{row.m === 'fail' ? 'Sun-Arch in use' : row.m === 'partial' ? 'partial' : 'aligned'}</Status></td>
+                  <td style={{ padding: '14px 18px' }}><Status kind={row.p}>{row.p === 'fail' ? 'no Night, blue still primary' : row.p === 'partial' ? 'warm-cream OK, blue stays' : 'aligned'}</Status></td>
+                  <td style={{ padding: '14px 18px' }}><Status kind={row.c}>{row.c === 'info' ? 'not built' : 'no squircle'}</Status></td>
+                  <td style={{ padding: '14px 18px' }}><Status kind={row.t}>{row.t === 'info' ? 'n/a' : 'Cormorant + DM Sans'}</Status></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ── Strategic decision ────────────────────────────────── */}
+      <section style={{
+        background: 'oklch(0.96 0.06 75)',
+        border: '1px solid oklch(0.85 0.08 75)',
+        borderRadius: 16, padding: 32,
+        marginBottom: 56,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
+          <span className="font-mono" style={{ fontSize: 10.5, color: 'var(--gold-deep)', letterSpacing: '0.12em' }}>DECISION REQUIRED</span>
+        </div>
+        <h3 className="font-serif" style={{ fontSize: 26, lineHeight: 1.18, color: 'var(--warm-darker)', marginBottom: 12, fontWeight: 400 }}>
+          Does Night live in marketing only, or does it run through the product too?
+        </h3>
+        <p style={{ fontSize: 14.5, lineHeight: 1.6, color: 'var(--warm-dark)', maxWidth: 760, marginBottom: 20, textWrap: 'pretty' }}>
+          The v2 system puts Night on splash, social, app icon — strong, atmospheric. Inside the product (Dashboards, journal-writing surfaces) you can either (A) keep parchment-light with Night reserved for headers and Gold for CTAs, or (B) push Night into the product as a "night-mode by default" experience that fits the dream-interpretation use case. <strong>Recommend A for v2 launch</strong> — it's a smaller migration and parchment is easier for journaling. Revisit B as a v2.1 night-mode option.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{
+            background: 'white', borderRadius: 10, padding: 18,
+            border: '1px solid oklch(0.85 0.08 75)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <strong style={{ fontSize: 13 }}>A · Night for marketing, parchment in-app</strong>
+              <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 100, background: 'var(--gold)', color: 'var(--night-deep)', fontWeight: 700 }}>RECOMMENDED</span>
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--warm-muted)', lineHeight: 1.55 }}>
+              Splash + social + app icon use Night. Product surfaces stay on warm-cream/parchment with Night reserved for top-nav and Gold replacing blue for primary actions.
+            </div>
+          </div>
+          <div style={{
+            background: 'white', borderRadius: 10, padding: 18,
+            border: '1px solid oklch(0.85 0.08 75)',
+          }}>
+            <div style={{ marginBottom: 8 }}>
+              <strong style={{ fontSize: 13 }}>B · Night-by-default product</strong>
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--warm-muted)', lineHeight: 1.55 }}>
+              Whole product runs on Night. Suits dream-interpretation framing. Bigger migration; needs careful contrast work on journaling typography. Best as a v2.1 toggle.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Findings: Splash ──────────────────────────────────── */}
+      <Section id="splash"
+               eyebrow="01 — Splash Page"
+               title="dreamriver.app · landing & waitlist"
+               desc="The most public surface. Highest priority for alignment because it's the brand's first impression. Currently using the previous warm gradient + blue CTA combination.">
+
+        <Finding
+          id="F01"
+          priority="P0"
+          surfaces={['Splash']}
+          title="Replace Sun-Arch with Moonwater in header and phone mockup"
+          current={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <SunArchMark size={28} color="var(--warm-darker)" stroke={1.7} />
+              <span className="wordmark" style={{ fontSize: 22, color: 'var(--warm-darker)' }}>DreamRiver</span>
+            </div>
+          }
+          target={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AppIcon size={32} radius={22}>
+                <MoonwaterMark size={20} />
+              </AppIcon>
+              <span className="wordmark" style={{ fontSize: 22, color: 'var(--warm-darker)' }}>DreamRiver</span>
+            </div>
+          }
+          recommendation="Swap the BrandMark component (currently in Splash header + phone-mockup nav) for the contained MoonwaterMark lockup. On the splash header use the squircle (most public surface = strongest container). Inside the phone mockup use the free-floating mark at small size since the device chrome is already a container."
+        />
+
+        <Finding
+          id="F02"
+          priority="P0"
+          surfaces={['Splash']}
+          title="Move the splash from light gradient to Night"
+          current={<CurrentSplashHeader />}
+          target={<TargetSplashHeader />}
+          recommendation="The current sky-blue → cream gradient reads generic-SaaS. Night-Deep → Night-Soft gives the splash the same atmosphere as the app icon — they reinforce each other. Hero copy moves to cream, CTA to gold, scripture tags to gold-on-translucent."
+        />
+
+        <Finding
+          id="F03"
+          priority="P0"
+          surfaces={['Splash', 'Dashboards']}
+          title="Retire sacred-blue primary; promote Gold to primary action color"
+          current={<CtaPair kind="current" />}
+          target={<CtaPair kind="target" />}
+          recommendation="Find/replace var(--blue-deep) and oklch(0.45 0.12 245) across globals. Buttons, link colors, focus rings, and email-signup submit all move to Gold (#D4A247) with Night-Deep text. Keep the existing Tailwind blue-soft for one purpose only: secondary informational badges where Gold would over-signal."
+        />
+
+        <Finding
+          id="F04"
+          priority="P1"
+          surfaces={['Splash']}
+          title="The phone-mockup interior is still on warm-cream + blue"
+          current={
+            <div style={{ width: 140, height: 220, borderRadius: 22, background: 'oklch(0.955 0.015 75)', border: '8px solid #1a1a1a', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: 8, borderBottom: '1px solid oklch(0.88 0.01 70)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <SunArchMark size={10} color="var(--warm-darker)" stroke={2} />
+                <span className="wordmark" style={{ fontSize: 8 }}>DreamRiver</span>
+              </div>
+              <div style={{ flex: 1, padding: 8, fontSize: 7, color: 'var(--warm-muted)' }}>
+                <div>Dream Journal</div>
+                <div style={{ marginTop: 4, padding: 6, background: 'white', borderRadius: 4, color: 'var(--warm-dark)' }}>A river of golden light…</div>
+                <div style={{ marginTop: 8, textAlign: 'center', padding: 4, background: 'var(--old-blue)', color: 'white', borderRadius: 100, fontSize: 7 }}>Get Interpretation</div>
+              </div>
+            </div>
+          }
+          target={
+            <div style={{ width: 140, height: 220, borderRadius: 22, background: 'oklch(0.955 0.015 75)', border: '8px solid #1a1a1a', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: 8, borderBottom: '1px solid oklch(0.88 0.01 70)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <MoonwaterMark size={10} moonColor="var(--night)" waveTop="var(--night)" waveBottom="var(--gold)" />
+                <span className="wordmark" style={{ fontSize: 8 }}>DreamRiver</span>
+              </div>
+              <div style={{ flex: 1, padding: 8, fontSize: 7, color: 'var(--warm-muted)' }}>
+                <div>Dream Journal</div>
+                <div style={{ marginTop: 4, padding: 6, background: 'white', borderRadius: 4, color: 'var(--warm-dark)' }}>A river of golden light…</div>
+                <div style={{ marginTop: 8, textAlign: 'center', padding: 4, background: 'var(--gold)', color: 'var(--night-deep)', borderRadius: 100, fontSize: 7, fontWeight: 700 }}>Get Interpretation</div>
+              </div>
+            </div>
+          }
+          recommendation="Phone interior keeps parchment background (it's showing the in-product experience, which under Decision A stays light). But the CTA inside the phone moves to gold, and the nav mark becomes the free-floating Moonwater."
+        />
+
+        <Finding
+          id="F05"
+          priority="P2"
+          surfaces={['Splash']}
+          title="Scripture pill chips currently sit on warm-amber"
+          current={
+            <div style={{ display: 'flex', gap: 6 }}>
+              <span style={{ padding: '3px 10px', borderRadius: 100, background: 'oklch(0.93 0.04 75)', color: 'oklch(0.65 0.16 60)', fontSize: 10, fontWeight: 600 }}>Isaiah 43:2</span>
+              <span style={{ padding: '3px 10px', borderRadius: 100, background: 'oklch(0.93 0.04 75)', color: 'oklch(0.65 0.16 60)', fontSize: 10, fontWeight: 600 }}>Psalm 23:4</span>
+            </div>
+          }
+          target={
+            <div style={{ display: 'flex', gap: 6 }}>
+              <span style={{ padding: '3px 10px', borderRadius: 100, background: 'var(--cream)', color: 'var(--gold-deep)', fontSize: 10, fontWeight: 600, border: '1px solid oklch(0.85 0.08 75)' }}>Isaiah 43:2</span>
+              <span style={{ padding: '3px 10px', borderRadius: 100, background: 'var(--cream)', color: 'var(--gold-deep)', fontSize: 10, fontWeight: 600, border: '1px solid oklch(0.85 0.08 75)' }}>Psalm 23:4</span>
+            </div>
+          }
+          recommendation="Pills use the cream surface with gold-deep text + a hairline gold-soft border. Reads as a quoted reference rather than a tag, which is the right vocabulary for scripture."
+        />
+      </Section>
+
+      {/* ── Findings: Dashboard ───────────────────────────────── */}
+      <Section id="dashboards"
+               eyebrow="02 — Dashboards"
+               title="User Settings · Admin Console"
+               desc="Product surfaces under Decision A. Keep parchment surface; replace mark, container, and primary action color. Don't move to Night here — journaling needs the light reading environment.">
+
+        <Finding
+          id="F06"
+          priority="P0"
+          surfaces={['User Dash', 'Admin Dash']}
+          title="Sidebar logo: swap to contained Moonwater"
+          current={<CurrentDashSidebar />}
+          target={<TargetDashSidebar />}
+          recommendation="Replace the BrandMark line-icon in both sidebars (and the print-app headers) with a small contained AppIcon — 22–24px squircle with the gold/cream Moonwater inside. The container even at small size communicates the brand mark consistently with social and app-store."
+        />
+
+        <Finding
+          id="F07"
+          priority="P0"
+          surfaces={['User Dash', 'Admin Dash']}
+          title="--primary token: blue → gold"
+          current={
+            <Swatches items={[
+              { c: 'var(--old-blue)', l: '--primary', h: '#3F6FCB' },
+              { c: 'var(--old-blue-pale)', l: 'primary-soft', h: 'pale blue' },
+            ]} />
+          }
+          target={
+            <Swatches items={[
+              { c: 'var(--gold)', l: '--primary', h: '#D4A247', fg: 'var(--night-deep)' },
+              { c: 'oklch(0.95 0.05 75)', l: 'primary-soft', h: 'pale gold', fg: 'var(--warm-darker)' },
+            ]} />
+          }
+          recommendation="In dashboards.html :root, replace --primary, --primary-hover, --primary-soft, --primary-foreground with gold variants. This single change cascades through buttons, focus rings, active-row highlights, switch on-states, and link colors. Keep --blue-deep around as a semantic color for one specific use: information/learn-more accents."
+        />
+
+        <Finding
+          id="F08"
+          priority="P1"
+          surfaces={['User Dash', 'Admin Dash']}
+          title="Active-row indicator: change accent rule"
+          current={
+            <div style={{ width: 220, padding: '8px 12px', background: 'var(--old-blue-pale)', color: 'var(--old-blue)', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>● Account</div>
+          }
+          target={
+            <div style={{ width: 220, padding: '8px 12px', background: 'oklch(0.95 0.05 75)', color: 'var(--gold-deep)', borderRadius: 6, fontSize: 13, fontWeight: 600, borderLeft: '3px solid var(--gold)' }}>● Account</div>
+          }
+          recommendation="Active sidebar rows pick up a 3px gold-deep left edge in addition to the pale-gold background. The left edge is the brand's recurring vertical accent — appears on quoted scripture and gold CTAs too. Don't use the gold-pale background alone — it's too low-contrast without the edge."
+        />
+
+        <Finding
+          id="F09"
+          priority="P1"
+          surfaces={['User Dash']}
+          title="ProfileCard tier badges use blue"
+          current={
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 9px', borderRadius: 100, background: 'var(--old-blue-pale)', color: 'var(--old-blue)', fontSize: 11, fontWeight: 600 }}>Prophet</span>
+          }
+          target={
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 9px', borderRadius: 100, background: 'var(--night)', color: 'var(--gold-light)', fontSize: 11, fontWeight: 600 }}>Prophet</span>
+          }
+          recommendation="Membership/tier badges move to night-on-gold-light. The dark pill is a small but distinctive premium signal that maps to the brand's “gold on night” motif. Free tier stays as the neutral cream pill."
+        />
+
+        <Finding
+          id="F10"
+          priority="P2"
+          surfaces={['Admin Dash']}
+          title="Admin top-bar gradient avatar"
+          current={
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, oklch(0.70 0.08 235), oklch(0.72 0.14 75))' }} />
+          }
+          target={
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--night-soft), var(--gold))' }} />
+          }
+          recommendation="The default-avatar gradient uses the old blue-soft → gold. Repoint to night-soft → gold. Same intent (a soft brand gradient for unknown-user avatars), updated colors."
+        />
+      </Section>
+
+      {/* ── Findings: UX Recs ─────────────────────────────────── */}
+      <Section id="ux-recs"
+               eyebrow="03 — UX Recommendations"
+               title="The audit document family"
+               desc="The UX Recs document is now ironically out of date — its “improved” mockups still reflect v1 (blue palette + Sun-Arch). Choices below: refresh it, or retire it now that the audit has been incorporated.">
+
+        <Finding
+          id="F11"
+          priority="P1"
+          surfaces={['UX Recs']}
+          title="Improved-state mockups reference the now-superseded palette"
+          recommendation="The ImprovedLandingHero and ImprovedDashboard mockups in ux-recs-components.jsx still use --old-blue + Sun-Arch. Either (a) update them to the v2 Moonwater state — making the doc match what we're now building — or (b) mark the doc as Archived and link out to this Brand Audit doc as its successor. Recommend (b): the audit recommendations in UX Recs have largely been implemented; recreating them inside a moving brand target is wasted work."
+        />
+
+        <Finding
+          id="F12"
+          priority="P2"
+          surfaces={['UX Recs', 'Print export']}
+          title="Print headers still pull a generic wordmark line"
+          recommendation="dashboards-print-app.jsx renders a wordmark+separator header at the top of each PDF page. Swap in a small contained Moonwater + wordmark lockup (16px icon). Print is the one place where the squircle reproduces beautifully — black ink fill on cream paper."
+        />
+      </Section>
+
+      {/* ── Findings: iOS / Marketing ─────────────────────────── */}
+      <Section id="ios"
+               eyebrow="04 — Beyond the current build"
+               title="What v2 makes possible that v1 couldn't"
+               desc="Two surfaces the previous brand couldn't really do — they need a self-contained icon, which the Moonwater system provides for the first time.">
+
+        <Finding
+          id="F13"
+          priority="P0"
+          surfaces={['iOS', 'Android']}
+          title="Ship an app icon — for real, at full asset spec"
+          current={
+            <div style={{ width: 80, height: 80, borderRadius: 18, background: 'oklch(0.94 0.008 75)', border: '1px dashed var(--warm-line)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warm-muted)', fontSize: 11, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>
+              not built
+            </div>
+          }
+          target={<AppIcon size={80} radius={22}><MoonwaterMark size={52} /></AppIcon>}
+          recommendation="Export the squircle + Moonwater at the full iOS spec: 1024² master, plus 180/167/152/120/87/80/76/60/58/40/29/20pt @ 1×/2×/3×. Same for Android adaptive icon (foreground = Moonwater on transparent, background = Night solid). Use the contained design exactly as shown in DreamRiver Brand.html → Section 06 (iOS app icon stack)."
+        />
+
+        <Finding
+          id="F14"
+          priority="P1"
+          surfaces={['Marketing']}
+          title="Social card / og:image template not produced"
+          current={
+            <div style={{ width: 240, height: 126, borderRadius: 8, background: 'oklch(0.94 0.008 75)', border: '1px dashed var(--warm-line)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warm-muted)', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}>
+              not built
+            </div>
+          }
+          target={
+            <div style={{ width: 240, height: 126, borderRadius: 8, background: 'linear-gradient(170deg, var(--night-deep) 0%, var(--night-soft) 100%)', padding: 14, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, oklch(0.5 0.12 75 / 0.3) 0%, transparent 60%)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                <MoonwaterMark size={14} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+                <span className="wordmark" style={{ fontSize: 11, color: 'var(--cream)' }}>DreamRiver</span>
+              </div>
+              <div className="font-serif" style={{ fontSize: 13, lineHeight: 1.2, color: 'var(--cream)', maxWidth: 180 }}>
+                Discover what God is saying through your dreams.
+              </div>
+            </div>
+          }
+          recommendation="Produce a 1200×630 og:image template (and 1200×675 for X/Twitter). Night gradient ground, Moonwater + wordmark lockup top-left, headline center, gold dot of light in the upper-right. Template lives at /og as an HTML route — same content can stamp social cards for blog posts and feature launches by varying the headline."
+        />
+      </Section>
+
+      {/* ── Backlog ───────────────────────────────────────────── */}
+      <Section id="backlog"
+               eyebrow="05 — Backlog"
+               title="Suggested order of operations"
+               desc="If you can only do one thing this week, do F07 — the primary-color token swap. It cascades through every surface that touches a button or focus state.">
+
+        <div style={{
+          background: 'white', border: '1px solid var(--warm-line)',
+          borderRadius: 14, overflow: 'hidden',
+        }}>
+          {[
+            { id: 'F07', p: 'P0', t: 'Primary token: blue → gold', e: 'Low · single-file edit', i: 'High · cascades everywhere' },
+            { id: 'F03', p: 'P0', t: 'Retire blue across CTAs / focus rings', e: 'Low · follows F07', i: 'High' },
+            { id: 'F01', p: 'P0', t: 'Swap Sun-Arch → Moonwater everywhere', e: 'Medium · ~8 call-sites', i: 'High · brand-defining' },
+            { id: 'F02', p: 'P0', t: 'Splash: light gradient → Night', e: 'Medium · hero rebuild', i: 'High · first impression' },
+            { id: 'F13', p: 'P0', t: 'Export iOS app icon at full asset spec', e: 'Medium · asset export', i: 'High · App Store ready' },
+            { id: 'F06', p: 'P0', t: 'Sidebar logo: contained Moonwater', e: 'Low · two files', i: 'Medium' },
+            { id: 'F04', p: 'P1', t: 'Phone-mockup interior CTA → gold', e: 'Low', i: 'Medium' },
+            { id: 'F08', p: 'P1', t: 'Active-row indicator: gold left edge', e: 'Low · one CSS rule', i: 'Medium' },
+            { id: 'F09', p: 'P1', t: 'Premium tier badge: night-on-gold-light', e: 'Low', i: 'Low–Medium' },
+            { id: 'F11', p: 'P1', t: 'UX Recs: archive or refresh mockups', e: 'Medium', i: 'Low (internal doc)' },
+            { id: 'F14', p: 'P1', t: 'Build og:image / social card template', e: 'Medium', i: 'High · sharing/launch' },
+            { id: 'F05', p: 'P2', t: 'Scripture pill restyle', e: 'Low', i: 'Low–Medium' },
+            { id: 'F10', p: 'P2', t: 'Admin avatar gradient repoint', e: 'Trivial', i: 'Low' },
+            { id: 'F12', p: 'P2', t: 'Print export header lockup', e: 'Low', i: 'Low' },
+          ].map((row, i) => (
+            <div key={row.id} style={{
+              display: 'grid', gridTemplateColumns: '60px 120px 1fr 200px 200px',
+              gap: 14, padding: '14px 20px', alignItems: 'center',
+              borderTop: i === 0 ? 'none' : '1px solid var(--warm-line)',
+              background: i % 2 === 1 ? 'oklch(0.99 0.005 75)' : 'white',
+            }}>
+              <span className="font-mono" style={{ fontSize: 11, color: 'var(--warm-muted)' }}>{row.id}</span>
+              <PriorityBadge p={row.p} />
+              <span style={{ fontSize: 13.5, color: 'var(--warm-darker)', fontWeight: 500 }}>{row.t}</span>
+              <span style={{ fontSize: 12, color: 'var(--warm-muted)' }}><strong style={{ color: 'var(--warm-dark)', fontWeight: 600 }}>Effort:</strong> {row.e}</span>
+              <span style={{ fontSize: 12, color: 'var(--warm-muted)' }}><strong style={{ color: 'var(--warm-dark)', fontWeight: 600 }}>Impact:</strong> {row.i}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <footer style={{
+        marginTop: 60, paddingTop: 28, borderTop: '1px solid var(--warm-line)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontSize: 12, color: 'var(--warm-muted)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AppIcon size={20} radius={22}><MoonwaterMark size={13} /></AppIcon>
+          <span className="wordmark" style={{ fontSize: 15, color: 'var(--warm-darker)' }}>DreamRiver</span>
+        </div>
+        <span className="font-mono" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Brand Audit · v2 Moonwater · May 2026</span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Brand Identity</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=Instrument+Serif:ital@0;1&family=Italiana&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --warm-white: oklch(0.975 0.006 70);
+    --warm-cream: oklch(0.955 0.015 75);
+    --warm-paper: oklch(0.97 0.012 75);
+    --warm-dark: oklch(0.22 0.02 250);
+    --warm-darker: oklch(0.15 0.015 250);
+    --warm-muted: oklch(0.55 0.02 250);
+    --warm-line: oklch(0.88 0.01 75);
+
+    --blue-deep: oklch(0.45 0.12 245);
+    --blue-mid: oklch(0.55 0.14 240);
+    --blue-soft: oklch(0.70 0.08 235);
+    --blue-pale: oklch(0.92 0.03 235);
+
+    --gold: oklch(0.72 0.14 75);
+    --gold-light: oklch(0.82 0.10 78);
+    --amber: oklch(0.65 0.16 60);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--warm-white);
+    color: var(--warm-dark);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Wordmark font + variants */
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .wordmark--italiana { font-family: 'Italiana', Georgia, serif; font-style: normal; font-weight: 400; letter-spacing: 0.04em; }
+  .wordmark--instrument { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: 0; }
+  .wordmark--dmserif { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: 0; }
+  .wordmark--cormorant { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 500; letter-spacing: 0.005em; }
+
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* Subtle ambient */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .ambient::before, .ambient::after {
+    content: ''; position: absolute; width: 60vw; height: 60vw;
+    border-radius: 50%; filter: blur(90px); opacity: 0.25;
+  }
+  .ambient::before {
+    background: radial-gradient(circle, oklch(0.85 0.08 235 / 0.6), transparent 60%);
+    top: -25vw; right: -20vw;
+  }
+  .ambient::after {
+    background: radial-gradient(circle, oklch(0.85 0.10 75 / 0.5), transparent 60%);
+    bottom: -30vw; left: -25vw;
+  }
+
+  .card {
+    background: oklch(1 0 0 / 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--warm-line);
+    border-radius: 14px;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--warm-muted);
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--warm-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--warm-line), transparent);
+    margin: 4px 0;
+  }
+
+  /* Checkerboard for clear-space demos */
+  .checker {
+    background-image:
+      linear-gradient(45deg, oklch(0.92 0.01 75) 25%, transparent 25%),
+      linear-gradient(-45deg, oklch(0.92 0.01 75) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, oklch(0.92 0.01 75) 75%),
+      linear-gradient(-45deg, transparent 75%, oklch(0.92 0.01 75) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div id="root" style="position: relative; z-index: 1;"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "wordmarkFont": "cormorant",
+  "showRipples": true,
+  "showSun": true,
+  "markStyle": "arch"
+}/*EDITMODE-END*/;
+
+/* ────────────────────────────────────────────────────────────
+   The Mark — Sun · Arch · Ripple
+   A small dot (light/divine eye) above a thin arch (the bridge)
+   above two ripple lines (the river).
+   Drawn with currentColor + currentStroke so it inherits palette.
+   ──────────────────────────────────────────────────────────── */
+function Mark({ size = 40, stroke = 1.5, color = 'currentColor', showRipples = true, showSun = true, style = 'arch' }) {
+  // viewBox 48x48, leaves a tiny breathing margin
+  const sw = stroke;
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} fill="none"
+         stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: 'block', overflow: 'visible' }}>
+      {/* sun / point of light */}
+      {showSun && (
+        <circle cx="24" cy="8" r="1.6" fill={color} stroke="none" />
+      )}
+      {/* arch */}
+      {style === 'arch' && (
+        <path d="M9 26 A15 15 0 0 1 39 26" />
+      )}
+      {style === 'pointed' && (
+        <path d="M9 26 Q24 8 39 26" />
+      )}
+      {style === 'arch' && (
+        <>
+          {/* legs of the arch grounding it on the water */}
+          <line x1="9" y1="26" x2="9" y2="29" />
+          <line x1="39" y1="26" x2="39" y2="29" />
+        </>
+      )}
+      {/* the river — two ripples */}
+      {showRipples && (
+        <>
+          <path d="M5 33 Q13 30 20 33 T35 33 Q40 31 43 33" />
+          <path d="M7 39 Q14 36 21 39 T36 39 Q40 37.5 41 39" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* The wordmark — clickable name lockup */
+function Wordmark({ size = 32, color = 'var(--warm-dark)', fontClass = 'wordmark' }) {
+  return (
+    <span className={fontClass} style={{
+      fontSize: size, lineHeight: 1, color,
+      whiteSpace: 'nowrap',
+    }}>
+      DreamRiver
+    </span>
+  );
+}
+
+/* Horizontal lockup */
+function Lockup({ markSize = 36, wordSize = 30, gap = 12, color = 'var(--warm-dark)', fontClass = 'wordmark', markProps = {} }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap, color }}>
+      <Mark size={markSize} color={color} {...markProps} />
+      <Wordmark size={wordSize} color={color} fontClass={fontClass} />
+    </div>
+  );
+}
+
+/* Stacked lockup */
+function StackedLockup({ markSize = 64, wordSize = 28, color = 'var(--warm-dark)', fontClass = 'wordmark', markProps = {} }) {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 14, color }}>
+      <Mark size={markSize} color={color} {...markProps} />
+      <Wordmark size={wordSize} color={color} fontClass={fontClass} />
+    </div>
+  );
+}
+
+/* Section helper */
+function Section({ eyebrow, title, desc, children, style = {} }) {
+  return (
+    <section data-screen-label={title} style={{ marginBottom: 56, ...style }}>
+      <div style={{ marginBottom: 24, maxWidth: 720 }}>
+        <div className="eyebrow" style={{ marginBottom: 10 }}>{eyebrow}</div>
+        <h2 className="font-serif" style={{
+          fontSize: 32, lineHeight: 1.15, color: 'var(--warm-darker)',
+          marginBottom: 8, fontWeight: 400,
+        }}>{title}</h2>
+        {desc && <p style={{ color: 'var(--warm-muted)', fontSize: 15, lineHeight: 1.55 }}>{desc}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Tile({ children, label, sub, bg = 'oklch(1 0 0 / 0.7)', padding = 28, style = {} }) {
+  return (
+    <div style={{
+      background: bg,
+      border: '1px solid var(--warm-line)',
+      borderRadius: 14,
+      padding,
+      display: 'flex',
+      flexDirection: 'column',
+      ...style,
+    }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 0,
+      }}>
+        {children}
+      </div>
+      {(label || sub) && (
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--warm-line)' }}>
+          {label && <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--warm-dark)' }}>{label}</div>}
+          {sub && <div className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', marginTop: 4 }}>{sub}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Applications — small mockups
+   ──────────────────────────────────────────────────────────── */
+
+function PhoneAppIcon({ tweaks }) {
+  return (
+    <div style={{
+      width: 112, height: 112, borderRadius: 26,
+      background: 'linear-gradient(160deg, oklch(0.96 0.015 75) 0%, oklch(0.92 0.04 235) 100%)',
+      boxShadow: '0 8px 24px oklch(0.4 0.06 235 / 0.18), 0 2px 6px oklch(0.4 0.06 235 / 0.1), inset 0 1px 0 oklch(1 0 0 / 0.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* subtle ripple shimmer behind mark */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(circle at 50% 30%, oklch(0.95 0.08 75 / 0.35), transparent 60%)',
+      }} />
+      <div style={{ position: 'relative' }}>
+        <Mark size={66} color="var(--blue-deep)" stroke={1.6}
+              showRipples={tweaks.showRipples} showSun={tweaks.showSun} style={tweaks.markStyle} />
+      </div>
+    </div>
+  );
+}
+
+function FaviconBadge({ size = 32, bg = 'var(--blue-deep)', fg = 'var(--warm-white)', radius = 8 }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius,
+      background: bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Mark size={size * 0.7} color={fg} stroke={2} />
+    </div>
+  );
+}
+
+function SplashHeaderMock({ tweaks, fontClass }) {
+  return (
+    <div style={{
+      borderRadius: 12, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'linear-gradient(175deg, oklch(0.96 0.008 75) 0%, oklch(0.92 0.025 230) 100%)',
+    }}>
+      <div style={{
+        padding: '14px 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <Lockup markSize={22} wordSize={20} gap={8}
+                markProps={{ showRipples: tweaks.showRipples, showSun: tweaks.showSun, style: tweaks.markStyle }}
+                fontClass={fontClass} />
+        <span style={{ fontSize: 11.5, color: 'var(--warm-muted)' }}>Coming June 2026</span>
+      </div>
+      <div style={{ padding: '36px 24px 40px', textAlign: 'left' }}>
+        <div style={{
+          display: 'inline-block', padding: '4px 12px', borderRadius: 100,
+          background: 'oklch(0.92 0.04 75 / 0.6)',
+          border: '1px solid oklch(0.82 0.06 75 / 0.4)',
+          fontSize: 10, fontWeight: 600, color: 'var(--amber)',
+          marginBottom: 14,
+        }}>✦ Launching June 1, 2026</div>
+        <div className="font-serif" style={{ fontSize: 22, lineHeight: 1.18, color: 'var(--warm-darker)', maxWidth: 320, marginBottom: 14 }}>
+          Discover what God is saying through your dreams.
+        </div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'oklch(1 0 0 / 0.8)', border: '1px solid var(--warm-line)',
+          borderRadius: 100, padding: '6px 6px 6px 14px',
+        }}>
+          <span style={{ fontSize: 11, color: 'var(--warm-muted)' }}>your@email.com</span>
+          <span style={{
+            padding: '6px 12px', background: 'var(--blue-deep)', color: 'white',
+            borderRadius: 100, fontSize: 11, fontWeight: 600,
+          }}>Join Waitlist</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardHeaderMock({ tweaks, fontClass }) {
+  return (
+    <div style={{
+      borderRadius: 12, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'var(--warm-white)',
+    }}>
+      <div style={{
+        padding: '12px 20px',
+        borderBottom: '1px solid var(--warm-line)',
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        <Lockup markSize={20} wordSize={18} gap={8}
+                markProps={{ showRipples: tweaks.showRipples, showSun: tweaks.showSun, style: tweaks.markStyle }}
+                fontClass={fontClass} />
+        <div style={{ flex: 1, display: 'flex', gap: 18 }}>
+          {['Journal', 'Library', 'Insights', 'Settings'].map((l, i) => (
+            <span key={l} style={{
+              fontSize: 12, fontWeight: i === 0 ? 600 : 500,
+              color: i === 0 ? 'var(--warm-dark)' : 'var(--warm-muted)',
+              borderBottom: i === 0 ? '2px solid var(--blue-deep)' : '2px solid transparent',
+              paddingBottom: 4,
+            }}>{l}</span>
+          ))}
+        </div>
+        <div style={{
+          width: 24, height: 24, borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--blue-soft), var(--gold))',
+        }} />
+      </div>
+      <div style={{ padding: 20, background: 'var(--warm-cream)' }}>
+        <div className="font-serif" style={{ fontSize: 22, color: 'var(--warm-darker)' }}>Welcome back.</div>
+        <div style={{ fontSize: 12, color: 'var(--warm-muted)', marginTop: 4 }}>14 dreams journaled this month</div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{
+              flex: 1, height: 64, background: 'white',
+              border: '1px solid var(--warm-line)', borderRadius: 8,
+            }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotificationMock({ tweaks, fontClass }) {
+  return (
+    <div style={{
+      background: 'white',
+      border: '1px solid var(--warm-line)',
+      borderRadius: 12,
+      padding: 14,
+      display: 'flex', gap: 12,
+      maxWidth: 360,
+    }}>
+      <FaviconBadge size={36} radius={9} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+          <span className={fontClass} style={{ fontSize: 14, color: 'var(--warm-dark)' }}>DreamRiver</span>
+          <span style={{ fontSize: 10, color: 'var(--warm-muted)' }}>now</span>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--warm-dark)', fontWeight: 600, marginBottom: 2 }}>Your dream has been interpreted</div>
+        <div style={{ fontSize: 11.5, color: 'var(--warm-muted)', lineHeight: 1.4 }}>
+          "Walking across a bridge over golden light…" — 3 scripture references found.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   App
+   ──────────────────────────────────────────────────────────── */
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const fontClass = `wordmark wordmark--${tweaks.wordmarkFont}`;
+  const markProps = {
+    showRipples: tweaks.showRipples,
+    showSun: tweaks.showSun,
+    style: tweaks.markStyle,
+  };
+
+  return (
+    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '56px 40px 120px' }}>
+
+      {/* ── Top: identity card ─────────────────────────────────── */}
+      <header style={{ marginBottom: 64 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 36 }}>
+          <Lockup markSize={28} wordSize={24} markProps={markProps} fontClass={fontClass} />
+          <span className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Brand · v2 · May 2026
+          </span>
+        </div>
+
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Visual Identity</div>
+        <h1 className="font-serif" style={{ fontSize: 56, lineHeight: 1.05, color: 'var(--warm-darker)', maxWidth: 820, marginBottom: 18, fontWeight: 400, textWrap: 'balance' }}>
+          A quieter, more literary mark for biblical dream interpretation.
+        </h1>
+        <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--warm-muted)', maxWidth: 640 }}>
+          Replaces the sci-fi all-caps wordmark with a high-contrast italic serif and a small geometric mark — a point of light over a thin arch, over the river. The same warm parchment, sacred blue, and gold remain.
+        </p>
+      </header>
+
+      {/* ── Hero lockup ─────────────────────────────────────────── */}
+      <section data-screen-label="Hero lockup" style={{
+        background: 'linear-gradient(165deg, oklch(0.97 0.012 75) 0%, oklch(0.93 0.025 230) 100%)',
+        border: '1px solid var(--warm-line)',
+        borderRadius: 24, padding: '88px 40px',
+        textAlign: 'center', marginBottom: 64,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* subtle ripple bg */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none',
+        }}>
+          {[40, 55, 70, 85].map((top, i) => (
+            <div key={i} style={{
+              position: 'absolute', left: 0, right: 0, height: 1, top: `${top}%`,
+              background: 'linear-gradient(90deg, transparent 10%, oklch(1 0 0 / 0.4) 50%, transparent 90%)',
+            }} />
+          ))}
+        </div>
+        <div style={{ position: 'relative' }}>
+          <Mark size={84} color="var(--blue-deep)" stroke={1.5} {...markProps} />
+          <div style={{ marginTop: 28 }}>
+            <span className={fontClass} style={{
+              fontSize: 88, lineHeight: 1, color: 'var(--warm-darker)',
+            }}>DreamRiver</span>
+          </div>
+          <div className="font-mono" style={{
+            marginTop: 22, fontSize: 11, letterSpacing: '0.18em',
+            textTransform: 'uppercase', color: 'var(--warm-muted)',
+          }}>
+            Dreams · Scripture · Stillness
+          </div>
+        </div>
+      </section>
+
+      {/* ── Mark anatomy ────────────────────────────────────────── */}
+      <Section eyebrow="01 — The Mark"
+               title="Sun · Arch · River"
+               desc="Three elements drawn with a single stroke weight. The point of light sits above a thin arch (the bridge from the founding metaphor — “a bridge over a river of golden light”). The river runs beneath in two unhurried ripples.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          <Tile label="Full mark" sub="48 × 48 viewBox · 1.5px stroke">
+            <div style={{ position: 'relative', padding: 24 }}>
+              <Mark size={160} color="var(--warm-darker)" stroke={1.5} {...markProps} />
+              {/* anatomy callouts */}
+              <div style={{ position: 'absolute', top: 18, right: -4, fontSize: 10, color: 'var(--amber)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="font-mono">light</span>
+                  <span style={{ width: 18, height: 1, background: 'var(--amber)' }} />
+                </div>
+              </div>
+              <div style={{ position: 'absolute', top: '40%', right: -4, fontSize: 10, color: 'var(--blue-deep)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="font-mono">arch</span>
+                  <span style={{ width: 18, height: 1, background: 'var(--blue-deep)' }} />
+                </div>
+              </div>
+              <div style={{ position: 'absolute', bottom: 28, right: -4, fontSize: 10, color: 'var(--warm-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="font-mono">river</span>
+                  <span style={{ width: 18, height: 1, background: 'var(--warm-muted)' }} />
+                </div>
+              </div>
+            </div>
+          </Tile>
+          <Tile label="On parchment" sub="primary lockup" bg="var(--warm-cream)">
+            <Mark size={140} color="var(--blue-deep)" stroke={1.5} {...markProps} />
+          </Tile>
+          <Tile label="On sacred blue" sub="reverse" bg="var(--blue-deep)">
+            <Mark size={140} color="var(--warm-white)" stroke={1.5} {...markProps} />
+          </Tile>
+        </div>
+
+        {/* sizing scale */}
+        <div className="card" style={{ marginTop: 20, padding: 28 }}>
+          <div className="label" style={{ marginBottom: 18 }}>Sizing scale · pixel-level legibility</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 40, flexWrap: 'wrap' }}>
+            {[16, 20, 24, 32, 40, 56, 80].map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <Mark size={s} color="var(--warm-darker)" stroke={s < 24 ? 2 : 1.5} {...markProps} />
+                <div className="font-mono" style={{ fontSize: 10, color: 'var(--warm-muted)', marginTop: 8 }}>{s}px</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Wordmark ────────────────────────────────────────────── */}
+      <Section eyebrow="02 — The Wordmark"
+               title="Cormorant Garamond, italic"
+               desc="A high-contrast Garamond pulls the brand toward the literary and devotional. Title case — not all-caps — keeps it human. Default weight 500 italic; subtle 0.005em letter-spacing.">
+        <div style={{
+          background: 'var(--warm-cream)', border: '1px solid var(--warm-line)',
+          borderRadius: 14, padding: '60px 40px', textAlign: 'center',
+          marginBottom: 20,
+        }}>
+          <span className={fontClass} style={{
+            fontSize: 120, lineHeight: 1, color: 'var(--warm-darker)',
+          }}>DreamRiver</span>
+        </div>
+
+        {/* alphabet / glyph sheet */}
+        <div className="card" style={{ padding: 28, marginBottom: 20 }}>
+          <div className="label" style={{ marginBottom: 12 }}>Character set · italic 500</div>
+          <div className={fontClass} style={{ fontSize: 28, color: 'var(--warm-darker)', lineHeight: 1.4 }}>
+            ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+            abcdefghijklmnopqrstuvwxyz<br />
+            <span style={{ fontSize: 22 }}>0 1 2 3 4 5 6 7 8 9 &nbsp; & . , ’ — ✦</span>
+          </div>
+        </div>
+
+        {/* alternates */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+          {[
+            { cls: 'wordmark--cormorant', name: 'Cormorant Garamond Italic', note: 'Selected · literary, biblical', selected: true },
+            { cls: 'wordmark--instrument', name: 'Instrument Serif Italic', note: 'Alt · contemporary, editorial' },
+            { cls: 'wordmark--italiana', name: 'Italiana', note: 'Alt · luxury, very thin' },
+            { cls: 'wordmark--dmserif', name: 'DM Serif Display Italic', note: 'Alt · matches existing headlines' },
+          ].map(opt => (
+            <div key={opt.cls} style={{
+              background: opt.selected ? 'oklch(0.96 0.025 245)' : 'white',
+              border: `1px solid ${opt.selected ? 'var(--blue-soft)' : 'var(--warm-line)'}`,
+              borderRadius: 12, padding: '24px 22px',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 18,
+            }}>
+              <div className={opt.cls} style={{ fontSize: 38, color: 'var(--warm-darker)', lineHeight: 1 }}>DreamRiver</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--warm-dark)' }}>{opt.name}</div>
+                  <div className="font-mono" style={{ fontSize: 10.5, color: opt.selected ? 'var(--blue-deep)' : 'var(--warm-muted)', marginTop: 4 }}>{opt.note}</div>
+                </div>
+                {opt.selected && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: 'var(--blue-deep)',
+                    padding: '3px 8px', borderRadius: 100,
+                    background: 'oklch(0.94 0.04 245)', border: '1px solid var(--blue-soft)',
+                  }}>✓ default</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 12.5, color: 'var(--warm-muted)', marginTop: 14, fontStyle: 'italic' }}>
+          Toggle wordmark font in the Tweaks panel to compare on every surface live.
+        </p>
+      </Section>
+
+      {/* ── Lockups ─────────────────────────────────────────────── */}
+      <Section eyebrow="03 — Lockups"
+               title="Primary, stacked, and mark-only"
+               desc="The horizontal lockup is the default. Use stacked for square crops (app cover, share images) and mark-only when context already names the brand (in-app, favicon, push notifications).">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 20 }}>
+          <Tile label="Horizontal — primary" sub="mark + wordmark · 36 / 30 / 12">
+            <Lockup markSize={36} wordSize={30} gap={12} markProps={markProps} fontClass={fontClass} />
+          </Tile>
+          <Tile label="Stacked" sub="square crops, splash" padding={32}>
+            <StackedLockup markSize={64} wordSize={26} markProps={markProps} fontClass={fontClass} />
+          </Tile>
+          <Tile label="Mark only" sub="in-context, favicon">
+            <Mark size={80} color="var(--warm-darker)" {...markProps} />
+          </Tile>
+        </div>
+
+        {/* clear space */}
+        <div className="card" style={{ padding: 32, marginTop: 20 }}>
+          <div className="label" style={{ marginBottom: 18 }}>Clear space · minimum padding equals the cap-height of the wordmark</div>
+          <div className="checker" style={{
+            padding: 36, borderRadius: 10, display: 'flex', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: 'white',
+              padding: '22px 26px',
+              border: '1px dashed var(--blue-soft)',
+              borderRadius: 6,
+            }}>
+              <Lockup markSize={32} wordSize={28} markProps={markProps} fontClass={fontClass} />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Color treatments ────────────────────────────────────── */}
+      <Section eyebrow="04 — Color"
+               title="The brand reads in four registers"
+               desc="Dark on parchment is the everyday voice. Reverse on sacred blue is for splash and marketing. Gold-on-dark is for premium / membership. Mono is for stamps, watermarks, and print.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <Tile bg="var(--warm-cream)" label="Default" sub="warm-dark on parchment">
+            <Lockup markSize={32} wordSize={26} color="var(--warm-darker)" markProps={markProps} fontClass={fontClass} />
+          </Tile>
+          <Tile bg="var(--blue-deep)" label="Reverse" sub="cream on sacred blue">
+            <Lockup markSize={32} wordSize={26} color="var(--warm-white)" markProps={markProps} fontClass={fontClass} />
+          </Tile>
+          <Tile bg="oklch(0.18 0.015 250)" label="Premium" sub="gold on near-black">
+            <Lockup markSize={32} wordSize={26} color="var(--gold-light)" markProps={markProps} fontClass={fontClass} />
+          </Tile>
+          <Tile bg="white" label="Mono" sub="single-color print / stamp">
+            <Lockup markSize={32} wordSize={26} color="oklch(0.22 0.02 250)" markProps={markProps} fontClass={fontClass} />
+          </Tile>
+        </div>
+      </Section>
+
+      {/* ── Applications ────────────────────────────────────────── */}
+      <Section eyebrow="05 — In context"
+               title="Where the brand shows up"
+               desc="App icon, splash header, dashboard chrome, push notification, favicon. Same mark, same wordmark, scaled and recolored for context.">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <Tile label="iOS app icon" sub="112 × 112 · radius 26">
+            <PhoneAppIcon tweaks={tweaks} />
+          </Tile>
+          <Tile label="Favicons" sub="square mark on solid · 8px / 6px radius">
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              <FaviconBadge size={64} bg="var(--blue-deep)" fg="white" radius={14} />
+              <FaviconBadge size={48} bg="var(--warm-darker)" fg="var(--gold-light)" radius={10} />
+              <FaviconBadge size={32} bg="var(--warm-cream)" fg="var(--blue-deep)" radius={8} />
+              <FaviconBadge size={20} bg="var(--blue-deep)" fg="white" radius={5} />
+              <FaviconBadge size={16} bg="var(--blue-deep)" fg="white" radius={4} />
+            </div>
+          </Tile>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <Tile label="Splash header" sub="DreamRiver Splash Page.html" padding={20}>
+            <SplashHeaderMock tweaks={tweaks} fontClass={fontClass} />
+          </Tile>
+          <Tile label="Dashboard chrome" sub="DreamRiver Dashboards.html" padding={20}>
+            <DashboardHeaderMock tweaks={tweaks} fontClass={fontClass} />
+          </Tile>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <Tile label="Push notification" sub="iOS · standard banner" padding={28}>
+            <NotificationMock tweaks={tweaks} fontClass={fontClass} />
+          </Tile>
+          <Tile label="Inline byline" sub="email, embeds, footers">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--warm-muted)' }}>
+                <span>An interpretation by</span>
+                <Lockup markSize={18} wordSize={16} gap={6} markProps={markProps} fontClass={fontClass} />
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--warm-muted)' }}>
+                © 2026 <span className={fontClass} style={{ color: 'var(--warm-dark)' }}>DreamRiver</span>, Inc. · All rights reserved.
+              </div>
+            </div>
+          </Tile>
+        </div>
+      </Section>
+
+      {/* ── Don'ts ──────────────────────────────────────────────── */}
+      <Section eyebrow="06 — Don't"
+               title="Misuse"
+               desc="A few things the wordmark and mark shouldn't do.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            {
+              label: 'Don\'t set in all caps',
+              sub: 'breaks the literary tone',
+              children: (
+                <span className={fontClass} style={{ fontSize: 30, color: 'var(--warm-darker)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>DREAMRIVER</span>
+              )
+            },
+            {
+              label: 'Don\'t use sans-serif',
+              sub: 'reads generic / templated',
+              children: (
+                <span style={{ fontFamily: 'DM Sans', fontSize: 30, color: 'var(--warm-darker)', fontWeight: 600 }}>DreamRiver</span>
+              )
+            },
+            {
+              label: 'Don\'t add gradients to mark',
+              sub: 'stroke must be a single value',
+              children: (
+                <svg viewBox="0 0 48 48" width={70} height={70} fill="none" strokeWidth={1.5} strokeLinecap="round">
+                  <defs>
+                    <linearGradient id="bad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stopColor="#ff5577" />
+                      <stop offset="1" stopColor="#5577ff" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="24" cy="8" r="1.6" fill="url(#bad)" />
+                  <path d="M9 26 A15 15 0 0 1 39 26" stroke="url(#bad)" />
+                  <path d="M5 33 Q13 30 20 33 T35 33" stroke="url(#bad)" />
+                  <path d="M7 39 Q14 36 21 39 T36 39" stroke="url(#bad)" />
+                </svg>
+              )
+            },
+            {
+              label: 'Don\'t squish or stretch',
+              sub: 'preserve aspect ratio',
+              children: (
+                <span className={fontClass} style={{ fontSize: 34, color: 'var(--warm-darker)', transform: 'scaleY(0.6)', display: 'inline-block' }}>DreamRiver</span>
+              )
+            },
+          ].map((d, i) => (
+            <div key={i} style={{
+              background: 'white', border: '1px solid oklch(0.92 0.04 25)',
+              borderRadius: 12, padding: 24,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute', top: 10, right: 12,
+                fontSize: 16, color: 'oklch(0.62 0.20 25)', fontWeight: 700,
+              }}>✕</div>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                minHeight: 96, marginBottom: 16,
+              }}>
+                {d.children}
+              </div>
+              <div style={{ borderTop: '1px dashed oklch(0.92 0.04 25)', paddingTop: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.16 25)' }}>{d.label}</div>
+                <div className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', marginTop: 4 }}>{d.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── Token reference ─────────────────────────────────────── */}
+      <Section eyebrow="07 — Tokens"
+               title="Drop-in values"
+               desc="Use these tokens directly. Body type and color palette are unchanged from v1; only the wordmark and mark have moved.">
+        <div className="card" style={{ padding: 28 }}>
+          <div className="font-mono" style={{ fontSize: 12.5, color: 'var(--warm-dark)', lineHeight: 1.85 }}>
+            <div><span style={{ color: 'var(--warm-muted)' }}>wordmark.font</span> &nbsp;= &nbsp;'Cormorant Garamond', Georgia, serif</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>wordmark.style</span> &nbsp;= &nbsp;italic · weight 500 · letter-spacing 0.005em</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>wordmark.case</span> &nbsp;&nbsp;= &nbsp;title case · "DreamRiver"</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.viewBox</span> &nbsp;= &nbsp;48 × 48</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.stroke</span> &nbsp;&nbsp;= &nbsp;1.5px (2px under 24px)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.parts</span> &nbsp;&nbsp;= &nbsp;sun-dot · arch · two-ripple river</div>
+            <div className="divider" style={{ margin: '12px 0' }}></div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>headline.font</span> = &nbsp;'DM Serif Display' (unchanged)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>body.font</span> &nbsp;&nbsp;&nbsp;&nbsp;= &nbsp;'DM Sans' (unchanged)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mono.font</span> &nbsp;&nbsp;&nbsp;&nbsp;= &nbsp;'JetBrains Mono' (unchanged)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>palette</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &nbsp;warm parchment · sacred blue · gold (unchanged)</div>
+          </div>
+        </div>
+      </Section>
+
+      <footer style={{
+        marginTop: 80, paddingTop: 28, borderTop: '1px solid var(--warm-line)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontSize: 12, color: 'var(--warm-muted)',
+      }}>
+        <Lockup markSize={18} wordSize={15} gap={7} markProps={markProps} fontClass={fontClass} />
+        <span className="font-mono" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>brand · v2 · 2026</span>
+      </footer>
+
+      {/* ── Tweaks ─────────────────────────────────────────────── */}
+      <TweaksPanel>
+        <TweakSection label="Wordmark">
+          <TweakSelect label="Font"
+                       tweakKey="wordmarkFont"
+                       value={tweaks.wordmarkFont}
+                       onChange={v => setTweak('wordmarkFont', v)}
+                       options={[
+                         { value: 'cormorant', label: 'Cormorant Garamond (default)' },
+                         { value: 'instrument', label: 'Instrument Serif' },
+                         { value: 'italiana', label: 'Italiana' },
+                         { value: 'dmserif', label: 'DM Serif Display' },
+                       ]} />
+        </TweakSection>
+        <TweakSection label="Mark">
+          <TweakRadio label="Arch shape"
+                      tweakKey="markStyle"
+                      value={tweaks.markStyle}
+                      onChange={v => setTweak('markStyle', v)}
+                      options={[
+                        { value: 'arch', label: 'Round' },
+                        { value: 'pointed', label: 'Pointed' },
+                      ]} />
+          <TweakToggle label="Sun / point of light" tweakKey="showSun"
+                       value={tweaks.showSun} onChange={v => setTweak('showSun', v)} />
+          <TweakToggle label="River ripples" tweakKey="showRipples"
+                       value={tweaks.showRipples} onChange={v => setTweak('showRipples', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Brand Identity</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=Instrument+Serif:ital@0;1&family=Italiana&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    /* Brand v2 — Moonwater palette */
+    --night:        #0e1a30;
+    --night-deep:   #08111f;
+    --night-soft:   #1a2748;
+    --cream:        #f5ecd6;
+    --cream-soft:   #faf4e2;
+    --gold:         #d4a247;
+    --gold-deep:    #b08436;
+    --gold-light:   #e6c073;
+
+    /* Working palette in oklch for tonal harmony */
+    --warm-white:   oklch(0.975 0.006 70);
+    --warm-paper:   oklch(0.97 0.012 75);
+    --warm-cream:   oklch(0.955 0.015 75);
+    --warm-line:    oklch(0.88 0.01 75);
+    --warm-dark:    oklch(0.22 0.02 250);
+    --warm-darker:  oklch(0.15 0.015 250);
+    --warm-muted:   oklch(0.55 0.02 250);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--warm-white);
+    color: var(--warm-dark);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--warm-muted);
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--warm-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--warm-line), transparent);
+    margin: 4px 0;
+  }
+
+  .checker {
+    background-image:
+      linear-gradient(45deg, oklch(0.92 0.01 75) 25%, transparent 25%),
+      linear-gradient(-45deg, oklch(0.92 0.01 75) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, oklch(0.92 0.01 75) 75%),
+      linear-gradient(-45deg, transparent 75%, oklch(0.92 0.01 75) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "crescentFullness": 9,
+  "crescentTilt": 15,
+  "waveStyle": "cream-gold",
+  "wavePhase": "aligned",
+  "containerRadius": 22
+}/*EDITMODE-END*/;
+
+/* ────────────────────────────────────────────────────────────
+   The Moonwater Mark
+   A waxing crescent above two gentle waves.
+   - crescentFullness: inner-arc rx (smaller = thinner crescent)
+   - crescentTilt: degrees of rotation
+   - waveColors: 'cream-gold' | 'all-cream' | 'all-gold'
+   ──────────────────────────────────────────────────────────── */
+function MoonwaterMark({
+  size = 80,
+  moonColor = 'var(--gold)',
+  waveTop = 'var(--cream)',
+  waveBottom = 'var(--gold)',
+  stroke = 2.5,
+  crescentFullness = 9,
+  crescentTilt = 15,
+  invertWaves = false,
+}) {
+  // viewBox 64×64. Crescent sits in the upper third; two parallel waves
+  // sit in the lower half. Cream above, gold below — not crossing.
+  const cf = crescentFullness; // typical 7..11
+  const crescent = `M32 11 A14 14 0 1 0 32 39 A${cf} 14 0 1 1 32 11 Z`;
+  const sw = (stroke * size) / 80;
+  const swClamped = Math.max(1.4, Math.min(3.2, sw));
+
+  const topWave    = "M10 48 C 18 42, 22 42, 30 48 C 38 54, 42 54, 54 48";
+  const bottomWave = invertWaves
+    ? "M14 56 C 22 62, 26 62, 32 56 C 38 50, 42 50, 50 56"   // crossed (alternative)
+    : "M14 56 C 22 50, 26 50, 32 56 C 38 62, 42 62, 50 56";  // aligned (default, matches reference)
+
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} fill="none"
+         style={{ display: 'block', overflow: 'visible' }}>
+      <g transform={`rotate(${crescentTilt} 32 25)`}>
+        <path d={crescent} fill={moonColor} />
+      </g>
+      <path d={bottomWave} stroke={waveBottom} strokeWidth={swClamped} strokeLinecap="round" />
+      <path d={topWave}    stroke={waveTop}    strokeWidth={swClamped} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* App-icon container — the squircle. Part of the identity for installable surfaces. */
+function AppIcon({
+  size = 120,
+  radius = 22,            // border-radius in % of size (Apple squircle ≈ 22.37%)
+  bg = 'var(--night)',
+  showHighlight = true,
+  children,
+}) {
+  return (
+    <div style={{
+      width: size, height: size,
+      borderRadius: `${size * radius / 100}px`,
+      background: bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden',
+      boxShadow: '0 8px 24px oklch(0.18 0.02 250 / 0.18), 0 2px 6px oklch(0.18 0.02 250 / 0.08)',
+    }}>
+      {showHighlight && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(circle at 50% 0%, oklch(0.45 0.06 250 / 0.6) 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }} />
+      )}
+      <div style={{ position: 'relative' }}>{children}</div>
+    </div>
+  );
+}
+
+/* Wordmark */
+function Wordmark({ size = 32, color = 'var(--warm-darker)' }) {
+  return (
+    <span className="wordmark" style={{
+      fontSize: size, lineHeight: 1, color, whiteSpace: 'nowrap',
+    }}>DreamRiver</span>
+  );
+}
+
+/* Horizontal lockup — mark + wordmark, no container */
+function Lockup({ markSize = 36, wordSize = 30, gap = 12, color = 'var(--warm-darker)', tweaks, on = 'light' }) {
+  // Color rules: on dark surfaces moon = gold, top wave = cream, bottom = gold.
+  // On light surfaces moon = night, top wave = night, bottom = gold.
+  const palette = on === 'dark'
+    ? { moon: 'var(--gold)', top: 'var(--cream)', bottom: 'var(--gold)' }
+    : { moon: 'var(--night)', top: 'var(--night)', bottom: 'var(--gold)' };
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap, color }}>
+      <MoonwaterMark size={markSize}
+                     moonColor={palette.moon}
+                     waveTop={palette.top}
+                     waveBottom={palette.bottom}
+                     crescentFullness={tweaks?.crescentFullness ?? 9}
+                     crescentTilt={tweaks?.crescentTilt ?? 15}
+                     invertWaves={(tweaks?.wavePhase ?? 'aligned') === 'inverted'} />
+      <Wordmark size={wordSize} color={color} />
+    </div>
+  );
+}
+
+/* Contained lockup — uses the squircle */
+function ContainedLockup({ iconSize = 56, wordSize = 28, gap = 16, color = 'var(--warm-darker)', tweaks }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap, color }}>
+      <AppIcon size={iconSize} radius={tweaks?.containerRadius ?? 22}>
+        <MoonwaterMark size={iconSize * 0.65}
+                       moonColor="var(--gold)"
+                       waveTop="var(--cream)"
+                       waveBottom="var(--gold)"
+                       crescentFullness={tweaks?.crescentFullness ?? 9}
+                       crescentTilt={tweaks?.crescentTilt ?? 15}
+                       invertWaves={(tweaks?.wavePhase ?? 'aligned') === 'inverted'} />
+      </AppIcon>
+      <Wordmark size={wordSize} color={color} />
+    </div>
+  );
+}
+
+/* Section helper */
+function Section({ eyebrow, title, desc, children, style = {} }) {
+  return (
+    <section data-screen-label={title} style={{ marginBottom: 72, ...style }}>
+      <div style={{ marginBottom: 28, maxWidth: 720 }}>
+        <div className="eyebrow" style={{ marginBottom: 10 }}>{eyebrow}</div>
+        <h2 className="font-serif" style={{
+          fontSize: 34, lineHeight: 1.12, color: 'var(--warm-darker)',
+          marginBottom: 10, fontWeight: 400,
+        }}>{title}</h2>
+        {desc && <p style={{ color: 'var(--warm-muted)', fontSize: 15, lineHeight: 1.55, textWrap: 'pretty' }}>{desc}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Tile({ children, label, sub, bg = 'oklch(1 0 0 / 0.7)', padding = 28, style = {} }) {
+  // Auto-detect dark backgrounds (named night tokens) so labels stay readable.
+  const isDark = typeof bg === 'string' && /var\(--night|0e1a30|08111f|1a2748|oklch\(0\.[01]/i.test(bg);
+  const labelColor = isDark ? 'var(--cream)' : 'var(--warm-dark)';
+  const subColor   = isDark ? 'oklch(0.72 0.04 75)' : 'var(--warm-muted)';
+  const borderColor = isDark ? 'oklch(0.55 0.04 75 / 0.3)' : 'var(--warm-line)';
+  return (
+    <div style={{
+      background: bg,
+      border: '1px solid var(--warm-line)',
+      borderRadius: 14,
+      padding,
+      display: 'flex',
+      flexDirection: 'column',
+      ...style,
+    }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 0,
+      }}>
+        {children}
+      </div>
+      {(label || sub) && (
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px dashed ${borderColor}` }}>
+          {label && <div style={{ fontSize: 12, fontWeight: 600, color: labelColor }}>{label}</div>}
+          {sub && <div className="font-mono" style={{ fontSize: 10.5, color: subColor, marginTop: 4 }}>{sub}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Application mockups
+   ──────────────────────────────────────────────────────────── */
+
+function SplashHeaderMock({ tweaks }) {
+  return (
+    <div style={{
+      borderRadius: 12, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'linear-gradient(175deg, var(--night) 0%, var(--night-deep) 100%)',
+    }}>
+      <div style={{
+        padding: '14px 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <Lockup markSize={26} wordSize={20} gap={10} color="var(--cream)" tweaks={tweaks} on="dark" />
+        <span style={{ fontSize: 11.5, color: 'oklch(0.7 0.04 75)' }}>Coming June 2026</span>
+      </div>
+      <div style={{ padding: '40px 24px 50px', textAlign: 'left' }}>
+        <div style={{
+          display: 'inline-block', padding: '4px 12px', borderRadius: 100,
+          background: 'oklch(0.4 0.1 80 / 0.25)',
+          border: '1px solid oklch(0.65 0.12 75 / 0.4)',
+          fontSize: 10, fontWeight: 600, color: 'var(--gold-light)',
+          marginBottom: 16,
+        }}>✦ Launching June 1, 2026</div>
+        <div className="font-serif" style={{ fontSize: 24, lineHeight: 1.18, color: 'var(--cream)', maxWidth: 320, marginBottom: 16 }}>
+          Discover what God is saying through your dreams.
+        </div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'oklch(0.25 0.03 250 / 0.5)',
+          border: '1px solid oklch(0.4 0.05 250)',
+          borderRadius: 100, padding: '6px 6px 6px 14px',
+        }}>
+          <span style={{ fontSize: 11, color: 'oklch(0.7 0.03 75)' }}>your@email.com</span>
+          <span style={{
+            padding: '6px 12px', background: 'var(--gold)', color: 'var(--night-deep)',
+            borderRadius: 100, fontSize: 11, fontWeight: 700,
+          }}>Join Waitlist</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardHeaderMock({ tweaks }) {
+  return (
+    <div style={{
+      borderRadius: 12, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'var(--warm-white)',
+    }}>
+      <div style={{
+        padding: '12px 20px',
+        borderBottom: '1px solid var(--warm-line)',
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        <Lockup markSize={24} wordSize={18} gap={9} color="var(--warm-darker)" tweaks={tweaks} on="light" />
+        <div style={{ flex: 1, display: 'flex', gap: 18 }}>
+          {['Journal', 'Library', 'Insights', 'Settings'].map((l, i) => (
+            <span key={l} style={{
+              fontSize: 12, fontWeight: i === 0 ? 600 : 500,
+              color: i === 0 ? 'var(--warm-dark)' : 'var(--warm-muted)',
+              borderBottom: i === 0 ? '2px solid var(--gold)' : '2px solid transparent',
+              paddingBottom: 4,
+            }}>{l}</span>
+          ))}
+        </div>
+        <div style={{
+          width: 24, height: 24, borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--night-soft), var(--gold))',
+        }} />
+      </div>
+      <div style={{ padding: 20, background: 'var(--warm-cream)' }}>
+        <div className="font-serif" style={{ fontSize: 22, color: 'var(--warm-darker)' }}>Welcome back.</div>
+        <div style={{ fontSize: 12, color: 'var(--warm-muted)', marginTop: 4 }}>14 dreams journaled this month</div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{
+              flex: 1, height: 64, background: 'white',
+              border: '1px solid var(--warm-line)', borderRadius: 8,
+            }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotificationMock({ tweaks }) {
+  return (
+    <div style={{
+      background: 'white',
+      border: '1px solid var(--warm-line)',
+      borderRadius: 14,
+      padding: 14,
+      display: 'flex', gap: 12,
+      maxWidth: 360,
+    }}>
+      <AppIcon size={40} radius={tweaks?.containerRadius ?? 22}>
+        <MoonwaterMark size={28} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)"
+                       crescentFullness={tweaks?.crescentFullness ?? 9} />
+      </AppIcon>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+          <span className="wordmark" style={{ fontSize: 14, color: 'var(--warm-dark)' }}>DreamRiver</span>
+          <span style={{ fontSize: 10, color: 'var(--warm-muted)' }}>now</span>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--warm-dark)', fontWeight: 600, marginBottom: 2 }}>
+          Your dream has been interpreted
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--warm-muted)', lineHeight: 1.4 }}>
+          "Walking across a bridge over golden light…" — 3 scripture references found.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SocialCardMock({ tweaks }) {
+  return (
+    <div style={{
+      borderRadius: 14, overflow: 'hidden',
+      border: '1px solid var(--warm-line)',
+      background: 'linear-gradient(170deg, var(--night-deep) 0%, var(--night-soft) 100%)',
+      position: 'relative',
+    }}>
+      {/* subtle moon glow in corner */}
+      <div style={{
+        position: 'absolute', top: -60, right: -60,
+        width: 240, height: 240, borderRadius: '50%',
+        background: 'radial-gradient(circle, oklch(0.5 0.12 75 / 0.3) 0%, transparent 60%)',
+      }} />
+      <div style={{ padding: '40px 36px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <MoonwaterMark size={32} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)"
+                         crescentFullness={tweaks?.crescentFullness ?? 9} />
+          <span className="wordmark" style={{ fontSize: 22, color: 'var(--cream)' }}>DreamRiver</span>
+        </div>
+        <div className="font-serif" style={{ fontSize: 30, lineHeight: 1.15, color: 'var(--cream)', maxWidth: 380 }}>
+          Discover what God is saying through your dreams.
+        </div>
+        <div style={{
+          marginTop: 22, fontSize: 12,
+          color: 'oklch(0.7 0.04 75)',
+          fontFamily: 'JetBrains Mono, monospace',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+        }}>dreamriver.app</div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   App
+   ──────────────────────────────────────────────────────────── */
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // Wave color tweak — applies to lockups+icons that read it
+  const waveColors = (() => {
+    if (tweaks.waveStyle === 'all-cream') return { top: 'var(--cream)', bottom: 'var(--cream)' };
+    if (tweaks.waveStyle === 'all-gold') return { top: 'var(--gold)', bottom: 'var(--gold)' };
+    return { top: 'var(--cream)', bottom: 'var(--gold)' }; // default
+  })();
+
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '56px 40px 120px' }}>
+
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <header style={{ marginBottom: 64 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+          <Lockup markSize={28} wordSize={24} tweaks={tweaks} on="light" />
+          <span className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Brand · v2 · Moonwater · May 2026
+          </span>
+        </div>
+
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Visual Identity</div>
+        <h1 className="font-serif" style={{ fontSize: 60, lineHeight: 1.05, color: 'var(--warm-darker)', maxWidth: 880, marginBottom: 18, fontWeight: 400, textWrap: 'balance' }}>
+          A waxing crescent rising over still water.
+        </h1>
+        <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--warm-muted)', maxWidth: 640 }}>
+          The mark is a moon above two gentle waves, set against midnight. Anchored by a squircle for installable surfaces; freed for inline use. Gold for the moon and the second wave; cream for the first wave; night for everything around it.
+        </p>
+      </header>
+
+      {/* ── Hero icon ──────────────────────────────────────────── */}
+      <section data-screen-label="Hero icon" style={{
+        background: 'linear-gradient(165deg, var(--night-deep) 0%, var(--night-soft) 100%)',
+        borderRadius: 24, padding: '88px 40px',
+        textAlign: 'center', marginBottom: 64,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* corner moon glow */}
+        <div style={{ position: 'absolute', top: -120, left: -120, width: 360, height: 360, borderRadius: '50%',
+                      background: 'radial-gradient(circle, oklch(0.5 0.1 75 / 0.35) 0%, transparent 60%)' }} />
+        <div style={{ position: 'absolute', bottom: -100, right: -80, width: 280, height: 280, borderRadius: '50%',
+                      background: 'radial-gradient(circle, oklch(0.4 0.08 245 / 0.35) 0%, transparent 60%)' }} />
+
+        <div style={{ position: 'relative' }}>
+          <AppIcon size={208} radius={tweaks.containerRadius}>
+            <MoonwaterMark size={136} moonColor="var(--gold)" waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </AppIcon>
+          <div style={{ marginTop: 36 }}>
+            <Wordmark size={68} color="var(--cream)" />
+          </div>
+          <div className="font-mono" style={{
+            marginTop: 20, fontSize: 11, letterSpacing: '0.18em',
+            textTransform: 'uppercase', color: 'oklch(0.7 0.04 75)',
+          }}>
+            Dreams · Scripture · Stillness
+          </div>
+        </div>
+      </section>
+
+      {/* ── Mark anatomy ───────────────────────────────────────── */}
+      <Section eyebrow="01 — The Mark"
+               title="Moon · Wave · Wave"
+               desc="Three elements on a 64×64 grid. The waxing crescent sits in the upper third, the cream wave under it as a horizon, the gold wave below as an undertow. The container is a squircle in midnight — Apple-spec radius (~22.4%) so the icon sits naturally on iOS.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          <Tile label="In container" sub="primary application · 208×208" bg="oklch(0.95 0.015 75)" padding={36}>
+            <AppIcon size={180} radius={tweaks.containerRadius}>
+              <MoonwaterMark size={118} moonColor="var(--gold)" waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                             crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+            </AppIcon>
+          </Tile>
+          <Tile label="Free-floating" sub="header use · light bg" bg="var(--warm-cream)" padding={36}>
+            <MoonwaterMark size={150} moonColor="var(--night)" waveTop="var(--night)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+          <Tile label="Free-floating reverse" sub="header use · dark bg" bg="var(--night-deep)" padding={36}>
+            <MoonwaterMark size={150} moonColor="var(--gold)" waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+        </div>
+
+        {/* anatomy diagram */}
+        <div className="card" style={{ marginTop: 20, padding: 36, background: 'oklch(0.97 0.012 75)', border: '1px solid var(--warm-line)', borderRadius: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 240 }}>
+            <MoonwaterMark size={200} moonColor="var(--night)" waveTop="var(--night)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+            {/* callouts */}
+            <div style={{ position: 'absolute', top: 18, right: 6, fontSize: 10, color: 'var(--gold-deep)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 22, height: 1, background: 'var(--gold-deep)' }} />
+              <span className="font-mono">crescent · waxing</span>
+            </div>
+            <div style={{ position: 'absolute', top: '52%', right: 6, fontSize: 10, color: 'var(--warm-darker)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 22, height: 1, background: 'var(--warm-darker)' }} />
+              <span className="font-mono">surface wave</span>
+            </div>
+            <div style={{ position: 'absolute', bottom: 18, right: 6, fontSize: 10, color: 'var(--gold-deep)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 22, height: 1, background: 'var(--gold-deep)' }} />
+              <span className="font-mono">undertow wave</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+            <div>
+              <div className="label" style={{ marginBottom: 4 }}>Crescent</div>
+              <div style={{ fontSize: 13, color: 'var(--warm-dark)', lineHeight: 1.55 }}>
+                Waxing — opens to the right, suggesting growth and anticipation. Outer arc r=14; inner arc rx=9–11 controls fullness. Stays solid (filled), never outlined.
+              </div>
+            </div>
+            <div>
+              <div className="label" style={{ marginBottom: 4 }}>Waves</div>
+              <div style={{ fontSize: 13, color: 'var(--warm-dark)', lineHeight: 1.55 }}>
+                Two phase-aligned cubic sines. Top is the surface (cream / night), bottom is the undertow (always gold). Stroke 2.5 at 80px, clamped 1.4–3.2.
+              </div>
+            </div>
+            <div>
+              <div className="label" style={{ marginBottom: 4 }}>Container</div>
+              <div style={{ fontSize: 13, color: 'var(--warm-dark)', lineHeight: 1.55 }}>
+                Squircle, 22% border-radius (iOS-spec). Subtle top-edge glow suggests the moon lighting its own sky. Container is required for app surfaces; optional everywhere else.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* sizing scale */}
+        <div className="card" style={{ marginTop: 20, padding: 28, background: 'white', border: '1px solid var(--warm-line)', borderRadius: 14 }}>
+          <div className="label" style={{ marginBottom: 18 }}>Sizing scale · with container</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 28, flexWrap: 'wrap' }}>
+            {[20, 28, 40, 56, 76, 100, 140].map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <AppIcon size={s} radius={tweaks.containerRadius}>
+                  <MoonwaterMark size={s * 0.65}
+                                 moonColor="var(--gold)" waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                                 crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+                </AppIcon>
+                <div className="font-mono" style={{ fontSize: 10, color: 'var(--warm-muted)', marginTop: 8 }}>{s}px</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Color palette ──────────────────────────────────────── */}
+      <Section eyebrow="02 — Palette"
+               title="Three colors do all the work"
+               desc="Night carries the brand. Cream lights it. Gold marks what matters — the moon, the call-to-action, the second wave. No fourth color; harmonic tints of these three handle everything else.">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 16 }}>
+          {/* Night swatch */}
+          <div style={{
+            background: 'var(--night)', borderRadius: 14, padding: 28,
+            color: 'var(--cream)', minHeight: 240,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          }}>
+            <div>
+              <div className="label" style={{ color: 'oklch(0.7 0.04 75)' }}>01 · Primary</div>
+              <div className="font-serif" style={{ fontSize: 32, marginTop: 8 }}>Night</div>
+              <div style={{ fontSize: 13, marginTop: 6, color: 'oklch(0.78 0.025 75)', maxWidth: 320 }}>
+                The sky that holds everything. Used for backgrounds, body type on light, app-icon container.
+              </div>
+            </div>
+            <div className="font-mono" style={{ fontSize: 11, color: 'oklch(0.75 0.04 75)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <span>HEX</span><span>#0E1A30</span>
+              <span>OKLCH</span><span>0.18 · 0.04 · 250</span>
+              <span>Deep</span><span>#08111F</span>
+              <span>Soft</span><span>#1A2748</span>
+            </div>
+          </div>
+
+          {/* Cream */}
+          <div style={{
+            background: 'var(--cream)', borderRadius: 14, padding: 28,
+            color: 'var(--warm-darker)', minHeight: 240,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            border: '1px solid var(--warm-line)',
+          }}>
+            <div>
+              <div className="label">02 · Surface</div>
+              <div className="font-serif" style={{ fontSize: 28, marginTop: 8 }}>Cream</div>
+              <div style={{ fontSize: 12.5, marginTop: 6, color: 'var(--warm-muted)' }}>
+                Light on night, parchment on light. Body backgrounds, type on dark.
+              </div>
+            </div>
+            <div className="font-mono" style={{ fontSize: 11, color: 'var(--warm-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <span>HEX</span><span>#F5ECD6</span>
+              <span>OKLCH</span><span>0.93 · 0.03 · 80</span>
+            </div>
+          </div>
+
+          {/* Gold */}
+          <div style={{
+            background: 'var(--gold)', borderRadius: 14, padding: 28,
+            color: 'var(--night-deep)', minHeight: 240,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          }}>
+            <div>
+              <div className="label" style={{ color: 'var(--night-deep)', opacity: 0.7 }}>03 · Accent</div>
+              <div className="font-serif" style={{ fontSize: 28, marginTop: 8 }}>Gold</div>
+              <div style={{ fontSize: 12.5, marginTop: 6, color: 'var(--night-deep)', opacity: 0.75 }}>
+                The moon, the undertow, the call-to-action. Used sparingly — never as a background.
+              </div>
+            </div>
+            <div className="font-mono" style={{ fontSize: 11, color: 'var(--night-deep)', opacity: 0.7, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <span>HEX</span><span>#D4A247</span>
+              <span>OKLCH</span><span>0.72 · 0.14 · 75</span>
+              <span>Light</span><span>#E6C073</span>
+              <span>Deep</span><span>#B08436</span>
+            </div>
+          </div>
+        </div>
+
+        {/* harmonic tints */}
+        <div style={{ marginTop: 20, padding: 28, background: 'white', borderRadius: 14, border: '1px solid var(--warm-line)' }}>
+          <div className="label" style={{ marginBottom: 14 }}>Harmonic tints · usage notes</div>
+          <div style={{ display: 'flex', gap: 0, height: 56, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--warm-line)' }}>
+            {[
+              { c: 'var(--night-deep)', l: 'night-deep' },
+              { c: 'var(--night)', l: 'night' },
+              { c: 'var(--night-soft)', l: 'night-soft' },
+              { c: 'var(--warm-muted)', l: 'muted' },
+              { c: 'var(--warm-line)', l: 'line' },
+              { c: 'var(--warm-paper)', l: 'paper' },
+              { c: 'var(--cream-soft)', l: 'cream-soft' },
+              { c: 'var(--cream)', l: 'cream' },
+              { c: 'var(--gold-light)', l: 'gold-light' },
+              { c: 'var(--gold)', l: 'gold' },
+              { c: 'var(--gold-deep)', l: 'gold-deep' },
+            ].map((s, i) => (
+              <div key={i} style={{ flex: 1, background: s.c, position: 'relative' }}>
+                <div className="font-mono" style={{
+                  position: 'absolute', bottom: 4, left: 6, fontSize: 9,
+                  color: i < 4 || i === 8 ? 'oklch(0.85 0.04 75 / 0.85)' : 'oklch(0.25 0.02 250 / 0.7)',
+                }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Wordmark ───────────────────────────────────────────── */}
+      <Section eyebrow="03 — Wordmark"
+               title="Cormorant Garamond, italic"
+               desc="Pulls the brand into literary and devotional territory. Title case, weight 500, italic. Letter-spacing nudged +0.005em. Unchanged from v1; works as the pair to the new mark.">
+        <div style={{
+          background: 'var(--cream)', border: '1px solid var(--warm-line)',
+          borderRadius: 14, padding: '60px 40px', textAlign: 'center',
+          marginBottom: 20,
+        }}>
+          <Wordmark size={132} color="var(--night-deep)" />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{
+            padding: 28, background: 'white', borderRadius: 14, border: '1px solid var(--warm-line)',
+          }}>
+            <div className="label" style={{ marginBottom: 12 }}>Glyph sheet · italic 500</div>
+            <div className="wordmark" style={{ fontSize: 22, color: 'var(--warm-darker)', lineHeight: 1.4 }}>
+              ABCDEFGHIJKLMN<br />
+              OPQRSTUVWXYZ<br />
+              abcdefghijklmnopqrstuvwxyz<br />
+              <span style={{ fontSize: 18 }}>0 1 2 3 4 5 6 7 8 9 &nbsp; & . , ’ — ✦</span>
+            </div>
+          </div>
+          <div style={{
+            padding: 28, background: 'var(--night)', borderRadius: 14, color: 'var(--cream)',
+          }}>
+            <div className="label" style={{ marginBottom: 12, color: 'oklch(0.7 0.04 75)' }}>Sizes · on night</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Wordmark size={48} color="var(--cream)" />
+              <Wordmark size={32} color="var(--cream)" />
+              <Wordmark size={22} color="var(--cream)" />
+              <Wordmark size={14} color="var(--cream)" />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Lockups ────────────────────────────────────────────── */}
+      <Section eyebrow="04 — Lockups"
+               title="Four configurations"
+               desc="Contained (squircle + wordmark) is the marketing default. Free-floating reads cleaner inside chrome. Mark-only when context already names the brand. Wordmark-only for type-set surfaces like emails and bylines.">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: 20 }}>
+          <Tile label="Contained — primary" sub="splash, marketing, app stores">
+            <ContainedLockup iconSize={56} wordSize={28} tweaks={tweaks} />
+          </Tile>
+          <Tile label="Free-floating" sub="in-chrome use">
+            <Lockup markSize={32} wordSize={24} tweaks={tweaks} on="light" />
+          </Tile>
+          <Tile label="Mark-only" sub="in-context, favicon">
+            <AppIcon size={64} radius={tweaks.containerRadius}>
+              <MoonwaterMark size={42} moonColor="var(--gold)" waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                             crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+            </AppIcon>
+          </Tile>
+          <Tile label="Wordmark-only" sub="email, bylines, ribbons">
+            <Wordmark size={28} color="var(--warm-darker)" />
+          </Tile>
+        </div>
+
+        {/* clear space */}
+        <div style={{ padding: 32, marginTop: 20, background: 'white', borderRadius: 14, border: '1px solid var(--warm-line)' }}>
+          <div className="label" style={{ marginBottom: 18 }}>Clear space · minimum padding = ⅓ of icon edge length</div>
+          <div className="checker" style={{
+            padding: 36, borderRadius: 10, display: 'flex', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: 'white',
+              padding: '24px 28px',
+              border: '1px dashed var(--gold)',
+              borderRadius: 6,
+            }}>
+              <ContainedLockup iconSize={48} wordSize={26} tweaks={tweaks} />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── Color treatments ───────────────────────────────────── */}
+      <Section eyebrow="05 — Treatments"
+               title="The mark in five registers"
+               desc="The default lives on night. Cream is the daytime version. Mono-night for stamps and watermarks. Mono-gold for premium / membership surfaces. Inverse-cream for special editorial cases.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
+          <Tile bg="var(--night)" label="Default" sub="night sky" padding={32}>
+            <MoonwaterMark size={72} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+          <Tile bg="var(--cream)" label="Daylight" sub="navy + gold" padding={32}>
+            <MoonwaterMark size={72} moonColor="var(--night)" waveTop="var(--night)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+          <Tile bg="var(--night)" label="Mono · night" sub="watermarks" padding={32}>
+            <MoonwaterMark size={72} moonColor="var(--cream)" waveTop="var(--cream)" waveBottom="var(--cream)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+          <Tile bg="var(--night-deep)" label="Mono · gold" sub="premium" padding={32}>
+            <MoonwaterMark size={72} moonColor="var(--gold)" waveTop="var(--gold)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+          <Tile bg="var(--cream)" label="Inverse-cream" sub="editorial" padding={32}>
+            <MoonwaterMark size={72} moonColor="var(--gold)" waveTop="var(--night)" waveBottom="var(--gold)"
+                           crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+          </Tile>
+        </div>
+      </Section>
+
+      {/* ── Applications ───────────────────────────────────────── */}
+      <Section eyebrow="06 — In context"
+               title="Where the brand shows up"
+               desc="App icon stacks first because that's where the system is strongest. Splash and dashboard pull the contained lockup onto product surfaces. The social card shows how the mark sits inside a story.">
+
+        {/* iOS app icon stack */}
+        <div style={{
+          background: 'var(--warm-paper)',
+          borderRadius: 14,
+          padding: '40px 32px',
+          border: '1px solid var(--warm-line)',
+          marginBottom: 20,
+        }}>
+          <div className="label" style={{ marginBottom: 24 }}>iOS app icon · 1024 → 20</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 36, flexWrap: 'wrap' }}>
+            {[120, 88, 64, 48, 36, 28, 20].map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <AppIcon size={s} radius={tweaks.containerRadius}>
+                  <MoonwaterMark size={s * 0.65} moonColor="var(--gold)"
+                                 waveTop={waveColors.top} waveBottom={waveColors.bottom}
+                                 crescentFullness={tweaks.crescentFullness} crescentTilt={tweaks.crescentTilt} />
+                </AppIcon>
+                <div className="font-mono" style={{ fontSize: 10, color: 'var(--warm-muted)', marginTop: 8 }}>{s}px</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <Tile label="Splash header" sub="dreamriver.app" padding={20}>
+            <SplashHeaderMock tweaks={tweaks} />
+          </Tile>
+          <Tile label="Dashboard chrome" sub="logged-in product" padding={20}>
+            <DashboardHeaderMock tweaks={tweaks} />
+          </Tile>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 20 }}>
+          <Tile label="Push notification" sub="iOS · standard banner" padding={28}>
+            <NotificationMock tweaks={tweaks} />
+          </Tile>
+          <Tile label="Social card · 1200×630 crop" sub="og:image, twitter:card" padding={20}>
+            <SocialCardMock tweaks={tweaks} />
+          </Tile>
+        </div>
+      </Section>
+
+      {/* ── Refinement suggestions ─────────────────────────────── */}
+      <Section eyebrow="07 — Suggestions"
+               title="Refinements worth considering"
+               desc="The source design is strong. These are small adjustments — most are cosmetic; one is structural. Each is live-toggleable in the Tweaks panel so you can A/B it on every surface above.">
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+          {/* Suggestion 1: thinner crescent */}
+          <RefinementCard
+            n="01"
+            title="Thin the crescent slightly"
+            note="Current fullness is 9. Try 7–8 for a more elegant sliver that pairs better with the italic wordmark and reads as a younger moon (closer to new)."
+            before={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" crescentFullness={11} />}
+            after={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" crescentFullness={7} />}
+            beforeLabel="fullness 11"
+            afterLabel="fullness 7"
+            ground="var(--night)"
+          />
+
+          {/* Suggestion 2: subtle tilt */}
+          <RefinementCard
+            n="02"
+            title="Add a few degrees of tilt"
+            note="A 10–15° clockwise tilt makes the crescent feel like it's *rising* over the water rather than floating statically. Subtle, but adds narrative motion."
+            before={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" crescentTilt={0} />}
+            after={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" crescentTilt={12} />}
+            beforeLabel="0°"
+            afterLabel="+12°"
+            ground="var(--night)"
+          />
+
+          {/* Suggestion 3: container is optional */}
+          <RefinementCard
+            n="03"
+            title="Let the mark leave the squircle"
+            note="The container is essential on app icons but starts to feel heavy in headers and inline contexts. Extract the moon-and-waves on its own (or with a transparent ground) for chrome use."
+            before={
+              <AppIcon size={88} radius={tweaks.containerRadius}>
+                <MoonwaterMark size={56} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+              </AppIcon>
+            }
+            after={<MoonwaterMark size={88} moonColor="var(--night)" waveTop="var(--night)" waveBottom="var(--gold)" />}
+            beforeLabel="contained"
+            afterLabel="free-floating"
+            ground="var(--cream)"
+          />
+
+          {/* Suggestion 4: cream-gold vs all-cream */}
+          <RefinementCard
+            n="04"
+            title="Test the all-cream wave"
+            note="Cream + gold (current) is rich and warm. All-cream is quieter and gives the gold moon more focal weight. Worth A/B-ing on the splash before committing."
+            before={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />}
+            after={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--cream)" />}
+            beforeLabel="cream + gold"
+            afterLabel="all cream"
+            ground="var(--night)"
+          />
+
+          {/* Suggestion 5: container radius */}
+          <RefinementCard
+            n="05"
+            title="Match the iOS squircle radius"
+            note="Current radius is 22% (iOS spec). Going to 25% feels softer/friendlier; staying at 22 is correct for app-store consistency. Don't go below 18% — the mark starts to look pinched."
+            before={
+              <AppIcon size={88} radius={18}>
+                <MoonwaterMark size={56} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+              </AppIcon>
+            }
+            after={
+              <AppIcon size={88} radius={25}>
+                <MoonwaterMark size={56} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+              </AppIcon>
+            }
+            beforeLabel="r 18%"
+            afterLabel="r 25%"
+            ground="var(--cream)"
+          />
+
+          {/* Suggestion 6: wave phase */}
+          <RefinementCard
+            n="06"
+            title="Optional: try crossed waves"
+            note="Stacked waves (current, cream above gold) read calm and cartographic — the chosen default, matching the reference. Crossing the waves (peak-over-trough) gives a braided, more decorative read; worth A/B-ing on the marketing site only."
+            before={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />}
+            after={<MoonwaterMark size={92} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" invertWaves={true} />}
+            beforeLabel="stacked (default)"
+            afterLabel="crossed"
+            ground="var(--night)"
+          />
+        </div>
+      </Section>
+
+      {/* ── Don'ts ─────────────────────────────────────────────── */}
+      <Section eyebrow="08 — Don't"
+               title="Misuse">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            {
+              label: 'Don\'t outline the crescent',
+              sub: 'mark stays solid',
+              children: (
+                <svg viewBox="0 0 64 64" width={76} height={76} fill="none" style={{ display: 'block' }}>
+                  <path d="M32 11 A14 14 0 1 0 32 39 A9 14 0 1 1 32 11 Z" stroke="var(--gold)" strokeWidth={2} />
+                  <path d="M14 56 C 22 50, 26 50, 32 56 C 38 62, 42 62, 50 56" stroke="var(--gold)" strokeWidth={2.5} strokeLinecap="round" />
+                  <path d="M10 48 C 18 42, 22 42, 30 48 C 38 54, 42 54, 54 48" stroke="var(--cream)" strokeWidth={2.5} strokeLinecap="round" />
+                </svg>
+              ),
+              bg: 'var(--night)',
+            },
+            {
+              label: 'Don\'t recolor the moon',
+              sub: 'moon is always gold',
+              children: <MoonwaterMark size={76} moonColor="oklch(0.55 0.18 25)" waveTop="var(--cream)" waveBottom="var(--gold)" />,
+              bg: 'var(--night)',
+            },
+            {
+              label: 'Don\'t change crescent direction',
+              sub: 'waxing only · opens right',
+              children: (
+                <div style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>
+                  <MoonwaterMark size={76} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+                </div>
+              ),
+              bg: 'var(--night)',
+            },
+            {
+              label: 'Don\'t put mark on busy ground',
+              sub: 'always solid color',
+              children: (
+                <div style={{
+                  padding: 8, borderRadius: 8,
+                  backgroundImage: 'linear-gradient(45deg, #ff5577 0%, #5577ff 50%, #55ff77 100%)',
+                }}>
+                  <MoonwaterMark size={60} moonColor="var(--gold)" waveTop="var(--cream)" waveBottom="var(--gold)" />
+                </div>
+              ),
+              bg: 'white',
+            },
+          ].map((d, i) => (
+            <div key={i} style={{
+              background: 'white', border: '1px solid oklch(0.92 0.04 25)',
+              borderRadius: 14, padding: 20,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute', top: 10, right: 12,
+                fontSize: 16, color: 'oklch(0.62 0.20 25)', fontWeight: 700,
+              }}>✕</div>
+              <div style={{
+                background: d.bg, borderRadius: 10,
+                padding: 22,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 14, minHeight: 110,
+              }}>
+                {d.children}
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.16 25)' }}>{d.label}</div>
+                <div className="font-mono" style={{ fontSize: 10.5, color: 'var(--warm-muted)', marginTop: 4 }}>{d.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── Token reference ────────────────────────────────────── */}
+      <Section eyebrow="09 — Tokens"
+               title="Drop-in values">
+        <div style={{ padding: 28, background: 'white', borderRadius: 14, border: '1px solid var(--warm-line)' }}>
+          <div className="font-mono" style={{ fontSize: 12.5, color: 'var(--warm-dark)', lineHeight: 1.85 }}>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.night       </span>= #0E1A30 · oklch(0.18 0.04 250)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.night.deep  </span>= #08111F</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.night.soft  </span>= #1A2748</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.cream       </span>= #F5ECD6 · oklch(0.93 0.03 80)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.gold        </span>= #D4A247 · oklch(0.72 0.14 75)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.gold.light  </span>= #E6C073</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>color.gold.deep   </span>= #B08436</div>
+            <div className="divider" style={{ margin: '12px 0' }} />
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.viewBox      </span>= 64 × 64</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.crescent     </span>= waxing · fullness 9 · tilt 0°</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mark.wave.stroke  </span>= 2.5 (scaled, clamped 1.4–3.2)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>container.radius  </span>= 22% (iOS squircle)</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>container.bg      </span>= var(--night)</div>
+            <div className="divider" style={{ margin: '12px 0' }} />
+            <div><span style={{ color: 'var(--warm-muted)' }}>wordmark.font     </span>= 'Cormorant Garamond', Georgia, serif</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>wordmark.style    </span>= italic · 500 · letter-spacing 0.005em</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>headline.font     </span>= 'DM Serif Display'</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>body.font         </span>= 'DM Sans'</div>
+            <div><span style={{ color: 'var(--warm-muted)' }}>mono.font         </span>= 'JetBrains Mono'</div>
+          </div>
+        </div>
+      </Section>
+
+      <footer style={{
+        marginTop: 80, paddingTop: 28, borderTop: '1px solid var(--warm-line)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontSize: 12, color: 'var(--warm-muted)',
+      }}>
+        <Lockup markSize={20} wordSize={16} gap={8} tweaks={tweaks} on="light" />
+        <span className="font-mono" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>brand · v2 · moonwater · 2026</span>
+      </footer>
+
+      {/* ── Tweaks ─────────────────────────────────────────────── */}
+      <TweaksPanel>
+        <TweakSection label="Crescent">
+          <TweakSlider label="Fullness" tweakKey="crescentFullness"
+                       min={5} max={12} step={1}
+                       value={tweaks.crescentFullness}
+                       onChange={v => setTweak('crescentFullness', v)} />
+          <TweakSlider label="Tilt °" tweakKey="crescentTilt"
+                       min={-20} max={20} step={2}
+                       value={tweaks.crescentTilt}
+                       onChange={v => setTweak('crescentTilt', v)} />
+        </TweakSection>
+        <TweakSection label="Waves">
+          <TweakRadio label="Phase"
+                      tweakKey="wavePhase"
+                      value={tweaks.wavePhase}
+                      onChange={v => setTweak('wavePhase', v)}
+                      options={[
+                        { value: 'aligned', label: 'Stacked' },
+                        { value: 'inverted', label: 'Crossed' },
+                      ]} />
+          <TweakRadio label="Color pair"
+                      tweakKey="waveStyle"
+                      value={tweaks.waveStyle}
+                      onChange={v => setTweak('waveStyle', v)}
+                      options={[
+                        { value: 'cream-gold', label: 'Cream + Gold' },
+                        { value: 'all-cream', label: 'All cream' },
+                        { value: 'all-gold', label: 'All gold' },
+                      ]} />
+        </TweakSection>
+        <TweakSection label="Container">
+          <TweakSlider label="Radius %" tweakKey="containerRadius"
+                       min={15} max={30} step={1}
+                       value={tweaks.containerRadius}
+                       onChange={v => setTweak('containerRadius', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+/* Helper: refinement before/after card */
+function RefinementCard({ n, title, note, before, after, beforeLabel, afterLabel, ground = 'var(--night)' }) {
+  return (
+    <div style={{
+      background: 'white', border: '1px solid var(--warm-line)',
+      borderRadius: 14, padding: 24,
+    }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', marginBottom: 14 }}>
+        <span className="font-mono" style={{ fontSize: 10, color: 'var(--gold-deep)', letterSpacing: '0.14em' }}>
+          {n}
+        </span>
+        <div className="font-serif" style={{ fontSize: 18, color: 'var(--warm-darker)', lineHeight: 1.15 }}>
+          {title}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div style={{
+          background: ground, borderRadius: 10, padding: 22,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: 140, position: 'relative',
+        }}>
+          {before}
+          <span className="font-mono" style={{
+            position: 'absolute', bottom: 6, left: 8, fontSize: 9,
+            color: ground.includes('night') ? 'oklch(0.65 0.04 75)' : 'var(--warm-muted)',
+          }}>{beforeLabel}</span>
+        </div>
+        <div style={{
+          background: ground, borderRadius: 10, padding: 22,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: 140, position: 'relative',
+          boxShadow: '0 0 0 2px var(--gold)',
+        }}>
+          {after}
+          <span className="font-mono" style={{
+            position: 'absolute', bottom: 6, left: 8, fontSize: 9,
+            color: ground.includes('night') ? 'var(--gold-light)' : 'var(--gold-deep)',
+          }}>{afterLabel} ✓</span>
+        </div>
+      </div>
+      <p style={{ fontSize: 12.5, lineHeight: 1.55, color: 'var(--warm-muted)', textWrap: 'pretty' }}>
+        {note}
+      </p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

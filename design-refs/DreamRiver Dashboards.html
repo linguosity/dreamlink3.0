@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Settings & Admin</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    /* Brand tokens — pulled from app/globals.css */
+    --background: oklch(0.975 0.006 70);
+    --surface: oklch(0.99 0.004 75);
+    --card: #ffffff;
+    --foreground: oklch(0.22 0.02 250);
+    --muted: oklch(0.94 0.008 75);
+    --muted-foreground: oklch(0.55 0.02 250);
+    --border: oklch(0.90 0.01 75);
+    --border-strong: oklch(0.86 0.01 75);
+
+    --primary: oklch(0.45 0.12 245);
+    --primary-hover: oklch(0.40 0.13 245);
+    --primary-soft: oklch(0.92 0.03 245);
+    --primary-foreground: oklch(0.98 0.005 75);
+
+    --accent-bg: oklch(0.95 0.04 75);
+    --accent-fg: oklch(0.50 0.14 75);
+
+    --cream: oklch(0.955 0.015 75);
+    --gold: oklch(0.72 0.14 75);
+    --gold-light: oklch(0.82 0.10 78);
+    --amber: oklch(0.65 0.16 60);
+    --blue-deep: oklch(0.45 0.12 245);
+    --blue-soft: oklch(0.70 0.08 235);
+
+    --success: oklch(0.62 0.13 155);
+    --warning: oklch(0.72 0.14 75);
+    --danger: oklch(0.62 0.20 25);
+
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+
+    --shadow-sm: 0 1px 2px oklch(0.22 0.02 250 / 0.04);
+    --shadow: 0 1px 3px oklch(0.22 0.02 250 / 0.05), 0 1px 2px oklch(0.22 0.02 250 / 0.03);
+    --shadow-lg: 0 8px 24px oklch(0.22 0.02 250 / 0.08), 0 2px 6px oklch(0.22 0.02 250 / 0.04);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  #root { height: 100vh; }
+
+  /* Ambient water-drift behind the dashboard */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .ambient::before, .ambient::after {
+    content: ''; position: absolute; width: 60vw; height: 60vw;
+    border-radius: 50%; filter: blur(80px); opacity: 0.35;
+  }
+  .ambient::before {
+    background: radial-gradient(circle, oklch(0.85 0.08 235 / 0.5), transparent 60%);
+    top: -20vw; right: -15vw; animation: drift 28s ease-in-out infinite;
+  }
+  .ambient::after {
+    background: radial-gradient(circle, oklch(0.85 0.10 75 / 0.45), transparent 60%);
+    bottom: -25vw; left: -20vw; animation: drift 36s ease-in-out infinite reverse;
+  }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0); }
+    50% { transform: translate(3%, 2%); }
+  }
+
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.85 0.01 75);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(0.75 0.02 75); background-clip: padding-box; border: 2px solid transparent; }
+
+  button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select, textarea { font: inherit; color: inherit; }
+
+  /* Form controls */
+  .input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    font-size: 14px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px oklch(0.45 0.12 245 / 0.12);
+  }
+  .input:disabled {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    cursor: not-allowed;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px; font-weight: 500;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--primary); color: var(--primary-foreground);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-ghost { color: var(--muted-foreground); }
+  .btn-ghost:hover { color: var(--foreground); background: var(--muted); }
+  .btn-outline {
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+  .btn-outline:hover { border-color: var(--border-strong); background: var(--muted); }
+
+  /* Switch */
+  .switch {
+    position: relative; width: 36px; height: 20px;
+    background: oklch(0.85 0.01 75);
+    border-radius: 999px; transition: background .2s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; background: white;
+    border-radius: 50%; transition: transform .2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  }
+  .switch.on { background: var(--primary); }
+  .switch.on::after { transform: translateX(16px); }
+
+  /* Tier badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .badge-gold { background: var(--accent-bg); color: var(--accent-fg); }
+  .badge-blue { background: var(--primary-soft); color: var(--primary); }
+  .badge-success { background: oklch(0.95 0.05 155); color: oklch(0.40 0.13 155); }
+  .badge-muted { background: var(--muted); color: var(--muted-foreground); }
+  .badge-danger { background: oklch(0.95 0.05 25); color: oklch(0.50 0.18 25); }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  /* Subtle highlight border for active items */
+  .ring-primary {
+    box-shadow: 0 0 0 2px var(--primary), var(--shadow);
+    border-color: transparent;
+  }
+
+  /* Utility */
+  .clip { overflow: hidden; }
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="dashboards-icons.jsx"></script>
+<script type="text/babel" src="dashboards-user.jsx"></script>
+<script type="text/babel" src="dashboards-admin.jsx"></script>
+<script type="text/babel" src="dashboards-app.jsx"></script>
+
+</body>
+</html>

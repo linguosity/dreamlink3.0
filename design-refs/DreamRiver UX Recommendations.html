@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — UX Recommendations</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --rec-cream: oklch(0.965 0.01 75);
+    --rec-dark: oklch(0.22 0.02 250);
+    --rec-muted: oklch(0.55 0.02 250);
+    --rec-blue-deep: oklch(0.45 0.12 245);
+    --rec-blue-soft: oklch(0.70 0.08 235);
+    --rec-gold: oklch(0.72 0.14 75);
+    --rec-amber: oklch(0.65 0.16 60);
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: oklch(0.975 0.005 75);
+    color: var(--rec-dark);
+    -webkit-font-smoothing: antialiased;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="ux-recs-components.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function App() {
+  const [activeSection, setActiveSection] = useState(0);
+
+  const sections = [
+    { id: 'identity', label: 'Visual Identity' },
+    { id: 'landing', label: 'Landing Page' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'summary', label: 'Summary' },
+  ];
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      {/* Sticky nav */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'oklch(1 0 0 / 0.85)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid oklch(0.90 0.01 75)',
+        padding: '12px 32px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg viewBox="0 0 48 48" width={20} height={20} fill="none" stroke="var(--rec-dark)" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', overflow: 'visible' }}>
+            <circle cx="24" cy="8" r="1.8" fill="var(--rec-dark)" stroke="none" />
+            <path d="M9 26 A15 15 0 0 1 39 26" />
+            <line x1="9" y1="26" x2="9" y2="29" />
+            <line x1="39" y1="26" x2="39" y2="29" />
+            <path d="M5 33 Q13 30 20 33 T35 33 Q40 31 43 33" />
+            <path d="M7 39 Q14 36 21 39 T36 39 Q40 37.5 41 39" />
+          </svg>
+          <span style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontStyle: 'italic', fontWeight: 500,
+            fontSize: 18, letterSpacing: '0.005em',
+            color: 'var(--rec-dark)', lineHeight: 1,
+          }}>DreamRiver</span>
+          <span style={{
+            fontSize: 11, padding: '3px 10px', borderRadius: 100,
+            background: 'oklch(0.92 0.04 75 / 0.6)', color: 'var(--rec-amber)',
+            fontWeight: 600,
+          }}>UX Recommendations</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {sections.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                setActiveSection(i);
+                document.getElementById(s.id)?.scrollIntoView?.() ||
+                  (document.getElementById(s.id).parentElement.scrollTop = document.getElementById(s.id).offsetTop);
+              }}
+              style={{
+                padding: '6px 14px', borderRadius: 100, border: 'none', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                background: activeSection === i ? 'var(--rec-blue-deep)' : 'transparent',
+                color: activeSection === i ? 'white' : 'var(--rec-muted)',
+                transition: 'all 0.2s',
+              }}
+            >{s.label}</button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Hero intro */}
+      <div style={{
+        padding: '64px 32px 48px', maxWidth: 800, margin: '0 auto', textAlign: 'center',
+      }}>
+        <div style={{
+          display: 'inline-block', padding: '6px 16px', borderRadius: 100,
+          background: 'oklch(0.92 0.06 75 / 0.5)', marginBottom: 16,
+          fontSize: 12, fontWeight: 700, color: 'var(--rec-amber)',
+          letterSpacing: '0.05em',
+        }}>✦ DreamRiver UI/UX Audit</div>
+        <h1 style={{
+          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontSize: 44, lineHeight: 1.12, color: 'var(--rec-dark)', marginBottom: 16,
+        }}>
+          Recommendations for a Warmer, More Cohesive Experience
+        </h1>
+        <p style={{
+          fontSize: 17, lineHeight: 1.65, color: 'var(--rec-muted)', maxWidth: 560, margin: '0 auto',
+        }}>
+          Three areas of focus: visual identity, landing page conversion, and dashboard usability. Each includes before/after comparisons.
+        </p>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 32px 80px' }}>
+
+        {/* ── 1. Visual Identity ──────────────────────────────── */}
+        <section id="identity" style={{ marginBottom: 72, scrollMarginTop: 80 }}>
+          <SectionHeader
+            area="Visual Identity"
+            title="Replace the generic palette with warm, branded colors"
+            subtitle="Your current color system uses default Tailwind blue-600 — the same blue as thousands of SaaS landing pages. Your brand imagery (olive trees, golden rivers, stepping stones) tells a completely different story. Let's align the two."
+          />
+
+          <div style={{
+            padding: 32, borderRadius: 20,
+            background: 'oklch(1 0 0 / 0.6)',
+            border: '1px solid oklch(0.92 0.01 75)',
+            marginBottom: 24,
+          }}>
+            <PaletteComparison />
+          </div>
+
+          {/* Annotations */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 32 }}>
+            <Callout number="1" label="Sacred Gold accent" description="Ties directly to your brand imagery — golden light, stepping stones, warm sunsets. Used for tags, highlights, and sacred elements." />
+            <Callout number="2" label="Warm cream background" description="Subtle warmth instead of stark white. Feels like aged parchment — appropriate for a scripture-based app." />
+            <Callout number="3" label="Deep warm blue" description="Still trustworthy and calm, but with more depth and warmth than stock Tailwind blue." />
+          </div>
+
+          {/* Typography */}
+          <div style={{
+            padding: 32, borderRadius: 20,
+            background: 'oklch(1 0 0 / 0.6)',
+            border: '1px solid oklch(0.92 0.01 75)',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--rec-dark)', marginBottom: 20, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Typography Pairing</div>
+            <TypographyComparison />
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <Callout number="4" label="DM Serif Display for headlines" description="A warm serif adds gravitas and spiritual character. Pair with DM Sans for body — both from the same superfamily for natural harmony. Blanka stays for the wordmark." color="var(--rec-blue-deep)" />
+          </div>
+        </section>
+
+        {/* ── 2. Landing Page ─────────────────────────────────── */}
+        <section id="landing" style={{ marginBottom: 72, scrollMarginTop: 80 }}>
+          <SectionHeader
+            area="Landing Page"
+            title="Warm the hero, sharpen the conversion path"
+            subtitle="The current landing page is well-structured, but the visual treatment feels like a template. The warm palette and serif headlines transform it into something that feels uniquely DreamRiver."
+          />
+
+          <BeforeAfter>
+            {[<CurrentLandingHero />, <ImprovedLandingHero />]}
+          </BeforeAfter>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 24 }}>
+            <Callout number="1" label="Warm gradient background" description="Replaces the flat white with a subtle warm-to-blue gradient that evokes the water/golden light brand imagery." />
+            <Callout number="2" label="Serif headline treatment" description="DM Serif Display adds weight and spirituality. The current sans-serif 'extrabold' reads as generic SaaS." />
+            <Callout number="3" label="Gold scripture tags" description="Bible verse pills use warm gold instead of stock blue — reinforces the sacred content." />
+            <Callout number="4" label="Warmer phone mockup" description="The app preview inside the phone uses the new palette too, giving visitors an accurate preview of what they'll experience." color="var(--rec-blue-deep)" />
+          </div>
+
+          {/* Additional landing recommendations */}
+          <div style={{
+            marginTop: 32, padding: 24, borderRadius: 16,
+            background: 'oklch(0.97 0.008 240 / 0.4)',
+            border: '1px solid oklch(0.90 0.02 240 / 0.3)',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--rec-dark)', marginBottom: 12 }}>Additional Landing Page Notes</div>
+            <ul style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--rec-muted)', paddingLeft: 20 }}>
+              <li><strong>Social proof bar:</strong> Replace gradient avatar circles with real testimonial text or a specific metric ("500 dreams interpreted this week"). Gradient circles feel placeholder-ish.</li>
+              <li><strong>Feature cards:</strong> Currently each card links to /sign-up, which is unexpected. Users expect to learn more, not be sent to registration. Remove the links or add dedicated feature detail sections.</li>
+              <li><strong>FAQ section:</strong> Well done. Consider adding "What Bible translations do you support?" since it's a common question for your audience.</li>
+              <li><strong>"2,000+ believers" claim:</strong> If not yet accurate, change to softer language like "A growing community of believers" to avoid credibility issues at launch.</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ── 3. Dashboard ────────────────────────────────────── */}
+        <section id="dashboard" style={{ marginBottom: 72, scrollMarginTop: 80 }}>
+          <SectionHeader
+            area="Dashboard"
+            title="Give the journal a warmer, more tactile feel"
+            subtitle="The dashboard is functional but feels cold. The warm palette, subtle card textures, and gold accents make it feel like an actual journal — not a database viewer."
+          />
+
+          <BeforeAfter>
+            {[<CurrentDashboard />, <ImprovedDashboard />]}
+          </BeforeAfter>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 24 }}>
+            <Callout number="1" label="Warm cream canvas" description="The warm background makes dream cards feel like they're resting on parchment, not floating in a void." />
+            <Callout number="2" label="Enhanced dream input" description="The input area gets a gentle card treatment with a gold pen icon and subtle border — invites writing." />
+            <Callout number="3" label="Dream count badge" description="Small touch: showing '3 dreams' next to the gallery header gives a sense of progress and collection." />
+            <Callout number="4" label="Featured first card" description="The newest dream spans full width, creating visual hierarchy. Older dreams tile below at half width." color="var(--rec-blue-deep)" />
+          </div>
+
+          {/* Additional dashboard recommendations */}
+          <div style={{
+            marginTop: 32, padding: 24, borderRadius: 16,
+            background: 'oklch(0.97 0.008 240 / 0.4)',
+            border: '1px solid oklch(0.90 0.02 240 / 0.3)',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--rec-dark)', marginBottom: 12 }}>Additional Dashboard Notes</div>
+            <ul style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--rec-muted)', paddingLeft: 20 }}>
+              <li><strong>DreamCard.tsx is 1,600+ lines:</strong> This single component handles card display, dialog, tabs, tooltips, image polling, Bible verse fetching, deletion, sharing, and retry logic. Split into smaller composable pieces for maintainability.</li>
+              <li><strong>Footer on dashboard:</strong> The in-app footer with social share links and Three.js attribution is heavy. Move legal links to Settings; remove the Three.js credit from the user-facing footer (keep in source comments).</li>
+              <li><strong>Search UX:</strong> The keyword-chip search is creative but may confuse users who expect standard search. Consider adding a tooltip on first use explaining the "press Enter to add keywords" pattern.</li>
+              <li><strong>Empty state:</strong> When a new user has 0 dreams, the gallery is bare. Add an encouraging empty state: "Your dream journal is empty. Record your first dream above to begin."</li>
+              <li><strong>Image polling:</strong> The shimmer loading state for images is good. Consider adding a subtle "Generating visualization…" label so users know something is happening.</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ── 4. Summary ──────────────────────────────────────── */}
+        <section id="summary" style={{ scrollMarginTop: 80 }}>
+          <SectionHeader
+            area="Summary"
+            title="Priority changes for launch"
+            subtitle="Ordered by impact and effort. The color/typography changes cascade through the entire app, so they deliver the most value first."
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              { priority: 'P0', label: 'Warm color palette', desc: 'Replace Tailwind blue-600 defaults with the warm blue + gold palette across globals.css. Biggest single improvement — transforms the entire feel.', effort: 'Low', impact: 'High' },
+              { priority: 'P0', label: 'Typography upgrade', desc: 'Add DM Serif Display for headings, DM Sans for body. Replace Blanka wordmark with Cormorant Garamond italic. Update Tailwind config.', effort: 'Low', impact: 'High' },
+              { priority: 'P1', label: 'Landing hero warmth', desc: 'Warm gradient background, gold scripture tags, updated HeroVisual with new palette.', effort: 'Medium', impact: 'High' },
+              { priority: 'P1', label: 'Dashboard card layout', desc: 'Featured first card, warm cream background, gold accent tags, dream count badge.', effort: 'Medium', impact: 'Medium' },
+              { priority: 'P2', label: 'Split DreamCard.tsx', desc: 'Break the 1,600-line component into DreamCardPreview, DreamCardDialog, BibleVerseTooltip, etc.', effort: 'High', impact: 'Medium' },
+              { priority: 'P2', label: 'Social proof authenticity', desc: 'Replace gradient avatar circles with real metrics or testimonials. Update "2,000+" claim.', effort: 'Low', impact: 'Medium' },
+              { priority: 'P2', label: 'Empty state for new users', desc: 'Warm, encouraging empty state when dream gallery is empty. Include sample dream prompt.', effort: 'Low', impact: 'Medium' },
+            ].map((item, i) => (
+              <div key={i} style={{
+                display: 'flex', gap: 14, alignItems: 'flex-start',
+                padding: '16px 20px', borderRadius: 14,
+                background: 'oklch(1 0 0 / 0.6)',
+                border: '1px solid oklch(0.92 0.01 75)',
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6,
+                  background: item.priority === 'P0' ? 'oklch(0.92 0.08 25)' : item.priority === 'P1' ? 'oklch(0.92 0.06 75)' : 'oklch(0.94 0.02 240)',
+                  color: item.priority === 'P0' ? 'oklch(0.45 0.15 25)' : item.priority === 'P1' ? 'var(--rec-amber)' : 'var(--rec-blue-deep)',
+                  flexShrink: 0,
+                }}>{item.priority}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--rec-dark)', marginBottom: 3 }}>{item.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--rec-muted)', lineHeight: 1.5 }}>{item.desc}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 100, background: 'oklch(0.95 0.01 235)', color: 'var(--rec-muted)', fontWeight: 600 }}>Effort: {item.effort}</span>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 100, background: 'oklch(0.95 0.01 235)', color: 'var(--rec-muted)', fontWeight: 600 }}>Impact: {item.impact}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Closing note */}
+          <div style={{
+            marginTop: 40, padding: 28, borderRadius: 20, textAlign: 'center',
+            background: 'linear-gradient(135deg, oklch(0.95 0.03 75 / 0.5), oklch(0.93 0.04 235 / 0.3))',
+            border: '1px solid oklch(0.90 0.03 75 / 0.4)',
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--rec-amber)', marginBottom: 6, letterSpacing: '0.05em' }}>✦ NEXT STEPS</div>
+            <p style={{ fontSize: 15, color: 'var(--rec-dark)', lineHeight: 1.6, maxWidth: 500, margin: '0 auto' }}>
+              The splash page prototype is ready to use as-is. For the app changes, start with the P0 palette and typography updates — they'll cascade through every page with minimal effort.
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

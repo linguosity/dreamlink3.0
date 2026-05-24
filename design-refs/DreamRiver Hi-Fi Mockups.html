@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamRiver — Hi-Fi Mockups · Moonwater applied</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --night:        #0e1a30;
+    --night-deep:   #08111f;
+    --night-soft:   #1a2748;
+    --cream:        #f5ecd6;
+    --cream-soft:   #faf4e2;
+    --gold:         #d4a247;
+    --gold-deep:    #b08436;
+    --gold-light:   #e6c073;
+    --warm-white:   oklch(0.975 0.006 70);
+    --warm-paper:   oklch(0.97 0.012 75);
+    --warm-cream:   oklch(0.955 0.015 75);
+    --warm-line:    oklch(0.88 0.01 75);
+    --warm-dark:    oklch(0.22 0.02 250);
+    --warm-darker:  oklch(0.15 0.015 250);
+    --warm-muted:   oklch(0.55 0.02 250);
+    --success:      oklch(0.62 0.13 155);
+    --danger:       oklch(0.62 0.20 25);
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    color: var(--warm-darker);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="hi-fi-shared.jsx"></script>
+<script type="text/babel" src="hi-fi-splash.jsx"></script>
+<script type="text/babel" src="hi-fi-signup.jsx"></script>
+<script type="text/babel" src="hi-fi-journal.jsx"></script>
+<script type="text/babel" src="hi-fi-settings.jsx"></script>
+<script type="text/babel" src="hi-fi-admin.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="brief" title="DreamRiver · Hi-Fi mockups" subtitle="5 pages with Moonwater branding applied — Splash, Sign-up, Dream Journal, Settings, Admin">
+        <DCArtboard id="brief" label="Brief" width={480} height={680}>
+          <HiFiBrief />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="marketing" title="Marketing surfaces" subtitle="Public-facing — Night palette">
+        <DCArtboard id="splash" label="01 · Splash / Landing" width={1280} height={2400}>
+          <SplashMockup />
+        </DCArtboard>
+        <DCArtboard id="signup" label="02 · Sign Up" width={1280} height={1000}>
+          <SignUpMockup />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="product" title="Product surfaces" subtitle="Logged-in — Parchment palette, gold accents">
+        <DCArtboard id="journal" label="03 · Dream Journal · analysis" width={1280} height={1700}>
+          <JournalMockup />
+        </DCArtboard>
+        <DCArtboard id="settings" label="04 · Settings" width={1280} height={1100}>
+          <SettingsMockup />
+        </DCArtboard>
+        <DCArtboard id="admin" label="05 · Admin Console" width={1280} height={1400}>
+          <AdminMockup />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

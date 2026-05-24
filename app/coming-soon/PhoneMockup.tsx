@@ -42,7 +42,8 @@ export default function PhoneMockup() {
     >
       {/* App nav.
           F01: free-floating Moonwater mark (no squircle — the phone chrome is
-          already a container at this size). Wordmark stays in Blanka.
+          already a container at this size). Wordmark uses .wordmark (Cormorant
+          Garamond italic).
           F10: avatar gradient repointed from blue-soft → gold to
           night-soft → gold so it matches the brand palette. */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-[oklch(0.88_0.01_70)]">
