@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getStripe, PLAN_PRICES } from "@/lib/stripe";
+import type Stripe from "stripe";
 
 /**
  * POST /api/stripe/checkout

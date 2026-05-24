@@ -24,8 +24,10 @@ export function getStripe(): Stripe {
     );
   }
 
+  // Pin to the SDK's expected API version. Older literal "2024-12-18.acacia"
+  // started failing typecheck after the @stripe types bumped expectations.
   stripeInstance = new Stripe(key, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2026-02-25.clover",
     typescript: true,
   });
 

@@ -36,6 +36,7 @@ interface Dream {
   supporting_points?: string[];
   conclusion_sentence?: string;
   formatted_analysis?: string;
+  personalized_summary?: string;
   tags?: string[];
   bible_refs?: string[];
   created_at?: string;
@@ -223,8 +224,11 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     );
   }
 
-  // Enrich dreams with client-side analysis data if available (before server refresh)
-  const enrichedDreams = filteredDreams.map((dream) => {
+  // Enrich dreams with client-side analysis data if available (before server refresh).
+  // Annotated as `Dream[]` so downstream consumers (comparison_group_id, etc.)
+  // keep their full type — without the annotation TS narrows the synthetic
+  // branch's object literal and the union loses fields not mentioned inline.
+  const enrichedDreams: Dream[] = filteredDreams.map((dream): Dream => {
     if (analyzedDream && analyzedDream.id === dream.id && !dream.dream_summary) {
       const a = analyzedDream.analysis;
       return {

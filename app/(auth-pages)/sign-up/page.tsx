@@ -15,8 +15,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
-import { Moon, Sparkles, CheckCircle } from "lucide-react";
+import { Sparkles, CheckCircle } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 // Action state shape returned by signUpAction
 type SignUpState = {
@@ -45,26 +46,35 @@ export default function Signup() {
   const errorMessage = state?.error;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)] p-4 overflow-hidden">
+      {/* Soft gold moon-glow behind the card, per hi-fi-signup */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-[10%] left-1/2 -translate-x-1/2 w-[360px] h-[220px] rounded-full
+                   bg-[radial-gradient(ellipse,oklch(0.85_0.06_75/0.5)_0%,transparent_60%)]"
+      />
+      <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-4 px-4 py-2">
             <Sparkles className="w-4 h-4 mr-2" />
             Start Your Free Trial
           </Badge>
-          <h1 className="text-3xl font-bold mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-soft">
-              Join DreamRiver
+          <h1 className="font-serif text-4xl font-normal leading-tight mb-2">
+            Join{" "}
+            <span className="wordmark text-[color:var(--gold-deep)]">
+              DreamRiver
             </span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-muted-foreground">
             Begin your spiritual dream interpretation journey
           </p>
         </div>
 
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm mb-6">
           <CardHeader className="text-center pb-4">
-            <Moon className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <AppIcon size={56} radius={22} className="mx-auto mb-4">
+              <MoonwaterMark size={36} />
+            </AppIcon>
             <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
             <CardDescription>
               7 days free &bull; No credit card required &bull; Cancel anytime

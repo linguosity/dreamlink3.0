@@ -347,7 +347,7 @@ export default function SettingsPage() {
             dreamCount={dreamCount}
           />
           <div>
-            <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground px-3 mb-1.5">
+            <div className="font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground px-3 mb-1.5">
               Settings
             </div>
             <SidebarNav current={section} onSelect={setSection} />

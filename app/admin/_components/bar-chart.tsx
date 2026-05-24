@@ -1,5 +1,6 @@
-// Stateless bar chart. Last bar gets a deeper gradient so today reads as
-// "current" — the rest of the bars share a soft blue gradient.
+// Stateless bar chart. Last bar gets a deeper gold gradient so today reads
+// as "current" — the rest of the bars share a soft cream-to-gold gradient
+// (v2 Moonwater, per hi-fi-admin.jsx).
 export function DreamsBarChart({
   data,
 }: {
@@ -32,8 +33,8 @@ export function DreamsBarChart({
                   height: `${pct}%`,
                   minHeight: d.count ? 3 : 0,
                   background: isLast
-                    ? "linear-gradient(180deg, var(--primary), var(--blue-soft))"
-                    : "linear-gradient(180deg, oklch(0.75 0.08 235), oklch(0.85 0.05 235))",
+                    ? "linear-gradient(to top, var(--gold-deep), var(--gold))"
+                    : "linear-gradient(to top, oklch(0.85 0.04 75), oklch(0.92 0.05 75))",
                 }}
               />
             </div>

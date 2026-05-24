@@ -42,7 +42,11 @@ function planBadgeClass(plan: SubscriptionPlan) {
   // sacred-night-and-gold pairing that anchors the brand mark. Visionary
   // stays on pale-gold; Free stays neutral.
   if (plan === "prophet") return "bg-[var(--night)] text-[var(--gold-light)]";
-  if (plan === "visionary") return "bg-primary/10 text-primary";
+  // Visionary: gold-tinted parchment background with gold-deep text — matches
+  // hi-fi-settings spec (oklch(0.95 0.05 75) / var(--gold-deep)) and reads
+  // tonally lighter than the Prophet night-on-gold pill.
+  if (plan === "visionary")
+    return "bg-[oklch(0.95_0.05_75)] text-[color:var(--gold-deep)]";
   return "bg-muted text-muted-foreground";
 }
 
@@ -105,7 +109,7 @@ export function ProfileCard({
 
       <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3.5">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.04em] text-muted-foreground">
+          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             Dreams
           </div>
           <div className="font-serif text-[22px] mt-0.5 leading-tight">
@@ -113,7 +117,7 @@ export function ProfileCard({
           </div>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.04em] text-muted-foreground">
+          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             Plan
           </div>
           <div className="font-serif text-[22px] mt-0.5 leading-tight capitalize">

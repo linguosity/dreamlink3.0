@@ -47,7 +47,7 @@ export async function POST() {
 
   const results: Array<{
     dreamId: string;
-    title?: string;
+    title?: string | null;
     status: "success" | "no_image" | "error" | "timeout";
     imageUrl?: string;
     error?: string;

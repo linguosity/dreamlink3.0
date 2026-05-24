@@ -293,7 +293,8 @@ export default async function AdminDashboard() {
         <div>
           <h1 className="font-serif text-[28px] leading-[1.1]">Overview</h1>
           <p className="text-[13px] text-muted-foreground mt-1">
-            DreamRiver activity and health · last 14 days
+            <span className="wordmark text-[color:var(--gold-deep)]">DreamRiver</span>{" "}
+            activity and health · last 14 days
           </p>
         </div>
         <div className="flex items-center gap-2.5">

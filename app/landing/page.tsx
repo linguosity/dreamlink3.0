@@ -21,6 +21,12 @@ import Wordmark from "@/components/Wordmark";
 import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
 
+// v2 Moonwater: feature icon chips read as a unified pale-gold set
+// (no purple/teal one-offs). Background + border mirror the "step" circles
+// from the How-It-Works section above.
+const FEATURE_ICON =
+  "text-[color:var(--gold-deep)] bg-[oklch(0.95_0.05_75)] ring-1 ring-[oklch(0.85_0.08_75)]";
+
 const STEPS = [
   {
     step: 1,
@@ -47,22 +53,21 @@ const FEATURES = [
     icon: BookOpen,
     title: "Biblical References",
     desc: "Every interpretation grounded in scripture, not speculation.",
-    color: "text-gold bg-accent dark:text-gold dark:bg-accent",
+    color: FEATURE_ICON,
     href: "/sign-up",
   },
   {
     icon: Brain,
     title: "AI Dream Analysis",
     desc: "Powered by advanced AI trained to understand dream symbolism.",
-    color:
-      "text-purple-700 bg-purple-100 dark:text-purple-300 dark:bg-purple-900/40",
+    color: FEATURE_ICON,
     href: "/sign-up",
   },
   {
     icon: SlidersHorizontal,
     title: "Personalized Reading Levels",
     desc: "From simple to scholarly, matched to your preference.",
-    color: "text-teal-700 bg-teal-100 dark:text-teal-300 dark:bg-teal-900/40",
+    color: FEATURE_ICON,
     href: "/sign-up",
   },
 ];
@@ -92,12 +97,18 @@ export default function LandingPage() {
       <SiteHeader />
 
       {/* ── Hero Section ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
+      {/* v2 Moonwater: Night gradient + cream type + two soft moon-glow
+          radials (one gold upper-right, one blue lower-left) per hi-fi-splash. */}
+      <section className="relative overflow-hidden bg-[linear-gradient(160deg,var(--night-deep)_0%,var(--night)_50%,var(--night-soft)_100%)]">
         <div
           aria-hidden="true"
-          className="absolute inset-0
-                     bg-[linear-gradient(135deg,var(--cream)_0%,oklch(0.96_0.02_75)_30%,oklch(0.92_0.04_240)_100%)]
-                     dark:bg-[linear-gradient(135deg,oklch(0.20_0.015_250)_0%,oklch(0.18_0.012_250)_50%,oklch(0.22_0.02_245)_100%)]"
+          className="pointer-events-none absolute -top-32 right-32 w-[360px] h-[360px] rounded-full
+                     bg-[radial-gradient(circle,oklch(0.5_0.12_75/0.30)_0%,transparent_60%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 -left-16 w-[260px] h-[260px] rounded-full
+                     bg-[radial-gradient(circle,oklch(0.4_0.08_245/0.35)_0%,transparent_60%)]"
         />
 
         <div
@@ -109,14 +120,14 @@ export default function LandingPage() {
             {/* Copy */}
             <div className="text-center lg:text-left">
               <h1
-                className="leading-[1.05] tracking-tight text-gray-900 dark:text-white text-balance
+                className="leading-[1.05] tracking-tight text-[color:var(--cream)] text-balance
                            text-[clamp(2rem,5.5vw,4rem)]
                            max-w-[14ch] mx-auto lg:mx-0 lg:max-w-[18ch]"
               >
                 Discover What God Is Saying Through Your Dreams
               </h1>
 
-              <p className="mt-6 text-base sm:text-lg lg:text-xl text-gray-700 dark:text-gray-300 max-w-prose mx-auto lg:mx-0 leading-relaxed">
+              <p className="mt-6 text-base sm:text-lg lg:text-xl text-[oklch(0.82_0.02_75)] max-w-prose mx-auto lg:mx-0 leading-relaxed">
                 AI-powered biblical dream interpretation. Journal your dreams,
                 receive scripture-backed insights in seconds.
               </p>
@@ -138,52 +149,50 @@ export default function LandingPage() {
                   href="#sample-interpretation"
                   className="w-full sm:w-auto whitespace-nowrap
                              inline-flex items-center justify-center h-12 px-7 rounded-full
-                             border border-gray-300 dark:border-slate-700
-                             text-gray-800 dark:text-gray-100 text-base font-medium
-                             hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors
+                             border border-[oklch(0.35_0.03_250)]
+                             text-[color:var(--cream)] text-base font-medium
+                             hover:bg-[oklch(0.30_0.07_252/0.45)] transition-colors
                              focus-ring"
                 >
                   See an example
                 </a>
               </div>
 
-              <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+              <p className="mt-4 text-sm text-[oklch(0.70_0.03_75)]">
                 Free forever. No credit card required.
               </p>
 
-              {/* Social proof, promoted from bottom strip into the hero so the
-                  desktop column doesn't leave a vertical hole next to the
-                  ~590px-tall phone mock. */}
+              {/* Social proof — Night-toned initials, no candy gradients. */}
               <div className="mt-8 flex items-center gap-3 justify-center lg:justify-start">
                 <div className="flex -space-x-2" aria-hidden="true">
-                  {[
-                    "bg-gradient-to-br from-sky-300 to-sky-500",
-                    "bg-gradient-to-br from-fuchsia-300 to-fuchsia-500",
-                    "bg-gradient-to-br from-rose-300 to-rose-500",
-                    "bg-gradient-to-br from-amber-300 to-amber-500",
-                  ].map((bg, i) => (
+                  {["EM", "JT", "AK", "SR"].map((init) => (
                     <div
-                      key={i}
-                      className={`w-8 h-8 ${bg} rounded-full ring-2 ring-white dark:ring-slate-950`}
-                    />
+                      key={init}
+                      className="w-9 h-9 rounded-full bg-[color:var(--night-soft)]
+                                 ring-2 ring-[color:var(--night)]
+                                 text-[10px] font-semibold text-[color:var(--cream)]
+                                 flex items-center justify-center"
+                    >
+                      {init}
+                    </div>
                   ))}
                 </div>
                 <div className="flex flex-col items-start">
                   <div
-                    className="flex gap-0.5 text-amber-400"
+                    className="flex gap-0.5 text-[color:var(--gold)]"
                     aria-label="5 out of 5 stars"
                   >
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className="w-4 h-4 fill-amber-400"
+                        className="w-4 h-4 fill-current"
                         aria-hidden="true"
                       />
                     ))}
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <p className="text-sm text-[oklch(0.80_0.025_75)]">
                     Joined by{" "}
-                    <span className="font-semibold text-gray-800 dark:text-gray-100">
+                    <span className="font-semibold text-[color:var(--cream)]">
                       2,000+ believers
                     </span>
                   </p>
@@ -256,7 +265,7 @@ export default function LandingPage() {
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <span className="inline-block text-xs uppercase tracking-widest text-amber-warm font-semibold mb-3">
+            <span className="inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] mb-3">
               See it in action
             </span>
             <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white">
@@ -381,9 +390,15 @@ export default function LandingPage() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────────────────── */}
-      <section className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-sm py-20 sm:py-24 lg:py-28">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-balance text-white text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">
+      <section className="relative overflow-hidden bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] py-20 sm:py-24 lg:py-28">
+        {/* moon-glow halo above the heading */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full
+                     bg-[radial-gradient(ellipse,oklch(0.5_0.12_75/0.25)_0%,transparent_60%)]"
+        />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-balance text-[color:var(--cream)] text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">
             Begin Your Spiritual Dream Journey Today
           </h2>
 
@@ -397,7 +412,7 @@ export default function LandingPage() {
                          transition-[background-color,box-shadow,transform] duration-150
                          hover:shadow-lg hover:shadow-primary/30
                          active:translate-y-px
-                         focus-ring focus-visible:ring-offset-slate-900"
+                         focus-ring focus-visible:ring-offset-[color:var(--night)]"
             >
               Start Your Dream Journal &mdash; Free
             </Link>
@@ -405,15 +420,15 @@ export default function LandingPage() {
               href="#sample-interpretation"
               className="w-full sm:w-auto whitespace-nowrap
                          inline-flex items-center justify-center h-12 px-6 rounded-full
-                         text-white/85 hover:text-white text-base font-medium
-                         underline-offset-4 hover:underline
-                         focus-ring focus-visible:ring-offset-slate-900"
+                         text-[oklch(0.78_0.025_75)] hover:text-[color:var(--cream)] text-base font-medium
+                         underline underline-offset-4
+                         focus-ring focus-visible:ring-offset-[color:var(--night)]"
             >
               See an example
             </a>
           </div>
 
-          <p className="mt-8 text-sm text-slate-300/90 max-w-md mx-auto">
+          <p className="mt-8 text-sm text-[oklch(0.65_0.03_75)] max-w-md mx-auto">
             This app is not affiliated with any particular church or
             denomination. All are welcome.
           </p>
@@ -421,12 +436,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className="bg-slate-950/95 dark:bg-black/95 border-t border-slate-800">
+      <footer className="bg-[color:var(--night-deep)] border-t border-[oklch(0.28_0.03_250)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid gap-10 md:grid-cols-12">
           {/* Brand block: spans 5/12 on desktop, full width on mobile */}
           <div className="md:col-span-5">
-            <Wordmark className="text-white text-xl" />
-            <p className="mt-3 text-sm text-gray-300 max-w-xs leading-relaxed">
+            <Wordmark className="text-[color:var(--cream)] text-xl" />
+            <p className="mt-3 text-sm text-[oklch(0.68_0.025_75)] max-w-xs leading-relaxed">
               AI-powered dream interpretation with Biblical wisdom.
             </p>
 
@@ -448,15 +463,15 @@ export default function LandingPage() {
             aria-label="Footer"
           >
             <div>
-              <h3 className="font-semibold text-white mb-3 text-sm">Product</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
+              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Product</h3>
+              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <a href="#features" className="hover:text-white transition-colors">
+                  <a href="#features" className="hover:text-[color:var(--cream)] transition-colors">
                     Features
                   </a>
                 </li>
                 <li>
-                  <Link href="/sign-up" className="hover:text-white transition-colors">
+                  <Link href="/sign-up" className="hover:text-[color:var(--cream)] transition-colors">
                     Free Trial
                   </Link>
                 </li>
@@ -464,15 +479,15 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-white mb-3 text-sm">Support</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
+              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Support</h3>
+              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <Link href="/help" className="hover:text-white transition-colors">
+                  <Link href="/help" className="hover:text-[color:var(--cream)] transition-colors">
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
+                  <Link href="/contact" className="hover:text-[color:var(--cream)] transition-colors">
                     Contact
                   </Link>
                 </li>
@@ -480,15 +495,15 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-white mb-3 text-sm">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
+              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Legal</h3>
+              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition-colors">
+                  <Link href="/privacy" className="hover:text-[color:var(--cream)] transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
+                  <Link href="/terms" className="hover:text-[color:var(--cream)] transition-colors">
                     Terms of Service
                   </Link>
                 </li>
@@ -497,8 +512,8 @@ export default function LandingPage() {
           </nav>
         </div>
 
-        <div className="border-t border-slate-800/70">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-center text-xs text-slate-500">
+        <div className="border-t border-[oklch(0.28_0.03_250)]">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-center text-xs text-[oklch(0.55_0.02_250)]">
             &copy; {new Date().getFullYear()} DreamRiver. All rights reserved.
           </div>
         </div>

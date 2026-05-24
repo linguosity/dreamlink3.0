@@ -19,33 +19,42 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Moon, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
+import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)] p-4 overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-[10%] left-1/2 -translate-x-1/2 w-[360px] h-[220px] rounded-full
+                   bg-[radial-gradient(ellipse,oklch(0.85_0.06_75/0.5)_0%,transparent_60%)]"
+      />
+      <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-4 px-4 py-2">
             <Sparkles className="w-4 h-4 mr-2" />
             Welcome Back
           </Badge>
-          <h1 className="text-3xl font-bold mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-soft">
-              Sign in to DreamRiver
+          <h1 className="font-serif text-4xl font-normal leading-tight mb-2">
+            Sign in to{" "}
+            <span className="wordmark text-[color:var(--gold-deep)]">
+              DreamRiver
             </span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-muted-foreground">
             Continue your spiritual dream journey
           </p>
         </div>
-        
+
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
-            <Moon className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <AppIcon size={56} radius={22} className="mx-auto mb-4">
+              <MoonwaterMark size={36} />
+            </AppIcon>
             <CardTitle className="text-xl">Welcome Back</CardTitle>
             <CardDescription>
               Sign in to access your dream journal and interpretations

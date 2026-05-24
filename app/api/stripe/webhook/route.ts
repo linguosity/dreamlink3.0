@@ -3,6 +3,20 @@ import { getStripe, stripePriceToPlan } from "@/lib/stripe";
 import { getAdminClient } from "@/utils/supabase/admin";
 import Stripe from "stripe";
 
+// Stripe 2026-02-25 moved `current_period_end` off the top-level Subscription
+// onto each item. Older payloads still carry it at the top; check both.
+function readPeriodEnd(subscription: Stripe.Subscription): number | null {
+  const legacy = (subscription as unknown as { current_period_end?: number })
+    .current_period_end;
+  if (typeof legacy === "number") return legacy;
+  const item = subscription.items.data[0] as unknown as {
+    current_period_end?: number;
+  };
+  return typeof item?.current_period_end === "number"
+    ? item.current_period_end
+    : null;
+}
+
 /**
  * POST /api/stripe/webhook
  * Handles Stripe webhook events to sync subscription state to Supabase.
@@ -62,6 +76,11 @@ export async function POST(request: NextRequest) {
         );
         const priceId = subscription.items.data[0]?.price?.id || "";
         const plan = stripePriceToPlan(priceId);
+        // Stripe 2026-02-25 moved `current_period_end` off the top-level
+        // Subscription object onto individual subscription items. Read the
+        // first item's window; fall back to the (still-present on older
+        // payloads) top-level field for forward/backward compatibility.
+        const periodEnd = readPeriodEnd(subscription);
 
         await admin.from("subscriptions").upsert(
           {
@@ -69,9 +88,9 @@ export async function POST(request: NextRequest) {
             stripe_subscription_id: subscription.id,
             status: subscription.status,
             plan,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
+            current_period_end: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
@@ -83,15 +102,16 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const priceId = subscription.items.data[0]?.price?.id || "";
         const plan = stripePriceToPlan(priceId);
+        const periodEnd = readPeriodEnd(subscription);
 
         await admin
           .from("subscriptions")
           .update({
             status: subscription.status,
             plan,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
+            current_period_end: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
@@ -113,7 +133,14 @@ export async function POST(request: NextRequest) {
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        if (!invoice.subscription) break;
+        // Stripe 2026-02-25 removed `subscription` from the top-level Invoice
+        // shape; the link now lives on parent.subscription_details. Read both
+        // so we tolerate either payload version.
+        const subscriptionId =
+          (invoice as unknown as { subscription?: string | null }).subscription ??
+          invoice.parent?.subscription_details?.subscription ??
+          null;
+        if (!subscriptionId) break;
 
         // Record payment
         await admin.from("payments").insert({

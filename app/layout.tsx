@@ -25,7 +25,6 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 import { Providers } from './providers';
-import { LazyWaterBackground } from '@/components/LazyWaterBackground';
 import { VersionChecker } from '@/components/VersionChecker';
 import CookieConsent from '@/components/CookieConsent';
 import { HintsProvider } from '@/lib/hints/dismissed-context';
@@ -160,7 +159,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="text-foreground">
-      <LazyWaterBackground />
         <Providers>
           <HintsProvider initialDismissed={dismissedHints}>
           <VersionChecker />

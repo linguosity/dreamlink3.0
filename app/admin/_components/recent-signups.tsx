@@ -26,8 +26,6 @@ export function RecentSignups({ items }: { items: SignupItem[] }) {
         <div className="flex flex-col">
           {items.map((s, i) => {
             const initials = s.user_id.slice(0, 2).toUpperCase();
-            // Stable, varied avatar tints derived from the uid hash
-            const hue = (s.user_id.charCodeAt(0) * 47) % 360;
             return (
               <div
                 key={s.user_id}
@@ -39,9 +37,13 @@ export function RecentSignups({ items }: { items: SignupItem[] }) {
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
-                    className="w-6.5 h-6.5 w-[26px] h-[26px] rounded-full grid place-items-center text-white text-[10px] font-semibold shrink-0"
+                    className="w-[26px] h-[26px] rounded-full grid place-items-center text-white text-[10px] font-semibold shrink-0"
                     style={{
-                      background: `oklch(0.75 0.08 ${hue})`,
+                      // v2 Moonwater: uniform night-soft → gold gradient (matches
+                      // settings ProfileCard and hi-fi-admin spec). Hash-tinted
+                      // ocean colors were a v1 holdover.
+                      background:
+                        "linear-gradient(135deg, var(--night-soft), var(--gold))",
                     }}
                     aria-hidden
                   >
@@ -55,9 +57,12 @@ export function RecentSignups({ items }: { items: SignupItem[] }) {
                   {s.plan && s.plan !== "free" && (
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                        // v2 Moonwater: prophet chip mirrors settings — night
+                        // background + gold-light text — so the premium tier
+                        // reads identically everywhere.
                         s.plan === "prophet"
-                          ? "bg-accent text-accent-foreground"
-                          : "bg-primary/10 text-primary"
+                          ? "bg-[var(--night)] text-[var(--gold-light)]"
+                          : "bg-[oklch(0.95_0.05_75)] text-[color:var(--gold-deep)]"
                       }`}
                     >
                       {s.plan}
