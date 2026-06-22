@@ -260,7 +260,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="container py-10">
+      <div className="container px-4 sm:px-6 py-6 sm:py-10">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-0 max-w-[1280px] mx-auto">
           <div className="h-[400px] bg-muted/50 rounded animate-pulse" />
           <div className="h-[600px] bg-muted/50 rounded animate-pulse ml-0 md:ml-6" />
@@ -336,7 +336,7 @@ export default function SettingsPage() {
   })();
 
   return (
-    <div className="container py-8">
+    <div className="container px-4 sm:px-6 py-6 sm:py-10">
       <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 max-w-[1280px] mx-auto">
         {/* Left rail */}
         <aside className="flex flex-col gap-4 md:sticky md:top-20 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto pb-2">

@@ -5,6 +5,7 @@ type ErrorType =
   | "auth"
   | "image_generation"
   | "dream_delete"
+  | "dream_star"
   | "network"
   | "unknown";
 

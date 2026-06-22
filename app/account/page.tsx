@@ -87,7 +87,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="container py-10">
+      <div className="container px-4 sm:px-6 py-6 sm:py-10">
         <div className="flex flex-col space-y-4 max-w-3xl mx-auto">
           <div className="h-8 w-64 bg-muted rounded animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -115,7 +115,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container py-10">
+    <div className="container px-4 sm:px-6 py-6 sm:py-10">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Your Account</h1>
         

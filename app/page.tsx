@@ -20,11 +20,6 @@ import CompactDreamInput from "@/components/CompactDreamInput";
 import AnimatedDreamGrid from "@/components/AnimatedDreamGrid";
 import { Sparkles } from "lucide-react";
 
-// v2 Moonwater journal chrome: gallery filter pills. Visual-only for now —
-// "All" is the active state; the others are placeholders for future filter
-// wiring (Recurring themes, Starred, etc.). Matches hi-fi-journal lines 64–75.
-const GALLERY_FILTERS = ["All", "This month", "Recurring themes", "Starred"] as const;
-
 function formatJournalDate(d: Date): string {
   // "Tuesday · May 26, 2026" — weekday, dot separator, long date.
   const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
@@ -61,18 +56,8 @@ export default async function MainPage() {
   }
   
   if (!user) {
-    console.error("No user in session - redirecting to landing page");
-    
-    // Add a small delay to ensure cookies are properly processed
-    // This can help with issues related to cookie propagation
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
     return redirect("/landing");
   }
-
-  // Add a small delay after successful auth to ensure session is fully established
-  // This helps prevent timing issues with subsequent API calls
-  await new Promise(resolve => setTimeout(resolve, 100));
 
   // Check if user has completed onboarding (has a reading_level set)
   // and pull the admin/test-mode fields so we can warn admins when they're
@@ -100,12 +85,16 @@ export default async function MainPage() {
   const showTestModeBanner =
     profile.is_admin && profile.test_mode_enabled && adminTestModeMatrixSize > 1;
 
-  // Fetch dream entries for the logged in user
+  // Fetch dream entries for the logged in user.
+  // The grid renders at most 12 entries (plus comparison-group siblings for
+  // admin matrix rows), so cap the fetch — previously this pulled and
+  // decrypted the user's ENTIRE journal on every page load (audit H7).
   const { data: dreamsRaw, error } = await supabase
     .from("dream_entries")
     .select("*")
     .eq("user_id", user.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(60);
 
   if (error) {
     console.error("Error fetching dreams:", error.message);
@@ -135,15 +124,28 @@ export default async function MainPage() {
 
     for (const row of usageRows ?? []) {
       if (!row.dream_entry_id) continue;
-      // A dream may have multiple interaction rows (retries, etc.). The first
-      // one we see wins — that's the original analysis call we want to inspect.
-      if (!usageByDream.has(row.dream_entry_id)) {
+      // A dream may have multiple interaction rows (retries, fallback-chain
+      // attempts, length-correction calls). SUM them — the footer shows what
+      // the dream actually cost, not what one arbitrary call cost.
+      // (2026-06-09 audit fix: previously "first row wins" with no ORDER BY,
+      // which undercounted multi-call dreams nondeterministically.)
+      const existing = usageByDream.get(row.dream_entry_id);
+      if (!existing) {
         usageByDream.set(row.dream_entry_id, {
           input_tokens: row.input_tokens,
           output_tokens: row.output_tokens,
           image_generated: row.image_generated,
           image_cost_usd: row.image_cost_usd,
         });
+      } else {
+        existing.input_tokens =
+          (existing.input_tokens ?? 0) + (row.input_tokens ?? 0);
+        existing.output_tokens =
+          (existing.output_tokens ?? 0) + (row.output_tokens ?? 0);
+        existing.image_generated =
+          Boolean(existing.image_generated) || Boolean(row.image_generated);
+        existing.image_cost_usd =
+          (existing.image_cost_usd ?? 0) + (row.image_cost_usd ?? 0) || null;
       }
     }
   }
@@ -159,11 +161,13 @@ export default async function MainPage() {
   const dreamCount = decryptedDreams.length;
   const firstName = firstNameFromEmail(user.email);
   const today = formatJournalDate(new Date());
-  // "Pattern emerging" callout shows once a user has enough dreams to
-  // plausibly hint at a recurring theme. Mockup spec: hi-fi-journal lines
-  // 112–136. The CTA is visual for now — a future feature will populate
-  // the actual pattern text.
-  const showPatternHint = dreamCount >= 7;
+  // "Pattern emerging" callout — gated OFF until the pattern-detection
+  // feature actually populates real recurring-theme text. It was previously
+  // shown to any user with >= 7 dreams, but the CTA is purely visual, so it
+  // appeared as a dead/placeholder element (and inconsistently between
+  // accounts depending on dream count). Flip this back on when the feature
+  // is built. Mockup spec: hi-fi-journal lines 112–136.
+  const showPatternHint = false;
 
   return (
     <div className="container py-6 sm:py-10 relative">
@@ -225,29 +229,13 @@ export default async function MainPage() {
           <CompactDreamInput userId={user.id} />
         </div>
 
-        {/* Gallery — serif heading + filter pills, then the grid. */}
+        {/* Gallery — serif heading, then the grid (the grid renders its own
+            interactive filter pills: All / This month / Starred). */}
         <div>
           <div className="flex items-baseline justify-between mb-5 gap-4 flex-wrap">
             <h2 className="font-serif text-[28px] font-normal leading-tight">
               Your dream gallery
             </h2>
-            <div className="flex gap-1 text-[12.5px]" role="tablist" aria-label="Filter dreams">
-              {GALLERY_FILTERS.map((f, i) => (
-                <button
-                  key={f}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === 0}
-                  className={
-                    i === 0
-                      ? "px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold"
-                      : "px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                  }
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
           </div>
           <AnimatedDreamGrid dreams={dreams || []} isAdmin={Boolean(profile.is_admin)} />
         </div>

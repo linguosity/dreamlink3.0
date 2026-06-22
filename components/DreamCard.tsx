@@ -29,13 +29,7 @@ import { toast } from "sonner";
 import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
-
-// Instead of direct import, use fallback icon components
-const MessageSquareIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
+import ShareDreamButton from "@/components/ShareDreamButton";
 
 // Import UI components with error handling
 let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
@@ -85,6 +79,14 @@ try {
     <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background ${className}`} {...props}>{children}</button>
   );
 }
+
+// Dev-only logger (2026-06-09 audit: 46 console.log calls in render/format
+// paths shipped to production — including per-text-part logging on every
+// open dialog render). console.error/warn are kept as-is for real failures.
+const debugLog: typeof console.log =
+  process.env.NODE_ENV === "development"
+    ? console.log.bind(console)
+    : () => {};
 
 // Use inline SVG components instead of lucide-react imports
 const CalendarIcon = ({ className }: { className?: string }) => (
@@ -140,6 +142,14 @@ const ShareIcon = ({ className }: { className?: string }) => (
     <circle cx="18" cy="19" r="3" />
     <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
+// Star toggle icon. `filled` swaps between an outlined star (not starred)
+// and a solid gold star (starred).
+const StarIcon = ({ className, filled }: { className?: string; filled?: boolean }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
@@ -373,6 +383,12 @@ type DreamEntryProps = {
     bible_refs?: string[];
     created_at?: string;
     image_url?: string | null;
+    /** Opt-in public sharing state. */
+    is_public?: boolean;
+    share_token?: string | null;
+    share_scope?: 'summary' | 'full' | null;
+    /** Owner-only "favorite" flag, surfaced via the Starred gallery filter. */
+    is_starred?: boolean;
     /** Admin-only usage row joined from chatgpt_interactions. */
     _admin_usage?: {
       input_tokens: number | null;
@@ -404,6 +420,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const analysisContentRef = useRef<HTMLDivElement>(null);
   const originalContentRef = useRef<HTMLDivElement>(null);
   const [dream, setDream] = useState(initialDream);
+  const [isShared, setIsShared] = useState(Boolean(initialDream.is_public));
+  const [isStarred, setIsStarred] = useState(Boolean(initialDream.is_starred));
+  const [isStarPending, setIsStarPending] = useState(false);
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
@@ -452,7 +471,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     
     // Check if it's a valid range
     if (isNaN(start) || isNaN(end) || start > end) {
-      console.log(`⚠️ Invalid verse range: ${reference}`);
+      debugLog(`⚠️ Invalid verse range: ${reference}`);
       return [reference.trim()];
     }
     
@@ -462,7 +481,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       expandedRefs.push(`${bookChapter}:${verse}`);
     }
     
-    console.log(`Expanded verse range ${reference} into ${expandedRefs.length} individual verses`);
+    debugLog(`Expanded verse range ${reference} into ${expandedRefs.length} individual verses`);
     return expandedRefs;
   };
   
@@ -478,31 +497,31 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     const isRange = reference.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
     
     if (isRange) {
-      console.log(`Processing verse range in component: ${reference}`);
+      debugLog(`Processing verse range in component: ${reference}`);
       
       // Step 1: Try to find the full range text directly
       if (bibleVerses[reference]) {
         verseText = bibleVerses[reference];
         source = "exact-range";
-        console.log(`Found exact range match for ${reference}`);
+        debugLog(`Found exact range match for ${reference}`);
       }
       else if (bibleVerses[normalizedRef]) {
         verseText = bibleVerses[normalizedRef];
         source = "normalized-range";
-        console.log(`Found normalized range match for ${normalizedRef}`);
+        debugLog(`Found normalized range match for ${normalizedRef}`);
       }
       // Step 2: Try fallback lookup
       else if (BIBLE_VERSES[reference]) {
         verseText = BIBLE_VERSES[reference];
         isFallback = true;
         source = "fallback-range";
-        console.log(`Using fallback for range ${reference}`);
+        debugLog(`Using fallback for range ${reference}`);
       }
       else if (BIBLE_VERSES[normalizedRef]) {
         verseText = BIBLE_VERSES[normalizedRef];
         isFallback = true;
         source = "fallback-normalized-range";
-        console.log(`Using fallback for normalized range ${normalizedRef}`);
+        debugLog(`Using fallback for normalized range ${normalizedRef}`);
       }
       // Step 3: Try to build text from individual verses
       else {
@@ -532,13 +551,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         if (expandedTexts.length > 0) {
           verseText = expandedTexts.join(" ");
           source = isFallback ? "expanded-fallback" : "expanded";
-          console.log(`Built range ${reference} from ${expandedTexts.length}/${expandedRefs.length} individual verses`);
+          debugLog(`Built range ${reference} from ${expandedTexts.length}/${expandedRefs.length} individual verses`);
         }
       }
       
       // If still nothing found for range, use placeholder
       if (!verseText) {
-        console.log(`No verse text found for range ${reference}`);
+        debugLog(`No verse text found for range ${reference}`);
         source = "missing-range";
       }
     } 
@@ -549,14 +568,14 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       if (bibleVerses[reference]) {
         verseText = bibleVerses[reference];
         source = "exact";
-        console.log(`Found exact verse match for ${reference}`);
+        debugLog(`Found exact verse match for ${reference}`);
       }
       
       // Step 2: Try normalized reference if exact match failed
       else if (bibleVerses[normalizedRef]) {
         verseText = bibleVerses[normalizedRef];
         source = "normalized";
-        console.log(`Found normalized verse match for ${normalizedRef}`);
+        debugLog(`Found normalized verse match for ${normalizedRef}`);
       }
       
       // Step 3: Try alternative formats
@@ -566,7 +585,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         if (bibleVerses[noSpaceRef]) {
           verseText = bibleVerses[noSpaceRef];
           source = "no-space";
-          console.log(`Found no-space verse match for ${noSpaceRef}`);
+          debugLog(`Found no-space verse match for ${noSpaceRef}`);
         }
         
         // Try splitting and reformatting (book name + chapter:verse)
@@ -579,7 +598,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             if (bibleVerses[reformattedRef]) {
               verseText = bibleVerses[reformattedRef];
               source = "reformatted";
-              console.log(`Found reformatted verse match for ${reformattedRef}`);
+              debugLog(`Found reformatted verse match for ${reformattedRef}`);
             }
           }
           
@@ -590,13 +609,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               verseText = BIBLE_VERSES[reference];
               isFallback = true; 
               source = "fallback-exact";
-              console.log(`Using fallback verse for ${reference}`);
+              debugLog(`Using fallback verse for ${reference}`);
             }
             else if (BIBLE_VERSES[normalizedRef]) {
               verseText = BIBLE_VERSES[normalizedRef];
               isFallback = true;
               source = "fallback-normalized";
-              console.log(`Using fallback verse for ${normalizedRef}`);
+              debugLog(`Using fallback verse for ${normalizedRef}`);
             }
           }
         }
@@ -604,7 +623,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       
       // If still not found, use a loading placeholder
       if (!verseText) {
-        console.log(`No verse text found for ${reference} (normalized: ${normalizedRef})`);
+        debugLog(`No verse text found for ${reference} (normalized: ${normalizedRef})`);
         source = "missing";
       }
     }
@@ -635,7 +654,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     if (loadingStartedAt) {
       const elapsed = Date.now() - parseInt(loadingStartedAt, 10);
       if (elapsed > 3 * 60 * 1000) {
-        console.log('Stale loadingDreamId detected (>3 min old), clearing');
+        debugLog('Stale loadingDreamId detected (>3 min old), clearing');
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
         setIsLoading(false);
@@ -644,7 +663,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       }
     }
 
-    console.log('This dream is loading:', dream.id);
+    debugLog('This dream is loading:', dream.id);
     setIsLoading(true);
 
     let pollCount = 0;
@@ -653,11 +672,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     const interval = setInterval(async () => {
       try {
         pollCount++;
-        console.log(`Polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
+        debugLog(`Polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
 
         // Stop polling after maximum attempts — show timeout error
         if (pollCount >= maxPolls) {
-          console.log('Maximum polling attempts reached, stopping');
+          debugLog('Maximum polling attempts reached, stopping');
           setIsLoading(false);
           setAnalysisTimedOut(true);
           localStorage.removeItem('loadingDreamId');
@@ -669,7 +688,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         // If dream already has analysis locally, stop polling
         if (dream.dream_summary || dream.analysis_summary ||
             (dream.supporting_points && dream.supporting_points.length > 0)) {
-          console.log('Dream analysis complete locally:', dream.id);
+          debugLog('Dream analysis complete locally:', dream.id);
           setIsLoading(false);
           localStorage.removeItem('loadingDreamId');
           localStorage.removeItem('loadingDreamStartedAt');
@@ -697,7 +716,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
           // Check for analysis error state (fallback text from failed analysis)
           if (updatedDream.dream_summary === "Analysis could not be completed at this time.") {
-            console.log('Dream analysis failed on server, stopping poll');
+            debugLog('Dream analysis failed on server, stopping poll');
             setDream(updatedDream);
             setIsLoading(false);
             setAnalysisTimedOut(true);
@@ -710,7 +729,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           // When analysis arrives, update state and stop polling
           if (updatedDream.dream_summary || updatedDream.analysis_summary ||
              (updatedDream.supporting_points && updatedDream.supporting_points.length > 0)) {
-            console.log('Dream analysis detected via API, updating state');
+            debugLog('Dream analysis detected via API, updating state');
             setDream(updatedDream);
             setIsLoading(false);
             setAnalysisTimedOut(false);
@@ -718,10 +737,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             localStorage.removeItem('loadingDreamStartedAt');
             clearInterval(interval);
 
-            // Trigger a page refresh to ensure all components update
-            if (typeof window !== 'undefined') {
-              window.location.reload();
-            }
+            // Refresh server components without a full page reload
+            // (audit M5: reload discarded all client state mid-session).
+            router.refresh();
           }
         }
       } catch (err) {
@@ -732,7 +750,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
     // Always clear on unmount
     return () => {
-      console.log('Clearing polling interval for dream:', dream.id);
+      debugLog('Clearing polling interval for dream:', dream.id);
       clearInterval(interval);
     };
   }, [dream.id]); // Removed other dependencies to prevent re-creating interval
@@ -744,17 +762,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     // aren't real UUIDs — polling them produces a Supabase filter error / 404.
     if (dream.id.startsWith('pending-')) return;
 
-    console.log('Starting image polling for dream:', dream.id);
+    debugLog('Starting image polling for dream:', dream.id);
     let pollCount = 0;
     const maxPolls = 12; // 60 seconds (12 * 5s)
 
     const interval = setInterval(async () => {
       try {
         pollCount++;
-        console.log(`Image polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
+        debugLog(`Image polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
 
         if (pollCount >= maxPolls) {
-          console.log('Max image polling attempts reached');
+          debugLog('Max image polling attempts reached');
           setIsPollingCardImage(false);
           setImageError(true);
           clearInterval(interval);
@@ -763,7 +781,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
         // Check if we already have an image URL
         if (cardImageUrl) {
-          console.log('Image URL already available, stopping poll');
+          debugLog('Image URL already available, stopping poll');
           setIsPollingCardImage(false);
           clearInterval(interval);
           return;
@@ -785,7 +803,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         if (data && data.dreams && data.dreams.length > 0) {
           const updatedDream = data.dreams[0];
           if (updatedDream.image_url) {
-            console.log('Dream image detected via polling, updating state');
+            debugLog('Dream image detected via polling, updating state');
             setCardImageUrl(updatedDream.image_url);
             setDream(updatedDream);
             setIsPollingCardImage(false);
@@ -807,30 +825,30 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   // Fetch Bible verses when the dialog opens
   useEffect(() => {
     if (isOpen && dream.id && dream.bible_refs && dream.bible_refs.length > 0) {
-      console.log("🔍 Fetching Bible verses for dream:", dream.id);
-      console.log("References needed:", dream.bible_refs);
+      debugLog("🔍 Fetching Bible verses for dream:", dream.id);
+      debugLog("References needed:", dream.bible_refs);
       
       const fetchBibleVerses = async () => {
         try {
-          console.log(`🌐 Making API call to /api/bible-verses/lookup?dreamId=${dream.id}`);
+          debugLog(`🌐 Making API call to /api/bible-verses/lookup?dreamId=${dream.id}`);
           const response = await fetch(`/api/bible-verses/lookup?dreamId=${dream.id}`);
           
-          console.log(`📊 API response status:`, response.status);
+          debugLog(`📊 API response status:`, response.status);
           
           if (response.ok) {
             const data = await response.json();
-            console.log("📚 Fetched Bible verses:", data);
-            console.log("Available reference count:", Object.keys(data).length);
+            debugLog("📚 Fetched Bible verses:", data);
+            debugLog("Available reference count:", Object.keys(data).length);
             
             // Log details about which verses we have
             if (dream.bible_refs) {
-              console.log("Checking response for each needed reference:");
+              debugLog("Checking response for each needed reference:");
               dream.bible_refs.forEach(ref => {
                 const normalizedRef = normalizeReference(ref);
                 const hasExact = !!data[ref];
                 const hasNormalized = !!data[normalizedRef];
                 
-                console.log(`  ${ref}: exact=${hasExact}, normalized=${hasNormalized}, value=${
+                debugLog(`  ${ref}: exact=${hasExact}, normalized=${hasNormalized}, value=${
                   hasExact ? data[ref].substring(0, 20) + "..." : 
                   (hasNormalized ? data[normalizedRef].substring(0, 20) + "..." : "not found")
                 }`);
@@ -851,7 +869,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               
               dream.bible_refs.forEach((ref) => {
                 const found = data[ref] ? true : false;
-                console.log(`Verse text for ${ref}: ${found ? 'Found' : 'Missing'}`);
+                debugLog(`Verse text for ${ref}: ${found ? 'Found' : 'Missing'}`);
                 
                 if (found) {
                   matchSummary.found++;
@@ -860,7 +878,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 }
               });
               
-              console.log("📊 Bible verse match summary:", matchSummary);
+              debugLog("📊 Bible verse match summary:", matchSummary);
             }
           } else {
             console.error("API error response:", await response.text());
@@ -892,9 +910,44 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     setIsOpen(true);
   };
   
+  // Handle star/unstar — optimistic toggle with rollback on failure.
+  const handleToggleStar = async (e: React.MouseEvent) => {
+    // Don't let the click bubble up to the card (which opens the dialog).
+    e.stopPropagation();
+    if (empty || isStarPending) return; // Example/placeholder cards aren't starrable.
+    if (dream.id.startsWith('pending-')) return; // Not yet persisted.
+
+    const next = !isStarred;
+    setIsStarred(next); // optimistic
+    setIsStarPending(true);
+
+    try {
+      const response = await fetch('/api/dream-entries/star', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: dream.id, starred: next }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update star');
+      }
+      // Keep the page's server-rendered list (and the Starred filter) in sync.
+      router.refresh();
+    } catch (error) {
+      setIsStarred(!next); // rollback
+      console.error('Error updating star:', error);
+      logClientError("dream_star", error instanceof Error ? error.message : String(error), {
+        route: `/api/dream-entries/star`,
+      });
+      toast.error('Could not update this dream. Please try again.');
+    } finally {
+      setIsStarPending(false);
+    }
+  };
+
   // Handle delete dream
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const handleDeleteDream = async () => {
     if (empty) return; // Don't allow deleting example dreams
     
@@ -929,10 +982,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     if (!text || !refs || refs.length === 0) return text;
     
     // Add debug logging
-    console.log("Formatting citations in text:", text.substring(0, 50) + "...");
-    console.log("Available references:", refs);
-    console.log("Available verse texts count:", Object.keys(bibleVerses).length);
-    console.log("Bible verses keys:", Object.keys(bibleVerses));
+    debugLog("Formatting citations in text:", text.substring(0, 50) + "...");
+    debugLog("Available references:", refs);
+    debugLog("Available verse texts count:", Object.keys(bibleVerses).length);
+    debugLog("Bible verses keys:", Object.keys(bibleVerses));
     
     // Create JSX elements with formatted citations and tooltips
     return (
@@ -945,11 +998,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             const reference = refMatch[1];
             const isValidRef = refs.includes(reference);
             
-            console.log(`Found reference in text: ${reference}, is in refs: ${isValidRef}, has verse text: ${bibleVerses[reference] ? 'Yes' : 'No'}`);
+            debugLog(`Found reference in text: ${reference}, is in refs: ${isValidRef}, has verse text: ${bibleVerses[reference] ? 'Yes' : 'No'}`);
             
             // Get the verse text using our utility function
             const { text: verseText, isFallback, source } = getVerseText(reference);
-            console.log(`Verse for reference ${reference}: source=${source}, isFallback=${isFallback}`);
+            debugLog(`Verse for reference ${reference}: source=${source}, isFallback=${isFallback}`);
             
             // Only create tooltip if this is a valid reference and we found a verse
             if (isValidRef) {
@@ -1028,7 +1081,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       }
 
       // The polling effect will pick up from here on re-render
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       console.error('Error retrying analysis:', err);
       setIsLoading(false);
@@ -1060,7 +1113,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         throw new Error(`Image generation request failed: ${response.status}`);
       }
 
-      console.log('Image generation retry requested for dream:', dream.id);
+      debugLog('Image generation retry requested for dream:', dream.id);
       // Polling will resume automatically via setIsPollingCardImage(true)
     } catch (err) {
       console.error('Error retrying image generation:', err);
@@ -1140,18 +1193,6 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     );
   }
 
-  // Generate a shareable text for social sharing
-  const getShareableText = () => {
-    const title = dream.title || "My Dream";
-    const summary = dream.dream_summary || "";
-    return `${title}: ${summary.substring(0, 100)}${summary.length > 100 ? '...' : ''}`;
-  };
-  
-  const getShareUrl = () => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dreamriver.io';
-    return `${baseUrl}/shared/dream/${dream.id}`;
-  };
-  
   return (
     <>
       <Card
@@ -1171,10 +1212,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       >
         {/* Background: image, loading shimmer, error state, or solid fallback */}
         {cardImageUrl ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${cardImageUrl})` }}
-          >
+          <div className="absolute inset-0">
+            {/* next/image instead of raw background-image (audit H7):
+                lazy loading + responsive resizing instead of shipping the
+                full-resolution original for every card in the grid. */}
+            <Image
+              src={cardImageUrl}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
           </div>
         ) : isPollingCardImage ? (
@@ -1212,6 +1260,34 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           <div className="absolute inset-0 bg-card/90 dark:bg-card/95 backdrop-blur-sm" />
         )}
 
+        {/* Shared badge — visible when this dream has an active public link */}
+        {isShared && (
+          <div
+            className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm"
+            title="This dream has an active share link"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            Shared
+          </div>
+        )}
+
         <div className={cn(
           "relative flex flex-col h-full flex-1",
           (cardImageUrl || isPollingCardImage) && "text-white"
@@ -1230,9 +1306,29 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 </div>
               </CardTitle>
               <div className={cn(
-                "flex items-center text-xs flex-shrink-0",
+                "flex items-center gap-1.5 text-xs flex-shrink-0",
                 (cardImageUrl || isPollingCardImage) ? "text-white/70" : "text-muted-foreground"
               )}>
+                {!empty && (
+                  <button
+                    type="button"
+                    onClick={handleToggleStar}
+                    disabled={isStarPending}
+                    aria-pressed={isStarred}
+                    aria-label={isStarred ? "Remove star" : "Star this dream"}
+                    title={isStarred ? "Starred" : "Star this dream"}
+                    className={cn(
+                      "rounded-full p-0.5 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isStarred
+                        ? "text-[color:var(--gold,#d4a843)]"
+                        : (cardImageUrl || isPollingCardImage)
+                          ? "text-white/70 hover:text-white"
+                          : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <StarIcon className="h-3.5 w-3.5" filled={isStarred} />
+                  </button>
+                )}
                 <CalendarIcon className="h-3 w-3 mr-1" />
                 <span className="whitespace-nowrap">{formattedDate}</span>
               </div>
@@ -1479,72 +1575,20 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           <FeatureHint
             id="share-dream"
             title="Share your interpretation"
-            body="Send a link, post to social, or copy. Each share opens a public read-only view of this dream."
+            body="Sharing is off by default. When you create a link you choose what it reveals, and you can turn it off anytime."
             side="top"
             align="end"
           >
           <div className="flex justify-end items-center mb-4">
-            <div className="text-xs text-muted-foreground mr-2">Share:</div>
-            <div className="flex items-center space-x-2">
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Facebook">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#3b5998" className="rounded-full">
-                        <path d="M18 2h-12c-2.21 0-4 1.79-4 4v12c0 2.21 1.79 4 4 4h12c2.21 0 4-1.79 4-4v-12c0-2.21-1.79-4-4-4zm0 4v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v7h-3v-7h-2v-3h2v-2.5c0-1.93 1.57-3.5 3.5-3.5h2.5z"/>
-                      </svg>
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>Facebook</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Twitter">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#1DA1F2" className="rounded-full">
-                        <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05-.78-.83-1.9-1.36-3.16-1.36-2.35 0-4.27 1.92-4.27 4.29 0 .34.03.67.11.98-3.56-.18-6.73-1.89-8.84-4.48-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21-.36.1-.74.15-1.13.15-.27 0-.54-.03-.8-.08.54 1.69 2.11 2.95 4 2.98-1.46 1.16-3.31 1.84-5.33 1.84-.34 0-.68-.02-1.02-.06 1.9 1.22 4.16 1.93 6.58 1.93 7.88 0 12.21-6.54 12.21-12.21 0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
-                      </svg>
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>Twitter</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href={`viber://forward?text=${encodeURIComponent(getShareableText() + " " + getShareUrl())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Viber">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#7360f2" className="rounded-full">
-                        <path d="M12 1c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2.238 7.525c2.246.235 3.455 1.512 3.667 3.824.039.433-.28.857-.75.857-.458 0-.85-.34-.885-.797-.149-1.604-.85-2.354-2.092-2.521-.389-.053-.695-.368-.695-.76 0-.415.366-.776.755-.603zm.31-1.97c3.252.306 5.212 2.374 5.499 5.666.029.337-.252.665-.585.665-.327 0-.596-.265-.626-.601-.211-2.609-1.69-4.153-4.209-4.405-.335-.033-.591-.321-.591-.656 0-.355.327-.673.682-.622.377-.04.422-.053.422-.053s-.045.013-.422.053c-.051-.006-.091-.029-.137-.045.437.065-.01.044-.059.044-.345 0-.627-.291-.627-.64 0-.35.282-.642.626-.642.168 0 .32.066.435.174.032-.016.119-.062.119-.062s-.086.045-.119.062v-.001zm.536-1.56c4.23.283 6.766 2.862 7.081 7.215.015.21-.31.437-.491.437-.261 0-.49-.213-.506-.47-.267-3.705-2.276-5.761-5.871-6.003-.348-.023-.611-.306-.611-.658 0-.336.273-.625.602-.625.188.001.362.081.486.214.047-.021.103-.045.103-.045s-.056.023-.103.045v.001zm9.022 12.114c-.597-.893-1.13-1.878-1.676-2.84-.741-1.309-1.929-.303-2.454.3-.536.616-1.032.674-1.362.27-.981-1.195-1.615-2.071-2.38-3.634 0 0-.3-.61-.873-1.641l-.014-.029c-.3-.61-.273-.913.045-1.289.309-.37 1.464-1.591.9-3.178-.535-1.505-2.565-5.802-3.618-5.148-1.061.658-1.357 1.41-1.352 2.11.005.7.194 1.339.374 1.862.172.5.316.958.316 1.363 0 .255-.043.49-.118.695-.127.347-.322.582-.508.808-.199.244-.38.458-.536.798-.151.333-.211.704-.211 1.102 0 1.008.619 2.674 1.125 3.589.399.731.81 1.359 1.246 1.887.859 1.044 1.893 1.893 2.834 2.507 1.451.948 3.082 1.608 4.999 1.608 1.072 0 1.96-.244 2.674-.732.366-.249.666-.559.916-.914.229-.328.401-.702.489-1.102.088-.4.096-.8.033-1.196-.065-.416-.176-.821-.291-1.211-.104-.35-.237-.695-.237-1.067 0-.39.124-.876.675-1.591.088-.115.999-1.179 1.271-1.499.272-.32.743-1.111.25-1.888z"/>
-                      </svg>
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>Viber</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a href={`https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(getShareableText())}`} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full" aria-label="Share on Telegram">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0088cc" className="rounded-full">
-                        <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.041 16.737c-.26 0-.215-.198-.306-.396l-.762-2.512 5.859-3.671-6.659 3.939-2.833-.726c-.613-.151-.613-.586.306-.879l11.08-4.581c.504-.302.909.151.706.879l-1.867 8.823c-.151.528-.628.654-1.01.4l-2.833-2.08-1.365 1.376c-.151.152-.306.228-.316.328z"/>
-                      </svg>
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>Telegram</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a
-                      href={`sms:?body=${encodeURIComponent(`${getShareableText()} ${getShareUrl()}`)}`}
-                      className="opacity-50 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-full"
-                      aria-label="Share via SMS"
-                    >
-                      <MessageSquareIcon className="h-6 w-6 text-gray-600" />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>SMS</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+            <ShareDreamButton
+              dreamId={dream.id}
+              title={dream.title}
+              dreamSummary={dream.dream_summary}
+              initialShared={isShared}
+              initialToken={dream.share_token ?? null}
+              initialScope={dream.share_scope ?? null}
+              onSharedChange={setIsShared}
+            />
           </div>
           </FeatureHint>
 

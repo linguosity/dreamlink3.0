@@ -184,6 +184,8 @@ export type Database = {
           id: string
           image_aesthetic_used: string | null
           image_url: string | null
+          is_public: boolean
+          is_starred: boolean
           original_text: string | null
           original_text_enc: string | null
           personalized_summary: string | null
@@ -191,6 +193,8 @@ export type Database = {
           raw_analysis_enc: string | null
           reading_level_used: string | null
           search_vector: unknown
+          share_scope: string | null
+          share_token: string | null
           supporting_points: string[] | null
           tags: string[] | null
           title: string | null
@@ -211,6 +215,8 @@ export type Database = {
           id?: string
           image_aesthetic_used?: string | null
           image_url?: string | null
+          is_public?: boolean
+          is_starred?: boolean
           original_text?: string | null
           original_text_enc?: string | null
           personalized_summary?: string | null
@@ -218,6 +224,8 @@ export type Database = {
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
           search_vector?: unknown
+          share_scope?: string | null
+          share_token?: string | null
           supporting_points?: string[] | null
           tags?: string[] | null
           title?: string | null
@@ -238,6 +246,8 @@ export type Database = {
           id?: string
           image_aesthetic_used?: string | null
           image_url?: string | null
+          is_public?: boolean
+          is_starred?: boolean
           original_text?: string | null
           original_text_enc?: string | null
           personalized_summary?: string | null
@@ -245,6 +255,8 @@ export type Database = {
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
           search_vector?: unknown
+          share_scope?: string | null
+          share_token?: string | null
           supporting_points?: string[] | null
           tags?: string[] | null
           title?: string | null

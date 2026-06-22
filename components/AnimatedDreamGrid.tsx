@@ -1,30 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
+import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
 import { useDreamSearch } from '@/hooks/use-dream-search';
 import { Search } from 'lucide-react';
 
-// Import framer-motion with error handling to prevent build failures
-let motion: any = { div: 'div' };
-let AnimatePresence: any = ({ children }: { children: React.ReactNode }) => <>{children}</>;
-
-try {
-  // Try to import framer-motion
-  const framerMotion = require('framer-motion');
-  motion = framerMotion.motion;
-  AnimatePresence = framerMotion.AnimatePresence;
-} catch (e) {
-  console.error('Error loading framer-motion:', e);
-  // Fallback to regular divs if framer-motion fails to load
-}
-
-// Use dynamic import for DreamCard with SSR disabled as fallback
-const DreamCard = dynamic(() => import('./DreamCard'), {
-  ssr: false,
-  loading: () => <div className="h-64 w-full bg-muted animate-pulse rounded-md"></div>
-});
+// Notes (2026-06-09 audit, H7/M6):
+// - framer-motion was previously pulled in via `require()` inside try/catch,
+//   which defeated ESM tree-shaking and shipped the whole CJS package; the
+//   fallback (`motion = { div: 'div' }`) was also broken — it had no
+//   `.section`, so ComparisonGroup would have crashed if it ever triggered.
+//   Standard ESM import restores tree-shaking; framer-motion supports SSR.
+// - DreamCard was dynamic-imported with `ssr: false`, which made the entire
+//   journal grid render as pulse skeletons until hydration even though the
+//   server had already fetched the data — wrecking LCP on the core page.
+//   A direct import lets the server render the cards.
 
 interface Dream {
   id: string;
@@ -40,6 +32,8 @@ interface Dream {
   tags?: string[];
   bible_refs?: string[];
   created_at?: string;
+  // Owner-only "favorite" flag, surfaced via the Starred gallery filter.
+  is_starred?: boolean;
   // Comparison-group metadata (set on rows produced by admin test mode).
   comparison_group_id?: string | null;
   analysis_depth?: string | null;
@@ -54,6 +48,18 @@ interface Dream {
     image_cost_usd: number | null;
   } | null;
 }
+
+// Gallery filter pills. "All", "This month" and "Starred" are wired to real
+// filtering below. "Recurring themes" is a future feature (depends on
+// pattern-detection that isn't built yet) so it's rendered disabled rather
+// than as a dead/clickable pill.
+type GalleryFilter = 'All' | 'This month' | 'Recurring themes' | 'Starred';
+const GALLERY_FILTERS: { label: GalleryFilter; enabled: boolean }[] = [
+  { label: 'All', enabled: true },
+  { label: 'This month', enabled: true },
+  { label: 'Recurring themes', enabled: false },
+  { label: 'Starred', enabled: true },
+];
 
 // Pretty labels for badges shown on comparison-group cards.
 const DEPTH_LABELS: Record<string, string> = {
@@ -97,6 +103,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // Hooks must be called before any conditional returns (Rules of Hooks)
   const [loadingDreamId, setLoadingDreamId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<GalleryFilter>('All');
 
   useEffect(() => {
     setIsMounted(true);
@@ -281,11 +288,29 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       : pendingDream
     : null;
 
+  // Apply the active gallery filter (All / This month / Starred). Search
+  // filtering already happened above (enrichedDreams); this composes on top
+  // of it. "Recurring themes" is disabled in the pill row, so it never
+  // becomes the active filter.
+  const now = new Date();
+  const categoryFiltered = enrichedDreams.filter((d) => {
+    if (activeFilter === 'Starred') return Boolean(d.is_starred);
+    if (activeFilter === 'This month') {
+      if (!d.created_at) return false;
+      const dt = new Date(d.created_at);
+      return (
+        dt.getFullYear() === now.getFullYear() &&
+        dt.getMonth() === now.getMonth()
+      );
+    }
+    return true; // 'All'
+  });
+
   // Build the render order: walk the visible dreams once, emit either
   // standalone cards or comparison-group sections (the first time we see
   // a given group_id, we emit the whole group; subsequent rows in that
   // group are skipped because they were emitted with the first one).
-  const visible = enrichedDreams.slice(0, 12);
+  const visible = categoryFiltered.slice(0, 12);
   const seenGroupIds = new Set<string>();
   const renderOrder: Array<
     | { type: 'standalone'; dream: Dream }
@@ -306,7 +331,60 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     }
   }
 
+  const hasVisibleCards = renderOrder.length > 0 || showPlaceholder;
+
   return (
+    <div>
+      {/* Gallery filter pills — wired to real filtering. Hidden while a
+          search is active to avoid two competing filter mechanisms. */}
+      {!(isMounted && isSearchEnabled) && (
+        <div
+          className="flex gap-1 text-[12.5px] justify-end mb-4 -mt-1"
+          role="tablist"
+          aria-label="Filter dreams"
+        >
+          {GALLERY_FILTERS.map(({ label, enabled }) => {
+            const isActive = activeFilter === label;
+            return (
+              <button
+                key={label}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                disabled={!enabled}
+                onClick={() => enabled && setActiveFilter(label)}
+                title={!enabled ? 'Coming soon' : undefined}
+                className={
+                  isActive
+                    ? 'px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold'
+                    : enabled
+                      ? 'px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors'
+                      : 'px-2.5 py-1 rounded-md text-muted-foreground/40 cursor-not-allowed'
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!hasVisibleCards ? (
+        <div className="min-h-[240px] flex flex-col items-center justify-center text-center p-8">
+          <h3 className="text-lg mb-1">
+            {activeFilter === 'Starred'
+              ? 'No starred dreams yet'
+              : activeFilter === 'This month'
+                ? 'No dreams this month'
+                : 'No dreams to show'}
+          </h3>
+          <p className="text-muted-foreground max-w-md text-sm">
+            {activeFilter === 'Starred'
+              ? 'Tap the star on any dream to save it here for quick access.'
+              : 'Try a different filter, or record a new dream above.'}
+          </p>
+        </div>
+      ) : (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
       <AnimatePresence initial={false}>
         {/* Optimistic placeholder — stays visible through analysis and
@@ -364,6 +442,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           ),
         )}
       </AnimatePresence>
+    </div>
+      )}
     </div>
   );
 }
