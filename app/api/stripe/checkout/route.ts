@@ -38,12 +38,19 @@ export async function POST(request: NextRequest) {
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";
 
-    // Check if user already has a Stripe customer ID
-    const { data: subscription } = await supabase
+    // Reuse the existing Stripe customer and block double-subscribing (Bug 5).
+    const { data: existing } = await supabase
       .from("subscriptions")
-      .select("stripe_subscription_id")
+      .select("status, stripe_customer_id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
+
+    if (existing?.status === "active") {
+      return NextResponse.json(
+        { error: "You already have an active subscription. Manage it from Settings." },
+        { status: 409 }
+      );
+    }
 
     const sessionParams: Record<string, unknown> = {
       mode: "subscription",
@@ -51,10 +58,13 @@ export async function POST(request: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/settings?checkout=success`,
       cancel_url: `${baseUrl}/pricing?checkout=cancelled`,
-      metadata: {
-        user_id: user.id,
-      },
-      customer_email: user.email,
+      metadata: { user_id: user.id },
+      // Carry the user id on the subscription object too, not just the session.
+      subscription_data: { metadata: { user_id: user.id } },
+      // Reuse the Stripe customer when we have one; otherwise key to email.
+      ...(existing?.stripe_customer_id
+        ? { customer: existing.stripe_customer_id }
+        : { customer_email: user.email }),
     };
 
     const session = await stripe.checkout.sessions.create(

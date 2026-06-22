@@ -25,6 +25,7 @@ import crypto from 'crypto';
 import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 import { OPENAI_MODEL } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
+import { checkMonthlyCredits, checkGlobalDailyDreamCap } from "@/lib/monthlyCredits";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 import { runDreamAnalysis } from "@/lib/dreamAnalysis";
 import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
@@ -34,7 +35,11 @@ import {
   clampDepthToPlan,
   type SubscriptionPlan,
 } from "@/schema/profile";
-import { ImageAesthetic } from "@/schema/imageAesthetic";
+import {
+  ImageAesthetic,
+  clampAestheticToTier,
+  planToAestheticTier,
+} from "@/schema/imageAesthetic";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -350,13 +355,18 @@ function buildMatrix(
   // Default reading level falls back to the saved profile preference.
   const readingLevel = requestedReadingLevel ?? ctx.reading_level;
 
-  // Non-admins or admins with test mode off: single combo, depth clamped to plan.
+  // Non-admins or admins with test mode off: single combo, depth AND aesthetic
+  // clamped to plan. The aesthetic clamp closes a hole where a user who had a
+  // paid aesthetic saved on their profile (or an unset profile defaulting to a
+  // prophet-tier style) would get a paid style for free.
   if (!ctx.is_admin || !ctx.test_mode_enabled) {
     return [
       {
         depth: clampDepthToPlan(ctx.analysis_depth, ctx.plan),
         readingLevel,
-        aesthetic: ctx.image_aesthetic,
+        aesthetic: ctx.is_admin
+          ? ctx.image_aesthetic
+          : clampAestheticToTier(ctx.image_aesthetic, planToAestheticTier(ctx.plan)),
       },
     ];
   }
@@ -386,24 +396,34 @@ function buildMatrix(
 
 export async function GET(request: Request) {
   const supabase = await createClient();
-  
+
   try {
+    // Explicit auth + ownership filter (2026-06-09 audit, M3). RLS already
+    // scopes reads to the owner, but relying on RLS alone means any future
+    // policy loosening (e.g. a public-sharing policy) silently turns this
+    // into an IDOR returning decrypted dream text. Defense in depth.
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Get dream ID from URL
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
-    
+
     if (!id) {
       return NextResponse.json(
         { error: "Dream ID is required" },
         { status: 400 }
       );
     }
-    
+
     // Get the dream entry
     const { data, error } = await supabase
       .from("dream_entries")
       .select("*")
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("Error fetching dream:", error);
@@ -541,6 +561,48 @@ export async function POST(request: Request) {
   // Resolve the user's profile + plan up-front so we know whether to bypass
   // the rate limit (admins) and how to build the analysis matrix.
   const profileCtx = await getProfileContext(user.id);
+
+  // Spend guards (non-admins only). Order matters — cheapest/most-protective
+  // checks first, all BEFORE any OpenAI/FLUX call fires.
+  if (!profileCtx.is_admin) {
+    // 1. Email verification — block throwaway/unverified accounts from
+    //    generating, the cheapest defense against multi-account abuse.
+    if (!user.email_confirmed_at) {
+      return NextResponse.json(
+        { error: "Please verify your email before submitting a dream.", code: "email_unverified" },
+        { status: 403 },
+      );
+    }
+
+    // 2. Global circuit breaker — hard ceiling on total dreams/24h across all
+    //    users, so a signup flood can't drain the budget.
+    const globalCap = await checkGlobalDailyDreamCap();
+    if (!globalCap.allowed) {
+      return NextResponse.json(
+        { error: "DreamRiver is at capacity right now. Please try again shortly." },
+        { status: 503, headers: { "Retry-After": "3600" } },
+      );
+    }
+
+    // 3. Monthly per-tier credit cap (Free = 3/mo). Free fails CLOSED.
+    const credits = await checkMonthlyCredits(user.id, profileCtx.plan);
+    if (!credits.allowed) {
+      return NextResponse.json(
+        {
+          error: `You've used all ${credits.limit} of your monthly dream credits. Upgrade for more.`,
+          code: "out_of_credits",
+          used: credits.used,
+          limit: credits.limit,
+        },
+        {
+          status: 402,
+          headers: credits.retryAfterSeconds
+            ? { "Retry-After": String(credits.retryAfterSeconds) }
+            : undefined,
+        },
+      );
+    }
+  }
 
   // Per-user daily rate limit — prevents a single signup from draining the
   // OpenAI/BFL budget by submitting dreams in a loop. Admins bypass it so

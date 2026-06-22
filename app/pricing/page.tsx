@@ -1,76 +1,128 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Check, ArrowLeft } from "lucide-react";
 import AuthNavigation from "@/components/AuthNavigation";
+import { toast } from "sonner";
 
-const plans = [
+type BillingPeriod = "monthly" | "yearly";
+
+interface Plan {
+  name: string;
+  monthly: string;
+  yearly: string;
+  /** Note shown under the price on the yearly toggle (e.g. effective /mo). */
+  yearlyNote?: string;
+  description: string;
+  credits: string;
+  features: string[];
+  cta: string;
+  /** Stripe priceKey base; null = free tier or not-yet-available. */
+  priceBase: "visionary" | "prophet" | null;
+  popular: boolean;
+  comingSoon?: boolean;
+  color: string;
+}
+
+const plans: Plan[] = [
   {
     name: "Seeker",
-    price: "Free",
-    period: "forever",
+    monthly: "Free",
+    yearly: "Free",
     description: "Begin your spiritual journey with essential dream insights",
-    credits: 5,
+    credits: "3 / month",
     features: [
-      "5 AI dream analyses per month",
-      "Basic biblical interpretations",
-      "Simple reading level",
-      "Dream journal storage",
-      "Mobile responsive design"
+      "3 AI dream analyses per month",
+      "Dream art + biblical interpretation",
+      "Standard reading levels",
+      "Dream journal storage & search",
     ],
     cta: "Start Free",
+    priceBase: null,
     popular: false,
-    color: "bg-gray-50 dark:bg-gray-900"
+    color: "bg-gray-50 dark:bg-gray-900",
   },
   {
-    name: "Visionary", 
-    price: "$9",
-    period: "month",
+    name: "Visionary",
+    monthly: "$12.99",
+    yearly: "$99.99",
+    yearlyNote: "$8.33/mo, billed yearly",
     description: "Unlock deeper spiritual insights with enhanced AI analysis",
-    credits: 50,
+    credits: "50 / month",
     features: [
       "50 AI dream analyses per month",
-      "Advanced biblical cross-references",
-      "All reading levels available",
-      "Dream pattern recognition",
-      "Export dream journals",
-      "Priority analysis processing",
-      "Email support"
+      "Deeper analysis + all reading levels",
+      "Five image styles",
+      "Export your dream journal",
+      "Dream sharing",
+      "Priority processing",
     ],
     cta: "Upgrade to Visionary",
+    priceBase: "visionary",
     popular: true,
-    color: "bg-primary/5 dark:bg-primary/10 border-primary/20"
+    color: "bg-primary/5 dark:bg-primary/10 border-primary/20",
   },
   {
     name: "Prophet",
-    price: "$29", 
-    period: "month",
+    monthly: "$29",
+    yearly: "$290",
     description: "Unlimited access to divine wisdom and premium features",
     credits: "Unlimited",
     features: [
       "Unlimited AI dream analyses",
-      "Deep theological interpretations", 
-      "Scholarly reading level",
-      "Advanced dream symbolism",
-      "Custom biblical study guides",
-      "Dream sharing capabilities",
-      "Priority customer support",
+      "Deepest theological interpretations",
+      "All eight image styles",
       "Early access to new features",
-      "API access for integrations"
+      "API access",
+      "Priority support",
     ],
-    cta: "Become a Prophet",
+    cta: "Coming Soon",
+    priceBase: "prophet",
     popular: false,
-    color: "bg-gradient-to-br from-accent/40 to-secondary"
-  }
+    comingSoon: true,
+    color: "bg-gradient-to-br from-accent/40 to-secondary",
+  },
 ];
 
 export default function PricingPage() {
+  const [billing, setBilling] = useState<BillingPeriod>("monthly");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  async function startCheckout(plan: Plan) {
+    if (!plan.priceBase) return;
+    const priceKey = `${plan.priceBase}_${billing}`;
+    setLoadingPlan(plan.name);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceKey }),
+      });
+      if (res.status === 401) {
+        // Not signed in — send them to create an account first.
+        window.location.href = "/sign-up";
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Could not start checkout");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not start checkout");
+      setLoadingPlan(null);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Background */}
       <div className="fixed inset-0 -z-10">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30 blur-[3px]"
           style={{ backgroundImage: "url('/images/background.jpg')" }}
         />
@@ -81,19 +133,22 @@ export default function PricingPage() {
         {/* Navigation */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <Link href="/sign-up" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/sign-up"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to Sign Up
             </Link>
             <div className="flex-1 max-w-md mx-4">
               <AuthNavigation variant="compact" />
             </div>
-            <div className="w-20" /> {/* Spacer for balance */}
+            <div className="w-20" />
           </div>
         </div>
 
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <Badge variant="outline" className="mb-4 text-xs font-medium">
             Choose Your Path
           </Badge>
@@ -101,126 +156,139 @@ export default function PricingPage() {
             Unlock Divine Insights
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Choose the subscription tier that aligns with your spiritual journey. 
+            Choose the subscription tier that aligns with your spiritual journey.
             Each plan offers deeper access to AI-powered biblical dream interpretation.
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card 
-              key={plan.name}
-              className={`
-                relative p-8 transition-all duration-300 hover:shadow-2xl hover:scale-105
-                ${plan.color}
-                ${plan.popular ? 'ring-2 ring-primary shadow-xl transform scale-105' : 'hover:shadow-lg'}
-              `}
-            >
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1">
-                  Most Popular
-                </Badge>
-              )}
-
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                  {plan.description}
-                </p>
-                
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  {plan.period !== "forever" && (
-                    <span className="text-muted-foreground">/{plan.period}</span>
-                  )}
-                </div>
-
-                <div className="mb-6 p-4 bg-background/50 rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Monthly Dream Analyses
-                  </p>
-                  <p className="text-2xl font-bold text-primary">
-                    {typeof plan.credits === 'number' ? plan.credits : plan.credits}
-                  </p>
-                </div>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm leading-relaxed">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className={`
-                  w-full py-3 text-base font-medium transition-all duration-200
-                  ${plan.popular
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl'
-                    : plan.name === 'Seeker'
-                    ? 'bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                    : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl'
-                  }
-                `}
-                variant={plan.popular || plan.name !== 'Seeker' ? "default" : "outline"}
-              >
-                {plan.name === 'Seeker' ? 'Your Current Plan' : plan.cta}
-              </Button>
-            </Card>
-          ))}
+        {/* Billing toggle */}
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <button
+            type="button"
+            onClick={() => setBilling("monthly")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              billing === "monthly"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setBilling("yearly")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              billing === "yearly"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Yearly <span className="text-xs opacity-80">· save ~36%</span>
+          </button>
         </div>
 
-        {/* Footer CTA */}
-        <div className="text-center mt-16 p-8 bg-muted/30 rounded-2xl">
-          <h3 className="text-2xl font-semibold mb-4">
-            Start Your Spiritual Journey Today
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join thousands of believers discovering God's messages through their dreams. 
-            Begin with our free tier and upgrade as your spiritual insights deepen.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/sign-up">
-              <Button size="lg" className="bg-primary hover:bg-primary/90">
-                Create Free Account
-              </Button>
-            </Link>
-            <Link href="/sign-in">
-              <Button variant="outline" size="lg">
-                Sign In
-              </Button>
-            </Link>
-          </div>
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {plans.map((plan) => {
+            const price = billing === "monthly" ? plan.monthly : plan.yearly;
+            const isFree = plan.priceBase === null;
+            const period = isFree ? "forever" : billing === "monthly" ? "month" : "year";
+            return (
+              <Card
+                key={plan.name}
+                className={`relative p-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 ${plan.color} ${
+                  plan.popular ? "ring-2 ring-primary shadow-xl transform scale-105" : "hover:shadow-lg"
+                }`}
+              >
+                {plan.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1">
+                    Most Popular
+                  </Badge>
+                )}
+
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    {plan.description}
+                  </p>
+
+                  <div className="mb-2">
+                    <span className="text-4xl font-bold">{price}</span>
+                    {price !== "Free" && (
+                      <span className="text-muted-foreground">/{period}</span>
+                    )}
+                  </div>
+                  {billing === "yearly" && plan.yearlyNote && (
+                    <p className="text-xs text-muted-foreground mb-4">{plan.yearlyNote}</p>
+                  )}
+
+                  <div className="mt-6 mb-6 p-4 bg-background/50 rounded-lg">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Monthly Dream Analyses
+                    </p>
+                    <p className="text-2xl font-bold text-primary">{plan.credits}</p>
+                  </div>
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                      <span className="text-sm leading-relaxed">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {isFree ? (
+                  <Link href="/sign-up" className="block">
+                    <Button
+                      className="w-full py-3 text-base font-medium bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                      variant="outline"
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    onClick={() => startCheckout(plan)}
+                    disabled={plan.comingSoon || loadingPlan === plan.name}
+                    className="w-full py-3 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl"
+                  >
+                    {plan.comingSoon
+                      ? "Coming Soon"
+                      : loadingPlan === plan.name
+                        ? "Redirecting…"
+                        : plan.cta}
+                  </Button>
+                )}
+              </Card>
+            );
+          })}
         </div>
 
         {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <h3 className="text-2xl font-bold text-center mb-8">
-            Frequently Asked Questions
-          </h3>
+          <h3 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h3>
           <div className="space-y-6">
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">Can I change my plan anytime?</h4>
               <p className="text-sm text-muted-foreground">
-                Yes, you can upgrade or downgrade your subscription at any time. 
-                Changes take effect at the next billing cycle.
+                Yes — upgrade, downgrade, or cancel anytime from Settings. Changes take effect at
+                the next billing cycle.
               </p>
             </div>
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">What happens to unused credits?</h4>
               <p className="text-sm text-muted-foreground">
-                Unused credits reset each month and don't roll over. 
-                We recommend choosing a plan that matches your regular usage.
+                Credits reset at the start of each month and don't roll over. Pick the plan that
+                matches your regular journaling.
               </p>
             </div>
             <div className="p-6 bg-muted/20 rounded-lg">
-              <h4 className="font-semibold mb-2">Is there a free trial for paid plans?</h4>
+              <h4 className="font-semibold mb-2">Is the free plan really free?</h4>
               <p className="text-sm text-muted-foreground">
-                Our Seeker plan is permanently free with 5 monthly analyses. 
-                You can upgrade anytime to access additional features.
+                Yes — the Seeker plan is permanently free with 3 dream analyses every month. Upgrade
+                anytime for more.
               </p>
             </div>
           </div>

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { SubscriptionPlan } from "@/schema/profile";
 import { SectionHead } from "../section-head";
 
@@ -21,7 +23,7 @@ const PLANS: Array<{
     price: "$0",
     per: "forever",
     features: [
-      "Daily journal",
+      "3 analyses / month",
       "Shallow analysis",
       "2 free image styles",
       "Limited scripture references",
@@ -31,14 +33,14 @@ const PLANS: Array<{
   {
     id: "visionary",
     name: "Visionary",
-    price: "$4.99",
-    per: "per month",
+    price: "$12.99",
+    per: "per month · $99.99/yr",
     features: [
       "Everything in Free",
-      "Deep analysis",
-      "+ 3 visionary image styles",
+      "50 analyses / month",
+      "Deep analysis + 3 image styles",
       "Unlimited scripture references",
-      "Pattern tracking",
+      "Export & sharing",
     ],
     cta: "Upgrade",
     featured: true,
@@ -46,20 +48,37 @@ const PLANS: Array<{
   {
     id: "prophet",
     name: "Prophet",
-    price: "$9.99",
+    price: "$29",
     per: "per month",
     features: [
       "Everything in Visionary",
-      "Profound analysis",
-      "+ 3 prophet image styles",
-      "Symbol dictionary",
-      "Export & backup",
+      "Unlimited analyses",
+      "Profound analysis + all styles",
+      "API access",
+      "Priority support",
     ],
-    cta: "Upgrade",
+    cta: "Coming soon",
   },
 ];
 
 export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  async function openBillingPortal() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Could not open billing portal");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not open billing portal");
+      setPortalLoading(false);
+    }
+  }
+
   return (
     <>
       <SectionHead
@@ -126,13 +145,26 @@ export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
 
       <div className="rounded-[var(--radius-lg)] border bg-card p-5 mt-5 shadow-sm">
         <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">
-          Billing history
+          Billing
         </div>
-        <div className="text-[13px] text-muted-foreground py-5 text-center">
-          {plan === "free"
-            ? "No charges yet — you're on the Free plan."
-            : "Visit the Stripe customer portal to view invoices."}
-        </div>
+        {plan === "free" ? (
+          <div className="text-[13px] text-muted-foreground py-5 text-center">
+            No charges yet — you&rsquo;re on the Free plan.
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-[13px] text-muted-foreground">
+              Update your card, view invoices, or cancel in the Stripe customer portal.
+            </p>
+            <Button
+              variant="outline"
+              onClick={openBillingPortal}
+              disabled={portalLoading}
+            >
+              {portalLoading ? "Opening…" : "Manage billing"}
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );

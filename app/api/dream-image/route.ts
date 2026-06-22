@@ -5,45 +5,133 @@
 // request so it isn't subject to the after() 10s cap on Vercel Hobby.
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/utils/supabase/server";
 import {
   buildImagePrompt,
   generateAndStoreDreamImage,
 } from "@/utils/imageGeneration";
-import { ImageAesthetic, imageAestheticSchema } from "@/schema/imageAesthetic";
+import {
+  ImageAesthetic,
+  imageAestheticSchema,
+  clampAestheticToTier,
+  planToAestheticTier,
+} from "@/schema/imageAesthetic";
+import type { SubscriptionPlan } from "@/schema/profile";
 import { FLUX_IMAGE_COST_USD } from "@/utils/pricing";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
 export const maxDuration = 60; // Vercel function timeout
 
+// Security (added 2026-06-09 release audit): this route used to be fully
+// unauthenticated while writing via the service-role client — anonymous
+// callers could burn FLUX spend and overwrite any user's image_url (IDOR).
+// Now: auth required; callers must own the dream; comparison-group (matrix
+// test mode) generation is admin-only; non-admins can only generate when the
+// dream has no image yet (the client fires this exactly once per new dream).
+
+const bodySchema = z.object({
+  dreamId: z.string().uuid(),
+  title: z.string().max(500).optional().default(""),
+  summary: z.string().max(4000).optional().default(""),
+  topicSentence: z.string().max(2000).optional().default(""),
+  aesthetic: z.unknown().optional(),
+  comparisonGroupId: z.string().uuid().optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
+    // ── Auth ──────────────────────────────────────────────────────
+    const supabase = await createClient();
     const {
-      dreamId,
-      title,
-      summary,
-      topicSentence,
-      aesthetic,
-      comparisonGroupId,
-    } = await request.json();
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!dreamId) {
+    // ── Input validation ──────────────────────────────────────────
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    const parsedBody = bodySchema.safeParse(rawBody);
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: "dreamId is required" },
+        { error: "Invalid request body", details: parsedBody.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+    const { dreamId, title, summary, topicSentence, aesthetic, comparisonGroupId } =
+      parsedBody.data;
 
     const adminSupabase = getAdminClient();
 
-    // Validate aesthetic if provided, default to sacred oil painting
+    // ── Authorization ─────────────────────────────────────────────
+    const { data: profile } = await supabase
+      .from("profile")
+      .select("is_admin")
+      .eq("user_id", user.id)
+      .single();
+    const isAdmin = Boolean(profile?.is_admin);
+
+    if (comparisonGroupId && !isAdmin) {
+      // Matrix/test-mode generation spans rows across the comparison group
+      // and is an admin-only feature.
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { data: dream, error: dreamError } = await adminSupabase
+      .from("dream_entries")
+      .select("id, user_id, image_url")
+      .eq("id", dreamId)
+      .maybeSingle();
+
+    if (dreamError || !dream) {
+      return NextResponse.json({ error: "Dream not found" }, { status: 404 });
+    }
+    if (!isAdmin) {
+      if ((dream as any).user_id !== user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      if ((dream as any).image_url) {
+        // The client triggers generation once, right after analysis. A dream
+        // that already has an image doesn't need a paid regeneration.
+        return NextResponse.json({ imageUrl: (dream as any).image_url });
+      }
+    }
+
+    // Validate aesthetic if provided, default to a free-tier style.
     const parsedAesthetic = aesthetic
       ? imageAestheticSchema.safeParse(aesthetic)
       : null;
-    const selectedAesthetic = parsedAesthetic?.success
+    const requestedAesthetic = parsedAesthetic?.success
       ? parsedAesthetic.data
-      : ImageAesthetic.PHOTOREALISTIC_VISION;
+      : ImageAesthetic.SACRED_OIL_PAINTING;
+
+    // Gate paid aesthetics by plan (non-admins). Without this a free user could
+    // POST a Prophet-tier style directly and we'd pay for it. Admins (matrix
+    // test mode) keep whatever they requested.
+    let selectedAesthetic = requestedAesthetic;
+    if (!isAdmin) {
+      const { data: subRow } = await adminSupabase
+        .from("subscriptions")
+        .select("plan, status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const plan: SubscriptionPlan =
+        subRow?.plan === "visionary" || subRow?.plan === "prophet"
+          ? subRow.plan
+          : "free";
+      selectedAesthetic = clampAestheticToTier(requestedAesthetic, planToAestheticTier(plan));
+    }
 
     const imagePrompt = buildImagePrompt(title, summary, topicSentence, selectedAesthetic);
     const imageUrl = await generateAndStoreDreamImage(dreamId, imagePrompt);

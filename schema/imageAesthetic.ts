@@ -148,4 +148,28 @@ export function planToAestheticTier(plan?: string): AestheticTier {
   }
 }
 
+/** True if the given aesthetic is unlocked at the given subscription tier. */
+export function isAestheticAllowedForTier(
+  aesthetic: ImageAesthetic,
+  userTier: AestheticTier,
+): boolean {
+  const tierHierarchy: AestheticTier[] = ["free", "visionary", "prophet"];
+  const presetTier = AESTHETIC_PRESETS[aesthetic]?.tier ?? "free";
+  return tierHierarchy.indexOf(presetTier) <= tierHierarchy.indexOf(userTier);
+}
+
+/**
+ * Server-side guard: if the requested aesthetic is above the user's tier
+ * (or invalid), fall back to a always-free aesthetic rather than silently
+ * granting a paid style. Use this on every paid image-generation path.
+ */
+export function clampAestheticToTier(
+  requested: ImageAesthetic,
+  userTier: AestheticTier,
+): ImageAesthetic {
+  return isAestheticAllowedForTier(requested, userTier)
+    ? requested
+    : ImageAesthetic.SACRED_OIL_PAINTING; // free-tier default
+}
+
 export const imageAestheticSchema = z.nativeEnum(ImageAesthetic);

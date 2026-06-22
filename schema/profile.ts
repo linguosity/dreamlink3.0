@@ -38,7 +38,9 @@ export type AnalysisDepth = z.infer<typeof analysisDepthSchema>;
 export type SubscriptionPlan = "free" | "visionary" | "prophet";
 
 // Plan ceiling for analysis depth. Admins bypass this (handled in the API).
-const PLAN_DEPTH_CEILING: Record<SubscriptionPlan, AnalysisDepth> = {
+// Exported so lib/tierConfig.ts can fold it into the single PLAN_CAPABILITIES
+// source of truth without duplicating the values.
+export const PLAN_DEPTH_CEILING: Record<SubscriptionPlan, AnalysisDepth> = {
   free: AnalysisDepth.SHALLOW,
   visionary: AnalysisDepth.DEEP,
   prophet: AnalysisDepth.PROFOUND,

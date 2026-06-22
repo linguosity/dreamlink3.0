@@ -63,6 +63,21 @@ export async function POST(request: NextRequest) {
 
   const admin = getAdminClient();
 
+  // Idempotency (Bug 4): Stripe re-delivers events. Claim the event id before
+  // doing any work; if we've seen it, acknowledge and bail so a replayed
+  // invoice.payment_succeeded can't insert a duplicate payment row.
+  const { error: claimError } = await admin
+    .from("stripe_events")
+    .insert({ event_id: event.id, type: event.type });
+  if (claimError) {
+    if ((claimError as { code?: string }).code === "23505") {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    // Can't guarantee idempotency — let Stripe retry rather than risk a dupe.
+    console.error("Stripe event claim failed:", claimError.message);
+    return NextResponse.json({ error: "Event claim failed" }, { status: 500 });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -82,10 +97,11 @@ export async function POST(request: NextRequest) {
         // payloads) top-level field for forward/backward compatibility.
         const periodEnd = readPeriodEnd(subscription);
 
-        await admin.from("subscriptions").upsert(
+        const { error: upsertError } = await admin.from("subscriptions").upsert(
           {
             user_id: userId,
             stripe_subscription_id: subscription.id,
+            stripe_customer_id: subscription.customer as string, // Bug 5
             status: subscription.status,
             plan,
             current_period_end: periodEnd
@@ -95,6 +111,7 @@ export async function POST(request: NextRequest) {
           },
           { onConflict: "user_id" }
         );
+        if (upsertError) throw new Error(`subscriptions upsert: ${upsertError.message}`);
         break;
       }
 
@@ -104,7 +121,7 @@ export async function POST(request: NextRequest) {
         const plan = stripePriceToPlan(priceId);
         const periodEnd = readPeriodEnd(subscription);
 
-        await admin
+        const { error: updateError } = await admin
           .from("subscriptions")
           .update({
             status: subscription.status,
@@ -115,19 +132,21 @@ export async function POST(request: NextRequest) {
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
+        if (updateError) throw new Error(`subscription update: ${updateError.message}`);
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
 
-        await admin
+        const { error: deleteError } = await admin
           .from("subscriptions")
           .update({
             status: "canceled",
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
+        if (deleteError) throw new Error(`subscription cancel: ${deleteError.message}`);
         break;
       }
 
@@ -136,35 +155,58 @@ export async function POST(request: NextRequest) {
         // Stripe 2026-02-25 removed `subscription` from the top-level Invoice
         // shape; the link now lives on parent.subscription_details. Read both
         // so we tolerate either payload version.
-        const subscriptionId =
-          (invoice as unknown as { subscription?: string | null }).subscription ??
+        const rawSub =
+          (invoice as unknown as { subscription?: string | { id: string } | null }).subscription ??
           invoice.parent?.subscription_details?.subscription ??
           null;
+        const subscriptionId = typeof rawSub === "string" ? rawSub : rawSub?.id ?? null;
         if (!subscriptionId) break;
 
-        // Record payment
-        await admin.from("payments").insert({
-          user_id: null, // Will be looked up via subscription
-          stripe_invoice_id: invoice.id,
+        // Bug 3: attribute the payment to a user via the subscription row.
+        const { data: subRow } = await admin
+          .from("subscriptions")
+          .select("user_id")
+          .eq("stripe_subscription_id", subscriptionId)
+          .maybeSingle();
+
+        // Record payment (Bug 2: column is stripe_payment_id, not _invoice_id).
+        const { error: payError } = await admin.from("payments").insert({
+          user_id: subRow?.user_id ?? null,
+          stripe_payment_id: invoice.id,
           amount: invoice.amount_paid,
           currency: invoice.currency,
           status: "succeeded",
           created_at: new Date().toISOString(),
         });
+        if (payError) throw new Error(`payment insert (succeeded): ${payError.message}`);
         break;
       }
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
+        const rawSub =
+          (invoice as unknown as { subscription?: string | { id: string } | null }).subscription ??
+          invoice.parent?.subscription_details?.subscription ??
+          null;
+        const subscriptionId = typeof rawSub === "string" ? rawSub : rawSub?.id ?? null;
 
-        await admin.from("payments").insert({
-          user_id: null,
-          stripe_invoice_id: invoice.id,
+        const { data: subRow } = subscriptionId
+          ? await admin
+              .from("subscriptions")
+              .select("user_id")
+              .eq("stripe_subscription_id", subscriptionId)
+              .maybeSingle()
+          : { data: null };
+
+        const { error: payError } = await admin.from("payments").insert({
+          user_id: subRow?.user_id ?? null,
+          stripe_payment_id: invoice.id,
           amount: invoice.amount_due,
           currency: invoice.currency,
           status: "failed",
           created_at: new Date().toISOString(),
         });
+        if (payError) throw new Error(`payment insert (failed): ${payError.message}`);
         break;
       }
 
