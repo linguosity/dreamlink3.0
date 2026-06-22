@@ -233,9 +233,14 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
             // Vertically center the send button on the right edge of the
-            // textarea: top-1/2 + -translate-y-1/2 keeps it centered no
-            // matter how tall the textarea grows (field-sizing: content).
-            className={`absolute right-2.5 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
+            // textarea. We apply the translate via an INLINE style rather than
+            // Tailwind's `-translate-y-1/2`: that utility only sets the
+            // `--tw-translate-y` custom property and relies on a separate
+            // shared `transform` rule to consume it — which can get tree-shaken
+            // out of the compiled CSS, leaving the button ~3px below center.
+            // The inline transform always applies and is immune to that.
+            style={{ transform: "translateY(-50%)" }}
+            className={`absolute right-2.5 top-1/2 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
               hasContent ? "opacity-100" : "opacity-30"
             }`}
           >

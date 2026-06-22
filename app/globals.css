@@ -164,6 +164,14 @@
   --gold-deep:  oklch(0.60 0.12 75);    /* #B08436 */
   --gold-light: oklch(0.82 0.10 78);    /* #E6C073 */
   --amber:      oklch(0.65 0.16 60);
+  /* Warm parchment neutrals — used by the onboarding card surfaces (always
+   * light, regardless of theme). Sourced from the onboarding design handoff. */
+  --warm-paper:  oklch(0.975 0.012 75);
+  --warm-white:  oklch(0.985 0.006 70);
+  --warm-line:   oklch(0.88 0.012 75);
+  --warm-dark:   oklch(0.34 0.02 255);
+  --warm-darker: oklch(0.20 0.02 255);
+  --warm-muted:  oklch(0.55 0.02 255);
   /* Old sacred-blue — kept for secondary/informational accents only (F07).
    * Do NOT use for primary actions; --primary above is now gold. */
   --blue-deep:  oklch(0.40 0.13 252);
