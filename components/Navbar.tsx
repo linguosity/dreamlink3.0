@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, X } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 import { FeatureHint } from "./feature-hint";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import Wordmark from "@/components/Wordmark";
 import { useSearch } from "@/context/search-context";
 import { Badge } from "@/components/ui/badge";
@@ -92,9 +92,7 @@ export default function Navbar() {
             aria-label="DreamRiver"
             className="inline-flex items-center gap-2 text-gray-900 dark:text-gray-100 no-brand-style"
           >
-            <AppIcon size={32} radius={22}>
-              <MoonwaterMark size={20} />
-            </AppIcon>
+            <BrandIcon size={32} alt="" />
             {/* v2 Moonwater: italic-serif wordmark on sm+; abbreviated "DR"
                 in Cormorant on mobile to mirror the brand voice. */}
             <Wordmark className="hidden sm:inline text-xl" />

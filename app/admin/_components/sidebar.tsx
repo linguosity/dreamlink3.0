@@ -11,7 +11,7 @@ import {
   Server,
   type LucideIcon,
 } from "lucide-react";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 const ADMIN_NAV: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/admin", label: "Overview", Icon: LayoutDashboard },
@@ -39,9 +39,7 @@ export function AdminSidebar({
         {/* v2 Moonwater (F06): contained app-icon squircle in the sidebar.
             Replaces the blue-soft → blue-deep droplet placeholder so the
             sidebar mark matches social, splash, and the iOS icon. */}
-        <AppIcon size={32} radius={22}>
-          <MoonwaterMark size={20} />
-        </AppIcon>
+        <BrandIcon size={32} />
         <div>
           <div className="font-serif text-base font-semibold leading-none">
             DreamRiver

@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   Icon, AppIcon, GoldBtn, StepBadge, TextField, Check, NavRow, FONTS,
 } from "./atoms";
-import { MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import type { OnboardingData, ReadingDepthId } from "../onboarding-lib";
 
 type StepProps = {
@@ -31,7 +31,7 @@ export function StepWelcome({ next }: { next: () => void }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-        <AppIcon size={84} radius={24}><MoonwaterMark size={52} /></AppIcon>
+        <BrandIcon size={84} alt="" />
       </div>
       <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--gold-deep)", marginBottom: 14 }}>Welcome to</div>
       <h1 style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", fontWeight: 500, fontSize: 40, lineHeight: 1.08, color: "var(--gold-deep)", marginBottom: 16 }}>DreamRiver</h1>
@@ -333,7 +333,7 @@ export function StepDone({ data, restart, onFinish }: { data: OnboardingData; re
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
         <div style={{ position: "relative" }}>
           <div style={{ position: "absolute", inset: -18, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.72 0.14 75 / 0.35) 0%, transparent 70%)" }} />
-          <AppIcon size={88} radius={26}><MoonwaterMark size={54} /></AppIcon>
+          <BrandIcon size={88} alt="" />
         </div>
       </div>
       <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--gold-deep)", marginBottom: 12 }}>You&rsquo;re in</div>

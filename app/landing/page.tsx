@@ -137,8 +137,9 @@ export default async function LandingPage() {
               </h1>
 
               <p className="mt-6 text-base sm:text-lg lg:text-xl text-[oklch(0.82_0.02_75)] max-w-prose mx-auto lg:mx-0 leading-relaxed">
-                AI-powered biblical dream interpretation. Journal your dreams,
-                receive scripture-backed insights in seconds.
+                Record your dreams and receive scripture-rooted reflections,
+                recurring themes, and spiritual insight to help you pray,
+                reflect, and understand.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center lg:justify-start">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -66,10 +66,8 @@ export default function SiteHeader() {
           aria-label="DreamRiver — home"
           className="inline-flex items-center gap-2 focus-ring rounded text-xl text-gray-900 dark:text-white"
         >
-          {/* v2 Moonwater lockup — squircle + wordmark */}
-          <AppIcon size={32} radius={22}>
-            <MoonwaterMark size={20} />
-          </AppIcon>
+          {/* DreamRiver logo — squircle + wordmark */}
+          <BrandIcon size={32} alt="" />
           <Wordmark />
         </Link>
 

@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
@@ -52,9 +52,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
 
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
-            <AppIcon size={56} radius={22} className="mx-auto mb-4">
-              <MoonwaterMark size={36} />
-            </AppIcon>
+            <BrandIcon size={56} className="mx-auto mb-4" />
             <CardTitle className="text-xl">Welcome Back</CardTitle>
             <CardDescription>
               Sign in to access your dream journal and interpretations

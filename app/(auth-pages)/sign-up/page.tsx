@@ -17,7 +17,7 @@ import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 import { Sparkles, CheckCircle } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 // Action state shape returned by signUpAction
 type SignUpState = {
@@ -72,9 +72,7 @@ export default function Signup() {
 
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm mb-6">
           <CardHeader className="text-center pb-4">
-            <AppIcon size={56} radius={22} className="mx-auto mb-4">
-              <MoonwaterMark size={36} />
-            </AppIcon>
+            <BrandIcon size={56} className="mx-auto mb-4" />
             <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
             <CardDescription>
               7 days free &bull; No credit card required &bull; Cancel anytime
@@ -98,8 +96,10 @@ export default function Signup() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
+                  id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="you@example.com"
                   required
                 />
@@ -108,10 +108,12 @@ export default function Signup() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
+                  id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Your password"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
               </div>

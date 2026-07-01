@@ -12,7 +12,7 @@ import {
   ArrowRight, ArrowLeft, PenLine, Bell, Lock, Clock, X, Compass,
   type LucideIcon,
 } from "lucide-react";
-import { MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 const ICONS: Record<string, LucideIcon> = {
   moon: Moon, sparkles: Sparkles, mail: Mail, mailCheck: MailCheck,
@@ -53,7 +53,7 @@ export function AppIcon({
 export function Lockup({ size = 30, word = 22, color = "var(--cream)" }: { size?: number; word?: number; color?: string }) {
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 11, color }}>
-      <AppIcon size={size} radius={24}><MoonwaterMark size={size * 0.62} /></AppIcon>
+      <BrandIcon size={size} alt="" />
       <span style={{ fontFamily: WORDMARK, fontStyle: "italic", fontWeight: 500, letterSpacing: "0.005em", fontSize: word, lineHeight: 1 }}>DreamRiver</span>
     </div>
   );

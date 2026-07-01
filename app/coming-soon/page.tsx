@@ -19,7 +19,7 @@ import ComingSoonForm from "./ComingSoonForm";
 import Countdown from "./Countdown";
 import IOSDevice from "./IOSDevice";
 import PhoneMockup from "./PhoneMockup";
-import { AppIcon, MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 const LAUNCH_TARGET_ISO = "2026-06-01T00:00:00";
 const LAUNCH_LABEL = "Coming June 2026";
@@ -69,9 +69,7 @@ export default function ComingSoonPage() {
         {/* Header — F01: contained Moonwater + italic-serif wordmark on cream */}
         <header className="px-6 sm:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <AppIcon size={28} radius={22}>
-              <MoonwaterMark size={18} />
-            </AppIcon>
+            <BrandIcon size={28} alt="" />
             <span
               className="wordmark text-[22px]"
               style={{ color: "var(--cream)" }}
@@ -119,7 +117,7 @@ export default function ComingSoonPage() {
                 className="font-serif leading-[1.12] text-balance mb-4 text-[clamp(2rem,7vw,3rem)]"
                 style={{ color: "var(--cream)" }}
               >
-                Discover What God Is Saying Through Your Dreams
+                Discover Biblical Insight through your Dreams
               </h1>
 
               {/* Subhead — muted cream */}
@@ -127,9 +125,9 @@ export default function ComingSoonPage() {
                 className="text-[17px] leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-8"
                 style={{ color: "oklch(0.82 0.04 75)" }}
               >
-                AI-powered biblical dream interpretation. Journal your dreams,
-                receive scripture-backed insights in seconds. Be the first to
-                experience it.
+                Record your dreams and receive scripture-rooted reflections,
+                recurring themes, and spiritual insight to help you pray,
+                reflect, and understand. Be the first to experience it.
               </p>
 
               {/* Email form */}
