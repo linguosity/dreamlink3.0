@@ -26,6 +26,7 @@ import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 import { OPENAI_MODEL } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { checkMonthlyCredits, checkGlobalDailyDreamCap } from "@/lib/monthlyCredits";
+import { sanitizeTags } from "@/lib/tags";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 import { runDreamAnalysis } from "@/lib/dreamAnalysis";
 import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
@@ -283,7 +284,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
       conclusion_sentence: conclusionSentence,
       formatted_analysis: formattedAnalysis,
       personalized_summary: personalizedSummary || null,
-      tags: tags.length > 0 ? tags : ["spiritual insight", "dream analysis"],
+      tags: sanitizeTags(tags),
       bible_refs: bibleRefs,
       raw_analysis_enc: encryptJson(analysisResult),
     };

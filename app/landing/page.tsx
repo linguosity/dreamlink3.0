@@ -124,7 +124,7 @@ export default function LandingPage() {
                            text-[clamp(2rem,5.5vw,4rem)]
                            max-w-[14ch] mx-auto lg:mx-0 lg:max-w-[18ch]"
               >
-                Discover What God Is Saying Through Your Dreams
+                Discover powerful scriptural insight through your dreams
               </h1>
 
               <p className="mt-6 text-base sm:text-lg lg:text-xl text-[oklch(0.82_0.02_75)] max-w-prose mx-auto lg:mx-0 leading-relaxed">

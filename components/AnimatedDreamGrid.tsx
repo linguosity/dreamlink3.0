@@ -248,7 +248,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         conclusion_sentence: a.conclusionSentence,
         formatted_analysis: a.analysis || `${a.topicSentence} ${(a.supportingPoints || []).join(' ')} ${a.conclusionSentence}`,
         personalized_summary: a.personalizedSummary,
-        tags: a.tags?.length > 0 ? a.tags : ['spiritual insight', 'dream analysis'],
+        tags: a.tags?.length > 0 ? a.tags : [],
         bible_refs: (a.biblicalReferences || []).filter((r: any) => r?.citation).map((r: any) => r.citation.trim()),
       };
     }
@@ -280,7 +280,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           tags:
             analyzedDream.analysis.tags?.length > 0
               ? analyzedDream.analysis.tags
-              : ['spiritual insight', 'dream analysis'],
+              : [],
           bible_refs: (analyzedDream.analysis.biblicalReferences || [])
             .filter((r: any) => r?.citation)
             .map((r: any) => r.citation.trim()),

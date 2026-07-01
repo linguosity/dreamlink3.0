@@ -224,7 +224,12 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             rows={2}
             maxLength={MAX_CHARS}
             disabled={isSubmitting}
-            className="w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [field-sizing:content] min-h-[60px] max-h-[200px]"
+            // `block` removes the inline-block baseline descender gap so the
+            // wrapper height equals the textarea height — without it the
+            // absolutely-positioned send button centers on a wrapper that's
+            // ~3px taller than the field and sits slightly low. With `block`,
+            // top-1/2 + translateY(-50%) is exact in every browser.
+            className="block w-full resize-none overflow-y-auto rounded-xl border border-input bg-background px-4 py-3 pr-14 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [field-sizing:content] min-h-[60px] max-h-[200px]"
           />
 
           <Button
@@ -232,15 +237,15 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             size="icon"
             disabled={!hasContent || isSubmitting}
             aria-label={isSubmitting ? "Processing dream" : "Submit dream"}
-            // Vertically center the send button on the right edge of the
-            // textarea. We apply the translate via an INLINE style rather than
-            // Tailwind's `-translate-y-1/2`: that utility only sets the
-            // `--tw-translate-y` custom property and relies on a separate
-            // shared `transform` rule to consume it — which can get tree-shaken
-            // out of the compiled CSS, leaving the button ~3px below center.
-            // The inline transform always applies and is immune to that.
-            style={{ transform: "translateY(-50%)" }}
-            className={`absolute right-2.5 top-1/2 z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
+            // Vertically center the send button using the bulletproof
+            // auto-margin technique: `inset-y-0` (top:0 + bottom:0) plus
+            // `my-auto` on a fixed-height element centers it in the wrapper
+            // with NO percentages and NO transform — so it can't be thrown off
+            // by the Tailwind transform utility being tree-shaken (older
+            // Chrome) or by sub-pixel rounding. Paired with the textarea's
+            // `block` (which makes the wrapper exactly the field height), this
+            // is exact across every browser and device.
+            className={`absolute right-2.5 inset-y-0 my-auto z-10 h-11 w-11 rounded-lg transition-opacity duration-200 ${
               hasContent ? "opacity-100" : "opacity-30"
             }`}
           >

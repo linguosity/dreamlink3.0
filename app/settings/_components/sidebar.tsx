@@ -31,9 +31,9 @@ export const USER_NAV: Array<{
 ];
 
 const PLAN_LABEL: Record<SubscriptionPlan, string> = {
-  free: "Free Plan",
-  visionary: "Visionary",
-  prophet: "Prophet",
+  free: "Discovery",
+  visionary: "Insight",
+  prophet: "Journey",
 };
 
 function planBadgeClass(plan: SubscriptionPlan) {
@@ -168,7 +168,7 @@ export function SidebarNav({
 
 export function UpgradeCTA({ plan }: { plan: SubscriptionPlan }) {
   if (plan === "prophet") return null;
-  const headline = plan === "visionary" ? "Upgrade to Prophet" : "Try Prophet";
+  const headline = plan === "visionary" ? "Upgrade to Journey" : "Try Insight";
   const desc =
     plan === "visionary"
       ? "Unlock profound analysis and the final 2 image styles."

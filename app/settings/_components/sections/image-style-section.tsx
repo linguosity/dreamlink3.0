@@ -89,7 +89,7 @@ export function ImageStyleSection({
                         : "bg-primary/10 text-primary"
                     }`}
                   >
-                    {preset.tier === "prophet" ? "Prophet" : "Visionary"}
+                    {preset.tier === "prophet" ? "Journey" : "Insight"}
                   </span>
                 )}
               </div>

@@ -357,6 +357,9 @@ function DreamImageHeader({ imageUrl, isLoading }: { imageUrl: string | null; is
         className="object-cover"
         sizes="(max-width: 768px) 100vw, 50vw"
         priority={false}
+        // Bypass the Next optimizer for private Supabase signed URLs (see the
+        // note on the gallery card image) — avoids blank images on load.
+        unoptimized
       />
     </div>
   );
@@ -1222,6 +1225,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover"
+              // Serve the Supabase signed URL directly instead of routing it
+              // through the Next image optimizer. The optimizer intermittently
+              // fails to fetch private signed URLs (query-token auth), which
+              // left cards blank on load. These are already small 512px FLUX
+              // images, so skipping optimization costs little.
+              unoptimized
+              onError={() => setImageError(true)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
           </div>
@@ -1584,6 +1594,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               dreamId={dream.id}
               title={dream.title}
               dreamSummary={dream.dream_summary}
+              dreamText={dream.original_text}
               initialShared={isShared}
               initialToken={dream.share_token ?? null}
               initialScope={dream.share_scope ?? null}

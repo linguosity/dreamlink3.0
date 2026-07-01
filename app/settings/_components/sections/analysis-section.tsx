@@ -295,7 +295,7 @@ export function AnalysisSection({
                         : "bg-primary/10 text-primary"
                     }`}
                   >
-                    {d.plan === "prophet" ? "Prophet" : "Visionary"}
+                    {d.plan === "prophet" ? "Journey" : "Insight"}
                   </span>
                 )}
               </button>

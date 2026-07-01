@@ -19,7 +19,7 @@ const PLANS: Array<{
 }> = [
   {
     id: "free",
-    name: "Free",
+    name: "Discovery",
     price: "$0",
     per: "forever",
     features: [
@@ -32,12 +32,12 @@ const PLANS: Array<{
   },
   {
     id: "visionary",
-    name: "Visionary",
+    name: "Insight",
     price: "$12.99",
     per: "per month · $99.99/yr",
     features: [
-      "Everything in Free",
-      "50 analyses / month",
+      "Everything in Discovery",
+      "30 analyses / month",
       "Deep analysis + 3 image styles",
       "Unlimited scripture references",
       "Export & sharing",
@@ -47,11 +47,11 @@ const PLANS: Array<{
   },
   {
     id: "prophet",
-    name: "Prophet",
+    name: "Journey",
     price: "$29",
     per: "per month",
     features: [
-      "Everything in Visionary",
+      "Everything in Insight",
       "Unlimited analyses",
       "Profound analysis + all styles",
       "API access",

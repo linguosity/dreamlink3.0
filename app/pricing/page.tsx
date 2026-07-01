@@ -30,7 +30,7 @@ interface Plan {
 
 const plans: Plan[] = [
   {
-    name: "Seeker",
+    name: "Discovery",
     monthly: "Free",
     yearly: "Free",
     description: "Begin your spiritual journey with essential dream insights",
@@ -47,27 +47,27 @@ const plans: Plan[] = [
     color: "bg-gray-50 dark:bg-gray-900",
   },
   {
-    name: "Visionary",
+    name: "Insight",
     monthly: "$12.99",
     yearly: "$99.99",
     yearlyNote: "$8.33/mo, billed yearly",
     description: "Unlock deeper spiritual insights with enhanced AI analysis",
-    credits: "50 / month",
+    credits: "30 / month",
     features: [
-      "50 AI dream analyses per month",
+      "30 AI dream analyses per month",
       "Deeper analysis + all reading levels",
       "Five image styles",
       "Export your dream journal",
       "Dream sharing",
       "Priority processing",
     ],
-    cta: "Upgrade to Visionary",
+    cta: "Upgrade to Insight",
     priceBase: "visionary",
     popular: true,
     color: "bg-primary/5 dark:bg-primary/10 border-primary/20",
   },
   {
-    name: "Prophet",
+    name: "Journey",
     monthly: "$29",
     yearly: "$290",
     description: "Unlimited access to divine wisdom and premium features",

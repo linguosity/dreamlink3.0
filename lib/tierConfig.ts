@@ -48,7 +48,7 @@ export interface PlanCapabilities {
 
 export const PLAN_CAPABILITIES: Record<SubscriptionPlan, PlanCapabilities> = {
   free: {
-    label: "Seeker",
+    label: "Discovery",
     monthlyCredits: 3,
     fairUseCeiling: 3,
     analysisDepthCeiling: PLAN_DEPTH_CEILING.free,
@@ -57,16 +57,16 @@ export const PLAN_CAPABILITIES: Record<SubscriptionPlan, PlanCapabilities> = {
     canAccessApi: false,
   },
   visionary: {
-    label: "Visionary",
-    monthlyCredits: 50,
-    fairUseCeiling: 100,
+    label: "Insight",
+    monthlyCredits: 30,
+    fairUseCeiling: 30,
     analysisDepthCeiling: PLAN_DEPTH_CEILING.visionary,
     topAestheticTier: "visionary",
     canExport: true,
     canAccessApi: false,
   },
   prophet: {
-    label: "Prophet",
+    label: "Journey",
     monthlyCredits: null, // "unlimited" (fair-use bounded)
     fairUseCeiling: 300,
     analysisDepthCeiling: PLAN_DEPTH_CEILING.prophet,

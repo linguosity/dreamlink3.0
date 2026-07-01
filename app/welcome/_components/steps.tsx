@@ -251,10 +251,10 @@ export function StepPlan({ data, update, next, back }: StepProps) {
         </div>
       </div>
       <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
-        <PlanCard active={plan === "free"} onClick={() => update({ plan: "free" })} icon="leaf" name="Seeker" price="$0" per="forever"
+        <PlanCard active={plan === "free"} onClick={() => update({ plan: "free" })} icon="leaf" name="Discovery" price="$0" per="forever"
           features={["3 dream credits this month", "Still Waters & Flowing River readings", "Private dream journal", "Scripture references"]} />
-        <PlanCard active={plan === "visionary"} onClick={() => update({ plan: "visionary" })} icon="crown" name="Visionary" price={price} per={per} effective={effective} badge="Most chosen" highlight
-          features={["Unlimited dream interpretations", "All reading levels — incl. Celestial & Scholarly", "AI dream imagery for every entry", "Pattern & theme insights", "Priority analysis"]} />
+        <PlanCard active={plan === "visionary"} onClick={() => update({ plan: "visionary" })} icon="crown" name="Insight" price={price} per={per} effective={effective} badge="Most chosen" highlight
+          features={["30 dream interpretations / month", "All reading levels — incl. Celestial & Scholarly", "AI dream imagery for every entry", "Pattern & theme insights", "Priority analysis"]} />
       </div>
       <NavRow back={back} next={handleContinue} nextLabel={plan === "visionary" ? `Upgrade — ${price}${per}` : "Join free — get 3 credits"} />
       {pending && <PendingModal data={data} update={update} price={price} per={per} onClose={() => setPending(false)} onProceed={() => { setPending(false); next(); }} />}
@@ -312,7 +312,7 @@ function PendingModal({
         <h3 style={{ fontFamily: FONTS.SERIF, fontSize: 22, color: "var(--warm-darker)", marginBottom: 10 }}>Upgrades open soon</h3>
         <p style={{ fontSize: 13.5, color: "var(--warm-muted)", lineHeight: 1.6, marginBottom: 20 }}>
           Card payments aren&rsquo;t live just yet. Join free now with your 3 credits, and we&rsquo;ll email you the moment{" "}
-          <span style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", color: "var(--gold-deep)" }}>Visionary</span> ({price}{per}) is ready.
+          <span style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", color: "var(--gold-deep)" }}>Insight</span> ({price}{per}) is ready.
         </p>
         <div style={{ padding: "12px 14px", background: "oklch(0.98 0.008 80)", border: "1px solid var(--warm-line)", borderRadius: 11, marginBottom: 20, textAlign: "left" }}>
           <Check checked={data.notifyUpgrade !== false} onChange={(v) => update({ notifyUpgrade: v })}>Email me when Visionary upgrades go live</Check>
