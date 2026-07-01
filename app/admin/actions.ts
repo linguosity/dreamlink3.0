@@ -7,6 +7,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { setComingSoonEnabled } from "@/lib/siteSettings";
+import { setTestimonials, type Testimonial } from "@/lib/testimonials";
 import { revalidatePath } from "next/cache";
 
 async function requireAdmin() {
@@ -35,6 +36,22 @@ export async function toggleComingSoonAction(
     // Force the admin dashboard to re-render with the new flag value.
     revalidatePath("/admin");
     return { ok: true, enabled };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: message };
+  }
+}
+
+export async function saveTestimonialsAction(
+  testimonials: Testimonial[],
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    const user = await requireAdmin();
+    await setTestimonials(testimonials, user.id);
+    // Landing page reads these server-side; drop its cache.
+    revalidatePath("/landing");
+    revalidatePath("/admin/system");
+    return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return { error: message };

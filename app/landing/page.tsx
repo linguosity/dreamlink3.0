@@ -20,6 +20,8 @@ import SiteHeader from "@/components/SiteHeader";
 import Wordmark from "@/components/Wordmark";
 import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
+import SocialProof from "@/components/SocialProof";
+import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
 // v2 Moonwater: feature icon chips read as a unified pale-gold set
 // (no purple/teal one-offs). Background + border mirror the "step" circles
@@ -91,7 +93,14 @@ const FAQS = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Social proof is admin-managed; fetched server-side (service role) so it
+  // works for logged-out visitors despite site_settings' admin-only RLS.
+  const [testimonials, userCount] = await Promise.all([
+    getTestimonials(),
+    getUserCount(),
+  ]);
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -124,7 +133,7 @@ export default function LandingPage() {
                            text-[clamp(2rem,5.5vw,4rem)]
                            max-w-[14ch] mx-auto lg:mx-0 lg:max-w-[18ch]"
               >
-                Discover powerful scriptural insight through your dreams
+                Discover Biblical Insight through your Dreams
               </h1>
 
               <p className="mt-6 text-base sm:text-lg lg:text-xl text-[oklch(0.82_0.02_75)] max-w-prose mx-auto lg:mx-0 leading-relaxed">
@@ -162,42 +171,9 @@ export default function LandingPage() {
                 Free forever. No credit card required.
               </p>
 
-              {/* Social proof — Night-toned initials, no candy gradients. */}
-              <div className="mt-8 flex items-center gap-3 justify-center lg:justify-start">
-                <div className="flex -space-x-2" aria-hidden="true">
-                  {["EM", "JT", "AK", "SR"].map((init) => (
-                    <div
-                      key={init}
-                      className="w-9 h-9 rounded-full bg-[color:var(--night-soft)]
-                                 ring-2 ring-[color:var(--night)]
-                                 text-[10px] font-semibold text-[color:var(--cream)]
-                                 flex items-center justify-center"
-                    >
-                      {init}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-col items-start">
-                  <div
-                    className="flex gap-0.5 text-[color:var(--gold)]"
-                    aria-label="5 out of 5 stars"
-                  >
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-4 h-4 fill-current"
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm text-[oklch(0.80_0.025_75)]">
-                    Joined by{" "}
-                    <span className="font-semibold text-[color:var(--cream)]">
-                      2,000+ believers
-                    </span>
-                  </p>
-                </div>
-              </div>
+              {/* Social proof — admin-managed rotating testimonials; shows the
+                  live user count only once we pass the threshold. */}
+              <SocialProof testimonials={testimonials} userCount={userCount} />
             </div>
 
             <div className="mt-4 lg:mt-0 flex justify-center lg:justify-end">

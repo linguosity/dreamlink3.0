@@ -2,6 +2,8 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetHintsCard } from "./ResetHintsCard";
+import { TestimonialsCard } from "./TestimonialsCard";
+import { getTestimonials, getUserCount } from "@/lib/testimonials";
 import { HINT_IDS, type HintId } from "@/lib/hints/types";
 
 async function getSystemMetrics() {
@@ -96,9 +98,11 @@ async function getMyDismissedHints(): Promise<HintId[]> {
 }
 
 export default async function SystemPage() {
-  const [metrics, dismissedHints] = await Promise.all([
+  const [metrics, dismissedHints, testimonials, userCount] = await Promise.all([
     getSystemMetrics(),
     getMyDismissedHints(),
+    getTestimonials(),
+    getUserCount(),
   ]);
 
   return (
@@ -184,7 +188,7 @@ export default async function SystemPage() {
               <span className="font-bold">{metrics.totalImages}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span>Success rate</span>
+              <span>Dreams with images</span>
               <span className="font-bold">{metrics.imageGenRate}%</span>
             </div>
             <div className="flex items-center justify-between text-sm">
@@ -234,6 +238,9 @@ export default async function SystemPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Landing testimonials — admin-managed rotating social proof */}
+      <TestimonialsCard initial={testimonials} userCount={userCount} />
 
       {/* Onboarding hints — admin self-service reset */}
       <ResetHintsCard initialDismissed={dismissedHints} />
