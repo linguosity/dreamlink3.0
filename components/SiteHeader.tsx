@@ -25,7 +25,7 @@ export default function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    const ids = ["how-it-works", "features", "sample-interpretation", "faq"];
+    const ids = ["how-it-works", "features", "sample-interpretation", "plans", "faq"];
     const elements = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
@@ -78,6 +78,9 @@ export default function SiteHeader() {
           </a>
           <a href="#how-it-works" className={navLinkClass("how-it-works")}>
             How It Works
+          </a>
+          <a href="#plans" className={navLinkClass("plans")}>
+            Plans
           </a>
           <Link
             href="/blog"
@@ -154,6 +157,13 @@ export default function SiteHeader() {
             className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
           >
             How It Works
+          </a>
+          <a
+            href="#plans"
+            onClick={() => setOpen(false)}
+            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+          >
+            Plans
           </a>
           <Link
             href="/blog"

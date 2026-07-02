@@ -332,6 +332,116 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Plans (consolidated, per Moonwater landing design) ──────
+          Two cards only: Free and a "DreamRiver Plus" teaser with no
+          dollar amounts — the full 3-tier breakdown stays on /pricing. */}
+      <section
+        id="plans"
+        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm"
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 lg:mb-12">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--gold-deep)] dark:text-gold">
+              Simple &amp; honest
+            </p>
+            <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-gray-900 dark:text-white mt-3 mb-3">
+              Start free. Upgrade when you&rsquo;re ready.
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto">
+              Create a free journal and get 3 dream interpretation credits —
+              no credit card required.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            {/* Free */}
+            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 sm:p-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--gold-deep)]">
+                Free
+              </p>
+              <div className="flex items-baseline gap-2 mt-3">
+                <span className="font-serif text-4xl text-gray-900 dark:text-white leading-none">
+                  $0
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  to start
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
+                Everything you need to hear from your first dreams.
+              </p>
+              <ul className="grid gap-2.5 mb-7 text-sm text-gray-800 dark:text-gray-200">
+                {[
+                  "3 dream interpretation credits",
+                  "Private dream journal",
+                  "Biblical references & insights",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/sign-up"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-base font-semibold transition-colors focus-ring"
+              >
+                Start free
+              </Link>
+            </div>
+
+            {/* DreamRiver Plus (Night card) */}
+            <div className="relative overflow-hidden flex flex-col rounded-2xl border border-night-soft bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] p-7 sm:p-8">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-light">
+                  DreamRiver Plus
+                </p>
+                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-night-deep bg-gold px-2.5 py-1 rounded-full">
+                  Upgrade
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-3">
+                <span className="font-serif text-4xl text-cream leading-none">
+                  More
+                </span>
+                <span className="text-sm text-cream/60">when you need it</span>
+              </div>
+              <p className="text-sm text-cream/60 mt-2 mb-5">
+                Go deeper when 3 credits isn&rsquo;t enough.
+              </p>
+              <ul className="grid gap-2.5 mb-7 text-sm text-cream/90">
+                {[
+                  "More interpretation credits",
+                  "Deeper, scholarly interpretation",
+                  "Pattern & theme tracking",
+                  "Everything in Free",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span aria-hidden className="text-gold mt-0.5">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/sign-up"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-gold hover:bg-gold-light text-night-deep text-base font-semibold transition-colors focus-ring"
+              >
+                Start free — upgrade anytime
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+            <Link
+              href="/pricing"
+              className="text-[color:var(--gold-deep)] dark:text-gold font-semibold hover:underline underline-offset-4"
+            >
+              See full plan details →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* ── FAQ ────────────────────────────────────────────────────── */}
       <section id="faq" className="scroll-mt-20 py-20 sm:py-24 bg-white dark:bg-slate-950">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
