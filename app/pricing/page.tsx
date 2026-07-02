@@ -147,10 +147,12 @@ export default function PricingPage() {
         <div className="absolute inset-0 bg-background/80" />
       </div>
 
-      <div className="container max-w-7xl mx-auto px-4 py-16">
+      {/* py-8 (was 16) + tightened header stack below: goal is the billing
+          toggle AND the top of all three cards visible without scrolling. */}
+      <div className="container max-w-7xl mx-auto px-4 py-8">
         {/* Navigation */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Link
               href="/sign-up"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -166,21 +168,18 @@ export default function PricingPage() {
         </div>
 
         {/* Header */}
-        <div className="text-center mb-10">
-          <Badge variant="outline" className="mb-4 text-xs font-medium">
-            Choose Your Path
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             Unlock Divine Insights
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Choose the subscription tier that aligns with your spiritual journey.
-            Each plan offers deeper access to AI-powered biblical dream interpretation.
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Choose the tier that fits your journey — each plan goes deeper into
+            biblical dream interpretation.
           </p>
         </div>
 
         {/* Billing toggle */}
-        <div className="flex items-center justify-center gap-3 mb-12">
+        <div className="flex items-center justify-center gap-3 mb-8">
           <button
             type="button"
             onClick={() => setBilling("monthly")}
