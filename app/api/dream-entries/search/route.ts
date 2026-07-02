@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const query = url.searchParams.get('q') || '';
     const cursor = url.searchParams.get('cursor') || undefined;
-    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+    // Clamp limit to a sane range (audit: unclamped parseInt allowed
+    // arbitrary fetch sizes).
+    const rawLimit = parseInt(url.searchParams.get('limit') || '10', 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 10;
 
     // If no query, return an error
     if (!query) {
@@ -78,11 +81,15 @@ export async function GET(request: NextRequest) {
     // the columns that are still plaintext (original_text is now encrypted
     // and not searchable via ILIKE).
     if (!dreams || dreams.length === 0) {
+      // Escape characters with meaning in PostgREST filter expressions and
+      // ILIKE patterns (audit: raw interpolation let commas/parens alter the
+      // .or() filter — not SQLi, but a correctness/abuse nuisance).
+      const escaped = query.replace(/[\\%_,()."']/g, (c) => `\\${c}`);
       let fallbackQuery = supabase
         .from("dream_entries")
         .select("*")
         .eq("user_id", user.id)
-        .or(`title.ilike.%${query}%, dream_summary.ilike.%${query}%`)
+        .or(`title.ilike.%${escaped}%,dream_summary.ilike.%${escaped}%`)
         .order('created_at', { ascending: false })
         .limit(limit);
 

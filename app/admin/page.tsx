@@ -52,25 +52,40 @@ function computeTrend(last7: number, prior7: number): number {
   return Math.round(((last7 - prior7) / prior7) * 100);
 }
 
-// Bucket created_at timestamps into the last N days starting today.
+// Bucket created_at timestamps into the last N UTC calendar days (oldest
+// first, today last). 2026-06-09 audit fix: the old version bucketed into
+// rolling 24h windows anchored at "now" but the bar chart labeled buckets
+// with calendar dates, so counts could land under the wrong date label.
+// Supabase `timestamp` columns are UTC; treat tz-less strings as UTC too.
+function utcDayKey(ts: string): string {
+  const normalized = /Z|[+-]\d{2}:?\d{2}$/.test(ts) ? ts : `${ts}Z`;
+  return new Date(normalized).toISOString().split("T")[0];
+}
+
 function bucketByDay(
   createdAts: string[],
   days: number,
-): { sparkline: number[]; total: number } {
+): { sparkline: number[]; total: number; dayKeys: string[] } {
+  const dayKeys: string[] = [];
+  const indexByKey = new Map<string, number>();
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * DAY_MS);
+    const key = d.toISOString().split("T")[0];
+    indexByKey.set(key, dayKeys.length);
+    dayKeys.push(key);
+  }
+
   const buckets = new Array<number>(days).fill(0);
-  const now = Date.now();
-  const start = now - days * DAY_MS;
   let total = 0;
   for (const ts of createdAts) {
-    const t = new Date(ts).getTime();
-    if (t < start) continue;
-    const idx = Math.floor((t - start) / DAY_MS);
-    if (idx >= 0 && idx < days) {
+    const idx = indexByKey.get(utcDayKey(ts));
+    if (idx !== undefined) {
       buckets[idx]++;
       total++;
     }
   }
-  return { sparkline: buckets, total };
+  return { sparkline: buckets, total, dayKeys };
 }
 
 async function getMetrics(): Promise<DashboardMetrics> {
@@ -182,14 +197,13 @@ async function getMetrics(): Promise<DashboardMetrics> {
   const subsSparkline = subsBuckets14.sparkline.slice(7);
   const aiCallsSparkline = aiBuckets14.sparkline.slice(7);
 
-  // 14-day series for the bar chart with explicit dates
-  const dreamsByDay: Array<{ date: string; count: number }> = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * DAY_MS);
-    const date = d.toISOString().split("T")[0];
-    const idx = 13 - i;
-    dreamsByDay.push({ date, count: dreamsBuckets14.sparkline[idx] ?? 0 });
-  }
+  // 14-day series for the bar chart — labels come from the same UTC day keys
+  // the counts were bucketed into, so they can't drift apart.
+  const dreamsByDay: Array<{ date: string; count: number }> =
+    dreamsBuckets14.dayKeys.map((date, idx) => ({
+      date,
+      count: dreamsBuckets14.sparkline[idx] ?? 0,
+    }));
 
   // Plan map for signup list
   const planByUser = new Map<string, "visionary" | "prophet">();
@@ -250,34 +264,55 @@ async function getMetrics(): Promise<DashboardMetrics> {
   };
 }
 
-const SYSTEM_ITEMS = [
-  {
-    label: "Database",
-    detail: "Supabase PostgreSQL",
-    status: "operational" as const,
-  },
-  {
-    label: "AI Analysis",
-    detail: "OpenAI gpt-4.1-mini · Edge",
-    status: "operational" as const,
-  },
-  {
-    label: "Image Generation",
-    detail: "FLUX.2 klein 9B",
-    status: "operational" as const,
-  },
-  {
-    label: "Payments",
-    detail: "Stripe — not connected",
-    status: "pending" as const,
-  },
-  {
-    label: "Error Monitoring",
-    detail: "Sentry + client_error_logs",
-    status: "operational" as const,
-  },
-  { label: "Email", detail: "Not configured", status: "pending" as const },
-];
+// 2026-06-09 audit fix: this list used to be fully hardcoded (every service
+// "operational" regardless of reality, Stripe "not connected" regardless of
+// env). Now driven by env configuration, mirroring app/admin/system/page.tsx.
+// "configured" ≠ "healthy" — these are config checks, not live health probes.
+function getSystemItems() {
+  const configured = (ok: boolean) =>
+    ok ? ("operational" as const) : ("pending" as const);
+  return [
+    {
+      label: "Database",
+      detail: "Supabase PostgreSQL",
+      status: configured(
+        Boolean(
+          process.env.NEXT_PUBLIC_SUPABASE_URL &&
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+        ),
+      ),
+    },
+    {
+      label: "AI Analysis",
+      detail: `OpenAI ${process.env.OPENAI_MODEL || "gpt-4.1-mini"} · Edge`,
+      status: configured(Boolean(process.env.OPENAI_API_KEY)),
+    },
+    {
+      label: "Image Generation",
+      detail: "FLUX.2 klein 9B",
+      status: configured(Boolean(process.env.BFL_API_KEY)),
+    },
+    {
+      label: "Payments",
+      detail: process.env.STRIPE_SECRET_KEY
+        ? "Stripe configured"
+        : "Stripe — not configured",
+      status: configured(
+        Boolean(
+          process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET,
+        ),
+      ),
+    },
+    {
+      label: "Error Monitoring",
+      detail: "Sentry + client_error_logs",
+      status: configured(
+        Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN),
+      ),
+    },
+    { label: "Email", detail: "Not configured", status: "pending" as const },
+  ];
+}
 
 export default async function AdminDashboard() {
   const m = await getMetrics();
@@ -362,20 +397,6 @@ export default async function AdminDashboard() {
                 Last 14 days
               </div>
             </div>
-            <div className="flex gap-1 p-0.5 bg-muted rounded-lg text-xs">
-              {(["14d", "30d", "90d"] as const).map((t, i) => (
-                <span
-                  key={t}
-                  className={`px-2.5 py-1 rounded-md ${
-                    i === 0
-                      ? "bg-card font-semibold shadow-sm"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
           </div>
           <DreamsBarChart data={m.dreamsByDay} />
         </div>
@@ -391,8 +412,8 @@ export default async function AdminDashboard() {
         <SiteSettingsCard />
       </div>
 
-      {/* System status */}
-      <SystemStatus items={SYSTEM_ITEMS} />
+      {/* System status (env-configuration checks) */}
+      <SystemStatus items={getSystemItems()} />
     </div>
   );
 }

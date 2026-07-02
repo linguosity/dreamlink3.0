@@ -15,8 +15,9 @@ interface Plan {
   name: string;
   monthly: string;
   yearly: string;
-  /** Note shown under the price on the yearly toggle (e.g. effective /mo). */
-  yearlyNote?: string;
+  /** Numeric prices for accurate savings/effective-monthly math (omit for free). */
+  monthlyNum?: number;
+  yearlyNum?: number;
   description: string;
   credits: string;
   features: string[];
@@ -50,7 +51,8 @@ const plans: Plan[] = [
     name: "Insight",
     monthly: "$12.99",
     yearly: "$99.99",
-    yearlyNote: "$8.33/mo, billed yearly",
+    monthlyNum: 12.99,
+    yearlyNum: 99.99,
     description: "Unlock deeper spiritual insights with enhanced AI analysis",
     credits: "30 / month",
     features: [
@@ -68,8 +70,10 @@ const plans: Plan[] = [
   },
   {
     name: "Journey",
-    monthly: "$29",
-    yearly: "$290",
+    monthly: "$19.99",
+    yearly: "$179.99",
+    monthlyNum: 19.99,
+    yearlyNum: 179.99,
     description: "Unlimited access to divine wisdom and premium features",
     credits: "Unlimited",
     features: [
@@ -87,6 +91,20 @@ const plans: Plan[] = [
     color: "bg-gradient-to-br from-accent/40 to-secondary",
   },
 ];
+
+// Yearly savings vs. paying month-to-month, rounded to a whole percent.
+function yearlySavingsPct(monthly: number, yearly: number): number {
+  if (!monthly || !yearly) return 0;
+  return Math.round((1 - yearly / (monthly * 12)) * 100);
+}
+
+// Highest savings across paid plans — used for the "save up to X%" toggle badge.
+const MAX_SAVINGS = Math.max(
+  0,
+  ...plans
+    .filter((p) => p.monthlyNum && p.yearlyNum)
+    .map((p) => yearlySavingsPct(p.monthlyNum as number, p.yearlyNum as number)),
+);
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<BillingPeriod>("monthly");
@@ -183,12 +201,15 @@ export default function PricingPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Yearly <span className="text-xs opacity-80">· save ~36%</span>
+            Yearly <span className="text-xs opacity-80">· save up to {MAX_SAVINGS}%</span>
           </button>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* grid-cols-1 matters: without it the mobile column is auto-sized
+            (min-content), and the nowrap CTA buttons force the cards wider
+            than the phone viewport. minmax(0,1fr) lets them shrink. */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => {
             const price = billing === "monthly" ? plan.monthly : plan.yearly;
             const isFree = plan.priceBase === null;
@@ -218,8 +239,11 @@ export default function PricingPage() {
                       <span className="text-muted-foreground">/{period}</span>
                     )}
                   </div>
-                  {billing === "yearly" && plan.yearlyNote && (
-                    <p className="text-xs text-muted-foreground mb-4">{plan.yearlyNote}</p>
+                  {billing === "yearly" && plan.monthlyNum && plan.yearlyNum && (
+                    <p className="text-xs text-muted-foreground mb-4">
+                      ≈ ${(plan.yearlyNum / 12).toFixed(2)}/mo · save{" "}
+                      {yearlySavingsPct(plan.monthlyNum, plan.yearlyNum)}%
+                    </p>
                   )}
 
                   <div className="mt-6 mb-6 p-4 bg-background/50 rounded-lg">
@@ -242,7 +266,7 @@ export default function PricingPage() {
                 {isFree ? (
                   <Link href="/sign-up" className="block">
                     <Button
-                      className="w-full py-3 text-base font-medium bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                      className="w-full py-3 text-base font-medium whitespace-normal h-auto bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
                       variant="outline"
                     >
                       {plan.cta}
@@ -252,7 +276,7 @@ export default function PricingPage() {
                   <Button
                     onClick={() => startCheckout(plan)}
                     disabled={plan.comingSoon || loadingPlan === plan.name}
-                    className="w-full py-3 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl"
+                    className="w-full py-3 text-base font-medium whitespace-normal h-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl"
                   >
                     {plan.comingSoon
                       ? "Coming Soon"
@@ -280,15 +304,15 @@ export default function PricingPage() {
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">What happens to unused credits?</h4>
               <p className="text-sm text-muted-foreground">
-                Credits reset at the start of each month and don't roll over. Pick the plan that
-                matches your regular journaling.
+                Your monthly credits reset at the start of each billing month — unused credits do
+                not roll over. Pick the plan that matches your regular journaling.
               </p>
             </div>
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">Is the free plan really free?</h4>
               <p className="text-sm text-muted-foreground">
-                Yes — the Seeker plan is permanently free with 3 dream analyses every month. Upgrade
-                anytime for more.
+                Yes — the Discovery plan is free and includes 3 dream analyses every month, with no
+                credit card required. Upgrade anytime for more.
               </p>
             </div>
           </div>

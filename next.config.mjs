@@ -3,12 +3,21 @@ import { withSentryConfig } from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    // Ignore TypeScript errors during build
-    ignoreBuildErrors: true,
+    // Type errors fail the build (2026-06-09 audit, M7). `npm run typecheck`
+    // passes as of this change — keep it that way.
+    ignoreBuildErrors: false,
   },
   reactStrictMode: true,
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'whuboznlopvhzwxdscah.supabase.co',
+        // `sign` covers the private-bucket signed URLs (migration
+        // 20260609000001); `public` kept during the transition for any
+        // legacy rows not yet re-signed via /api/backfill-images.
+        pathname: '/storage/v1/object/sign/**',
+      },
       {
         protocol: 'https',
         hostname: 'whuboznlopvhzwxdscah.supabase.co',

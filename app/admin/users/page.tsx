@@ -22,7 +22,7 @@ async function getUsers(): Promise<{
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Get all profiles with their dream counts
+  // Get the 50 most recent profiles for the table
   const { data: profiles, count } = await admin
     .from("profile")
     .select("user_id, created_at, reading_level, image_aesthetic, is_admin", {
@@ -31,15 +31,44 @@ async function getUsers(): Promise<{
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Get dream counts per user
-  const { data: dreamCounts } = await admin
-    .from("dream_entries")
-    .select("user_id, created_at");
+  const displayedIds = (profiles || [])
+    .map((p) => p.user_id)
+    .filter((id): id is string => Boolean(id));
 
-  // Aggregate dream data per user. Skip orphan rows (no user_id) and rows
-  // missing created_at — both are required to be useful in this view.
+  // 2026-06-09 audit fix: this page used to fetch EVERY dream_entries row to
+  // aggregate in JS — PostgREST silently caps unranged selects (default 1000
+  // rows), so past ~1000 dreams the "active" counts and per-user dream counts
+  // undercounted, biased by row order. Now:
+  //   - "active" metrics query only the last 7 days (bounded window)
+  //   - per-user stats query only the 50 displayed users
+  const [{ data: recentActivity }, { data: displayedDreams }] =
+    await Promise.all([
+      admin
+        .from("dream_entries")
+        .select("user_id, created_at")
+        .gte("created_at", weekAgo),
+      displayedIds.length > 0
+        ? admin
+            .from("dream_entries")
+            .select("user_id, created_at")
+            .in("user_id", displayedIds)
+        : Promise.resolve({ data: [] as Array<{ user_id: string | null; created_at: string | null }> }),
+    ]);
+
+  // "Active" = submitted a dream in the window (distinct users).
+  const activeTodaySet = new Set<string>();
+  const activeWeekSet = new Set<string>();
+  (recentActivity || []).forEach((d) => {
+    if (!d.user_id || !d.created_at) return;
+    activeWeekSet.add(d.user_id);
+    if (d.created_at >= todayStart) activeTodaySet.add(d.user_id);
+  });
+  const activeToday = activeTodaySet.size;
+  const activeThisWeek = activeWeekSet.size;
+
+  // Per-user dream stats for the displayed rows only.
   const userDreamMap = new Map<string, { count: number; lastDream: string | null }>();
-  dreamCounts?.forEach((d) => {
+  (displayedDreams || []).forEach((d) => {
     if (!d.user_id || !d.created_at) return;
     const existing = userDreamMap.get(d.user_id);
     if (!existing) {
@@ -50,14 +79,6 @@ async function getUsers(): Promise<{
         existing.lastDream = d.created_at;
       }
     }
-  });
-
-  // Count active users
-  let activeToday = 0;
-  let activeThisWeek = 0;
-  userDreamMap.forEach((data) => {
-    if (data.lastDream && data.lastDream >= todayStart) activeToday++;
-    if (data.lastDream && data.lastDream >= weekAgo) activeThisWeek++;
   });
 
   // Filter out orphan profile rows (missing user_id or created_at) — they

@@ -13,10 +13,13 @@ import { zodTextFormat } from "openai/helpers/zod";
 import {
   getOpenAIClient,
   OPENAI_MODEL,
+  OPENAI_FALLBACK_MODELS,
   getDreamAnalysisSchemaForDepth,
+  getDepthSpec,
   type DreamAnalysis,
   type BiblicalReference,
 } from "@/lib/openai";
+import { captureError } from "@/lib/sentry";
 import { ReadingLevel, AnalysisDepth } from "@/schema/profile";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -192,16 +195,34 @@ function getDepthInstructions(
   return getFallbackDepthInstructions(depth);
 }
 
-function getMaxOutputTokensForDepth(depth: string): number {
-  switch (depth) {
-    case AnalysisDepth.PROFOUND:
-      return 8000;
-    case AnalysisDepth.DEEP:
-      return 4500;
-    case AnalysisDepth.SHALLOW:
-    default:
-      return 2000;
+// ── Model fallback + length enforcement helpers ────────────────────
+
+/** Per-attempt request timeout. Keeps a failed model from eating the whole
+ *  Vercel budget before the next model in the chain gets a chance. */
+const PER_ATTEMPT_TIMEOUT_MS = 45_000;
+
+/** Retryable = the model/provider had a problem, not our request.
+ *  4xx validation/schema errors must NOT fall through to another model —
+ *  they'd fail identically and just double the spend. */
+function isRetryableError(err: unknown): boolean {
+  const anyErr = err as any;
+  const status: unknown = anyErr?.status ?? anyErr?.response?.status;
+  if (typeof status === "number") {
+    return status === 408 || status === 429 || status >= 500;
   }
+  // No HTTP status → connection error / timeout / abort.
+  const name: string = anyErr?.constructor?.name ?? "";
+  return (
+    name.includes("APIConnection") ||
+    name.includes("Timeout") ||
+    anyErr?.name === "AbortError" ||
+    anyErr?.code === "ETIMEDOUT" ||
+    anyErr?.code === "ECONNRESET"
+  );
+}
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 // ── Fallback response ──────────────────────────────────────────────
@@ -347,51 +368,160 @@ ${depthInstructions}
 
     const client = getOpenAIClient();
     const schemaForDepth = getDreamAnalysisSchemaForDepth(effectiveDepth);
+    const spec = getDepthSpec(effectiveDepth);
 
-    const response = await client.responses.parse({
-      model: OPENAI_MODEL,
-      input: [
-        { role: "system", content: systemMessage },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_output_tokens: getMaxOutputTokensForDepth(effectiveDepth),
-      text: {
-        format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
-      },
-    });
+    // Accumulates tokens across fallback attempts and the length-retry so
+    // the admin cost footer reflects what was actually billed.
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let sawUsage = false;
 
-    if (DEBUG) {
-      console.log(
-        `runDreamAnalysis depth=${effectiveDepth}: status=${response.status} tokens=${response.usage?.input_tokens}/${response.usage?.output_tokens}`,
+    const callModel = async (model: string, extraInstruction?: string) => {
+      const response = await client.responses.parse(
+        {
+          model,
+          input: [
+            { role: "system", content: systemMessage },
+            {
+              role: "user",
+              content: extraInstruction
+                ? `${userPrompt}\n\n${extraInstruction}`
+                : userPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_output_tokens: spec.maxOutputTokens,
+          text: {
+            format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
+          },
+        },
+        // Per-attempt timeout + a single SDK-level retry. Without these the
+        // SDK's default retry/backoff can eat the whole function budget
+        // before the next model in the chain ever runs.
+        { timeout: PER_ATTEMPT_TIMEOUT_MS, maxRetries: 1 },
       );
+      if (response.usage) {
+        sawUsage = true;
+        totalInputTokens += response.usage.input_tokens ?? 0;
+        totalOutputTokens += response.usage.output_tokens ?? 0;
+      }
+      return response;
+    };
+
+    // ── Model fallback chain ──────────────────────────────────────
+    // Primary first, then each fallback, but only on retryable errors
+    // (429/5xx/timeouts). Schema/validation errors propagate immediately.
+    const modelChain = [
+      OPENAI_MODEL,
+      ...OPENAI_FALLBACK_MODELS.filter((m) => m !== OPENAI_MODEL),
+    ];
+
+    let response: Awaited<ReturnType<typeof callModel>> | null = null;
+    let modelUsed = OPENAI_MODEL;
+    let lastError: unknown = null;
+
+    for (const model of modelChain) {
+      try {
+        response = await callModel(model);
+        modelUsed = model;
+        break;
+      } catch (err) {
+        lastError = err;
+        if (!isRetryableError(err)) throw err;
+        captureError(err, {
+          tags: { area: "ai-pipeline", stage: "analysis", model },
+          extra: { depth: effectiveDepth, fallbackAvailable: model !== modelChain[modelChain.length - 1] },
+          level: "warning",
+        });
+        if (DEBUG) {
+          console.warn(
+            `runDreamAnalysis: model ${model} failed (retryable), trying next in chain`,
+          );
+        }
+      }
+    }
+
+    if (!response) {
+      // Entire chain failed with retryable errors.
+      throw lastError ?? new Error("All models in fallback chain failed");
     }
 
     const usage: DreamAnalysisUsage = {
-      inputTokens: response.usage?.input_tokens ?? null,
-      outputTokens: response.usage?.output_tokens ?? null,
+      inputTokens: sawUsage ? totalInputTokens : null,
+      outputTokens: sawUsage ? totalOutputTokens : null,
     };
 
-    const parsed = response.output_parsed;
+    let parsed = response.output_parsed;
     if (!parsed) {
-      console.error(
-        `runDreamAnalysis depth=${effectiveDepth}: null parsed output, status=${response.status}`,
-      );
+      captureError(new Error("null parsed output"), {
+        tags: { area: "ai-pipeline", stage: "parse", model: modelUsed },
+        extra: { depth: effectiveDepth, status: response.status },
+      });
       // Tokens may still have been billed even though parsing failed — preserve
       // the usage block so the admin footer doesn't undercount cost.
       return { analysis: FALLBACK_ANALYSIS, usage };
     }
 
-    return { analysis: parsed, usage };
+    // ── Length enforcement (single corrective retry) ──────────────
+    // max_output_tokens only caps length; it can't force a minimum, and
+    // mini-tier models routinely undershoot the prose targets. If the
+    // analysis lands below ~75% of the tier's floor, retry once on the
+    // model that succeeded, with an explicit word-count correction.
+    const words = countWords(parsed.analysis);
+    if (words < Math.floor(spec.minWords * 0.75)) {
+      if (DEBUG) {
+        console.log(
+          `runDreamAnalysis depth=${effectiveDepth}: analysis is ${words} words (target ${spec.minWords}-${spec.maxWords}), retrying with length correction`,
+        );
+      }
+      try {
+        const retry = await callModel(
+          modelUsed,
+          `IMPORTANT LENGTH CORRECTION: A previous draft of this analysis was only ${words} words. The "analysis" field MUST be between ${spec.minWords} and ${spec.maxWords} words. Expand each supporting point to ${spec.pointMinWords}-${spec.pointMaxWords} words and fully develop every section required by the depth tier. Count words as you write.`,
+        );
+        const retryParsed = retry.output_parsed;
+        if (
+          retryParsed &&
+          countWords(retryParsed.analysis) > words
+        ) {
+          parsed = retryParsed;
+        }
+      } catch (err) {
+        // Length retry is best-effort — keep the short-but-valid result.
+        captureError(err, {
+          tags: { area: "ai-pipeline", stage: "length-retry", model: modelUsed },
+          extra: { depth: effectiveDepth, firstDraftWords: words },
+          level: "warning",
+        });
+      }
+    }
+
+    if (DEBUG) {
+      console.log(
+        `runDreamAnalysis depth=${effectiveDepth}: model=${modelUsed} words=${countWords(parsed.analysis)} tokens=${totalInputTokens}/${totalOutputTokens}`,
+      );
+    }
+
+    return {
+      analysis: parsed,
+      usage: {
+        inputTokens: sawUsage ? totalInputTokens : null,
+        outputTokens: sawUsage ? totalOutputTokens : null,
+      },
+    };
   } catch (error: unknown) {
     if (error instanceof SyntaxError) {
       console.error(
-        `runDreamAnalysis depth=${analysisDepth}: JSON parse error — likely truncation. Bump getMaxOutputTokensForDepth().`,
+        `runDreamAnalysis depth=${analysisDepth}: JSON parse error — likely truncation. Bump the tier's maxOutputTokens in DEPTH_SPECS.`,
         error,
       );
     } else {
       console.error(`runDreamAnalysis depth=${analysisDepth}: error`, error);
     }
+    captureError(error, {
+      tags: { area: "ai-pipeline", stage: "analysis" },
+      extra: { depth: analysisDepth ?? "unknown" },
+    });
     return { analysis: FALLBACK_ANALYSIS, usage: { inputTokens: null, outputTokens: null } };
   }
 }

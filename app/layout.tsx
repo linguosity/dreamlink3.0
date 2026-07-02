@@ -30,10 +30,14 @@ import CookieConsent from '@/components/CookieConsent';
 import { HintsProvider } from '@/lib/hints/dismissed-context';
 import { HINT_IDS, type HintId } from '@/lib/hints/types';
 
-// Determine the base URL for metadata and redirects
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+// Determine the base URL for metadata and redirects.
+// VERCEL_URL is the raw deployment host (…vercel.app), NOT the custom domain,
+// so production must hardcode the canonical origin or OG/canonical URLs
+// point search engines away from dreamriver.io.
+const defaultUrl =
+  process.env.NODE_ENV === "production"
+    ? "https://dreamriver.io"
+    : "http://localhost:3000";
 
 // ① Next.js Metadata API
 // F13/F14 (v2 Moonwater): wire the new icon set + og:image. Icons live in
@@ -203,7 +207,7 @@ export default async function RootLayout({
             {/* Footer only on auth pages (landing page has its own footer) */}
             {isAuthPage && (
               <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
-                <p className="text-white">
+                <p className="text-muted-foreground">
                   © {new Date().getFullYear()} DreamRiver. All rights reserved.
                 </p>
                 <div className="flex items-center gap-4">

@@ -80,6 +80,12 @@ export default function SiteHeader() {
             How It Works
           </a>
           <Link
+            href="/blog"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors focus-ring rounded px-1 py-0.5"
+          >
+            Journal
+          </Link>
+          <Link
             href="/sign-in"
             className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors focus-ring rounded px-1 py-0.5"
           >
@@ -149,6 +155,13 @@ export default function SiteHeader() {
           >
             How It Works
           </a>
+          <Link
+            href="/blog"
+            onClick={() => setOpen(false)}
+            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+          >
+            Journal
+          </Link>
           <Link
             href="/sign-in"
             onClick={() => setOpen(false)}

@@ -10,11 +10,15 @@
 //   4. Upload to Supabase Storage bucket "dream-images"
 //   5. Return the permanent public URL
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ImageAesthetic, AESTHETIC_PRESETS } from '@/schema/imageAesthetic';
 
 const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
-const TIMEOUT_MS = 90_000; // 90 second timeout
+// Must stay below the calling route's `maxDuration = 60` (Vercel kills the
+// function at 60s — a 90s internal timeout could never fire, and slow
+// generations were billed but never stored). 50s leaves headroom for the
+// download + Supabase upload + DB writes.
+const TIMEOUT_MS = 50_000;
 
 // Exponential backoff polling config
 const INITIAL_POLL_DELAY_MS = 500;
@@ -69,9 +73,33 @@ export function buildImagePrompt(
   return `${subject}. ${preset.scene} ${preset.styleAnnotation} Shot on 35mm film (Kodak Portra 400) with shallow depth of field—subject razor-sharp, background softly blurred.`;
 }
 
+// Signed-URL lifetime. 10 years — these are share-by-link capabilities, not
+// session credentials. If revocation-by-expiry is ever needed, shorten this
+// and re-sign on read instead.
+const SIGNED_URL_TTL_SECONDS = 10 * 365 * 24 * 60 * 60;
+
+/**
+ * Creates a long-lived signed URL for an object in the private dream-images
+ * bucket. Exported so the admin backfill route can re-sign legacy public
+ * URLs after the bucket was made private.
+ */
+export async function createDreamImageSignedUrl(
+  adminSupabase: Pick<SupabaseClient<any, any, any>, 'storage'>,
+  fileName: string
+): Promise<string | null> {
+  const { data, error } = await adminSupabase.storage
+    .from('dream-images')
+    .createSignedUrl(fileName, SIGNED_URL_TTL_SECONDS);
+  if (error || !data?.signedUrl) {
+    console.error('Failed to sign dream image URL:', error?.message);
+    return null;
+  }
+  return data.signedUrl;
+}
+
 /**
  * Generates a dream image via BFL API, downloads it, uploads to Supabase
- * Storage, and returns the permanent public URL.
+ * Storage, and returns a long-lived signed URL (bucket is private).
  *
  * Uses the service-role key so it can bypass RLS for storage uploads.
  * This is safe because this function only runs server-side.
@@ -180,13 +208,17 @@ export async function generateAndStoreDreamImage(
         throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
-      // ── Step 5: Return public URL ──────────────────────────────────────────
-      const { data: urlData } = adminSupabase.storage
-        .from('dream-images')
-        .getPublicUrl(fileName);
+      // ── Step 5: Return long-lived signed URL ──────────────────────────────
+      // The bucket is private (migration 20260609000001). The signed URL is
+      // the capability: shareable by link, but the bucket can't be browsed
+      // and objects can't be fetched without the token.
+      const signed = await createDreamImageSignedUrl(adminSupabase, fileName);
+      if (!signed) {
+        throw new Error('Failed to create signed URL for stored image');
+      }
 
-      console.log(`🎨 Dream image stored successfully: ${urlData.publicUrl}`);
-      return urlData.publicUrl;
+      console.log(`🎨 Dream image stored successfully: dream-images/${fileName}`);
+      return signed;
     }
 
     if (pollData.status === 'Error' || pollData.status === 'Failed') {
@@ -197,5 +229,5 @@ export async function generateAndStoreDreamImage(
     currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
   }
 
-  throw new Error('BFL image generation timed out after 90 seconds');
+  throw new Error(`BFL image generation timed out after ${TIMEOUT_MS / 1000} seconds`);
 }

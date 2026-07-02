@@ -194,7 +194,7 @@ export default async function DreamsPage() {
         {/* Popular tags */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Popular Tags</CardTitle>
+            <CardTitle className="text-base">Popular Tags (last 20 dreams)</CardTitle>
           </CardHeader>
           <CardContent>
             {metrics.topTags.length === 0 ? (

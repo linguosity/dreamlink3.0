@@ -31,6 +31,23 @@ export async function POST(request: Request) {
   const { email, source } = parsed.data;
   const admin = getAdminClient();
 
+  // Burst brake (2026-06-09 audit, M2): this is a public, service-role
+  // insert with no captcha. A global hourly cap stops a bot from bloating
+  // the table / poisoning the mailing list overnight. Generous enough that
+  // real launch-day traffic won't hit it; tune via SUBSCRIBE_HOURLY_LIMIT.
+  const hourlyLimit = Number.parseInt(process.env.SUBSCRIBE_HOURLY_LIMIT || "100", 10);
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await admin
+    .from("newsletter_signups")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", hourAgo);
+  if ((count ?? 0) >= hourlyLimit) {
+    return NextResponse.json(
+      { error: "Too many signups right now — please try again later." },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
+  }
+
   // Cast until Supabase types are generated; the admin client is untyped.
   const { error } = await admin
     .from("newsletter_signups")

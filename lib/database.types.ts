@@ -89,6 +89,57 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          excerpt: string | null
+          content_md: string
+          cover_image_url: string | null
+          author_name: string
+          tags: string[]
+          status: string
+          seo_title: string | null
+          seo_description: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          excerpt?: string | null
+          content_md?: string
+          cover_image_url?: string | null
+          author_name?: string
+          tags?: string[]
+          status?: string
+          seo_title?: string | null
+          seo_description?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          title?: string
+          excerpt?: string | null
+          content_md?: string
+          cover_image_url?: string | null
+          author_name?: string
+          tags?: string[]
+          status?: string
+          seo_title?: string | null
+          seo_description?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chatgpt_interactions: {
         Row: {
           created_at: string | null

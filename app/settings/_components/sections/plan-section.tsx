@@ -21,7 +21,7 @@ const PLANS: Array<{
     id: "free",
     name: "Discovery",
     price: "$0",
-    per: "forever",
+    per: "to start",
     features: [
       "3 analyses / month",
       "Shallow analysis",
@@ -48,8 +48,8 @@ const PLANS: Array<{
   {
     id: "prophet",
     name: "Journey",
-    price: "$29",
-    per: "per month",
+    price: "$19.99",
+    per: "per month · $179.99/yr",
     features: [
       "Everything in Insight",
       "Unlimited analyses",

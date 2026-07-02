@@ -20,6 +20,21 @@ import { AnalysisDepth } from "@/schema/profile";
 // structured output support and strong instruction following.
 export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
+// Ordered fallback models, tried in sequence when the primary model fails
+// with a retryable error (429 / 5xx / connection timeout). Comma-separated
+// env var so the chain can be re-ordered without a deploy:
+//   OPENAI_FALLBACK_MODELS="gpt-4.1,gpt-4o-mini"
+// Note this protects against single-MODEL failures and brownouts. For
+// whole-provider outage resilience, point OPENAI_BASE_URL at a multi-
+// provider router (e.g. OpenRouter) — the SDK reads that env var natively
+// and no code change is needed.
+export const OPENAI_FALLBACK_MODELS: string[] = (
+  process.env.OPENAI_FALLBACK_MODELS || "gpt-4.1"
+)
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
 // ── Singleton client ────────────────────────────────────────────────
 // Works in Node.js serverless and Edge runtimes (SDK v4 uses native fetch).
 let _client: OpenAI | null = null;
@@ -75,29 +90,96 @@ const baseShape = {
   ),
 } as const;
 
-// Shallow: minimum-viable analysis. 2 supporting points, 3 tags.
-export const ShallowDreamAnalysisSchema = z.object({
-  ...baseShape,
-  supportingPoints: z.array(z.string()).length(2),
-  biblicalReferences: z.array(BiblicalReferenceSchema).length(2),
-  tags: z.array(z.string()).length(3),
-});
+// ── Depth tier specs ────────────────────────────────────────────────
+// Single source of truth for per-tier structure AND length. Word budgets
+// live here and are injected into both the JSON-schema field descriptions
+// (models follow schema descriptions far more reliably than prompt prose)
+// and the length-enforcement retry in lib/dreamAnalysis.ts.
+export interface DepthSpec {
+  /** Exact number of supporting points / biblical references. */
+  points: number;
+  /** Exact number of tags. */
+  tags: number;
+  /** Target word range for the full `analysis` prose. */
+  minWords: number;
+  maxWords: number;
+  /** Target word range for each supporting point. */
+  pointMinWords: number;
+  pointMaxWords: number;
+  /** Hard token cap passed to the API (~1.5 tokens/word + JSON overhead). */
+  maxOutputTokens: number;
+}
 
-// Deep: balanced analysis. 3 supporting points, 3 tags.
-export const DeepDreamAnalysisSchema = z.object({
-  ...baseShape,
-  supportingPoints: z.array(z.string()).length(3),
-  biblicalReferences: z.array(BiblicalReferenceSchema).length(3),
-  tags: z.array(z.string()).length(3),
-});
+export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
+  [AnalysisDepth.SHALLOW]: {
+    points: 2,
+    tags: 3,
+    minWords: 150,
+    maxWords: 250,
+    pointMinWords: 25,
+    pointMaxWords: 45,
+    maxOutputTokens: 2000,
+  },
+  [AnalysisDepth.DEEP]: {
+    points: 3,
+    tags: 3,
+    minWords: 400,
+    maxWords: 600,
+    pointMinWords: 50,
+    pointMaxWords: 80,
+    maxOutputTokens: 4500,
+  },
+  [AnalysisDepth.PROFOUND]: {
+    points: 4,
+    tags: 5,
+    minWords: 800,
+    maxWords: 1100,
+    pointMinWords: 60,
+    pointMaxWords: 90,
+    maxOutputTokens: 8000,
+  },
+};
 
-// Profound: layered analysis. 4 supporting points, 5 tags.
-export const ProfoundDreamAnalysisSchema = z.object({
-  ...baseShape,
-  supportingPoints: z.array(z.string()).length(4),
-  biblicalReferences: z.array(BiblicalReferenceSchema).length(4),
-  tags: z.array(z.string()).length(5),
-});
+export function getDepthSpec(depth: string): DepthSpec {
+  return (
+    DEPTH_SPECS[depth as AnalysisDepth] ?? DEPTH_SPECS[AnalysisDepth.SHALLOW]
+  );
+}
+
+// Tier schema builder: arity is enforced structurally (.length), length is
+// pushed through .describe() so it lands in the JSON schema the model sees.
+function buildTierSchema(spec: DepthSpec) {
+  return z.object({
+    ...baseShape,
+    supportingPoints: z
+      .array(
+        z.string().describe(
+          `One supporting point of ${spec.pointMinWords}-${spec.pointMaxWords} words with exactly one parenthetical Bible citation embedded in the prose.`,
+        ),
+      )
+      .length(spec.points),
+    analysis: z.string().describe(
+      `Full analysis prose combining topic sentence, supporting points, conclusion, and any depth-tier extras (e.g. Dream Symbols, Three Lenses, Prayer prompts). LENGTH REQUIREMENT: ${spec.minWords}-${spec.maxWords} words. This range is mandatory — do not stop short of ${spec.minWords} words and do not exceed ${spec.maxWords}.`,
+    ),
+    biblicalReferences: z.array(BiblicalReferenceSchema).length(spec.points),
+    tags: z.array(z.string()).length(spec.tags),
+  });
+}
+
+// Shallow: minimum-viable analysis. 2 supporting points, 3 tags, 150-250 words.
+export const ShallowDreamAnalysisSchema = buildTierSchema(
+  DEPTH_SPECS[AnalysisDepth.SHALLOW],
+);
+
+// Deep: balanced analysis. 3 supporting points, 3 tags, 400-600 words.
+export const DeepDreamAnalysisSchema = buildTierSchema(
+  DEPTH_SPECS[AnalysisDepth.DEEP],
+);
+
+// Profound: layered analysis. 4 supporting points, 5 tags, 800-1100 words.
+export const ProfoundDreamAnalysisSchema = buildTierSchema(
+  DEPTH_SPECS[AnalysisDepth.PROFOUND],
+);
 
 // Default export keeps backward compatibility with code that imported
 // DreamAnalysisSchema before tier-specific schemas existed.

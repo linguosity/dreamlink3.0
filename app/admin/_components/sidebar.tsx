@@ -9,6 +9,7 @@ import {
   DollarSign,
   Wand2,
   Server,
+  PenLine,
   type LucideIcon,
 } from "lucide-react";
 import { BrandIcon } from "@/components/brand/BrandIcon";
@@ -18,6 +19,7 @@ const ADMIN_NAV: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/admin/users", label: "Users", Icon: Users },
   { href: "/admin/dreams", label: "Dreams", Icon: Droplet },
   { href: "/admin/revenue", label: "Revenue", Icon: DollarSign },
+  { href: "/admin/blog", label: "Blog", Icon: PenLine },
   { href: "/admin/prompts", label: "Prompts", Icon: Wand2 },
   { href: "/admin/system", label: "System", Icon: Server },
 ];

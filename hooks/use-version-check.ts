@@ -29,10 +29,22 @@ export function useVersionCheck() {
       }
     }
     
-    // Check immediately and then every 30 seconds
+    // Check immediately, then every 5 minutes — and only while the tab is
+    // visible (audit: a 30s no-store poll from the root layout meant constant
+    // background network churn on every open tab).
     checkVersion();
-    interval = setInterval(checkVersion, 30000);
-    
-    return () => clearInterval(interval);
+    interval = setInterval(() => {
+      if (document.visibilityState === "visible") checkVersion();
+    }, 5 * 60 * 1000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkVersion();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 }

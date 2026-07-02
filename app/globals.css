@@ -576,3 +576,60 @@
   50%, 100% { opacity: 0; }
 }
 .animate-splash-caret { animation: splashCaret 0.7s steps(1) infinite; }
+
+/* ------------------------------------------------------------------
+ * Journal (blog) markdown typography — .prose-blog
+ * Color-agnostic: inherits the surrounding text color and derives
+ * muted shades from currentColor, so the same class works on the
+ * night-themed public article page AND the light admin preview.
+ * ------------------------------------------------------------------ */
+.prose-blog {
+  line-height: 1.75;
+  font-size: 1.0625rem;
+}
+.prose-blog > * + * { margin-top: 1.1em; }
+.prose-blog h2,
+.prose-blog h3,
+.prose-blog h4 {
+  font-family: var(--font-serif, Georgia), Georgia, serif;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.8em;
+}
+.prose-blog h2 { font-size: 1.5em; }
+.prose-blog h3 { font-size: 1.2em; }
+.prose-blog a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-blog a:hover { color: var(--gold-light); }
+.prose-blog strong { font-weight: 650; }
+.prose-blog blockquote {
+  border-left: 3px solid var(--gold);
+  padding-left: 1em;
+  font-style: italic;
+  color: color-mix(in oklab, currentColor 80%, transparent);
+}
+.prose-blog ul, .prose-blog ol { padding-left: 1.4em; }
+.prose-blog ul { list-style: disc; }
+.prose-blog ol { list-style: decimal; }
+.prose-blog li + li { margin-top: 0.4em; }
+.prose-blog img { border-radius: 0.75rem; }
+.prose-blog hr {
+  border: none;
+  border-top: 1px solid color-mix(in oklab, currentColor 20%, transparent);
+  margin: 2em 0;
+}
+.prose-blog code {
+  font-size: 0.9em;
+  background: color-mix(in oklab, currentColor 10%, transparent);
+  padding: 0.15em 0.4em;
+  border-radius: 0.3em;
+}
+.prose-blog table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+.prose-blog th, .prose-blog td {
+  border: 1px solid color-mix(in oklab, currentColor 20%, transparent);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}

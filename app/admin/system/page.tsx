@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetHintsCard } from "./ResetHintsCard";
 import { TestimonialsCard } from "./TestimonialsCard";
+import { TestImageCard } from "./TestImageCard";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 import { HINT_IDS, type HintId } from "@/lib/hints/types";
 
@@ -238,6 +239,9 @@ export default async function SystemPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Image pipeline smoke test — live BFL round-trip */}
+      <TestImageCard />
 
       {/* Landing testimonials — admin-managed rotating social proof */}
       <TestimonialsCard initial={testimonials} userCount={userCount} />

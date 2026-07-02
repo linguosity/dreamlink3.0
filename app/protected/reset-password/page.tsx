@@ -16,16 +16,22 @@ export default async function ResetPassword(props: {
       </p>
       <Label htmlFor="password">New password</Label>
       <Input
+        id="password"
         type="password"
         name="password"
+        autoComplete="new-password"
         placeholder="New password"
+        minLength={8}
         required
       />
       <Label htmlFor="confirmPassword">Confirm password</Label>
       <Input
+        id="confirmPassword"
         type="password"
         name="confirmPassword"
+        autoComplete="new-password"
         placeholder="Confirm password"
+        minLength={8}
         required
       />
       <SubmitButton formAction={resetPasswordAction}>

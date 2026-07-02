@@ -169,7 +169,7 @@ export default async function LandingPage() {
               </div>
 
               <p className="mt-4 text-sm text-[oklch(0.70_0.03_75)]">
-                Free forever. No credit card required.
+                Start free. No credit card required.
               </p>
 
               {/* Social proof — admin-managed rotating testimonials; shows the

@@ -251,7 +251,7 @@ export function StepPlan({ data, update, next, back }: StepProps) {
         </div>
       </div>
       <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
-        <PlanCard active={plan === "free"} onClick={() => update({ plan: "free" })} icon="leaf" name="Discovery" price="$0" per="forever"
+        <PlanCard active={plan === "free"} onClick={() => update({ plan: "free" })} icon="leaf" name="Discovery" price="$0" per="to start"
           features={["3 dream credits this month", "Still Waters & Flowing River readings", "Private dream journal", "Scripture references"]} />
         <PlanCard active={plan === "visionary"} onClick={() => update({ plan: "visionary" })} icon="crown" name="Insight" price={price} per={per} effective={effective} badge="Most chosen" highlight
           features={["30 dream interpretations / month", "All reading levels — incl. Celestial & Scholarly", "AI dream imagery for every entry", "Pattern & theme insights", "Priority analysis"]} />
