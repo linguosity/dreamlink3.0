@@ -74,7 +74,9 @@ export default async function AuthLayout({
       <div className="fixed inset-0 -z-[5] bg-background/60 backdrop-blur-[2px]" />
 
       <div className="flex items-center justify-center min-h-screen w-full">
-        <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 space-y-8">
+        {/* space-y-5 (was 8): every vertical px here competes with the form
+            for above-the-fold space on small laptops/phones. */}
+        <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 py-6 space-y-5">
           {/* Header */}
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">

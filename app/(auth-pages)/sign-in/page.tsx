@@ -17,42 +17,28 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
-import { BrandIcon } from "@/components/brand/BrandIcon";
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)] p-4 overflow-hidden">
+    // Above-the-fold budget: the auth layout already shows the wordmark,
+    // tagline, and Sign In/Sign Up tabs — this page renders only the card.
+    <div className="relative w-full">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-[10%] left-1/2 -translate-x-1/2 w-[360px] h-[220px] rounded-full
+        className="pointer-events-none fixed inset-0 -z-[4] bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-[8%] left-1/2 -translate-x-1/2 -z-[3] w-[360px] h-[220px] rounded-full
                    bg-[radial-gradient(ellipse,oklch(0.85_0.06_75/0.5)_0%,transparent_60%)]"
       />
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <Badge variant="secondary" className="mb-4 px-4 py-2">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Welcome Back
-          </Badge>
-          <h1 className="font-serif text-4xl font-normal leading-tight mb-2">
-            Sign in to{" "}
-            <span className="wordmark text-[color:var(--gold-deep)]">
-              DreamRiver
-            </span>
-          </h1>
-          <p className="text-muted-foreground">
-            Continue your spiritual dream journey
-          </p>
-        </div>
-
+      <div className="relative w-full">
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-          <CardHeader className="text-center pb-4">
-            <BrandIcon size={56} className="mx-auto mb-4" />
+          <CardHeader className="text-center pb-3">
             <CardTitle className="text-xl">Welcome Back</CardTitle>
             <CardDescription>
               Sign in to access your dream journal and interpretations
@@ -120,7 +106,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           </CardFooter>
         </Card>
         
-        <div className="text-center mt-8">
+        <div className="text-center mt-5">
           <Link href="/landing" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
             ← Back to homepage
           </Link>

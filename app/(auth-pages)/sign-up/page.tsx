@@ -12,12 +12,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
-import { Sparkles, CheckCircle } from "lucide-react";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
-import { BrandIcon } from "@/components/brand/BrandIcon";
 
 // Action state shape returned by signUpAction
 type SignUpState = {
@@ -46,33 +42,25 @@ export default function Signup() {
   const errorMessage = state?.error;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)] p-4 overflow-hidden">
-      {/* Soft gold moon-glow behind the card, per hi-fi-signup */}
+    // Above-the-fold budget: the auth layout already shows the wordmark,
+    // tagline, and Sign In/Sign Up tabs — so this page renders ONLY the card.
+    // (Previously: a second min-h-screen wrapper + badge + h1 + brand icon
+    // pushed the submit button below the fold even on desktop.)
+    <div className="relative w-full">
+      {/* Full-viewport gradient + moon-glow, per hi-fi-signup; fixed so it
+          doesn't add layout height. Sits above the layout's -z-[5] overlay. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-[10%] left-1/2 -translate-x-1/2 w-[360px] h-[220px] rounded-full
+        className="pointer-events-none fixed inset-0 -z-[4] bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-[8%] left-1/2 -translate-x-1/2 -z-[3] w-[360px] h-[220px] rounded-full
                    bg-[radial-gradient(ellipse,oklch(0.85_0.06_75/0.5)_0%,transparent_60%)]"
       />
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <Badge variant="secondary" className="mb-4 px-4 py-2">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Start Your Free Trial
-          </Badge>
-          <h1 className="font-serif text-4xl font-normal leading-tight mb-2">
-            Join{" "}
-            <span className="wordmark text-[color:var(--gold-deep)]">
-              DreamRiver
-            </span>
-          </h1>
-          <p className="text-muted-foreground">
-            Begin your spiritual dream interpretation journey
-          </p>
-        </div>
-
-        <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm mb-6">
-          <CardHeader className="text-center pb-4">
-            <BrandIcon size={56} className="mx-auto mb-4" />
+      <div className="relative w-full">
+        <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+          <CardHeader className="text-center pb-3">
             <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
             <CardDescription>
               7 days free &bull; No credit card required &bull; Cancel anytime
@@ -146,36 +134,10 @@ export default function Signup() {
                 </Link>
               </p>
             </div>
-            <SmtpMessage />
           </CardFooter>
         </Card>
 
-        {/* Benefits reminder */}
-        <Card className="bg-gradient-to-r from-accent/40 to-secondary border-none">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3 text-center">What you'll get:</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>AI-powered dream interpretations</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>Biblical references and insights</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>Private dream journal</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>Pattern tracking and insights</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="text-center mt-8">
+        <div className="text-center mt-5">
           <Link href="/landing" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
             ← Back to homepage
           </Link>
