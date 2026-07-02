@@ -216,7 +216,7 @@ export default function PricingPage() {
             return (
               <Card
                 key={plan.name}
-                className={`relative p-8 transition-all duration-300 hover:shadow-2xl hover:scale-105 ${plan.color} ${
+                className={`relative p-6 transition-all duration-300 hover:shadow-2xl hover:scale-105 ${plan.color} ${
                   plan.popular ? "ring-2 ring-primary shadow-xl transform scale-105" : "hover:shadow-lg"
                 }`}
               >
@@ -226,9 +226,9 @@ export default function PricingPage() {
                   </Badge>
                 )}
 
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                     {plan.description}
                   </p>
 
@@ -245,15 +245,15 @@ export default function PricingPage() {
                     </p>
                   )}
 
-                  <div className="mt-6 mb-6 p-4 bg-background/50 rounded-lg">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="mt-4 mb-2 px-4 py-2.5 bg-background/50 rounded-lg">
+                    <p className="text-sm font-medium text-muted-foreground mb-0.5">
                       Monthly Dream Analyses
                     </p>
-                    <p className="text-2xl font-bold text-primary">{plan.credits}</p>
+                    <p className="text-xl font-bold text-primary">{plan.credits}</p>
                   </div>
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-2.5 mb-6">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
