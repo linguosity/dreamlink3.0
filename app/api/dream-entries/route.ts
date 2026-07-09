@@ -30,6 +30,7 @@ import { sanitizeTags } from "@/lib/tags";
 import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 import { runDreamAnalysis } from "@/lib/dreamAnalysis";
 import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
+import { captureServerEvent } from "@/lib/analytics-server";
 import {
   AnalysisDepth,
   ReadingLevel,
@@ -590,6 +591,16 @@ export async function POST(request: Request) {
     const credits = await checkMonthlyCredits(user.id, profileCtx.plan);
     if (!credits.allowed) {
       const isFreePlan = profileCtx.plan === "free";
+      if (isFreePlan) {
+        // First-party operational analytics, captured regardless of cookie
+        // consent — NOTE(Justin): confirm this stance in the privacy policy
+        // (see lib/analytics-server.ts).
+        await captureServerEvent(user.id, "credits_exhausted", {
+          plan: profileCtx.plan,
+          used: credits.used,
+          limit: credits.limit,
+        });
+      }
       return NextResponse.json(
         {
           error: isFreePlan
@@ -664,6 +675,14 @@ export async function POST(request: Request) {
     const adminSupabase = getAdminClient();
     const encryptedText = encrypt(dream_text);
 
+    // Count existing entries BEFORE inserting so we can tell whether this
+    // submission is the user's first-ever dream (drives the
+    // `first_dream_submitted` analytics event on the success path).
+    const { count: priorEntryCount } = await adminSupabase
+      .from("dream_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
     // Run each combo end-to-end in parallel: insert row → call OpenAI → update.
     // Bounded by the slowest call (~15s), well within the 60s function timeout.
     const entryResults = await Promise.all(
@@ -691,6 +710,17 @@ export async function POST(request: Request) {
     }
 
     const primary = successful[0];
+
+    if ((priorEntryCount ?? 0) === 0) {
+      // First-party operational analytics, captured regardless of cookie
+      // consent — NOTE(Justin): confirm this stance in the privacy policy
+      // (see lib/analytics-server.ts).
+      await captureServerEvent(user.id, "first_dream_submitted", {
+        plan: profileCtx.plan,
+        dream_id: primary.id,
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message:

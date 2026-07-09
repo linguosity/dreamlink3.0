@@ -30,6 +30,7 @@ import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
 import ShareDreamButton from "@/components/ShareDreamButton";
+import { track } from "@/lib/analytics";
 
 // Import UI components with error handling
 let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
@@ -906,6 +907,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       }, 100);
     }
   }, [isOpen, dream]);
+
+  // Analytics: a dream's analysis was opened in the detail dialog. No-ops
+  // without consent (see lib/analytics). Skips example/placeholder cards and
+  // dreams whose analysis hasn't landed yet.
+  useEffect(() => {
+    if (!isOpen || empty) return;
+    if (!dream.id || dream.id.startsWith("pending-")) return;
+    if (!dream.formatted_analysis && !dream.analysis_summary) return;
+    track("analysis_viewed", { dream_id: dream.id });
+  }, [isOpen, empty, dream.id, dream.formatted_analysis, dream.analysis_summary]);
 
   // Handle card click to show dialog
   const handleCardClick = () => {

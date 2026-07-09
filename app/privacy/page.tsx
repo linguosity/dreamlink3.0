@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       <div className="max-w-2xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">Privacy Policy</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          Last updated: March 2026
+          Last updated: July 2026
         </p>
 
         <div className="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -22,12 +22,55 @@ export default function PrivacyPage() {
               and associated metadata. We do not collect any information beyond
               what you explicitly provide.
             </p>
+            {/* <!-- JUSTIN REVIEW: analytics wording — updated from the old
+                "no tracking cookies or third-party analytics" claim now that
+                consent-gated PostHog product analytics exists. --> */}
             <p>
               We automatically collect limited technical data such as your IP
               address, browser type, and device information for the purpose of
-              maintaining security and improving the Service. We do not use
-              tracking cookies or third-party analytics that profile your
-              behavior across other websites.
+              maintaining security and improving the Service. If you consent
+              via our cookie banner, we also collect product usage data through
+              PostHog (see &quot;Cookies &amp; Analytics&quot; below). We do
+              not use advertising cookies, and we do not profile your behavior
+              across other websites.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Cookies &amp; Analytics
+            </h2>
+            {/* <!-- JUSTIN REVIEW: this entire section is new. Please confirm
+                (1) the consent-gated analytics description, and (2) the stance
+                that server-side account events are first-party operational
+                analytics collected without cookie consent — see
+                lib/analytics-server.ts. --> */}
+            <p>
+              <strong>Essential cookies.</strong> We use cookies that are
+              strictly necessary to operate the Service, such as keeping you
+              signed in. These are always active.
+            </p>
+            <p>
+              <strong>Analytics (optional, with your consent).</strong> If you
+              choose &quot;Allow analytics&quot; in our cookie banner, we use
+              PostHog, a product analytics service, to understand how
+              DreamRiver is used — for example, which pages are visited and
+              when an interpretation is viewed. This runs only after you
+              accept, respects your browser&apos;s Do Not Track setting, and is
+              never used for advertising or cross-site tracking. If you
+              decline, no analytics run in your browser. You can change your
+              choice at any time via the &quot;Cookie Preferences&quot; link in
+              the site footer.
+            </p>
+            <p>
+              <strong>Service events.</strong> Independent of your cookie
+              choice, our servers record a small number of account-level events
+              needed to operate and improve the Service — for example, when an
+              account is created, a subscription is purchased, or free credits
+              are used up. These are processed as first-party operational data
+              under our legitimate interests, are tied to your account rather
+              than to browsing behavior, and never include the content of your
+              dreams.
             </p>
           </section>
 
@@ -96,6 +139,12 @@ export default function PrivacyPage() {
               <li>
                 <strong>Stripe</strong> — payment processing (we do not store
                 your payment card details)
+              </li>
+              {/* <!-- JUSTIN REVIEW: PostHog added as a processor. --> */}
+              <li>
+                <strong>PostHog</strong> — product analytics (in-browser
+                analytics only with your consent; see &quot;Cookies &amp;
+                Analytics&quot;)
               </li>
               <li>
                 <strong>Google</strong> — OAuth sign-in (optional)

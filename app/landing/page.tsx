@@ -21,6 +21,7 @@ import Wordmark from "@/components/Wordmark";
 import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
 import SocialProof from "@/components/SocialProof";
+import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
 // v2 Moonwater: feature icon chips read as a unified pale-gold set
@@ -593,6 +594,9 @@ export default async function LandingPage() {
                   <Link href="/terms" className="hover:text-[color:var(--cream)] transition-colors">
                     Terms of Service
                   </Link>
+                </li>
+                <li>
+                  <CookiePreferencesLink className="hover:text-[color:var(--cream)] transition-colors" />
                 </li>
               </ul>
             </div>

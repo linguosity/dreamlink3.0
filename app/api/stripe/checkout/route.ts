@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getStripe, PLAN_PRICES } from "@/lib/stripe";
+import { captureServerEvent } from "@/lib/analytics-server";
 import type Stripe from "stripe";
 
 /**
@@ -70,6 +71,16 @@ export async function POST(request: NextRequest) {
     const session = await stripe.checkout.sessions.create(
       sessionParams as Stripe.Checkout.SessionCreateParams
     );
+
+    // First-party operational analytics, captured regardless of cookie
+    // consent — NOTE(Justin): confirm this stance in the privacy policy
+    // (see lib/analytics-server.ts). priceKey is e.g. "visionary_monthly".
+    const [plan, interval] = String(priceKey).split("_");
+    await captureServerEvent(user.id, "checkout_started", {
+      price_key: String(priceKey),
+      plan: plan ?? null,
+      interval: interval ?? null,
+    });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

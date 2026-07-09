@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, stripePriceToPlan } from "@/lib/stripe";
 import { getAdminClient } from "@/utils/supabase/admin";
+import { captureServerEvent } from "@/lib/analytics-server";
 import Stripe from "stripe";
 
 // Stripe 2026-02-25 moved `current_period_end` off the top-level Subscription
@@ -112,6 +113,15 @@ export async function POST(request: NextRequest) {
           { onConflict: "user_id" }
         );
         if (upsertError) throw new Error(`subscriptions upsert: ${upsertError.message}`);
+
+        // First-party operational analytics, captured regardless of cookie
+        // consent — NOTE(Justin): confirm this stance in the privacy policy
+        // (see lib/analytics-server.ts). Idempotent because duplicate events
+        // are rejected by the stripe_events claim above.
+        await captureServerEvent(userId, "subscribed", {
+          plan,
+          interval: subscription.items.data[0]?.price?.recurring?.interval ?? null,
+        });
         break;
       }
 

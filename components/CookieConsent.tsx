@@ -1,17 +1,57 @@
 "use client";
 
+// components/CookieConsent.tsx
+//
+// Real consent gating (not just a dismissible notice): the banner choice is
+// persisted and actually controls whether PostHog analytics initializes.
+// Accept → lib/analytics boots PostHog; Decline → essential cookies only,
+// PostHog never loads (or opts out if it was previously running). The choice
+// can be revisited later via openCookiePreferences() / <CookiePreferencesLink>.
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getStoredConsent, setStoredConsent } from "@/lib/analytics";
+
+/** Window event that reopens the banner so a visitor can change their choice. */
+export const COOKIE_PREFERENCES_EVENT = "dreamriver:open-cookie-preferences";
+
+/**
+ * Reopen the consent banner from anywhere in the client app (e.g. a footer
+ * "Cookie Preferences" link). Safe to call on any page — the banner is
+ * mounted globally in app/layout.tsx.
+ */
+export function openCookiePreferences(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(COOKIE_PREFERENCES_EVENT));
+}
+
+/** Small footer-style link that reopens the consent banner. */
+export function CookiePreferencesLink({ className }: { className?: string }) {
+  return (
+    <button type="button" onClick={openCookiePreferences} className={className}>
+      Cookie Preferences
+    </button>
+  );
+}
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("dreamriver-cookie-consent");
+    const consent = getStoredConsent();
     if (!consent) {
       const timer = setTimeout(() => setVisible(true), 1000);
       return () => clearTimeout(timer);
     }
+    // Note: for returning visitors who already accepted, PostHog is booted by
+    // the analytics bootstrap in app/providers.tsx — nothing to do here.
+  }, []);
+
+  // Let "Cookie Preferences" links reopen the banner to change the choice.
+  useEffect(() => {
+    const reopen = () => setVisible(true);
+    window.addEventListener(COOKIE_PREFERENCES_EVENT, reopen);
+    return () => window.removeEventListener(COOKIE_PREFERENCES_EVENT, reopen);
   }, []);
 
   useEffect(() => {
@@ -26,12 +66,12 @@ export default function CookieConsent() {
   }, [visible]);
 
   const accept = () => {
-    localStorage.setItem("dreamriver-cookie-consent", "accepted");
+    setStoredConsent("accepted"); // persists + initializes PostHog
     setVisible(false);
   };
 
   const decline = () => {
-    localStorage.setItem("dreamriver-cookie-consent", "declined");
+    setStoredConsent("declined"); // persists + keeps/turns PostHog off
     setVisible(false);
   };
 
@@ -50,8 +90,9 @@ export default function CookieConsent() {
     >
       <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
         We use essential cookies to keep you signed in and make the app work.
-        We don&apos;t use tracking or advertising cookies. By continuing, you
-        agree to our{" "}
+        With your permission, we&apos;d also like to use privacy-respecting
+        analytics to understand how DreamRiver is used — never advertising or
+        cross-site tracking cookies. Learn more in our{" "}
         <Link
           href="/privacy"
           className="underline text-primary hover:text-primary-hover focus-ring rounded"
@@ -65,13 +106,13 @@ export default function CookieConsent() {
           onClick={accept}
           className="tap inline-flex items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-colors focus-ring"
         >
-          Got it
+          Allow analytics
         </button>
         <button
           onClick={decline}
           className="tap inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
         >
-          Decline non-essential
+          Essential only
         </button>
       </div>
     </div>
