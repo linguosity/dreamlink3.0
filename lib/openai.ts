@@ -86,7 +86,7 @@ const baseShape = {
     "Bible references — one per supporting point, in the same order. Citations only; verse text is hydrated server-side.",
   ),
   tags: z.array(z.string()).describe(
-    "Meaningful tags capturing key themes, symbols, emotions, or spiritual concepts.",
+    "Tags naming CONCRETE elements of this specific dream — symbols, places, actions, emotions, or biblical motifs actually present in the dream or analysis (e.g. 'flood waters', 'lost teeth', 'childhood home', 'wilderness season'). Lowercase noun phrases of 1-2 words. NEVER generic labels like 'faith', 'spirituality', 'dreams', 'spiritual journey', 'divine guidance', or 'symbolism' — if a tag could describe half of all dreams, it is wrong.",
   ),
 } as const;
 
@@ -113,7 +113,7 @@ export interface DepthSpec {
 export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
   [AnalysisDepth.SHALLOW]: {
     points: 2,
-    tags: 3,
+    tags: 2,
     minWords: 150,
     maxWords: 250,
     pointMinWords: 25,
@@ -131,7 +131,7 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
   },
   [AnalysisDepth.PROFOUND]: {
     points: 4,
-    tags: 5,
+    tags: 3,
     minWords: 800,
     maxWords: 1100,
     pointMinWords: 60,
@@ -162,11 +162,20 @@ function buildTierSchema(spec: DepthSpec) {
       `Full analysis prose combining topic sentence, supporting points, conclusion, and any depth-tier extras (e.g. Dream Symbols, Three Lenses, Prayer prompts). LENGTH REQUIREMENT: ${spec.minWords}-${spec.maxWords} words. This range is mandatory — do not stop short of ${spec.minWords} words and do not exceed ${spec.maxWords}.`,
     ),
     biblicalReferences: z.array(BiblicalReferenceSchema).length(spec.points),
-    tags: z.array(z.string()).length(spec.tags),
+    tags: z
+      .array(
+        z.string().describe(
+          "One lowercase 1-2 word noun phrase naming a concrete symbol, place, action, emotion, or biblical motif from THIS specific dream (e.g. 'flood waters', 'lost teeth', 'wilderness season', 'unanswered door'). Never a generic label like 'faith', 'spirituality', 'dreams', or 'divine guidance'.",
+        ),
+      )
+      .length(spec.tags)
+      .describe(
+        `Exactly ${spec.tags} tags, each specific enough that a reader scanning only the tags could tell this dream apart from any other. Draw them from the dream's own imagery and the analysis themes — never generic spiritual vocabulary.`,
+      ),
   });
 }
 
-// Shallow: minimum-viable analysis. 2 supporting points, 3 tags, 150-250 words.
+// Shallow: minimum-viable analysis. 2 supporting points, 2 tags, 150-250 words.
 export const ShallowDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.SHALLOW],
 );
@@ -176,7 +185,7 @@ export const DeepDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.DEEP],
 );
 
-// Profound: layered analysis. 4 supporting points, 5 tags, 800-1100 words.
+// Profound: layered analysis. 4 supporting points, 3 tags, 800-1100 words.
 export const ProfoundDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.PROFOUND],
 );

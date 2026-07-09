@@ -158,7 +158,7 @@ DEPTH TIER: deep
 DEPTH TIER: profound
 - supportingPoints must contain exactly 4 items, each ~30-50 words.
 - biblicalReferences must contain exactly 4 items, one per supportingPoint, in the same order.
-- tags must contain exactly 5 items.
+- tags must contain exactly 3 items.
 - Aim for ~800-1100 words across the analysis prose. Within the analysis you may include:
     * A "Dream Symbols" section unpacking 3-5 resonant images — one sentence each, tied to scripture.
     * A "Three Lenses on This Dream" section reading the dream through Literal, Allegorical, and Prophetic lenses (~2 sentences each).
@@ -170,7 +170,7 @@ DEPTH TIER: profound
 DEPTH TIER: shallow
 - supportingPoints must contain exactly 2 items.
 - biblicalReferences must contain exactly 2 items, one per supportingPoint, in the same order.
-- tags must contain exactly 3 items.
+- tags must contain exactly 2 items.
 - Keep the analysis prose concise: ~150-250 words covering topic, supporting points, and conclusion.`;
   }
 }
@@ -333,6 +333,7 @@ ${dbPrompt.format_instructions}
 - Begin directly with the spiritual theme or insight without introductory phrases
 - For each supporting point, include exactly one Bible citation in the supportingPoints prose (e.g., "(Genesis 1:1)" or "(1 Peter 5:8)"). Use full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
 - The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation only — do not include verse text. The application retrieves verse text from a canonical KJV source.
+- Tags: each tag must name something CONCRETE from this specific dream — a symbol, place, action, emotion, or biblical motif actually present in the dream or analysis (e.g. 'flood waters', 'lost teeth', 'childhood home', 'wilderness season'). Lowercase noun phrases, 1-2 words. Never generic labels like 'faith', 'spirituality', 'dreams', 'spiritual journey', or 'divine guidance'.
 
 ${readingLevelInstructions}
 ${depthInstructions}
@@ -349,7 +350,7 @@ Format your analysis using this exact structure:
 3. End with a concluding sentence that provides guidance based on the dream's meaning.
 4. Create a personalized summary that addresses the dreamer directly about their dream's significance using vivid language - just one compelling sentence.
 5. Generate a clever, memorable title (3-6 words) that captures the essence of the dream and its spiritual meaning, making it easy for the dreamer to identify this dream later (e.g., "Walking on Sacred Waters", "The Golden Key Vision", "Angels in the Storm").
-6. Follow the depth tier instructions below for the exact number of tags.
+6. Follow the depth tier instructions below for the exact number of tags. Each tag must name something CONCRETE from this specific dream — a symbol, place, action, emotion, or biblical motif that actually appears in the dream or your analysis (e.g. 'flood waters', 'lost teeth', 'childhood home', 'wilderness season'). Lowercase noun phrases, 1-2 words. Never generic labels like 'faith', 'spirituality', 'dreams', 'spiritual journey', or 'divine guidance' — if a tag could describe half of all dreams, replace it with one only this dream could carry.
 
 Additional instruction:
 - Focus analysis on theme: ${topic || "general spiritual meaning"}
