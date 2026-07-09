@@ -11,7 +11,7 @@
 //   pricing page, upgrade CTAs, and server-side enforcement can never diverge.
 //
 // Pricing (target, June 2026):
-//   Free (Seeker)     — $0,      3 analyses / month
+//   Free (Seeker)     — $0,      3 analyses LIFETIME (once at signup; enforced in monthlyCredits.ts)
 //   Visionary         — $12.99/mo or $99.99/yr
 //   Prophet           — premium (added later)
 //

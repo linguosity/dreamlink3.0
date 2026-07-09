@@ -72,7 +72,7 @@ export default async function BlogPostPage({ params }: Props) {
   };
 
   return (
-    <div className="dark min-h-screen bg-night text-cream">
+    <div className="dark w-full min-h-screen bg-night text-cream">
       <SiteHeader />
       <script
         type="application/ld+json"

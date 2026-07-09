@@ -43,9 +43,15 @@ function secondsUntilNextMonth(now = new Date()): number {
 }
 
 /**
- * Check whether `userId` is under their plan's monthly credit cap. One dream
- * entry = one credit (it bundles the analysis + image). Counts rows in
- * `dream_entries` created since the start of this calendar month.
+ * Check whether `userId` is under their plan's credit cap. One dream entry =
+ * one credit (it bundles the analysis + image).
+ *
+ * FREE tier: the cap is LIFETIME — 3 credits granted once at signup, never
+ * refreshed (product decision 2026-07-02; marketing copy says "3 to start").
+ * Implemented by counting ALL of the user's dream entries, ever.
+ *
+ * PAID tiers: cap is per calendar month — counts rows created since the
+ * start of this month, resetting on the 1st.
  */
 export async function checkMonthlyCredits(
   userId: string,
@@ -53,15 +59,18 @@ export async function checkMonthlyCredits(
 ): Promise<CreditCheckResult> {
   const limit = monthlyCreditCap(plan);
   const isFree = plan === "free";
-  const monthStart = startOfMonthISO();
 
   try {
     const admin = getAdminClient();
-    const { count, error } = await admin
+    let query = admin
       .from("dream_entries")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", monthStart);
+      .eq("user_id", userId);
+    // Free = lifetime window (no date filter); paid = current calendar month.
+    if (!isFree) {
+      query = query.gte("created_at", startOfMonthISO());
+    }
+    const { count, error } = await query;
 
     if (error) {
       console.error(
@@ -78,7 +87,9 @@ export async function checkMonthlyCredits(
       allowed,
       used,
       limit,
-      retryAfterSeconds: allowed ? undefined : secondsUntilNextMonth(),
+      // Free credits never refresh, so there's no meaningful Retry-After.
+      retryAfterSeconds:
+        allowed || isFree ? undefined : secondsUntilNextMonth(),
     };
   } catch (err: any) {
     console.error(

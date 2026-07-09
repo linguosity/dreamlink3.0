@@ -559,7 +559,7 @@ export default async function LandingPage() {
                 </li>
                 <li>
                   <Link href="/sign-up" className="hover:text-[color:var(--cream)] transition-colors">
-                    Free Trial
+                    Start Free
                   </Link>
                 </li>
               </ul>

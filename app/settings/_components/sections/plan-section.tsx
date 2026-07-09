@@ -23,7 +23,7 @@ const PLANS: Array<{
     price: "$0",
     per: "to start",
     features: [
-      "3 analyses / month",
+      "3 analyses at signup",
       "Shallow analysis",
       "2 free image styles",
       "Limited scripture references",

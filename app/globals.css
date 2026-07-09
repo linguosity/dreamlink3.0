@@ -161,7 +161,9 @@
   --cream:      oklch(0.955 0.015 75);  /* #F5ECD6 */
   --cream-soft: oklch(0.97 0.012 75);   /* #FAF4E2 */
   --gold:       oklch(0.72 0.14 75);    /* #D4A247 */
-  --gold-deep:  oklch(0.60 0.12 75);    /* #B08436 */
+  /* Darkened from 0.60 → 0.55 so small gold-deep text on white/cream passes
+   * WCAG AA (measured 4.04:1 before; ≈5:1 now). Button hovers unaffected. */
+  --gold-deep:  oklch(0.55 0.12 75);
   --gold-light: oklch(0.82 0.10 78);    /* #E6C073 */
   --amber:      oklch(0.65 0.16 60);
   /* Warm parchment neutrals — used by the onboarding card surfaces (always

@@ -35,9 +35,9 @@ const plans: Plan[] = [
     monthly: "Free",
     yearly: "Free",
     description: "Begin your spiritual journey with essential dream insights",
-    credits: "3 / month",
+    credits: "3 to start",
     features: [
-      "3 AI dream analyses per month",
+      "3 AI dream analyses when you sign up",
       "Dream art + biblical interpretation",
       "Standard reading levels",
       "Dream journal storage & search",
@@ -247,7 +247,7 @@ export default function PricingPage() {
 
                   <div className="mt-4 mb-2 px-4 py-2.5 bg-background/50 rounded-lg">
                     <p className="text-sm font-medium text-muted-foreground mb-0.5">
-                      Monthly Dream Analyses
+                      {isFree ? "Dream Analyses" : "Monthly Dream Analyses"}
                     </p>
                     <p className="text-xl font-bold text-primary">{plan.credits}</p>
                   </div>

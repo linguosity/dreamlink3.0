@@ -27,7 +27,9 @@ export default async function BlogIndexPage() {
   return (
     // `dark` wrapper: SiteHeader + shared components render their dark:
     // variants so they stay legible on the night background.
-    <div className="dark min-h-screen bg-night text-cream">
+    // w-full matters: the root layout centers signed-out non-landing pages in
+    // a flex row, which otherwise shrink-wraps this div into a boxed column.
+    <div className="dark w-full min-h-screen bg-night text-cream">
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 sm:px-6 pt-10 sm:pt-14 pb-16 sm:pb-24">

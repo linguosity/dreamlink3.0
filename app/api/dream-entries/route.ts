@@ -585,12 +585,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Monthly per-tier credit cap (Free = 3/mo). Free fails CLOSED.
+    // 3. Per-tier credit cap (Free = 3 lifetime at signup; paid = monthly).
+    // Free fails CLOSED.
     const credits = await checkMonthlyCredits(user.id, profileCtx.plan);
     if (!credits.allowed) {
+      const isFreePlan = profileCtx.plan === "free";
       return NextResponse.json(
         {
-          error: `You've used all ${credits.limit} of your monthly dream credits. Upgrade for more.`,
+          error: isFreePlan
+            ? `You've used all ${credits.limit} of your free dream credits. Upgrade to keep interpreting.`
+            : `You've used all ${credits.limit} of your monthly dream credits. Upgrade for more.`,
           code: "out_of_credits",
           used: credits.used,
           limit: credits.limit,

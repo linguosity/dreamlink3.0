@@ -96,11 +96,11 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link className="text-primary font-medium hover:underline" href="/sign-up" prefetch={true}>
-                  Start your free trial
+                  Create your free journal
                 </Link>
               </p>
               <p className="text-xs text-gray-500">
-                Free 7-day trial • No credit card required
+                3 free interpretations • No credit card required
               </p>
             </div>
           </CardFooter>

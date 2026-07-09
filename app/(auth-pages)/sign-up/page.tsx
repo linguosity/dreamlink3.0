@@ -61,9 +61,9 @@ export default function Signup() {
       <div className="relative w-full">
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-3">
-            <CardTitle className="text-xl">Start Your Free Trial</CardTitle>
+            <CardTitle className="text-xl">Create Your Free Journal</CardTitle>
             <CardDescription>
-              7 days free &bull; No credit card required &bull; Cancel anytime
+              3 free dream interpretations &bull; No credit card required
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
