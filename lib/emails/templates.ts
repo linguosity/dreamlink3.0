@@ -67,9 +67,21 @@ function ctaButton(label: string, href: string): string {
  * Shared branded shell: hidden preheader, text wordmark, night-blue card,
  * starlight footer with the support address. `bodyHtml` renders inside the
  * card.
+ *
+ * Every footer carries a "Manage email preferences" link (/settings). For
+ * recurring email (reminders, digest) callers also pass a tokenized
+ * `unsubscribeUrl` (lib/emails/unsubscribe.ts) so one click opts out without
+ * logging in; when it's null (CRON_SECRET unset) the link is simply omitted.
  */
-function wrap(preheader: string, bodyHtml: string): string {
+function wrap(
+  preheader: string,
+  bodyHtml: string,
+  opts?: { unsubscribeUrl?: string | null },
+): string {
   const support = getSupportEmail();
+  const unsubscribeHtml = opts?.unsubscribeUrl
+    ? ` &middot; <a href="${opts.unsubscribeUrl}" style="color:${MUTED}; text-decoration:underline;">Unsubscribe</a>`
+    : "";
   return `<div style="display:none; max-height:0px; overflow:hidden; mso-hide:all;">${preheader}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NIGHT}" style="margin:0; padding:0; background-color:${NIGHT};">
   <tr>
@@ -89,6 +101,7 @@ function wrap(preheader: string, bodyHtml: string): string {
           <td align="center" style="padding:24px 8px 0 8px; font-family:${SANS}; font-size:12px; line-height:1.7; color:${MUTED};">
             Questions? Just reply, or write to <a href="mailto:${support}" style="color:${GOLD_LIGHT}; text-decoration:underline;">${support}</a>.<br/>
             You're receiving this because you have a DreamRiver account.<br/>
+            <a href="${SITE_URL}/settings" style="color:${MUTED}; text-decoration:underline;">Manage email preferences</a>${unsubscribeHtml}<br/>
             DreamRiver &middot; <a href="${SITE_URL}" style="color:${MUTED}; text-decoration:underline;">dreamriver.io</a>
           </td>
         </tr>
@@ -99,8 +112,21 @@ function wrap(preheader: string, bodyHtml: string): string {
 }
 
 /** Shared plain-text footer appended to every text fallback. */
-function textFooter(): string {
-  return `\n\n—\nQuestions? Just reply, or write to ${getSupportEmail()}.\nYou're receiving this because you have a DreamRiver account.\nDreamRiver · ${SITE_URL}`;
+function textFooter(opts?: { unsubscribeUrl?: string | null }): string {
+  const unsubscribeLine = opts?.unsubscribeUrl
+    ? `\nUnsubscribe: ${opts.unsubscribeUrl}`
+    : "";
+  return `\n\n—\nQuestions? Just reply, or write to ${getSupportEmail()}.\nYou're receiving this because you have a DreamRiver account.\nManage email preferences: ${SITE_URL}/settings${unsubscribeLine}\nDreamRiver · ${SITE_URL}`;
+}
+
+/** Escape user-provided text (dream titles) before interpolating into HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /** Deterministic long-form date ("August 3, 2026") for access-until copy. */
@@ -281,6 +307,131 @@ ${accessLineText}
 And one thing that never changes: your journal stays yours, free, forever — every dream and interpretation will be right where you left it. If you ever want to pick the journey back up, you can resubscribe anytime from Settings.
 
 Open your journal: ${cta}${textFooter()}`;
+
+  return { subject, html, text };
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * 5. Morning reminder — recurring (hourly cron, at most once per day per
+ *    user). Deliberately tiny: one question, one line, one button.
+ * ──────────────────────────────────────────────────────────────────────── */
+export function morningReminderEmail(params: {
+  /** Tokenized one-click opt-out; null omits the link (CRON_SECRET unset). */
+  unsubscribeUrl: string | null;
+}): EmailContent {
+  const subject = "What did you dream last night?";
+  const preheader = "Even a fragment is enough — write it down before it fades.";
+  const cta = `${SITE_URL}/?utm_source=email&utm_medium=lifecycle&utm_campaign=morning_reminder`;
+  const footerOpts = { unsubscribeUrl: params.unsubscribeUrl };
+
+  const html = wrap(
+    preheader,
+    [
+      heading("What did you dream last night?"),
+      para(
+        "Even a fragment is enough — write it down before it fades, and see what it might mean.",
+      ),
+      ctaButton("Write it down", cta),
+    ].join("\n"),
+    footerOpts,
+  );
+
+  const text = `What did you dream last night?
+
+Even a fragment is enough — write it down before it fades, and see what it might mean.
+
+Write it down: ${cta}${textFooter(footerOpts)}`;
+
+  return { subject, html, text };
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * 6. Weekly digest — recurring (Sunday cron, once per ISO week), only for
+ *    users with ≥1 dream that week. PRIVACY: dream titles and dates ONLY —
+ *    never dream content, summaries, or interpretations. Titles are
+ *    user-provided text and get HTML-escaped.
+ * ──────────────────────────────────────────────────────────────────────── */
+export interface DigestDream {
+  title: string | null;
+  createdAt: Date;
+}
+
+export function weeklyDigestEmail(params: {
+  /** Dreams recorded in the 7-day window (≥1 — zero-dream users are skipped). */
+  dreamCount: number;
+  /** Up to 3, newest first. Titles only. */
+  recentDreams: DigestDream[];
+  /** Free plan with lifetime credits used up → gentle /pricing pointer. */
+  creditsExhausted: boolean;
+  /** Tokenized one-click opt-out; null omits the link (CRON_SECRET unset). */
+  unsubscribeUrl: string | null;
+}): EmailContent {
+  const { dreamCount, recentDreams, creditsExhausted, unsubscribeUrl } = params;
+  const noun = dreamCount === 1 ? "dream" : "dreams";
+  const subject = `You wrote down ${dreamCount} ${noun} this week`;
+  const preheader = "A quiet look back at your week on the river.";
+  const cta = `${SITE_URL}/?utm_source=email&utm_medium=lifecycle&utm_campaign=weekly_digest`;
+  const pricingUrl = `${SITE_URL}/pricing?utm_source=email&utm_medium=lifecycle&utm_campaign=weekly_digest`;
+  const footerOpts = { unsubscribeUrl };
+
+  const shortDate = (d: Date): string =>
+    d.toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+  const displayTitle = (title: string | null): string => {
+    const trimmed = (title ?? "").trim();
+    const capped = trimmed.length > 80 ? `${trimmed.slice(0, 79)}…` : trimmed;
+    return capped || "Untitled dream";
+  };
+  const moreCount = Math.max(0, dreamCount - recentDreams.length);
+
+  const listHtml = recentDreams
+    .map(
+      (d) =>
+        `<p style="margin:0 0 10px 0; font-family:${SANS}; font-size:15px; line-height:1.5;"><span style="color:${STARLIGHT};">${escapeHtml(displayTitle(d.title))}</span><span style="color:${MUTED};">&nbsp;&middot;&nbsp;${shortDate(d.createdAt)}</span></p>`,
+    )
+    .join("\n");
+
+  const html = wrap(
+    preheader,
+    [
+      heading("Your week on the river"),
+      para(
+        `You wrote down <strong style="color:${STARLIGHT}">${dreamCount} ${noun}</strong> this week:`,
+      ),
+      listHtml,
+      moreCount > 0
+        ? mutedPara(`…and ${moreCount} more in your journal.`)
+        : "",
+      creditsExhausted
+        ? para(
+            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${GOLD_LIGHT}; text-decoration:underline;">the Visionary plan</a> continues it — and your journal stays free either way.`,
+          )
+        : "",
+      ctaButton("Open your journal", cta),
+      mutedPara(
+        "Only your dream titles appear in this email — the dreams themselves stay private in your journal.",
+      ),
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    footerOpts,
+  );
+
+  const listText = recentDreams
+    .map((d) => `- ${displayTitle(d.title)} · ${shortDate(d.createdAt)}`)
+    .join("\n");
+  const creditsText = creditsExhausted
+    ? `\n\nOne gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, the Visionary plan continues it — and your journal stays free either way: ${pricingUrl}`
+    : "";
+
+  const text = `Your week on the river
+
+You wrote down ${dreamCount} ${noun} this week:
+
+${listText}${moreCount > 0 ? `\n…and ${moreCount} more in your journal.` : ""}${creditsText}
+
+Open your journal: ${cta}
+
+Only your dream titles appear in this email — the dreams themselves stay private in your journal.${textFooter(footerOpts)}`;
 
   return { subject, html, text };
 }

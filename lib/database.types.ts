@@ -466,10 +466,12 @@ export type Database = {
           language: string | null
           preferences: Json | null
           reading_level: string | null
+          reminder_hour: number | null
           test_mode_aesthetics: string[] | null
           test_mode_depths: string[] | null
           test_mode_enabled: boolean | null
           test_mode_reading_levels: string[] | null
+          timezone: string | null
           user_id: string | null
         }
         Insert: {
@@ -483,10 +485,12 @@ export type Database = {
           language?: string | null
           preferences?: Json | null
           reading_level?: string | null
+          reminder_hour?: number | null
           test_mode_aesthetics?: string[] | null
           test_mode_depths?: string[] | null
           test_mode_enabled?: boolean | null
           test_mode_reading_levels?: string[] | null
+          timezone?: string | null
           user_id?: string | null
         }
         Update: {
@@ -500,10 +504,12 @@ export type Database = {
           language?: string | null
           preferences?: Json | null
           reading_level?: string | null
+          reminder_hour?: number | null
           test_mode_aesthetics?: string[] | null
           test_mode_depths?: string[] | null
           test_mode_enabled?: boolean | null
           test_mode_reading_levels?: string[] | null
+          timezone?: string | null
           user_id?: string | null
         }
         Relationships: []
