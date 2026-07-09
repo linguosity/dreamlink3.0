@@ -28,6 +28,7 @@ import { Providers } from './providers';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import { VersionChecker } from '@/components/VersionChecker';
 import CookieConsent from '@/components/CookieConsent';
+import FeedbackWidget from '@/components/FeedbackWidget';
 import { HintsProvider } from '@/lib/hints/dismissed-context';
 import { HINT_IDS, type HintId } from '@/lib/hints/types';
 
@@ -205,6 +206,12 @@ export default async function RootLayout({
 
             {/* Cookie consent banner */}
             <CookieConsent />
+
+            {/* Floating feedback bubble — signed-in users only; the widget
+                additionally hides itself on public/marketing routes via
+                usePathname (the root layout survives client navigations, so
+                the server-side pathname here would go stale). */}
+            {user && <FeedbackWidget />}
 
             {/* Footer only on auth pages (landing page has its own footer) */}
             {isAuthPage && (

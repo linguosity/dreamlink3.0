@@ -130,6 +130,21 @@ export default async function SharedDreamPage(props: {
             </div>
           </div>
         </Card>
+
+        {/* Share-loop CTA — this page is the only surface anonymous visitors
+            ever see, so it carries one quiet conversion moment. The UTM
+            params attribute resulting signups to shared dreams. */}
+        <Card className="mt-6 p-6 text-center sm:p-8">
+          <h2 className="text-xl font-bold mb-2 sm:text-2xl">What did you dream?</h2>
+          <p className="text-muted-foreground mb-5">
+            Keep a dream journal and receive biblically-grounded interpretation — 3 free.
+          </p>
+          <Button asChild size="lg" className="w-full rounded-full font-semibold sm:w-auto">
+            <Link href="/sign-up?utm_source=share&utm_medium=dream&utm_campaign=shared_dream">
+              Interpret your own dream
+            </Link>
+          </Button>
+        </Card>
       </div>
     </div>
   );

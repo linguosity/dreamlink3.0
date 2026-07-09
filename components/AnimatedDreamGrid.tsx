@@ -139,11 +139,21 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       }
     }
 
+    // Failed submissions (e.g. 402 out-of-credits paywall) never produce a
+    // real card, so drop the optimistic placeholder instead of leaving it
+    // spinning forever behind the error/upsell UI.
+    function handleDreamFailed() {
+      setPendingDream(null);
+      setAnalyzedDream(null);
+    }
+
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
     window.addEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
+    window.addEventListener('dreamriver:dream-failed', handleDreamFailed);
     return () => {
       window.removeEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
       window.removeEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
+      window.removeEventListener('dreamriver:dream-failed', handleDreamFailed);
     };
   }, []);
 

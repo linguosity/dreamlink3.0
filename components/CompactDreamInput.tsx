@@ -9,6 +9,7 @@ import { createClient } from "@/utils/supabase/client";
 import { ImageAesthetic } from "@/schema/imageAesthetic";
 import { ReadingLevel } from "@/schema/profile";
 import { logClientError } from "@/utils/errorLogger";
+import PaywallDialog from "./PaywallDialog";
 
 interface CompactDreamInputProps {
   userId: string;
@@ -16,9 +17,15 @@ interface CompactDreamInputProps {
 
 const MAX_CHARS = 8000;
 
+// localStorage key holding a dream that hit the out-of-credits paywall. The
+// text survives the trip to /pricing (or a reload) and is restored into the
+// composer on return; the next successful submission clears it.
+const PENDING_DREAM_KEY = "dr_pending_dream";
+
 export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dream, setDream] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
@@ -44,6 +51,12 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     if (dismissed === 'true') {
       setTipDismissed(true);
     }
+    // Restore a dream stashed at the paywall (see PENDING_DREAM_KEY) so the
+    // user never has to retype it after visiting /pricing or upgrading.
+    const pending = localStorage.getItem(PENDING_DREAM_KEY);
+    if (pending) {
+      setDream((current) => current || pending);
+    }
   }, []);
 
   const handlePermanentDismiss = () => {
@@ -64,12 +77,15 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     if (event) event.preventDefault();
     if (!dream.trim()) return;
 
-    await submitDream(dream);
-    setDream("");
+    const submitted = await submitDream(dream);
+    // Only clear the composer on success — a failed submission (especially
+    // the out-of-credits paywall) must never eat the user's words.
+    if (submitted) setDream("");
   };
 
-  // Common submission logic with retry for auth timing issues
-  const submitDream = async (dreamText: string, retryCount = 0) => {
+  // Common submission logic with retry for auth timing issues.
+  // Resolves true only when the dream was accepted by the API.
+  const submitDream = async (dreamText: string, retryCount = 0): Promise<boolean> => {
     setIsSubmitting(true);
 
     // Optimistically show a placeholder card in the grid immediately
@@ -116,6 +132,22 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         return await submitDream(dreamText, retryCount + 1);
       }
 
+      // Free credits exhausted → the paywall moment, not an error toast.
+      // The user's dream is written and worth protecting: stash it so it
+      // survives the trip to /pricing, drop the optimistic placeholder card
+      // (no analysis is coming), and open the upgrade dialog.
+      if (response.status === 402 && result?.code === "out_of_credits") {
+        try {
+          localStorage.setItem(PENDING_DREAM_KEY, dreamText);
+        } catch {
+          // Storage unavailable (private mode) — the composer still holds
+          // the text in memory.
+        }
+        window.dispatchEvent(new CustomEvent("dreamriver:dream-failed"));
+        setShowPaywall(true);
+        return false;
+      }
+
       if (!response.ok) {
         console.error("API error details:", result);
 
@@ -131,6 +163,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         localStorage.removeItem('loadingDreamId');
         localStorage.removeItem('loadingDreamStartedAt');
+        // A successful submit means any dream stashed at a previous paywall
+        // is obsolete (this WAS that dream, or the user has moved on).
+        localStorage.removeItem(PENDING_DREAM_KEY);
 
         // Matrix-aware image generation: dedupe by aesthetic so we only
         // burn one image per unique aesthetic in a comparison group.
@@ -183,6 +218,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       // Small delay to ensure DB writes have fully propagated before refresh
       await new Promise(resolve => setTimeout(resolve, 500));
       router.refresh();
+      return true;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error("Error submitting dream:", err);
@@ -199,6 +235,9 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       }
 
       toast.error(`Failed to submit your dream: ${userMessage}`);
+      // The submission produced no card — clear the optimistic placeholder.
+      window.dispatchEvent(new CustomEvent("dreamriver:dream-failed"));
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -292,6 +331,11 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
           </button>
         </div>
       )}
+
+      {/* Credit-exhaustion upsell — opened when the API answers 402
+          out_of_credits. The dream text stays in the composer and in
+          localStorage (PENDING_DREAM_KEY) while the user decides. */}
+      <PaywallDialog open={showPaywall} onOpenChange={setShowPaywall} />
     </div>
   );
 }
