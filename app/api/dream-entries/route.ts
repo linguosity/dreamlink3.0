@@ -31,6 +31,7 @@ import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
 import { runDreamAnalysis } from "@/lib/dreamAnalysis";
 import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
 import { captureServerEvent } from "@/lib/analytics-server";
+import { sendCreditsExhaustedEmail } from "@/lib/emails/send";
 import {
   AnalysisDepth,
   ReadingLevel,
@@ -600,6 +601,18 @@ export async function POST(request: Request) {
           used: credits.used,
           limit: credits.limit,
         });
+
+        // Lifecycle email — free credits are lifetime and never refresh, so
+        // this fires once ever per user (notification_log dedupe key "once").
+        // No-ops without RESEND_API_KEY and never throws; the catch is
+        // belt-and-braces so email can never break the 402 response.
+        try {
+          if (user.email) {
+            await sendCreditsExhaustedEmail(user.id, user.email);
+          }
+        } catch (err) {
+          console.error("[dream-entries] credits_exhausted email failed (non-fatal):", err);
+        }
       }
       return NextResponse.json(
         {

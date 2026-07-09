@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe, stripePriceToPlan } from "@/lib/stripe";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { captureServerEvent } from "@/lib/analytics-server";
+import {
+  getUserEmailById,
+  sendPaymentFailedEmail,
+  sendCancellationConfirmedEmail,
+} from "@/lib/emails/send";
 import Stripe from "stripe";
 
 // Stripe 2026-02-25 moved `current_period_end` off the top-level Subscription
@@ -143,6 +148,33 @@ export async function POST(request: NextRequest) {
           })
           .eq("stripe_subscription_id", subscription.id);
         if (updateError) throw new Error(`subscription update: ${updateError.message}`);
+
+        // Lifecycle email — the app's only cancellation paths (billing portal,
+        // account deletion) schedule cancel_at_period_end, which arrives as
+        // this event. Deduped per (subscription, period) via notification_log
+        // (`<sub>:<period_end>`): replays and later same-period updates skip,
+        // and the eventual customer.subscription.deleted reuses the same key
+        // so it can't double-send. Email failures never fail the event.
+        if (subscription.cancel_at_period_end) {
+          try {
+            const { data: subRow } = await admin
+              .from("subscriptions")
+              .select("user_id")
+              .eq("stripe_subscription_id", subscription.id)
+              .maybeSingle();
+            if (subRow?.user_id) {
+              const email = await getUserEmailById(subRow.user_id);
+              if (email) {
+                await sendCancellationConfirmedEmail(subRow.user_id, email, {
+                  accessUntil: periodEnd ? new Date(periodEnd * 1000) : null,
+                  dedupeKey: `${subscription.id}:${periodEnd ?? "unknown"}`,
+                });
+              }
+            }
+          } catch (err) {
+            console.error("cancellation_confirmed email failed (non-fatal):", err);
+          }
+        }
         break;
       }
 
@@ -157,6 +189,38 @@ export async function POST(request: NextRequest) {
           })
           .eq("stripe_subscription_id", subscription.id);
         if (deleteError) throw new Error(`subscription cancel: ${deleteError.message}`);
+
+        // Lifecycle email — covers cancellations that never passed through a
+        // cancel_at_period_end update (e.g. immediate cancellation from the
+        // Stripe dashboard). For portal/account-delete cancellations the
+        // `<sub>:<period_end>` key was already claimed when the scheduled
+        // cancellation was confirmed above, so this dedupes to nothing.
+        try {
+          const { data: subRow } = await admin
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_subscription_id", subscription.id)
+            .maybeSingle();
+          if (subRow?.user_id) {
+            const email = await getUserEmailById(subRow.user_id);
+            if (email) {
+              const periodEnd = readPeriodEnd(subscription);
+              const endedAt =
+                typeof subscription.ended_at === "number"
+                  ? subscription.ended_at
+                  : null;
+              const accessUntilEpoch = endedAt ?? periodEnd;
+              await sendCancellationConfirmedEmail(subRow.user_id, email, {
+                accessUntil: accessUntilEpoch
+                  ? new Date(accessUntilEpoch * 1000)
+                  : null,
+                dedupeKey: `${subscription.id}:${periodEnd ?? "unknown"}`,
+              });
+            }
+          }
+        } catch (err) {
+          console.error("cancellation_confirmed email failed (non-fatal):", err);
+        }
         break;
       }
 
@@ -217,6 +281,23 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
         });
         if (payError) throw new Error(`payment insert (failed): ${payError.message}`);
+
+        // Lifecycle email — Stripe re-fires invoice.payment_failed on every
+        // Smart Retry attempt; notification_log dedupes on the invoice id so
+        // the user hears about a failing card once per invoice, not once per
+        // retry. Email failures never fail the event.
+        if (subRow?.user_id && invoice.id) {
+          try {
+            const email = await getUserEmailById(subRow.user_id);
+            if (email) {
+              await sendPaymentFailedEmail(subRow.user_id, email, {
+                invoiceId: invoice.id,
+              });
+            }
+          } catch (err) {
+            console.error("payment_failed email failed (non-fatal):", err);
+          }
+        }
         break;
       }
 

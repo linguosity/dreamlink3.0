@@ -15,6 +15,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { getComingSoonEnabled, isAllowedAdminEmail } from "@/lib/siteSettings";
+import { sendWelcomeEmail } from "@/lib/emails/send";
 
 /**
  * Whitelist of safe internal paths that `redirect_to` is allowed to point at.
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data: exchange } = await supabase.auth.exchangeCodeForSession(code);
 
     // Coming-soon gate: tear down the session if a non-admin made it through
     // OAuth or email-verification while the splash is up. Mirrors the gate
@@ -82,6 +83,22 @@ export async function GET(request: Request) {
       if (!bypass) {
         await supabase.auth.signOut();
         return NextResponse.redirect(`${origin}/coming-soon`);
+      }
+    }
+
+    // Lifecycle welcome email at first authenticated arrival. This route is
+    // the one reliable convergence point: email verification and every OAuth
+    // sign-in redirect through /auth/callback with a code. notification_log
+    // dedupes on (user, "welcome", "once"), so repeat logins, password-reset
+    // links, and webhook-style replays never re-send. sendWelcomeEmail no-ops
+    // without RESEND_API_KEY and never throws, but the belt-and-braces catch
+    // guarantees email can never break the login redirect.
+    const authedUser = exchange?.user ?? null;
+    if (authedUser?.email) {
+      try {
+        await sendWelcomeEmail(authedUser.id, authedUser.email);
+      } catch (err) {
+        console.error("[auth/callback] welcome email failed (non-fatal):", err);
       }
     }
   }
