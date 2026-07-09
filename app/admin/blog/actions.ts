@@ -70,7 +70,11 @@ export async function savePostAction(
         .from("blog_posts")
         .update(row)
         .eq("id", input.id);
-      if (error) return { error: error.message };
+      if (error) {
+        if (error.code === "23505")
+          return { error: `A post with the slug "${slug}" already exists.` };
+        return { error: error.message };
+      }
       revalidateBlog(slug);
       return { ok: true, id: input.id, slug };
     }
@@ -98,21 +102,24 @@ export async function setPostStatusAction(
 ): Promise<{ ok: true } | { error: string }> {
   try {
     const { supabase } = await requireAdmin();
+    const { data } = await supabase
+      .from("blog_posts")
+      .select("published_at, slug")
+      .eq("id", id)
+      .single();
+    const existing = data as
+      | { published_at: string | null; slug: string }
+      | null;
     const patch: Record<string, unknown> = { status };
-    if (status === "published") {
-      // Only set published_at the first time so re-publishing keeps its date.
-      const { data } = await supabase
-        .from("blog_posts")
-        .select("published_at, slug")
-        .eq("id", id)
-        .single();
-      if (!(data as { published_at: string | null } | null)?.published_at) {
-        patch.published_at = new Date().toISOString();
-      }
+    // Only set published_at the first time so re-publishing keeps its date.
+    if (status === "published" && !existing?.published_at) {
+      patch.published_at = new Date().toISOString();
     }
     const { error } = await supabase.from("blog_posts").update(patch).eq("id", id);
     if (error) return { error: error.message };
-    revalidateBlog();
+    // Revalidate the post's own URL too, so unpublishing drops the cached
+    // page and publishing makes it live immediately.
+    revalidateBlog(existing?.slug);
     return { ok: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Unknown error" };
@@ -124,9 +131,14 @@ export async function deletePostAction(
 ): Promise<{ ok: true } | { error: string }> {
   try {
     const { supabase } = await requireAdmin();
+    const { data } = await supabase
+      .from("blog_posts")
+      .select("slug")
+      .eq("id", id)
+      .maybeSingle();
     const { error } = await supabase.from("blog_posts").delete().eq("id", id);
     if (error) return { error: error.message };
-    revalidateBlog();
+    revalidateBlog((data as { slug: string } | null)?.slug);
     return { ok: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Unknown error" };

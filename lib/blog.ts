@@ -43,6 +43,35 @@ export async function getPublishedPostBySlug(
   return (data as BlogPost | null) ?? null;
 }
 
+/**
+ * Admin-only fetch of a post in ANY status, used by /blog/[slug] to let
+ * admins preview drafts at their future public URL. Returns null unless the
+ * current session belongs to a profile with is_admin. RLS
+ * ("blog_posts_admin_all") enforces the same rule at the DB layer, so the
+ * explicit check here is defense in depth, not load-bearing.
+ */
+export async function getPostBySlugForAdmin(
+  slug: string
+): Promise<BlogPost | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from("profile")
+    .select("is_admin")
+    .eq("user_id", user.id)
+    .single();
+  if (!profile?.is_admin) return null;
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  return (data as BlogPost | null) ?? null;
+}
+
 /** Turn a title into a URL slug: "God's Voice at Night" -> "gods-voice-at-night" */
 export function slugify(title: string): string {
   return title

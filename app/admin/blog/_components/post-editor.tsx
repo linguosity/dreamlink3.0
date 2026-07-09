@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -61,12 +61,46 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
   );
   const [preview, setPreview] = useState(false);
   const [postId, setPostId] = useState(post?.id ?? null);
+  // Slug as it exists in the DB (what /blog/<slug> will actually serve).
+  const [savedSlug, setSavedSlug] = useState(post?.slug ?? null);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const effectiveSlug = slugTouched ? slug : slugPreview(title);
   const metaTitle = seoTitle || title;
   const metaDesc = seoDesc || excerpt;
+
+  // ---- Unsaved-changes guard ----------------------------------------------
+  // Snapshot of every field the save action persists (id excluded — it only
+  // changes on first save). Compared against the last saved snapshot to warn
+  // before the browser tab closes or Justin navigates back mid-edit.
+  const fields = {
+    title,
+    slug: effectiveSlug,
+    excerpt,
+    content,
+    cover,
+    author,
+    tags,
+    seoTitle,
+    seoDesc,
+  };
+  const snap = JSON.stringify(fields);
+  const savedSnapRef = useRef(snap);
+  const dirty = snap !== savedSnapRef.current;
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, []);
 
   const words = useMemo(
     () => content.split(/\s+/).filter(Boolean).length,
@@ -115,8 +149,9 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
   }
 
   function save(then?: (id: string) => Promise<void>) {
+    const input = collectInput();
     startTransition(async () => {
-      const res = await savePostAction(collectInput());
+      const res = await savePostAction(input);
       if ("error" in res) {
         toast.error(res.error);
         return;
@@ -124,6 +159,9 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
       setPostId(res.id);
       setSlug(res.slug);
       setSlugTouched(true);
+      setSavedSlug(res.slug);
+      // The server may normalize the slug — record what was actually saved.
+      savedSnapRef.current = JSON.stringify({ ...fields, slug: res.slug });
       if (then) await then(res.id);
       else toast.success("Saved");
       router.refresh();
@@ -132,6 +170,12 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
 
   function publishToggle() {
     const next = status === "published" ? "draft" : "published";
+    const ok = confirm(
+      next === "published"
+        ? `Publish this article? It will be live for everyone at dreamriver.io/blog/${effectiveSlug}`
+        : "Unpublish this article? Its public page will show a 404 until you publish it again."
+    );
+    if (!ok) return;
     save(async (id) => {
       const res = await setPostStatusAction(id, next);
       if ("error" in res) {
@@ -178,7 +222,17 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
     <main className="p-6 md:p-8 max-w-5xl">
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin/blog">
+          <Link
+            href="/admin/blog"
+            onClick={(e) => {
+              if (
+                dirty &&
+                !confirm("You have unsaved changes. Leave without saving?")
+              ) {
+                e.preventDefault();
+              }
+            }}
+          >
             <ArrowLeft className="size-4 mr-1" /> All articles
           </Link>
         </Button>
@@ -197,12 +251,25 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
               <Trash2 className="size-4" />
             </Button>
           ) : null}
+          {postId && savedSlug ? (
+            <Button variant="ghost" size="sm" asChild>
+              <a
+                href={`/blog/${savedSlug}`}
+                target="_blank"
+                rel="noreferrer"
+                title="Opens the public page in a new tab. Save first to see your latest changes."
+              >
+                <Eye className="size-4 mr-1" />
+                {status === "published" ? "View live" : "Preview page"}
+              </a>
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             onClick={() => save()}
             disabled={isPending || !title.trim()}
           >
-            Save draft
+            {status === "published" ? "Save changes" : "Save draft"}
           </Button>
           <Button
             onClick={publishToggle}

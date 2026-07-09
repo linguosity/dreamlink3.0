@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import SiteHeader from "@/components/SiteHeader";
 import {
+  getPostBySlugForAdmin,
   getPublishedPostBySlug,
   readingTimeMinutes,
   SITE_URL,
@@ -20,7 +21,18 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPublishedPostBySlug(slug);
-  if (!post) return { title: "Article not found — DreamRiver" };
+  if (!post) {
+    // Admins can preview drafts at their future URL (see below) — make sure
+    // those pages are never indexed, even if a crawler somehow had a session.
+    const draft = await getPostBySlugForAdmin(slug);
+    if (draft) {
+      return {
+        title: `[Draft] ${draft.seo_title || draft.title} — The DreamRiver Journal`,
+        robots: { index: false, follow: false },
+      };
+    }
+    return { title: "Article not found — DreamRiver" };
+  }
 
   const title = post.seo_title || post.title;
   const description =
@@ -50,8 +62,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(slug);
-  if (!post) notFound();
+  let post = await getPublishedPostBySlug(slug);
+  let isDraftPreview = false;
+  if (!post) {
+    // Not published: only admins get a draft preview here (anon/regular
+    // visitors 404). This route is request-rendered (Supabase client reads
+    // cookies), so the preview is never cached for the public.
+    const draft = await getPostBySlugForAdmin(slug);
+    if (!draft) notFound();
+    post = draft;
+    isDraftPreview = draft.status !== "published";
+  }
 
   const minutes = readingTimeMinutes(post.content_md);
   const jsonLd = {
@@ -74,12 +95,32 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <div className="dark w-full min-h-screen bg-night text-cream">
       <SiteHeader />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {!isDraftPreview ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      ) : null}
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-10 sm:pt-14 pb-16 sm:pb-24">
+        {isDraftPreview ? (
+          <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
+            <strong className="uppercase tracking-[0.14em] text-[11px] font-bold text-gold">
+              Draft preview
+            </strong>
+            <span className="text-cream/70">
+              Only admins can see this page — readers get a 404 until you
+              publish.
+            </span>
+            <Link
+              href={`/admin/blog/${post.id}`}
+              className="text-gold underline underline-offset-4 hover:text-gold-light"
+            >
+              Back to editor
+            </Link>
+          </div>
+        ) : null}
+
         <nav className="text-sm">
           <Link
             href="/blog"
