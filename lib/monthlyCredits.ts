@@ -21,6 +21,7 @@
 
 import { getAdminClient } from "@/utils/supabase/admin";
 import { monthlyCreditCap } from "@/lib/tierConfig";
+import { captureError } from "@/lib/sentry";
 import type { SubscriptionPlan } from "@/schema/profile";
 
 export interface CreditCheckResult {
@@ -127,6 +128,14 @@ export async function checkGlobalDailyDreamCap(): Promise<{ allowed: boolean; us
     const used = count ?? 0;
     if (used >= cap) {
       console.error(`[globalCap] TRIPPED: ${used}/${cap} dreams in last 24h — blocking new generations.`);
+      // Spend-anomaly alert: surface the trip in Sentry instead of relying on
+      // console logs nobody watches. Constant message → Sentry groups repeat
+      // events into one issue while the breaker stays tripped.
+      captureError(new Error("Global daily dream cap tripped"), {
+        level: "warning",
+        tags: { area: "credits" },
+        extra: { used, cap },
+      });
     }
     return { allowed: used < cap, used, cap };
   } catch (err: any) {

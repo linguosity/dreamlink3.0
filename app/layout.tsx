@@ -25,6 +25,7 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 import { Providers } from './providers';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import { VersionChecker } from '@/components/VersionChecker';
 import CookieConsent from '@/components/CookieConsent';
 import { HintsProvider } from '@/lib/hints/dismissed-context';
@@ -165,6 +166,7 @@ export default async function RootLayout({
       <body className="text-foreground">
         <Providers>
           <HintsProvider initialDismissed={dismissedHints}>
+          <ServiceWorkerRegistration />
           <VersionChecker />
           {/* Skip-to-content link for keyboard/screen-reader users */}
           <a

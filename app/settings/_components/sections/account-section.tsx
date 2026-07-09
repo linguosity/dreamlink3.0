@@ -1,12 +1,81 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Download, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { SectionHead, Field } from "../section-head";
 
 export function AccountSection({ email }: { email: string }) {
+  const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/account/export");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Export failed. Please try again.");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `dreamriver-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Your data export has been downloaded");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Export failed. Please try again.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete account. Please try again.");
+      }
+      toast.success("Your account has been deleted");
+      // Full reload so all client auth state is dropped along with the cookies.
+      window.location.href = "/";
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete account. Please try again.",
+      );
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
       <SectionHead
@@ -48,29 +117,115 @@ export function AccountSection({ email }: { email: string }) {
         </div>
       </div>
 
+      <div className="rounded-[var(--radius-lg)] border bg-card p-6 mt-5 shadow-sm">
+        <SectionHead
+          title="Your data"
+          desc="Download a copy of everything DreamRiver stores for you."
+        />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-medium">Export my data</div>
+            <div className="text-[12.5px] text-muted-foreground mt-0.5">
+              A JSON file with your dreams, analyses, citations, and profile.
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+          >
+            {exporting ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            {exporting ? "Preparing…" : "Export my data"}
+          </Button>
+        </div>
+      </div>
+
       <div className="rounded-[var(--radius-lg)] border border-destructive/30 bg-card p-6 mt-5 shadow-sm">
         <SectionHead
           title="Danger zone"
-          desc="Account deletion is processed manually within 30 days. Reach out to delete your account."
+          desc="Deleting your account is immediate and permanent."
         />
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-sm font-medium">Delete account & data</div>
             <div className="text-[12.5px] text-muted-foreground mt-0.5">
-              Removes all dreams, analyses, and profile data.
+              Permanently removes all dreams, analyses, images, and profile
+              data. Any active subscription is canceled.
             </div>
           </div>
-          <Link href="/contact">
-            <Button
-              variant="outline"
-              type="button"
-              className="text-destructive border-destructive/40 hover:bg-destructive/5"
-            >
-              Request deletion
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="text-destructive border-destructive/40 hover:bg-destructive/5"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            Delete account
+          </Button>
         </div>
       </div>
+
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!open && deleting) return; // don't close mid-deletion
+          setDeleteOpen(open);
+          if (!open) setConfirmText("");
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes your account, every dream and analysis,
+              your images, and your profile. If you have an active
+              subscription it will be canceled — you won&rsquo;t be charged
+              again. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="delete-confirm"
+              className="text-[13px] font-medium"
+            >
+              Type <span className="font-semibold">DELETE</span> to confirm
+            </label>
+            <Input
+              id="delete-confirm"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE"
+              autoComplete="off"
+              disabled={deleting}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={confirmText !== "DELETE" || deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault(); // keep the dialog open while we work
+                void handleDelete();
+              }}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                "Delete my account"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
