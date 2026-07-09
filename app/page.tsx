@@ -18,6 +18,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import CompactDreamInput from "@/components/CompactDreamInput";
 import AnimatedDreamGrid from "@/components/AnimatedDreamGrid";
+import RecentPosts from "@/components/RecentPosts";
 import { Sparkles } from "lucide-react";
 
 function formatJournalDate(d: Date): string {
@@ -266,6 +267,10 @@ export default async function MainPage() {
             </Link>
           </aside>
         )}
+
+        {/* Journal cross-link — quiet blog-discovery strip below the gallery.
+            Renders nothing until the first blog post is published. */}
+        <RecentPosts variant="app" limit={3} />
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import Wordmark from "@/components/Wordmark";
 import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
 import SocialProof from "@/components/SocialProof";
+import RecentPosts from "@/components/RecentPosts";
 import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
@@ -477,6 +478,11 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── From the Journal (blog discovery) ──────────────────────── */}
+      {/* Server-fetched published posts; renders nothing until the first
+          post is published, so this slot invisibly no-ops today. */}
+      <RecentPosts variant="landing" limit={3} />
+
       {/* ── Final CTA ──────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] py-20 sm:py-24 lg:py-28">
         {/* moon-glow halo above the heading */}
@@ -557,6 +563,14 @@ export default async function LandingPage() {
                   <a href="#features" className="hover:text-[color:var(--cream)] transition-colors">
                     Features
                   </a>
+                </li>
+                <li>
+                  <Link
+                    href="/blog?utm_source=landing&utm_medium=footer"
+                    className="hover:text-[color:var(--cream)] transition-colors"
+                  >
+                    Journal
+                  </Link>
                 </li>
                 <li>
                   <Link href="/sign-up" className="hover:text-[color:var(--cream)] transition-colors">

@@ -30,6 +30,31 @@ export async function getPublishedPosts(): Promise<BlogPost[]> {
   return (data as BlogPost[] | null) ?? [];
 }
 
+/** Lightweight preview shape for cross-surface post cards (no content_md). */
+export type BlogPostPreview = Pick<
+  BlogPost,
+  "id" | "slug" | "title" | "excerpt" | "tags" | "published_at"
+>;
+
+/**
+ * Newest N published posts with columns trimmed for preview cards
+ * (components/RecentPosts on /landing and the dashboard). Same anon-safe
+ * status=published filter as getPublishedPosts, so logged-out visitors get
+ * exactly what RLS already allows; drafts never surface here.
+ */
+export async function getRecentPublishedPosts(
+  limit = 3
+): Promise<BlogPostPreview[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("id, slug, title, excerpt, tags, published_at")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  return (data as BlogPostPreview[] | null) ?? [];
+}
+
 export async function getPublishedPostBySlug(
   slug: string
 ): Promise<BlogPost | null> {
