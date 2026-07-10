@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { normalizeCitation } from "@/lib/bibleLookup";
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -123,8 +124,11 @@ export async function GET(request: Request) {
     // Process each reference from the dream_entries table first
     if (dreamRefs.length > 0) {
       dreamRefs.forEach((ref, index) => {
-        // Try to find this reference in our citations
-        const parsed = ref.match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
+        // Try to find this reference in our citations. Canonicalize
+        // book-name variants first ('Psalm 23:4' → 'Psalms 23:4',
+        // 'Song of Songs' → 'Song of Solomon') so refs stored before
+        // server-side hydration still match the canonical citation keys.
+        const parsed = normalizeCitation(ref).match(/((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*)\s+(\d+):(\d+)/);
         if (parsed) {
           const [, book, chapter, verse] = parsed;
           const normalizedRef = normalizeReference(book, parseInt(chapter), parseInt(verse));
@@ -208,15 +212,32 @@ export async function GET(request: Request) {
     
     // Add fallbacks for any dream references that are missing
     dreamRefs.forEach(ref => {
+      // Canonical form for book-name variants ('Psalm' → 'Psalms',
+      // 'Song of Songs' → 'Song of Solomon') — lets a non-canonical stored
+      // ref resolve via the canonical key hydrated from bible_citations.
+      const canonical = normalizeCitation(ref);
+
       // First check if this is a verse range
       const isRange = ref.match(/^((?:\d\s+)?[a-zA-Z]+(?:\s+[a-zA-Z]+)*\s+\d+):(\d+)-(\d+)$/);
-      
+
       if (isRange) {
         if (DEBUG) console.log(`Processing verse range: ${ref}`);
 
         // If we already have this range, skip it
         if (verseLookup[ref]) {
           if (DEBUG) console.log(`Range ${ref} already in verseLookup`);
+          return;
+        }
+
+        // Alias to the canonical form when that's what got hydrated
+        if (canonical !== ref && verseLookup[canonical]) {
+          verseLookup[ref] = verseLookup[canonical];
+          verseMapping.push({
+            reference: ref,
+            normalizedReference: canonical,
+            found: true,
+            source: "canonical alias",
+          });
           return;
         }
 
@@ -283,6 +304,20 @@ export async function GET(request: Request) {
 
         // Skip if we already have this reference
         if (verseLookup[ref]) return;
+
+        // Alias to the canonical form when that's what got hydrated
+        // (e.g. stored 'Psalm 23:4' vs hydrated 'Psalms 23:4')
+        if (canonical !== ref && verseLookup[canonical]) {
+          verseLookup[ref] = verseLookup[canonical];
+          verseMapping.push({
+            reference: ref,
+            normalizedReference: canonical,
+            text: verseLookup[canonical].substring(0, 50) + "...",
+            found: true,
+            source: "canonical alias",
+          });
+          return;
+        }
 
         // Check if we have a fallback
         if (BIBLE_VERSES[ref]) {

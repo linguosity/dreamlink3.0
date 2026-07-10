@@ -20,14 +20,36 @@ import { AnalysisDepth } from "@/schema/profile";
 // structured output support and strong instruction following.
 export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
+// Per-tier model overrides. Deep/profound are the paid tiers, so they can be
+// pointed at a newer/stronger model (e.g. an A/B of a gpt-5.x variant)
+// without a deploy and without touching shallow. Both fall back to
+// OPENAI_MODEL when unset.
+export const OPENAI_MODEL_DEEP =
+  process.env.OPENAI_MODEL_DEEP || OPENAI_MODEL;
+export const OPENAI_MODEL_PROFOUND =
+  process.env.OPENAI_MODEL_PROFOUND || OPENAI_MODEL;
+
+/** Model for a depth tier — used for the tier's core call AND its section
+ *  calls (see the two-phase composition in lib/dreamAnalysis.ts). */
+export function getModelForDepth(depth: string): string {
+  switch (depth) {
+    case AnalysisDepth.DEEP:
+      return OPENAI_MODEL_DEEP;
+    case AnalysisDepth.PROFOUND:
+      return OPENAI_MODEL_PROFOUND;
+    default:
+      return OPENAI_MODEL;
+  }
+}
+
 // Ordered fallback models, tried in sequence when the primary model fails
 // with a retryable error (429 / 5xx / connection timeout). Comma-separated
 // env var so the chain can be re-ordered without a deploy:
 //   OPENAI_FALLBACK_MODELS="gpt-4.1,gpt-4o-mini"
 // Note this protects against single-MODEL failures and brownouts. For
-// whole-provider outage resilience, point OPENAI_BASE_URL at a multi-
-// provider router (e.g. OpenRouter) — the SDK reads that env var natively
-// and no code change is needed.
+// whole-provider outages, lib/dreamAnalysis additionally makes one final
+// cross-provider attempt through OpenRouter after this ladder is exhausted —
+// dark until OPENROUTER_API_KEY is set (see getOpenRouterClient below).
 export const OPENAI_FALLBACK_MODELS: string[] = (
   process.env.OPENAI_FALLBACK_MODELS || "gpt-4.1"
 )
@@ -46,6 +68,37 @@ export function getOpenAIClient(): OpenAI {
     });
   }
   return _client;
+}
+
+// ── Cross-provider failover (OpenRouter) ────────────────────────────
+// Dark until OPENROUTER_API_KEY is set. When the OPENAI_FALLBACK_MODELS
+// ladder is exhausted, lib/dreamAnalysis makes one final attempt through
+// OpenRouter — a second OpenAI-SDK client pointed at their OpenAI-compatible
+// API. OPENROUTER_MODEL accepts ANY OpenRouter model slug (e.g.
+// "openai/gpt-4.1-mini", "google/gemini-2.5-flash",
+// "anthropic/claude-3.5-haiku"); structured outputs via
+// response_format json_schema work on compatible models.
+export const OPENROUTER_MODEL =
+  process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-haiku";
+
+let _openRouterClient: OpenAI | null = null;
+
+/** Second-provider client for failover. Returns null (failover disabled)
+ *  until OPENROUTER_API_KEY is configured. */
+export function getOpenRouterClient(): OpenAI | null {
+  if (!process.env.OPENROUTER_API_KEY) return null;
+  if (!_openRouterClient) {
+    _openRouterClient = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: "https://openrouter.ai/api/v1",
+      // Attribution headers OpenRouter recommends.
+      defaultHeaders: {
+        "HTTP-Referer": "https://dreamriver.io",
+        "X-Title": "DreamRiver",
+      },
+    });
+  }
+  return _openRouterClient;
 }
 
 // ── Dream Analysis Zod Schemas ──────────────────────────────────────
@@ -125,7 +178,7 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     tags: 3,
     minWords: 400,
     maxWords: 600,
-    pointMinWords: 50,
+    pointMinWords: 40,
     pointMaxWords: 80,
     maxOutputTokens: 4500,
   },
@@ -134,8 +187,8 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     tags: 3,
     minWords: 800,
     maxWords: 1100,
-    pointMinWords: 60,
-    pointMaxWords: 90,
+    pointMinWords: 30,
+    pointMaxWords: 60,
     maxOutputTokens: 8000,
   },
 };

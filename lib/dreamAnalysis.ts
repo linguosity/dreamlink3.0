@@ -7,13 +7,21 @@
 // somewhere — likely Next.js's request lifecycle around synthetic NextRequests),
 // so the import is now plumbed as a plain async function with no Request/Response
 // glue.
+//
+// Analysis architecture (July 2026): shallow is one structured call; deep and
+// profound are two-phase — the unchanged structured core call plus parallel
+// plain-text section completions with hard word budgets, composed server-side
+// into the `analysis` prose (see the "Two-phase composition" block below).
 
+import type OpenAI from "openai";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { zodTextFormat } from "openai/helpers/zod";
+import { zodResponseFormat, zodTextFormat } from "openai/helpers/zod";
 import {
   getOpenAIClient,
-  OPENAI_MODEL,
+  getOpenRouterClient,
+  getModelForDepth,
   OPENAI_FALLBACK_MODELS,
+  OPENROUTER_MODEL,
   getDreamAnalysisSchemaForDepth,
   getDepthSpec,
   type DreamAnalysis,
@@ -225,6 +233,168 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+// ── Two-phase composition (deep / profound) ────────────────────────
+//
+// Eval showed single-call analysis prose plateaus around ~600-715 words on
+// both gpt-4.1-mini and gpt-4.1 regardless of the schema's stated range —
+// structured outputs have no minimum-length mechanism. Paid tiers therefore
+// get their length BY CONSTRUCTION:
+//   Phase A — the unchanged structured core call (topic / points /
+//             conclusion / summary / title / tags / references). Its
+//             `analysis` field is superseded by the composition below.
+//   Phase B — parallel plain-text section completions, each with a hard
+//             word budget, composed server-side under the same heading
+//             names the depth-tier prompts established.
+// Shallow stays single-call (it passes eval).
+
+/** A resolved (client, model) pair plus the request dialect to use:
+ *  OpenAI's Responses API, or OpenRouter's Chat Completions
+ *  (response_format json_schema) for the cross-provider failover. */
+interface ModelTarget {
+  client: OpenAI;
+  model: string;
+  provider: "openai" | "openrouter";
+}
+
+interface SectionSpec {
+  /** Stable identifier for logs / Sentry tags. */
+  key: string;
+  /** Heading line composed into the analysis prose. Must keep matching the
+   *  heading conventions the depth-tier prompts established ("Dream
+   *  Symbols", "Three Lenses on This Dream", "For your prayer or journal"). */
+  heading: string;
+  /** Word budget the prompt asks for; the 70% quality guard keys off this. */
+  targetWords: number;
+  /** Bounds stated in the prompt. */
+  minWords: number;
+  maxWords: number;
+  /** What the section must contain. Code-owned on purpose — section prompts
+   *  must never depend on the DB prompt row. */
+  instruction: string;
+}
+
+interface SectionOutcome {
+  section: SectionSpec;
+  /** Trimmed section body, or null when the section failed after its retry —
+   *  composition simply skips it. */
+  text: string | null;
+}
+
+/** Sections are small (≤ ~300 words), so they get their own modest cap
+ *  instead of the tier's multi-thousand-token budget. */
+const SECTION_MAX_OUTPUT_TOKENS = 600;
+
+// Deterministic composed-length math (headings add ~10 words on top):
+//   deep     ≈ topic 30 + 3 points × 65 + 160 + 130 + conclusion 25 ≈ 550
+//              → mid-range of the 400-600 contract
+//   profound ≈ topic 30 + 4 points × 75 + 200 + 250 + 140 + conclusion 25 ≈ 955
+//              → mid-range of the 800-1100 contract
+const DEEP_SECTIONS: SectionSpec[] = [
+  {
+    key: "symbols",
+    heading: "Dream Symbols",
+    targetWords: 160,
+    minWords: 150,
+    maxWords: 200,
+    instruction:
+      "Unpack 2-4 of the most resonant images from this dream. For each, name the image and explore what it may suggest spiritually for the dreamer, tying each image to scripture with a parenthetical citation.",
+  },
+  {
+    key: "application",
+    heading: "How this might apply to your life right now",
+    targetWords: 130,
+    minWords: 120,
+    maxWords: 160,
+    instruction:
+      "Offer 2-3 gentle, practical suggestions for how the dream's themes might speak into the dreamer's life right now — invitations to reflect, pray, or act, never commands or predictions. Tie at least one suggestion to scripture with a parenthetical citation.",
+  },
+];
+
+const PROFOUND_SECTIONS: SectionSpec[] = [
+  {
+    key: "symbols",
+    heading: "Dream Symbols",
+    targetWords: 200,
+    minWords: 180,
+    maxWords: 220,
+    instruction:
+      "Unpack 3-5 of the most resonant images from this dream. For each, name the image and explore what it may suggest spiritually for the dreamer, tying each image to scripture with a parenthetical citation.",
+  },
+  {
+    key: "lenses",
+    heading: "Three Lenses on This Dream",
+    targetWords: 250,
+    minWords: 220,
+    maxWords: 280,
+    instruction:
+      "Read the dream through three lenses, giving each lens 2-3 sentences and naming it inline as you move through them. Literal: what the dream may reflect about the dreamer's present circumstances and emotions. Allegorical: how the dream's imagery echoes biblical narratives, symbols, or patterns, tied to scripture with a parenthetical citation. Prophetic: what gentle invitation, preparation, or encouragement the dream may point toward — held with humility, never predicting specific events.",
+  },
+  {
+    key: "prayer",
+    heading: "For your prayer or journal",
+    targetWords: 140,
+    minWords: 120,
+    maxWords: 160,
+    instruction:
+      "Open with one or two framing sentences inviting the dreamer to bring the dream into prayer or journaling, then pose exactly 3 reflection questions the dreamer can sit with, each ending with a question mark, woven into flowing prose rather than a numbered list.",
+  },
+];
+
+// Code-owned persona + style for section calls. Deliberately independent of
+// the DB prompt row (getActivePrompt) so admin prompt edits can't break the
+// composed tiers; mirrors the pastoral rules the core prompt establishes.
+const SECTION_SYSTEM_MESSAGE =
+  "You are a biblical dream interpreter writing one section of a longer, pastoral dream interpretation. You write warm, humble, scripture-grounded prose.";
+
+const SECTION_STYLE_RULES = `Style rules:
+- Interpret through a biblical lens with humility — use language like "may suggest", "could", or "points toward"; never fortune-telling, absolute claims, or date-setting.
+- No fear-based, manipulative, or overly mystical language. Never shame, condemn, or frighten the dreamer.
+- Address the dreamer directly as "you".
+- Cite scripture inline with parenthetical citations in the format (Book Chapter:Verse), using full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'. Do not quote full verse text.
+- Plain prose only: no markdown, no headings, no bullet points, no numbered lists.`;
+
+function buildSectionPrompt(
+  dream: string,
+  core: DreamAnalysis,
+  section: SectionSpec,
+  readingLevelInstructions: string,
+): string {
+  return `A biblical dream interpretation is being assembled from parts. Write ONLY the body text of its "${section.heading}" section — do not write the heading itself, do not introduce or summarize the rest of the interpretation, and do not add a sign-off.
+
+The dream:
+"${dream}"
+
+The interpretation's core (context only — do not restate it):
+Theme: ${core.topicSentence}
+${core.supportingPoints.map((p) => `- ${p}`).join("\n")}
+
+Section content: ${section.instruction}
+
+Length: about ${section.targetWords} words — no fewer than ${section.minWords}, no more than ${section.maxWords}. Count words as you write.
+
+${SECTION_STYLE_RULES}
+
+Reading level for this dreamer:
+${readingLevelInstructions}`;
+}
+
+/** Server-side composition for deep/profound: topic ¶, one ¶ per supporting
+ *  point, each delivered section under its plain-text heading, then the
+ *  conclusion. Matches how the UI renders analysis prose — plain text run
+ *  through the citation-tooltip splitter in DreamCard, no markdown — and the
+ *  blank-line-separated layout the single-call output already used. */
+function composeAnalysis(
+  core: DreamAnalysis,
+  outcomes: SectionOutcome[],
+): string {
+  const blocks: string[] = [core.topicSentence, ...core.supportingPoints];
+  for (const { section, text } of outcomes) {
+    if (text) blocks.push(`${section.heading}\n\n${text}`);
+  }
+  blocks.push(core.conclusionSentence);
+  return blocks.join("\n\n");
+}
+
 // ── Fallback response ──────────────────────────────────────────────
 
 // Citation-only fallback. Verse text is hydrated downstream via lib/bibleLookup
@@ -263,8 +433,10 @@ export interface DreamAnalysisArgs {
 }
 
 /**
- * Token usage from the OpenAI Responses API. Null on the fallback path
- * (network/parse errors) where no usable response was returned.
+ * Token usage summed across every call an analysis makes — core structured
+ * call, fallback attempts, section completions, retries, and any OpenRouter
+ * failover. Null on the fallback path (network/parse errors) where no usable
+ * response was returned.
  */
 export interface DreamAnalysisUsage {
   inputTokens: number | null;
@@ -277,9 +449,13 @@ export interface DreamAnalysisResult {
 }
 
 /**
- * Run the OpenAI dream analysis. Safe to call concurrently — there is no
- * shared mutable state per call beyond the prompt cache (which is read-only
- * after first fetch).
+ * Run the dream analysis. Shallow is a single structured call; deep and
+ * profound run the structured core call plus parallel plain-text section
+ * completions composed server-side into the `analysis` prose (length by
+ * construction — structured outputs cannot enforce a minimum length).
+ *
+ * Safe to call concurrently — there is no shared mutable state per call
+ * beyond the prompt cache (which is read-only after first fetch).
  *
  * Always returns a DreamAnalysisResult; on error the analysis falls back to
  * FALLBACK_ANALYSIS and usage tokens are null (we never made a billable call,
@@ -310,6 +486,10 @@ export async function runDreamAnalysis(
     );
 
     const effectiveDepth = analysisDepth || AnalysisDepth.SHALLOW;
+    // Deep and profound are composed (two-phase); shallow stays single-call.
+    const isComposedTier =
+      effectiveDepth === AnalysisDepth.DEEP ||
+      effectiveDepth === AnalysisDepth.PROFOUND;
     const depthInstructions = getDepthInstructions(effectiveDepth, dbPrompt);
 
     const forbiddenPhrases = dbPrompt?.forbidden_phrases?.length
@@ -371,60 +551,206 @@ ${depthInstructions}
     const schemaForDepth = getDreamAnalysisSchemaForDepth(effectiveDepth);
     const spec = getDepthSpec(effectiveDepth);
 
-    // Accumulates tokens across fallback attempts and the length-retry so
-    // the admin cost footer reflects what was actually billed.
+    // Accumulates tokens across every call this analysis makes — the core
+    // call, fallback attempts, section completions, and retries — so the
+    // admin cost footer reflects what was actually billed.
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let sawUsage = false;
 
-    const callModel = async (model: string, extraInstruction?: string) => {
-      const response = await client.responses.parse(
+    const addUsage = (
+      usage:
+        | { input_tokens?: number | null; output_tokens?: number | null }
+        | null
+        | undefined,
+    ) => {
+      if (!usage) return;
+      sawUsage = true;
+      totalInputTokens += usage.input_tokens ?? 0;
+      totalOutputTokens += usage.output_tokens ?? 0;
+    };
+
+    // Per-attempt timeout + a single SDK-level retry. Without these the
+    // SDK's default retry/backoff can eat the whole function budget
+    // before the next model in the chain ever runs.
+    const requestOptions = { timeout: PER_ATTEMPT_TIMEOUT_MS, maxRetries: 1 };
+
+    /** Phase A: the structured core call. OpenAI targets use the Responses
+     *  API with zodTextFormat (unchanged from the single-call architecture);
+     *  the OpenRouter failover target sends the same messages and schema
+     *  through Chat Completions' response_format json_schema, which
+     *  OpenRouter supports on compatible models. */
+    const callCore = async (
+      target: ModelTarget,
+      extraInstruction?: string,
+    ): Promise<DreamAnalysis | null> => {
+      const messages = [
+        { role: "system" as const, content: systemMessage },
         {
-          model,
-          input: [
-            { role: "system", content: systemMessage },
-            {
-              role: "user",
-              content: extraInstruction
-                ? `${userPrompt}\n\n${extraInstruction}`
-                : userPrompt,
-            },
-          ],
+          role: "user" as const,
+          content: extraInstruction
+            ? `${userPrompt}\n\n${extraInstruction}`
+            : userPrompt,
+        },
+      ];
+
+      if (target.provider === "openrouter") {
+        const completion = await target.client.beta.chat.completions.parse(
+          {
+            model: target.model,
+            messages,
+            temperature: 0.7,
+            max_tokens: spec.maxOutputTokens,
+            response_format: zodResponseFormat(schemaForDepth, "DreamAnalysis"),
+          },
+          requestOptions,
+        );
+        if (completion.usage) {
+          addUsage({
+            input_tokens: completion.usage.prompt_tokens,
+            output_tokens: completion.usage.completion_tokens,
+          });
+        }
+        return completion.choices[0]?.message?.parsed ?? null;
+      }
+
+      const response = await target.client.responses.parse(
+        {
+          model: target.model,
+          input: messages,
           temperature: 0.7,
           max_output_tokens: spec.maxOutputTokens,
           text: {
             format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
           },
         },
-        // Per-attempt timeout + a single SDK-level retry. Without these the
-        // SDK's default retry/backoff can eat the whole function budget
-        // before the next model in the chain ever runs.
-        { timeout: PER_ATTEMPT_TIMEOUT_MS, maxRetries: 1 },
+        requestOptions,
       );
-      if (response.usage) {
-        sawUsage = true;
-        totalInputTokens += response.usage.input_tokens ?? 0;
-        totalOutputTokens += response.usage.output_tokens ?? 0;
+      addUsage(response.usage);
+      return response.output_parsed;
+    };
+
+    /** Phase B transport: one plain-text completion — no JSON schema, since
+     *  length control is far more reliable unconstrained. */
+    const callSectionText = async (
+      target: ModelTarget,
+      prompt: string,
+    ): Promise<string> => {
+      const messages = [
+        { role: "system" as const, content: SECTION_SYSTEM_MESSAGE },
+        { role: "user" as const, content: prompt },
+      ];
+
+      if (target.provider === "openrouter") {
+        const completion = await target.client.chat.completions.create(
+          {
+            model: target.model,
+            messages,
+            temperature: 0.7,
+            max_tokens: SECTION_MAX_OUTPUT_TOKENS,
+          },
+          requestOptions,
+        );
+        if (completion.usage) {
+          addUsage({
+            input_tokens: completion.usage.prompt_tokens,
+            output_tokens: completion.usage.completion_tokens,
+          });
+        }
+        return (completion.choices[0]?.message?.content ?? "").trim();
       }
-      return response;
+
+      const response = await target.client.responses.create(
+        {
+          model: target.model,
+          input: messages,
+          temperature: 0.7,
+          max_output_tokens: SECTION_MAX_OUTPUT_TOKENS,
+        },
+        requestOptions,
+      );
+      addUsage(response.usage);
+      return (response.output_text ?? "").trim();
+    };
+
+    /** Phase B: generate one section with a per-section quality guard — if
+     *  the draft lands under 70% of its word budget, ONE corrective retry of
+     *  that section only. Returns text: null on failure so the composer can
+     *  skip it: a slightly short deep/profound beats a FALLBACK_ANALYSIS. */
+    const generateSection = async (
+      target: ModelTarget,
+      section: SectionSpec,
+      coreResult: DreamAnalysis,
+    ): Promise<SectionOutcome> => {
+      const prompt = buildSectionPrompt(
+        dream,
+        coreResult,
+        section,
+        readingLevelInstructions,
+      );
+      try {
+        let text = await callSectionText(target, prompt);
+        let words = countWords(text);
+
+        if (words < Math.ceil(section.targetWords * 0.7)) {
+          if (DEBUG) {
+            console.log(
+              `runDreamAnalysis depth=${effectiveDepth}: section "${section.key}" is ${words} words (target ~${section.targetWords}), retrying with expansion`,
+            );
+          }
+          try {
+            const retryText = await callSectionText(
+              target,
+              `${prompt}\n\nIMPORTANT LENGTH CORRECTION: a previous draft of this section was only ${words} words. Expand it to about ${section.targetWords} words — keep the same approach and content, just develop each thought more fully. Count words as you write.`,
+            );
+            if (countWords(retryText) > words) {
+              text = retryText;
+              words = countWords(retryText);
+            }
+          } catch (retryErr) {
+            // Expansion retry is best-effort — keep the short draft.
+            captureError(retryErr, {
+              tags: { area: "ai-pipeline", stage: "section", model: target.model },
+              extra: { depth: effectiveDepth, section: section.key, firstDraftWords: words },
+              level: "warning",
+            });
+          }
+        }
+
+        if (!text) throw new Error(`section "${section.key}" returned no text`);
+        return { section, text };
+      } catch (err) {
+        // Section failure after retry → compose without it.
+        captureError(err, {
+          tags: { area: "ai-pipeline", stage: "section", model: target.model },
+          extra: { depth: effectiveDepth, section: section.key, heading: section.heading },
+          level: "warning",
+        });
+        return { section, text: null };
+      }
     };
 
     // ── Model fallback chain ──────────────────────────────────────
-    // Primary first, then each fallback, but only on retryable errors
-    // (429/5xx/timeouts). Schema/validation errors propagate immediately.
+    // Tier-override model first (OPENAI_MODEL_DEEP / OPENAI_MODEL_PROFOUND,
+    // both defaulting to OPENAI_MODEL), then each fallback, but only on
+    // retryable errors (429/5xx/timeouts). Schema/validation errors propagate
+    // immediately. Core and sections both run on whichever target ends up
+    // serving the core call.
+    const tierModel = getModelForDepth(effectiveDepth);
     const modelChain = [
-      OPENAI_MODEL,
-      ...OPENAI_FALLBACK_MODELS.filter((m) => m !== OPENAI_MODEL),
+      tierModel,
+      ...OPENAI_FALLBACK_MODELS.filter((m) => m !== tierModel),
     ];
 
-    let response: Awaited<ReturnType<typeof callModel>> | null = null;
-    let modelUsed = OPENAI_MODEL;
+    let core: DreamAnalysis | null = null;
+    let coreTarget: ModelTarget | null = null;
     let lastError: unknown = null;
 
     for (const model of modelChain) {
+      const target: ModelTarget = { client, model, provider: "openai" };
       try {
-        response = await callModel(model);
-        modelUsed = model;
+        core = await callCore(target);
+        coreTarget = target;
         break;
       } catch (err) {
         lastError = err;
@@ -442,64 +768,122 @@ ${depthInstructions}
       }
     }
 
-    if (!response) {
-      // Entire chain failed with retryable errors.
+    if (!coreTarget) {
+      // ── Cross-provider failover (dark until OPENROUTER_API_KEY set) ──
+      // The whole OpenAI ladder failed with retryable errors — one final
+      // attempt through OpenRouter with the same request. A structured-parse
+      // failure here falls through to FALLBACK_ANALYSIS exactly as before.
+      const openRouterClient = getOpenRouterClient();
+      if (openRouterClient) {
+        const target: ModelTarget = {
+          client: openRouterClient,
+          model: OPENROUTER_MODEL,
+          provider: "openrouter",
+        };
+        try {
+          core = await callCore(target);
+          coreTarget = target;
+        } catch (err) {
+          lastError = err;
+          captureError(err, {
+            tags: { area: "ai-pipeline", stage: "analysis", model: `openrouter/${OPENROUTER_MODEL}` },
+            extra: { depth: effectiveDepth, fallbackAvailable: false },
+            level: "warning",
+          });
+        }
+      }
+    }
+
+    if (!coreTarget) {
+      // Entire chain (and failover, when keyed) failed with retryable errors.
       throw lastError ?? new Error("All models in fallback chain failed");
     }
+    // Const capture so closures below see the narrowed non-null type.
+    const activeTarget: ModelTarget = coreTarget;
 
     const usage: DreamAnalysisUsage = {
       inputTokens: sawUsage ? totalInputTokens : null,
       outputTokens: sawUsage ? totalOutputTokens : null,
     };
 
-    let parsed = response.output_parsed;
-    if (!parsed) {
+    if (!core) {
       captureError(new Error("null parsed output"), {
-        tags: { area: "ai-pipeline", stage: "parse", model: modelUsed },
-        extra: { depth: effectiveDepth, status: response.status },
+        tags: { area: "ai-pipeline", stage: "parse", model: activeTarget.model },
+        extra: { depth: effectiveDepth },
       });
       // Tokens may still have been billed even though parsing failed — preserve
       // the usage block so the admin footer doesn't undercount cost.
       return { analysis: FALLBACK_ANALYSIS, usage };
     }
+    const coreResult: DreamAnalysis = core;
 
-    // ── Length enforcement (single corrective retry) ──────────────
-    // max_output_tokens only caps length; it can't force a minimum, and
-    // mini-tier models routinely undershoot the prose targets. If the
-    // analysis lands below ~75% of the tier's floor, retry once on the
-    // model that succeeded, with an explicit word-count correction.
-    const words = countWords(parsed.analysis);
-    if (words < Math.floor(spec.minWords * 0.75)) {
-      if (DEBUG) {
-        console.log(
-          `runDreamAnalysis depth=${effectiveDepth}: analysis is ${words} words (target ${spec.minWords}-${spec.maxWords}), retrying with length correction`,
-        );
+    let parsed: DreamAnalysis = coreResult;
+
+    if (isComposedTier) {
+      // ── Phase B: parallel plain-text sections + server-side compose ──
+      // Deep/profound get their word count BY CONSTRUCTION: the core call
+      // supplies topic/points/conclusion, and each extra section is its own
+      // plain-text completion with a hard word budget.
+      const sectionSpecs =
+        effectiveDepth === AnalysisDepth.PROFOUND
+          ? PROFOUND_SECTIONS
+          : DEEP_SECTIONS;
+      const outcomes = await Promise.all(
+        sectionSpecs.map((section) =>
+          generateSection(activeTarget, section, coreResult),
+        ),
+      );
+      if (outcomes.some((o) => o.text !== null)) {
+        parsed = {
+          ...coreResult,
+          analysis: composeAnalysis(coreResult, outcomes),
+        };
       }
-      try {
-        const retry = await callModel(
-          modelUsed,
-          `IMPORTANT LENGTH CORRECTION: A previous draft of this analysis was only ${words} words. The "analysis" field MUST be between ${spec.minWords} and ${spec.maxWords} words. Expand each supporting point to ${spec.pointMinWords}-${spec.pointMaxWords} words and fully develop every section required by the depth tier. Count words as you write.`,
-        );
-        const retryParsed = retry.output_parsed;
-        if (
-          retryParsed &&
-          countWords(retryParsed.analysis) > words
-        ) {
-          parsed = retryParsed;
+      // else: every section failed even after retries (warnings already
+      // captured per section) — keep the core call's own analysis prose,
+      // which the schema still points at the tier's word range.
+    } else {
+      // ── Length enforcement (single corrective retry — shallow only) ──
+      // max_output_tokens only caps length; it can't force a minimum, and
+      // mini-tier models routinely undershoot the prose targets. If the
+      // analysis lands below ~75% of the tier's floor, retry once on the
+      // target that succeeded, with an explicit word-count correction.
+      // Composed tiers deliberately skip this: their length is built from
+      // per-section budgets guarded above, so re-running the whole analysis
+      // would double-retry and double-spend.
+      const words = countWords(parsed.analysis);
+      if (words < Math.floor(spec.minWords * 0.75)) {
+        if (DEBUG) {
+          console.log(
+            `runDreamAnalysis depth=${effectiveDepth}: analysis is ${words} words (target ${spec.minWords}-${spec.maxWords}), retrying with length correction`,
+          );
         }
-      } catch (err) {
-        // Length retry is best-effort — keep the short-but-valid result.
-        captureError(err, {
-          tags: { area: "ai-pipeline", stage: "length-retry", model: modelUsed },
-          extra: { depth: effectiveDepth, firstDraftWords: words },
-          level: "warning",
-        });
+        try {
+          const retryParsed = await callCore(
+            activeTarget,
+            `IMPORTANT LENGTH CORRECTION: A previous draft of this analysis was only ${words} words. The "analysis" field MUST be between ${spec.minWords} and ${spec.maxWords} words. Expand each supporting point to ${spec.pointMinWords}-${spec.pointMaxWords} words and fully develop every section required by the depth tier. Count words as you write.`,
+          );
+          if (retryParsed && countWords(retryParsed.analysis) > words) {
+            parsed = retryParsed;
+          }
+        } catch (err) {
+          // Length retry is best-effort — keep the short-but-valid result.
+          captureError(err, {
+            tags: { area: "ai-pipeline", stage: "length-retry", model: activeTarget.model },
+            extra: { depth: effectiveDepth, firstDraftWords: words },
+            level: "warning",
+          });
+        }
       }
     }
 
     if (DEBUG) {
+      const modelLabel =
+        activeTarget.provider === "openrouter"
+          ? `openrouter/${activeTarget.model}`
+          : activeTarget.model;
       console.log(
-        `runDreamAnalysis depth=${effectiveDepth}: model=${modelUsed} words=${countWords(parsed.analysis)} tokens=${totalInputTokens}/${totalOutputTokens}`,
+        `runDreamAnalysis depth=${effectiveDepth}: model=${modelLabel} words=${countWords(parsed.analysis)} tokens=${totalInputTokens}/${totalOutputTokens}`,
       );
     }
 

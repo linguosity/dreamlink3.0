@@ -164,6 +164,37 @@ function normalizeBook(rawBook: string): string | null {
 const REF_RE =
   /^\(?\s*((?:[1-3]\s+)?[A-Za-z][A-Za-z.\s]*?)\s+(\d+)\s*:\s*(\d+)(?:\s*-\s*(\d+))?\s*\)?$/;
 
+/**
+ * Best-effort canonicalization of a citation string without touching the
+ * verse index: trims whitespace and fixes book-name variants —
+ * 'Psalm 23:4' → 'Psalms 23:4', 'Song of Songs 2:4' → 'Song of Solomon 2:4',
+ * 'II Tim. 1:7' → '2 Timothy 1:7' — normalizing to "Book Chapter:Verse" or
+ * "Book Chapter:Verse-EndVerse" spacing. Returns the trimmed input unchanged
+ * when it doesn't parse as a citation or the book is unrecognized/ambiguous
+ * (bare 'Peter'/'John' are never guessed).
+ *
+ * Apply this wherever stored citations are matched against hydrated
+ * bible_citations rows so non-canonical citations still resolve. lookupVerse
+ * below already applies the same normalization internally.
+ */
+export function normalizeCitation(rawCitation: string): string {
+  const citation = (rawCitation ?? "").trim();
+  const match = citation.match(REF_RE);
+  if (!match) return citation;
+
+  const [, rawBook, chapterStr, verseStr, endVerseStr] = match;
+  const book = normalizeBook(rawBook);
+  if (!book) return citation;
+
+  const chapter = Number(chapterStr);
+  const verse = Number(verseStr);
+  const endVerse = endVerseStr ? Number(endVerseStr) : null;
+
+  return endVerse !== null && endVerse > verse
+    ? `${book} ${chapter}:${verse}-${endVerse}`
+    : `${book} ${chapter}:${verse}`;
+}
+
 export function lookupVerse(rawCitation: string): VerseLookupResult {
   const citation = (rawCitation ?? "").trim();
   const match = citation.match(REF_RE);
