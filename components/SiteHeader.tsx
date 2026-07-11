@@ -73,15 +73,15 @@ export default function SiteHeader() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className={navLinkClass("features")}>
+          <Link href="/landing#features" className={navLinkClass("features")}>
             Features
-          </a>
-          <a href="#how-it-works" className={navLinkClass("how-it-works")}>
+          </Link>
+          <Link href="/landing#how-it-works" className={navLinkClass("how-it-works")}>
             How It Works
-          </a>
-          <a href="#plans" className={navLinkClass("plans")}>
+          </Link>
+          <Link href="/landing#plans" className={navLinkClass("plans")}>
             Plans
-          </a>
+          </Link>
           <Link
             href="/blog"
             className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors focus-ring rounded px-1 py-0.5"
@@ -144,27 +144,27 @@ export default function SiteHeader() {
         className="md:hidden border-t border-gray-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-950"
       >
         <div className="px-4 py-4 flex flex-col gap-1">
-          <a
-            href="#features"
+          <Link
+            href="/landing#features"
             onClick={() => setOpen(false)}
             className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
           >
             Features
-          </a>
-          <a
-            href="#how-it-works"
+          </Link>
+          <Link
+            href="/landing#how-it-works"
             onClick={() => setOpen(false)}
             className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
           >
             How It Works
-          </a>
-          <a
-            href="#plans"
+          </Link>
+          <Link
+            href="/landing#plans"
             onClick={() => setOpen(false)}
             className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
           >
             Plans
-          </a>
+          </Link>
           <Link
             href="/blog"
             onClick={() => setOpen(false)}
