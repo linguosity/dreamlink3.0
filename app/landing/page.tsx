@@ -212,7 +212,7 @@ export default async function LandingPage() {
               <div key={step} className="flex flex-col items-center text-center">
                 <div className="relative w-16 h-16 rounded-full flex items-center justify-center
                                 bg-gradient-to-br from-accent to-accent/60
-                                text-gold
+                                text-[color:var(--gold-deep)] dark:text-gold
                                 ring-1 ring-accent mb-4">
                   <Icon className="w-7 h-7" aria-hidden="true" />
                   <span
@@ -245,7 +245,7 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <span className="inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] mb-3">
-              See it in action
+              In action
             </span>
             <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white">
               A real interpretation

@@ -1616,15 +1616,15 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   {/* Summary section removed as requested */}
 
                   {dream.formatted_analysis ? (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground max-w-[65ch]">
                       {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
                     </div>
                   ) : dream.analysis_summary ? (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground max-w-[65ch]">
                       {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-w-[65ch]">
                       {dream.topic_sentence && (
                         <div className="text-sm text-muted-foreground font-medium">
                           {dream.topic_sentence}
@@ -1705,7 +1705,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </TabsContent>
 
               <TabsContent value="original" className="space-y-4 p-1 min-h-0">
-                <div ref={originalContentRef} className="text-sm whitespace-pre-wrap">
+                <div ref={originalContentRef} className="text-sm whitespace-pre-wrap max-w-[65ch]">
                   {searchTerms.length > 0
                     ? highlightMatches(dream.original_text, searchTerms)
                     : dream.original_text
@@ -1767,16 +1767,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         <Tooltip key={index}>
                           <TooltipTrigger asChild>
                             {/* F05 (v2 Moonwater): scripture chip reads as a
-                                quoted reference — cream surface, gold-deep
-                                text, hairline gold border. */}
+                                quoted reference — cream-soft surface, gold-deep
+                                text (AA ≥4.5:1; bright gold in dark mode),
+                                hairline gold border. */}
                             <Badge
                               variant="outline"
-                              className="text-xs flex items-center gap-1 font-semibold"
-                              style={{
-                                background: "var(--cream)",
-                                color: "var(--gold-deep)",
-                                borderColor: "oklch(0.85 0.08 75)",
-                              }}
+                              className="text-xs flex items-center gap-1 font-semibold bg-cream-soft text-gold-deep dark:text-gold border-[oklch(0.85_0.08_75)]"
                             >
                               <BookIcon className="h-2 w-2" />
                               {ref}

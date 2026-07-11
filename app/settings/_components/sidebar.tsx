@@ -183,7 +183,7 @@ export function UpgradeCTA({ plan }: { plan: SubscriptionPlan }) {
       }}
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-gold" />
+        <Sparkles className="w-3.5 h-3.5 text-gold-deep" />
         <div className="text-xs font-semibold text-accent-foreground">
           {headline}
         </div>

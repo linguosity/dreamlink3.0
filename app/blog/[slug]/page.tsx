@@ -165,7 +165,7 @@ export default async function BlogPostPage({ params }: Props) {
           />
         ) : null}
 
-        <article className="prose-blog mt-8 sm:mt-10">
+        <article className="prose-blog max-w-[65ch] mt-8 sm:mt-10">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {post.content_md}
           </ReactMarkdown>

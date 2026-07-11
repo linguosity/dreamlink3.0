@@ -101,21 +101,21 @@ export default async function SharedDreamPage(props: {
           {dream.scope === 'full' && dream.original_text && (
             <div className="mb-4">
               <h2 className="text-lg font-medium mb-2">The Dream</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap">{dream.original_text}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap max-w-[65ch]">{dream.original_text}</p>
             </div>
           )}
 
           {dream.dream_summary && (
             <div className="mb-4">
               <h2 className="text-lg font-medium mb-2">Dream Summary</h2>
-              <p className="text-muted-foreground">{dream.dream_summary}</p>
+              <p className="text-muted-foreground max-w-[65ch]">{dream.dream_summary}</p>
             </div>
           )}
 
           {dream.analysis_summary && (
             <div className="mb-4">
               <h2 className="text-lg font-medium mb-2">Analysis</h2>
-              <p className="text-muted-foreground">{dream.analysis_summary}</p>
+              <p className="text-muted-foreground max-w-[65ch]">{dream.analysis_summary}</p>
             </div>
           )}
 

@@ -80,7 +80,7 @@ export function FeatureHint({
             <X className="h-3.5 w-3.5" />
           </button>
           <div className="pr-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-deep dark:text-gold">
               Tip
             </p>
             <p className="mt-1 text-sm font-semibold leading-snug">{title}</p>
@@ -92,7 +92,7 @@ export function FeatureHint({
             <button
               type="button"
               onClick={() => dismiss(id)}
-              className="text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80"
+              className="text-[11px] font-semibold uppercase tracking-wider text-gold-deep hover:text-foreground dark:text-gold dark:hover:text-gold-light"
             >
               Got it
             </button>

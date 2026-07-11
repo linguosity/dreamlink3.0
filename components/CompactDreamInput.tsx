@@ -310,7 +310,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             lives entirely outside the paywall dialog's flow. */}
         <div className="h-4 mb-1 px-1 text-right" aria-live="polite">
           {creditCostLine && (
-            <span className="text-[11px] text-muted-foreground opacity-70">
+            <span className="text-xs text-muted-foreground opacity-70">
               {creditCostLine}
             </span>
           )}
@@ -384,7 +384,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </div>
-          <p className="flex-1 text-sm text-foreground leading-relaxed">
+          <p className="flex-1 text-base text-foreground leading-relaxed">
             <span className="font-medium">Tip:</span> Adding more details will help generate a more insightful analysis.
           </p>
           <button

@@ -600,12 +600,20 @@
 }
 .prose-blog h2 { font-size: 1.5em; }
 .prose-blog h3 { font-size: 1.2em; }
+/* Links — surface-aware. Bright gold on cream/white is ≈2.2:1 and fails
+ * WCAG AA for body text, so the default is gold-deep (light surfaces, e.g.
+ * the admin editor preview). The night-themed article page wraps itself in
+ * `.dark`, which restores bright gold (passes on Night). A global `a {}`
+ * rule was deliberately NOT added: many <Link>s are button-styled or
+ * inherit color from card/nav wrappers and would repaint. */
 .prose-blog a {
-  color: var(--gold);
+  color: var(--gold-deep);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.prose-blog a:hover { color: var(--gold-light); }
+.prose-blog a:hover { color: var(--foreground); }
+.dark .prose-blog a { color: var(--gold); }
+.dark .prose-blog a:hover { color: var(--gold-light); }
 .prose-blog strong { font-weight: 650; }
 .prose-blog blockquote {
   border-left: 3px solid var(--gold);

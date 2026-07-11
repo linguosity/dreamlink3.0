@@ -249,15 +249,15 @@ export default function PricingPage() {
                     <p className="text-sm font-medium text-muted-foreground mb-0.5">
                       {isFree ? "Dream Analyses" : "Monthly Dream Analyses"}
                     </p>
-                    <p className="text-xl font-bold text-primary">{plan.credits}</p>
+                    <p className="text-xl font-bold text-gold-deep dark:text-gold">{plan.credits}</p>
                   </div>
                 </div>
 
                 <ul className="space-y-2.5 mb-6">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm leading-relaxed">{feature}</span>
+                      <Check className="h-5 w-5 text-gold-deep dark:text-gold flex-shrink-0 mt-0.5" />
+                      <span className="text-base leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -295,21 +295,21 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">Can I change my plan anytime?</h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Yes — upgrade, downgrade, or cancel anytime from Settings. Changes take effect at
                 the next billing cycle.
               </p>
             </div>
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">What happens to unused credits?</h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Your monthly credits reset at the start of each billing month — unused credits do
                 not roll over. Pick the plan that matches your regular journaling.
               </p>
             </div>
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">Is the free plan really free?</h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Yes — the Discovery plan is free and includes 3 dream analyses every month, with no
                 credit card required. Upgrade anytime for more.
               </p>

@@ -46,7 +46,7 @@ export function AdminSidebar({
           <div className="font-serif text-base font-semibold leading-none">
             DreamRiver
           </div>
-          <div className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-gold mt-1">
+          <div className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-gold-deep dark:text-gold mt-1">
             Admin
           </div>
         </div>
