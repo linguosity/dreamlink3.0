@@ -230,6 +230,7 @@ export type Database = {
           conclusion_sentence: string | null
           created_at: string | null
           dream_summary: string | null
+          feedback_at: string | null
           formatted_analysis: string | null
           gematria_interpretation: string | null
           id: string
@@ -237,6 +238,7 @@ export type Database = {
           image_url: string | null
           is_public: boolean
           is_starred: boolean
+          meaningful: boolean | null
           original_text: string | null
           original_text_enc: string | null
           personalized_summary: string | null
@@ -261,6 +263,7 @@ export type Database = {
           conclusion_sentence?: string | null
           created_at?: string | null
           dream_summary?: string | null
+          feedback_at?: string | null
           formatted_analysis?: string | null
           gematria_interpretation?: string | null
           id?: string
@@ -268,6 +271,7 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
+          meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
           personalized_summary?: string | null
@@ -292,6 +296,7 @@ export type Database = {
           conclusion_sentence?: string | null
           created_at?: string | null
           dream_summary?: string | null
+          feedback_at?: string | null
           formatted_analysis?: string | null
           gematria_interpretation?: string | null
           id?: string
@@ -299,6 +304,7 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
+          meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
           personalized_summary?: string | null

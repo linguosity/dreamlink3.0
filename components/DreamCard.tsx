@@ -30,7 +30,7 @@ import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
 import ShareDreamButton from "@/components/ShareDreamButton";
-import { track } from "@/lib/analytics";
+import { track, type ClientAnalyticsEvent } from "@/lib/analytics";
 
 // Import UI components with error handling
 let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
@@ -393,6 +393,8 @@ type DreamEntryProps = {
     share_scope?: 'summary' | 'full' | null;
     /** Owner-only "favorite" flag, surfaced via the Starred gallery filter. */
     is_starred?: boolean;
+    /** Owner-only interpretation feedback: null = no vote, true/false = latest vote. */
+    meaningful?: boolean | null;
     /** Admin-only usage row joined from chatgpt_interactions. */
     _admin_usage?: {
       input_tokens: number | null;
@@ -427,6 +429,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [isShared, setIsShared] = useState(Boolean(initialDream.is_public));
   const [isStarred, setIsStarred] = useState(Boolean(initialDream.is_starred));
   const [isStarPending, setIsStarPending] = useState(false);
+  // One-tap interpretation feedback ("Was this reading meaningful?").
+  // null = no vote yet; re-votes overwrite (the API is idempotent).
+  const [feedbackChoice, setFeedbackChoice] = useState<boolean | null>(
+    initialDream.meaningful ?? null
+  );
+  const [isFeedbackPending, setIsFeedbackPending] = useState(false);
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
@@ -959,6 +967,53 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     }
   };
 
+  // Handle interpretation feedback — optimistic set with rollback on failure,
+  // mirroring the star toggle. Changing the vote is allowed; the server
+  // simply overwrites the previous one.
+  const handleFeedback = async (value: boolean) => {
+    if (empty || isFeedbackPending) return; // Example/placeholder cards aren't ratable.
+    if (dream.id.startsWith('pending-')) return; // Not yet persisted.
+    if (feedbackChoice === value) return; // Same vote — nothing to change.
+
+    const previous = feedbackChoice;
+    setFeedbackChoice(value); // optimistic
+    setIsFeedbackPending(true);
+
+    try {
+      const response = await fetch(`/api/dream-entries/${dream.id}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meaningful: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save feedback');
+      }
+
+      // "interpretation_feedback" isn't in the ClientAnalyticsEvent union yet;
+      // lib/analytics.ts is owned by another workstream (import-only here), so
+      // cast instead of widening the type there. track() is consent-gated and
+      // no-ops without a PostHog key, so this is always safe to call.
+      try {
+        track("interpretation_feedback" as ClientAnalyticsEvent, {
+          meaningful: value,
+          dream_id: dream.id,
+        });
+      } catch {
+        // Analytics must never break the feedback moment.
+      }
+    } catch (error) {
+      setFeedbackChoice(previous); // rollback
+      console.error('Error saving feedback:', error);
+      logClientError("dream_feedback", error instanceof Error ? error.message : String(error), {
+        route: `/api/dream-entries/${dream.id}/feedback`,
+      });
+      toast.error('Could not save your feedback. Please try again.');
+    } finally {
+      setIsFeedbackPending(false);
+    }
+  };
+
   // Handle delete dream
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -1206,6 +1261,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       </Card>
     );
   }
+
+  // Whether the analysis tab has real interpretation content — mirrors the
+  // render branches inside the analysis TabsContent. Gates the AI-transparency
+  // label and the feedback prompt so neither shows on a pending/blank tab.
+  const hasInterpretation = Boolean(
+    dream.formatted_analysis ||
+    dream.analysis_summary ||
+    dream.topic_sentence ||
+    (dream.supporting_points && dream.supporting_points.length > 0) ||
+    dream.conclusion_sentence
+  );
 
   return (
     <>
@@ -1578,7 +1644,64 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                       )}
                     </div>
                   )}
+
+                  {/* AI-transparency label — one quiet line under the
+                      interpretation, mirrored on the public share page. */}
+                  {hasInterpretation && (
+                    <p className="mt-3 text-[11px] text-muted-foreground opacity-70">
+                      Interpretation generated with AI, grounded in the verses above.
+                    </p>
+                  )}
                 </div>
+
+                {/* One-tap feedback — owner-only (never on the public share
+                    page), skipped for example cards and optimistic
+                    placeholders that don't exist in the DB yet. */}
+                {hasInterpretation && !empty && !dream.id.startsWith('pending-') && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+                    <span className="text-xs text-muted-foreground">
+                      Was this reading meaningful?
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleFeedback(true)}
+                        disabled={isFeedbackPending}
+                        aria-pressed={feedbackChoice === true}
+                        className={cn(
+                          "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          feedbackChoice === true
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleFeedback(false)}
+                        disabled={isFeedbackPending}
+                        aria-pressed={feedbackChoice === false}
+                        className={cn(
+                          "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          feedbackChoice === false
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        No
+                      </button>
+                    </div>
+                    {feedbackChoice !== null && (
+                      <span
+                        className="text-[11px] text-muted-foreground opacity-70"
+                        role="status"
+                      >
+                        Thank you.
+                      </span>
+                    )}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="original" className="space-y-4 p-1 min-h-0">

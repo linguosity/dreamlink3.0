@@ -22,12 +22,25 @@ const MAX_CHARS = 8000;
 // composer on return; the next successful submission clears it.
 const PENDING_DREAM_KEY = "dr_pending_dream";
 
+// Shape of GET /api/credits — fetched once per mount so the cost line can
+// tell the user what a submission spends BEFORE they spend it.
+interface CreditsInfo {
+  plan: string;
+  remaining: number;
+  limit: number;
+  unlimited: boolean;
+  is_admin: boolean;
+}
+
 export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [dream, setDream] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [tipDismissed, setTipDismissed] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  // null until /api/credits answers; the cost line renders nothing (inside a
+  // fixed-height slot) until then, so late data never shifts the layout.
+  const [credits, setCredits] = useState<CreditsInfo | null>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
@@ -57,6 +70,31 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     if (pending) {
       setDream((current) => current || pending);
     }
+  }, []);
+
+  // Credit-cost transparency (fetched once per mount, cached in state).
+  // Purely informational — a failure here silently hides the line and never
+  // touches the submit flow or the paywall.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/credits")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data || typeof data.remaining !== "number") return;
+        setCredits({
+          plan: String(data.plan ?? "free"),
+          remaining: data.remaining,
+          limit: typeof data.limit === "number" ? data.limit : 0,
+          unlimited: Boolean(data.unlimited),
+          is_admin: Boolean(data.is_admin),
+        });
+      })
+      .catch(() => {
+        // Quietly skip the cost line — never block the composer.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handlePermanentDismiss = () => {
@@ -167,6 +205,12 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         // is obsolete (this WAS that dream, or the user has moved on).
         localStorage.removeItem(PENDING_DREAM_KEY);
 
+        // Keep the cost line honest without refetching: one accepted
+        // submission = one credit spent.
+        setCredits((c) =>
+          c ? { ...c, remaining: Math.max(0, c.remaining - 1) } : c,
+        );
+
         // Matrix-aware image generation: dedupe by aesthetic so we only
         // burn one image per unique aesthetic in a comparison group.
         // Server-side, /api/dream-image fans the resulting URL out to all
@@ -245,9 +289,33 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
   const hasContent = dream.trim().length > 0;
 
+  // What the next submission costs, shown BEFORE the credit is spent.
+  // Admins bypass the credit gate entirely, so they get no line. Free plan
+  // shows the live remaining count (lifetime credits, see /api/credits);
+  // paid plans just confirm the flat cost.
+  const creditCostLine = !credits || credits.is_admin
+    ? null
+    : credits.plan === "free"
+      ? credits.remaining > 0
+        ? `This will use 1 of your ${credits.remaining} remaining free interpretation${credits.remaining === 1 ? "" : "s"}`
+        : `You've used all ${credits.limit} of your free interpretations`
+      : "Uses 1 credit";
+
   return (
     <div className="w-full sm:max-w-2xl sm:mx-auto space-y-2">
       <form onSubmit={handleSubmit}>
+        {/* Credit-cost line — sits directly above the submit button's column.
+            The slot has a fixed height and renders from first paint, so the
+            text arriving from /api/credits never shifts the composer, and it
+            lives entirely outside the paywall dialog's flow. */}
+        <div className="h-4 mb-1 px-1 text-right" aria-live="polite">
+          {creditCostLine && (
+            <span className="text-[11px] text-muted-foreground opacity-70">
+              {creditCostLine}
+            </span>
+          )}
+        </div>
+
         {/* Textarea container with inset send button.
             `field-sizing: content` lets the browser grow the textarea
             natively — no JS measure/resize cycle on every keystroke, so

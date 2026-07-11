@@ -6,6 +6,7 @@ type ErrorType =
   | "image_generation"
   | "dream_delete"
   | "dream_star"
+  | "dream_feedback"
   | "network"
   | "unknown";
 

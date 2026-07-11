@@ -119,6 +119,14 @@ export default async function SharedDreamPage(props: {
             </div>
           )}
 
+          {/* AI-transparency label — one quiet line under the interpretation,
+              mirroring the same disclosure in DreamCard's analysis view. */}
+          {(dream.dream_summary || dream.analysis_summary) && (
+            <p className="text-xs text-muted-foreground opacity-70">
+              Interpretation generated with AI, grounded in the verses above.
+            </p>
+          )}
+
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
             <Link href="/">
               <Button variant="outline">Go to DreamRiver</Button>
