@@ -164,12 +164,8 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
             <DropdownMenuSeparator />
           </>
         )}
-        <Link href="/account">
-          <DropdownMenuItem className="cursor-pointer">
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Account</span>
-          </DropdownMenuItem>
-        </Link>
+        {/* "Account" entry removed — /account now 308-redirects to /settings
+            (design-handoff D2); two menu items to one page would be confusing. */}
         <Link href="/settings">
           <DropdownMenuItem className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />

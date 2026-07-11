@@ -260,7 +260,7 @@ export default async function MainPage() {
               </p>
             </div>
             <Link
-              href="/account"
+              href="/settings"
               className="hidden sm:inline-flex whitespace-nowrap h-9 px-3.5 items-center justify-center rounded-md border border-border text-[13px] font-medium hover:bg-muted transition-colors"
             >
               View patterns →
