@@ -310,8 +310,8 @@ export default function PricingPage() {
             <div className="p-6 bg-muted/20 rounded-lg">
               <h4 className="font-semibold mb-2">Is the free plan really free?</h4>
               <p className="text-base text-muted-foreground">
-                Yes — the Discovery plan is free and includes 3 dream analyses every month, with no
-                credit card required. Upgrade anytime for more.
+                Yes — the Discovery plan is free and includes 3 dream interpretations to start, with no
+                credit card required. Your journal stays free forever; upgrade anytime for more interpretations.
               </p>
             </div>
           </div>
