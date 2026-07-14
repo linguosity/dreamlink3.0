@@ -2,6 +2,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Pin the workspace root: a stray lockfile in the home directory (~/
+  // pnpm-lock.yaml) was making Turbopack infer ~ as the root and warn on
+  // every `next dev`. Deleting that file also works, but pinning is robust.
+  turbopack: {
+    root: new URL(".", import.meta.url).pathname,
+  },
   typescript: {
     // Type errors fail the build (2026-06-09 audit, M7). `npm run typecheck`
     // passes as of this change — keep it that way.

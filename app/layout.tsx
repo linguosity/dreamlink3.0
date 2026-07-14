@@ -11,7 +11,7 @@
 // structure), a security system (auth), and shared utilities (providers,
 // global styles).
 
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -63,7 +63,6 @@ export const metadata: Metadata = {
       { rel: "mask-icon", url: "/brand/icon-master.svg", color: "#0E1A30" },
     ],
   },
-  themeColor: "#0E1A30",
   openGraph: {
     title: "DreamRiver – Dream Journal",
     description: "Track and analyze your dreams with AI-powered insights",
@@ -79,6 +78,12 @@ export const metadata: Metadata = {
     description: "Track and analyze your dreams with AI-powered insights",
     images: ["/og"],
   },
+};
+
+// themeColor must live in the viewport export since Next 14+
+// (it was emitting an "Unsupported metadata themeColor" warning on every route).
+export const viewport: Viewport = {
+  themeColor: "#0E1A30",
 };
 
 // DM Sans for body, DM Serif Display for headlines, Cormorant Garamond for the wordmark.
