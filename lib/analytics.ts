@@ -100,7 +100,14 @@ export function isAnalyticsActive(): boolean {
 
 // ── Typed product events ────────────────────────────────────────────
 
-export type ClientAnalyticsEvent = "signed_up" | "analysis_viewed";
+export type ClientAnalyticsEvent =
+  | "signed_up"
+  | "analysis_viewed"
+  | "paywall_viewed"
+  | "interpretation_feedback"
+  | "landing_demo_step_viewed"
+  | "verse_tooltip_opened"
+  | "demo_style_swiped";
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 

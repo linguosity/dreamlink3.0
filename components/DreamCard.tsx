@@ -30,7 +30,7 @@ import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
 import ShareDreamButton from "@/components/ShareDreamButton";
-import { track, type ClientAnalyticsEvent } from "@/lib/analytics";
+import { track } from "@/lib/analytics";
 
 // Import UI components with error handling
 let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
@@ -990,12 +990,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         throw new Error('Failed to save feedback');
       }
 
-      // "interpretation_feedback" isn't in the ClientAnalyticsEvent union yet;
-      // lib/analytics.ts is owned by another workstream (import-only here), so
-      // cast instead of widening the type there. track() is consent-gated and
-      // no-ops without a PostHog key, so this is always safe to call.
+      // track() is consent-gated and no-ops without a PostHog key,
+      // so this is always safe to call.
       try {
-        track("interpretation_feedback" as ClientAnalyticsEvent, {
+        track("interpretation_feedback", {
           meaningful: value,
           dream_id: dream.id,
         });

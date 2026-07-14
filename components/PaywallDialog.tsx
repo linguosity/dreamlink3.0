@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { track, type ClientAnalyticsEvent } from "@/lib/analytics";
+import { track } from "@/lib/analytics";
 
 const PRICING_HREF =
   "/pricing?utm_source=app&utm_medium=paywall&utm_campaign=credits_exhausted";
@@ -35,11 +35,9 @@ export default function PaywallDialog({ open, onOpenChange }: PaywallDialogProps
   useEffect(() => {
     if (!open) return;
     try {
-      // "paywall_viewed" isn't in the ClientAnalyticsEvent union yet;
-      // lib/analytics.ts is owned by another workstream (import-only here),
-      // so cast instead of widening the type there. track() is consent-gated
-      // and no-ops without a PostHog key, so this is always safe to call.
-      track("paywall_viewed" as ClientAnalyticsEvent);
+      // track() is consent-gated and no-ops without a PostHog key,
+      // so this is always safe to call.
+      track("paywall_viewed");
     } catch {
       // Analytics must never break the paywall moment.
     }

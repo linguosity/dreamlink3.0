@@ -643,3 +643,19 @@
   padding: 0.5em 0.75em;
   text-align: left;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * Verse-chip hint (landing scrollytelling): two soft gold pulses
+ * when the chips first reveal, so users learn they're tappable.
+ * Removed after first interaction (see ScrollytellingInterpretation).
+ * ───────────────────────────────────────────────────────────── */
+@keyframes verse-hint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 162, 71, 0); }
+  50%      { box-shadow: 0 0 0 5px rgba(212, 162, 71, 0.28); }
+}
+.animate-verse-hint {
+  animation: verse-hint 1.6s ease-in-out 0.9s 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-verse-hint { animation: none; }
+}

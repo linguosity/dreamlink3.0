@@ -22,6 +22,7 @@ import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
 import SocialProof from "@/components/SocialProof";
 import RecentPosts from "@/components/RecentPosts";
+import ScrollytellingInterpretation from "@/components/landing/ScrollytellingInterpretation";
 import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
@@ -237,59 +238,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Sample Interpretation ─────────────────────────────────── */}
-      <section
-        id="sample-interpretation"
-        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm"
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <span className="inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] mb-3">
-              In action
-            </span>
-            <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white">
-              A real interpretation
-            </h2>
-          </div>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg ring-1 ring-gray-200/70 dark:ring-slate-800 p-8 sm:p-10 lg:p-12 max-w-3xl mx-auto">
-            <div className="text-gold text-6xl sm:text-7xl font-serif leading-none mb-4" aria-hidden="true">
-              &ldquo;
-            </div>
-
-            <blockquote className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white leading-snug mb-6">
-              I was walking across a bridge over a river of golden light...
-            </blockquote>
-
-            <div className="mb-6">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Analysis:
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                Your dream of crossing a bridge over golden light speaks to a
-                season of divine transition. The glowing river represents
-                God&apos;s presence guiding you through change, while the bridge
-                symbolizes faith carrying you from one chapter to the next.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {["Isaiah 43:2", "Psalm 23:4", "Revelation 22:1"].map((verse) => (
-                <Link
-                  key={verse}
-                  href={`/sign-up?verse=${encodeURIComponent(verse)}`}
-                  className="tap inline-flex items-center px-3 rounded-full
-                             bg-accent dark:bg-accent
-                             text-accent-foreground text-sm font-medium
-                             hover:bg-accent/70 transition-colors
-                             focus-ring"
-                >
-                  {verse}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── Sample Interpretation (scrollytelling demo) ───────────── */}
+      <ScrollytellingInterpretation />
 
       {/* ── Features ───────────────────────────────────────────────── */}
       <section
