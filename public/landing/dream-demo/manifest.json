@@ -1,0 +1,58 @@
+[
+  {
+    "id": "sacred_oil_painting",
+    "name": "Sacred Oil Painting",
+    "tier": "free",
+    "description": "Classical biblical illustration with luminous golden light",
+    "file": "/landing/dream-demo/sacred_oil_painting.jpg"
+  },
+  {
+    "id": "stained_glass",
+    "name": "Stained Glass",
+    "tier": "free",
+    "description": "Medieval cathedral window with jewel-toned light",
+    "file": "/landing/dream-demo/stained_glass.jpg"
+  },
+  {
+    "id": "watercolor_dreamscape",
+    "name": "Watercolor Dreamscape",
+    "tier": "visionary",
+    "description": "Soft, flowing watercolors with ethereal morning light",
+    "file": "/landing/dream-demo/watercolor_dreamscape.jpg"
+  },
+  {
+    "id": "celestial_cosmos",
+    "name": "Celestial Cosmos",
+    "tier": "visionary",
+    "description": "Cosmic nebulae and starfields with spiritual radiance",
+    "file": "/landing/dream-demo/celestial_cosmos.jpg"
+  },
+  {
+    "id": "renaissance_fresco",
+    "name": "Renaissance Fresco",
+    "tier": "visionary",
+    "description": "Sistine Chapel grandeur with warm divine radiance",
+    "file": "/landing/dream-demo/renaissance_fresco.jpg"
+  },
+  {
+    "id": "surreal_prophetic",
+    "name": "Surreal Prophetic",
+    "tier": "prophet",
+    "description": "Dalí-meets-Blake surrealism with dramatic chiaroscuro",
+    "file": "/landing/dream-demo/surreal_prophetic.jpg"
+  },
+  {
+    "id": "anime_sacred",
+    "name": "Anime Sacred",
+    "tier": "prophet",
+    "description": "Anime fantasy with ethereal spiritual glow",
+    "file": "/landing/dream-demo/anime_sacred.jpg"
+  },
+  {
+    "id": "photorealistic_vision",
+    "name": "Photorealistic Vision",
+    "tier": "prophet",
+    "description": "Cinematic photography with golden hour backlight",
+    "file": "/landing/dream-demo/photorealistic_vision.jpg"
+  }
+]

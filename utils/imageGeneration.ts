@@ -64,13 +64,18 @@ export function buildImagePrompt(
   const parts = [title, truncatedSummary || topic].filter(Boolean);
   const subject = parts.length > 0 ? parts.join('. ') : 'A sacred vision';
 
-  // Look up the aesthetic preset (default to Sacred Oil Painting for free users)
-  const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.PHOTOREALISTIC_VISION];
+  // Look up the aesthetic preset. Default = Sacred Oil Painting — the
+  // free-tier default, matching clampAestheticToTier's fallback. (Was
+  // PHOTOREALISTIC_VISION, which silently gave undefined-aesthetic dreams
+  // a Prophet-tier style.)
+  const preset = AESTHETIC_PRESETS[aesthetic || ImageAesthetic.SACRED_OIL_PAINTING];
 
   // Build a prose prompt following Subject → Setting → Details → Lighting → Atmosphere
-  // then append Style/Mood annotations from the selected aesthetic preset
-  // Default camera: 35mm film (Kodak Portra 400) with shallow DoF
-  return `${subject}. ${preset.scene} ${preset.styleAnnotation} Shot on 35mm film (Kodak Portra 400) with shallow depth of field—subject razor-sharp, background softly blurred.`;
+  // then append Style/Mood annotations from the selected aesthetic preset.
+  // Camera/film language lives only in presets that call for it (Photorealistic
+  // Vision already carries 35mm/Portra in its scene + annotation) — appending it
+  // globally pushed stained glass, fresco, etc. toward photographic renders.
+  return `${subject}. ${preset.scene} ${preset.styleAnnotation}`;
 }
 
 // Signed-URL lifetime. 10 years — these are share-by-link capabilities, not
