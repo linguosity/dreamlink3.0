@@ -112,16 +112,21 @@ export default function ScrollytellingInterpretation() {
   // motion collapses all choreography.
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
+    // Below ~680px of height the pinned card can't fit even fully compacted,
+    // so short windows get the static (mobile-style) layout instead.
+    const mh = window.matchMedia("(max-height: 679px)");
     const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onEnv = () => {
-      setIsMobile(mq.matches);
+      setIsMobile(mq.matches || mh.matches);
       setReduced(rm.matches);
     };
     onEnv();
     mq.addEventListener("change", onEnv);
+    mh.addEventListener("change", onEnv);
     rm.addEventListener("change", onEnv);
     return () => {
       mq.removeEventListener("change", onEnv);
+      mh.removeEventListener("change", onEnv);
       rm.removeEventListener("change", onEnv);
     };
   }, []);
@@ -279,8 +284,8 @@ export default function ScrollytellingInterpretation() {
         </div>
 
         {/* Right: dream-journal card (pinned on desktop) */}
-        <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-[9vh]">
-          <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-200/70 dark:bg-[color:var(--night-soft)] dark:ring-[rgba(245,236,214,0.13)] sm:px-9 sm:pb-8 sm:pt-8">
+        <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-[4vh]">
+          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-200/70 dark:bg-[color:var(--night-soft)] dark:ring-[rgba(245,236,214,0.13)] sm:px-8 sm:py-7">
             {/* Dream quote */}
             <div
               aria-hidden="true"
@@ -312,7 +317,23 @@ export default function ScrollytellingInterpretation() {
               <div className="mb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-[color:var(--gold-deep)] dark:text-[color:var(--gold-light)]">
                 Analysis:
               </div>
-              <p className="m-0 text-[15.5px] leading-[1.7] text-gray-600 dark:text-[rgba(245,236,214,0.72)]">
+              <p
+                className="m-0 text-[15.5px] leading-[1.7] text-gray-600 transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(245,236,214,0.72)]"
+                // Like the dream quote, the analysis recedes (2-line clamp)
+                // once the artwork panel arrives, so the pinned card keeps
+                // fitting the viewport. Chips stay fully visible.
+                style={
+                  compactDream
+                    ? {
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        opacity: 0.8,
+                      }
+                    : undefined
+                }
+              >
                 {INTERP_LINES.map((line, i) => (
                   <span
                     key={i}
@@ -430,7 +451,7 @@ export default function ScrollytellingInterpretation() {
                   setDrag(0);
                   setDragging(false);
                 }}
-                className="relative h-[min(340px,34vh)] w-full cursor-grab touch-pan-y overflow-hidden rounded-xl bg-[color:var(--cream)] focus-ring dark:bg-[color:var(--night-deep)]"
+                className="relative h-[clamp(180px,28vh,320px)] w-full cursor-grab touch-pan-y overflow-hidden rounded-xl bg-[color:var(--cream)] focus-ring dark:bg-[color:var(--night-deep)]"
               >
                 <div className="absolute inset-x-[18px] inset-y-3.5">
                   {PRESETS.map((p, i) => (
