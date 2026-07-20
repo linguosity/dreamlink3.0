@@ -13,6 +13,7 @@ import { RecentSignups, type SignupItem } from "./_components/recent-signups";
 import { RecentIssues } from "./_components/recent-issues";
 import { SystemStatus } from "./_components/system-status";
 import SiteSettingsCard from "./components/SiteSettingsCard";
+import FounderTasksCard from "./_components/founder-tasks-card";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -348,6 +349,9 @@ export default async function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Founder checklist — seeded weekly from the Monday brief */}
+      <FounderTasksCard />
 
       {/* KPI strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">

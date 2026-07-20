@@ -42,6 +42,34 @@ export async function toggleComingSoonAction(
   }
 }
 
+export async function toggleFounderTaskAction(
+  taskId: string,
+  done: boolean,
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    const user = await requireAdmin();
+    // RLS grants admins ALL on founder_tasks; use the user-scoped client so
+    // the policy is exercised (defense-in-depth on top of requireAdmin).
+    // Untyped cast: founder_tasks isn't in lib/database.types.ts yet —
+    // regenerate types after applying migration 20260720000001.
+    const supabase = (await createClient()) as unknown as import("@supabase/supabase-js").SupabaseClient;
+    const { error } = await supabase
+      .from("founder_tasks")
+      .update(
+        done
+          ? { done_at: new Date().toISOString(), done_by: user.email ?? null }
+          : { done_at: null, done_by: null },
+      )
+      .eq("id", taskId);
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: message };
+  }
+}
+
 export async function saveTestimonialsAction(
   testimonials: Testimonial[],
 ): Promise<{ ok: true } | { error: string }> {
