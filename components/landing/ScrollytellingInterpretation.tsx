@@ -54,25 +54,25 @@ const STEP_COPY = [
   },
   {
     num: "02",
-    title: "A scripture-grounded reading",
+    title: "A scripture-grounded analysis",
     body: "Every interpretation is anchored in the Word. Hover or tap any verse to read it in full.",
   },
   {
     num: "03",
-    title: "Rendered as sacred art",
+    title: "Rendered as beautiful art",
     body: "The same dream, painted in eight styles. Swipe through them.",
   },
   {
     num: "04",
     title: "Your turn",
-    body: "Write tonight's dream and receive a reading of your own.",
+    body: "Write your latest dream and receive a reading of your own.",
   },
 ] as const;
 
 const TIER_LABEL: Record<AestheticTier, string> = {
-  free: "Free",
-  visionary: "Visionary",
-  prophet: "Prophet",
+  free: "Discovery",
+  visionary: "Insight",
+  prophet: "Journey",
 };
 
 const TIER_CHIP_CLASS: Record<AestheticTier, string> = {

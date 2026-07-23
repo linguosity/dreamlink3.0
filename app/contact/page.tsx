@@ -16,10 +16,19 @@ export default function ContactPage() {
             <h2 className="text-lg font-semibold">Email</h2>
             <p className="text-gray-600 dark:text-gray-300">
               <a
-                href="mailto:brandon@linguosity.ai"
+                href="mailto:DreamRiverTechnologies@gmail.com"
                 className="text-primary underline"
               >
-                brandon@linguosity.ai
+                DreamRiverTechnologies@gmail.com
+              </a>
+            </p>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 space-y-3">
+            <h2 className="text-lg font-semibold">Phone</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              <a href="tel:+14804426120" className="text-primary underline">
+                +1 (480) 442-6120
               </a>
             </p>
           </div>

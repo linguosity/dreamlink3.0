@@ -40,5 +40,5 @@ export function getEmailFrom(): string {
 
 /** Support address used as Reply-To and in email footers. Override with SUPPORT_EMAIL. */
 export function getSupportEmail(): string {
-  return process.env.SUPPORT_EMAIL || "support@dreamriver.io";
+  return process.env.SUPPORT_EMAIL || "DreamRiverTechnologies@gmail.com";
 }

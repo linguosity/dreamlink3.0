@@ -120,8 +120,8 @@ export function ProfileCard({
           <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
             Plan
           </div>
-          <div className="font-serif text-[22px] mt-0.5 leading-tight capitalize">
-            {plan}
+          <div className="font-serif text-[22px] mt-0.5 leading-tight">
+            {PLAN_LABEL[plan]}
           </div>
         </div>
       </div>
@@ -171,8 +171,8 @@ export function UpgradeCTA({ plan }: { plan: SubscriptionPlan }) {
   const headline = plan === "visionary" ? "Upgrade to Journey" : "Try Insight";
   const desc =
     plan === "visionary"
-      ? "Unlock profound analysis and the final 2 image styles."
-      : "Unlock profound analysis and all 6 image styles.";
+      ? "Unlock profound analysis and the final 3 image styles."
+      : "Unlock deeper analysis and five image styles.";
   return (
     <div
       className="mt-4 p-4 rounded-xl border"

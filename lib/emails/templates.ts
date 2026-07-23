@@ -199,7 +199,7 @@ export function creditsExhaustedEmail(): EmailContent {
           "\">your journal is yours, forever</strong>. Every dream you've written and every interpretation you've received stays free and available for as long as you keep your account.",
       ),
       para(
-        "If DreamRiver has been meaningful, the Visionary plan continues the journey with 50 interpretations each month and deeper analysis of every dream.",
+        "If DreamRiver has been meaningful, the Insight plan continues the journey with 30 interpretations each month and deeper analysis of every dream.",
       ),
       ctaButton("See plans", cta),
       mutedPara("No pressure either way — thank you for dreaming with us."),
@@ -212,7 +212,7 @@ You've used all 3 of your free dream interpretations. We hope each one brought a
 
 First, the part that matters most: your journal is yours, forever. Every dream you've written and every interpretation you've received stays free and available for as long as you keep your account.
 
-If DreamRiver has been meaningful, the Visionary plan continues the journey with 50 interpretations each month and deeper analysis of every dream.
+If DreamRiver has been meaningful, the Insight plan continues the journey with 30 interpretations each month and deeper analysis of every dream.
 
 See plans: ${cta}
 
@@ -403,7 +403,7 @@ export function weeklyDigestEmail(params: {
         : "",
       creditsExhausted
         ? para(
-            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${GOLD_LIGHT}; text-decoration:underline;">the Visionary plan</a> continues it — and your journal stays free either way.`,
+            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${GOLD_LIGHT}; text-decoration:underline;">the Insight plan</a> continues it — and your journal stays free either way.`,
           )
         : "",
       ctaButton("Open your journal", cta),
@@ -420,7 +420,7 @@ export function weeklyDigestEmail(params: {
     .map((d) => `- ${displayTitle(d.title)} · ${shortDate(d.createdAt)}`)
     .join("\n");
   const creditsText = creditsExhausted
-    ? `\n\nOne gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, the Visionary plan continues it — and your journal stays free either way: ${pricingUrl}`
+    ? `\n\nOne gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, the Insight plan continues it — and your journal stays free either way: ${pricingUrl}`
     : "";
 
   const text = `Your week on the river

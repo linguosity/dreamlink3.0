@@ -103,6 +103,7 @@ export type Database = {
           seo_title: string | null
           seo_description: string | null
           published_at: string | null
+          scheduled_for: string | null
           created_at: string
           updated_at: string
         }
@@ -119,6 +120,7 @@ export type Database = {
           seo_title?: string | null
           seo_description?: string | null
           published_at?: string | null
+          scheduled_for?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -135,6 +137,7 @@ export type Database = {
           seo_title?: string | null
           seo_description?: string | null
           published_at?: string | null
+          scheduled_for?: string | null
           created_at?: string
           updated_at?: string
         }

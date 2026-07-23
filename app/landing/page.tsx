@@ -251,7 +251,7 @@ export default async function LandingPage() {
             Features
           </h2>
           <p className="text-center text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-12 lg:mb-16">
-            Built for believers who want to hear God in their dreams.
+            Built for believers who want to discover meaningful insight in their dreams.
           </p>
 
           {/* 1 → 3 columns; the 2-column middle state was orphaning the third
@@ -284,14 +284,15 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Plans (consolidated, per Moonwater landing design) ──────
-          Two cards only: Free and a "DreamRiver Plus" teaser with no
-          dollar amounts — the full 3-tier breakdown stays on /pricing. */}
+      {/* ── Plans (all three tiers inline) ──────────────────────────
+          Card data mirrors app/pricing/page.tsx + lib/tierConfig.ts:
+          Discovery (free, 3 lifetime credits at signup), Insight
+          ($12.99/mo or $99.99/yr, 30/mo), Journey (coming soon). */}
       <section
         id="plans"
         className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm"
       >
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 lg:mb-12">
             <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--gold-deep)] dark:text-gold">
               Simple &amp; honest
@@ -305,28 +306,32 @@ export default async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            {/* Free */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+            {/* Discovery (free) */}
             <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--gold-deep)]">
-                Free
+                Discovery
               </p>
               <div className="flex items-baseline gap-2 mt-3">
                 <span className="font-serif text-4xl text-gray-900 dark:text-white leading-none">
                   $0
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  to start
+                  free forever
                 </span>
               </div>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--gold-deep)]">
+                3 dream analyses to start
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
-                Everything you need to hear from your first dreams.
+                Begin your spiritual journey with essential dream insights.
               </p>
               <ul className="grid gap-2.5 mb-7 text-sm text-gray-800 dark:text-gray-200">
                 {[
-                  "3 dream interpretation credits",
-                  "Private dream journal",
-                  "Biblical references & insights",
+                  "3 AI dream analyses when you sign up",
+                  "Dream art + biblical interpretation",
+                  "Standard reading levels",
+                  "Dream journal storage & search",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
@@ -338,35 +343,43 @@ export default async function LandingPage() {
                 href="/sign-up"
                 className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-base font-semibold transition-colors focus-ring"
               >
-                Start free
+                Start Free
               </Link>
             </div>
 
-            {/* DreamRiver Plus (Night card) */}
+            {/* Insight (Night card, most popular) */}
             <div className="relative overflow-hidden flex flex-col rounded-2xl border border-night-soft bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] p-7 sm:p-8">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-light">
-                  DreamRiver Plus
+                  Insight
                 </p>
                 <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-night-deep bg-gold px-2.5 py-1 rounded-full">
-                  Upgrade
+                  Most Popular
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-3">
                 <span className="font-serif text-4xl text-cream leading-none">
-                  More
+                  $12.99
                 </span>
-                <span className="text-sm text-cream/60">when you need it</span>
+                <span className="text-sm text-cream/60">/month</span>
               </div>
+              <p className="mt-1.5 text-xs text-cream/60">
+                or $99.99/yr &mdash; &asymp;$8.33/mo, save 36%
+              </p>
+              <p className="mt-2 text-sm font-semibold text-gold-light">
+                30 dream analyses / month
+              </p>
               <p className="text-sm text-cream/60 mt-2 mb-5">
-                Go deeper when 3 credits isn&rsquo;t enough.
+                Unlock deeper spiritual insights with enhanced AI analysis.
               </p>
               <ul className="grid gap-2.5 mb-7 text-sm text-cream/90">
                 {[
-                  "More interpretation credits",
-                  "Deeper, scholarly interpretation",
-                  "Pattern & theme tracking",
-                  "Everything in Free",
+                  "30 AI dream analyses per month",
+                  "Deeper analysis + all reading levels",
+                  "Five image styles",
+                  "Export your dream journal",
+                  "Dream sharing",
+                  "Priority processing",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <span aria-hidden className="text-gold mt-0.5">✓</span>
@@ -378,19 +391,58 @@ export default async function LandingPage() {
                 href="/sign-up"
                 className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-gold hover:bg-gold-light text-night-deep text-base font-semibold transition-colors focus-ring"
               >
-                Start free — upgrade anytime
+                Upgrade to Insight
               </Link>
             </div>
-          </div>
 
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
-            <Link
-              href="/pricing"
-              className="text-[color:var(--gold-deep)] dark:text-gold font-semibold hover:underline underline-offset-4"
-            >
-              See full plan details →
-            </Link>
-          </p>
+            {/* Journey (coming soon) */}
+            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-gradient-to-br from-accent/40 to-secondary p-7 sm:p-8">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--gold-deep)]">
+                  Journey
+                </p>
+                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300 bg-gray-200/80 dark:bg-slate-700 px-2.5 py-1 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-3">
+                <span className="font-serif text-4xl text-gray-900 dark:text-white leading-none">
+                  $19.99
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">/month</span>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                or $179.99/yr &mdash; &asymp;$15.00/mo, save 25%
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--gold-deep)]">
+                Unlimited dream analyses
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
+                Unlimited access to divine wisdom and premium features.
+              </p>
+              <ul className="grid gap-2.5 mb-7 text-sm text-gray-800 dark:text-gray-200">
+                {[
+                  "Unlimited AI dream analyses",
+                  "Deepest theological interpretations",
+                  "All eight image styles",
+                  "Early access to new features",
+                  "API access",
+                  "Priority support",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <span
+                aria-disabled="true"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-gray-400 text-base font-semibold cursor-not-allowed select-none"
+              >
+                Coming Soon
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 

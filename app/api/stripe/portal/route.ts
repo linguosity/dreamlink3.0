@@ -43,9 +43,12 @@ export async function POST(request: NextRequest) {
         ? stripeSub.customer
         : stripeSub.customer.id;
 
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // VERCEL_URL is the deployment host (…vercel.app), not dreamriver.io —
+    // the portal must return customers to the domain their session lives on.
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://dreamriver.io"
+        : "http://localhost:3000";
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,

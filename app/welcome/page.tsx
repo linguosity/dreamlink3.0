@@ -27,7 +27,7 @@ function TermsModal({ onClose }: { onClose: () => void }) {
     { h: "Where it lives", b: "Entries and account data are stored on our managed database (Supabase). Dreams are private to your account by default and visible only to you unless you explicitly choose to share one." },
     { h: "Optional pattern research", b: "If you opt in, we may use anonymized dream themes — never the underlying content — to improve interpretation quality for everyone. This is off unless you turn it on, and you can change it anytime in Settings → Privacy." },
     { h: "Your choices", b: "You can export or permanently delete your journal and account at any time. Deleting your account removes your dream content from our active systems." },
-    { h: "Billing", b: "The free tier includes 3 dream credits per calendar month. Paid plans are processed by a third-party payment provider; you will only be charged for a plan you explicitly purchase." },
+    { h: "Billing", b: "The free tier includes 3 dream credits when you sign up. Paid plans are processed by a third-party payment provider; you will only be charged for a plan you explicitly purchase." },
   ];
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "oklch(0.06 0.02 250 / 0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 }}>

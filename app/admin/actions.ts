@@ -6,7 +6,7 @@
 // the auth user has is_admin = true before mutating.
 
 import { createClient } from "@/utils/supabase/server";
-import { setComingSoonEnabled } from "@/lib/siteSettings";
+import { setComingSoonEnabled, setSocialLinks } from "@/lib/siteSettings";
 import { setTestimonials, type Testimonial } from "@/lib/testimonials";
 import { revalidatePath } from "next/cache";
 
@@ -62,6 +62,24 @@ export async function toggleFounderTaskAction(
       )
       .eq("id", taskId);
     if (error) throw new Error(error.message);
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: message };
+  }
+}
+
+export async function saveSocialLinksAction(
+  links: Record<string, string>,
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    const user = await requireAdmin();
+    // setSocialLinks re-validates server-side: only known platforms are
+    // stored, blanks are dropped (= icon hidden), non-https URLs throw.
+    await setSocialLinks(links, user.id);
+    // Landing footer reads these server-side; drop its cache.
+    revalidatePath("/landing");
     revalidatePath("/admin");
     return { ok: true };
   } catch (err: unknown) {

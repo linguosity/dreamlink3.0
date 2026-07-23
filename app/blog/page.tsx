@@ -4,7 +4,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
-import { getPublishedPosts, readingTimeMinutes, SITE_URL } from "@/lib/blog";
+import {
+  effectivePublishedAt,
+  getPublishedPosts,
+  readingTimeMinutes,
+  SITE_URL,
+} from "@/lib/blog";
 
 export const metadata: Metadata = {
   title: "The DreamRiver Journal — Biblical Dream Interpretation Blog",
@@ -74,7 +79,7 @@ export default async function BlogIndexPage() {
                   )}
                   <div className="p-6 sm:p-8">
                     <PostMeta
-                      date={featured.published_at}
+                      date={effectivePublishedAt(featured)}
                       minutes={readingTimeMinutes(featured.content_md)}
                       tags={featured.tags}
                     />
@@ -104,7 +109,7 @@ export default async function BlogIndexPage() {
                     className="group rounded-xl border border-cream/10 bg-night-soft/30 hover:bg-night-soft/60 transition-colors p-5 sm:p-6 flex flex-col focus-visible:outline-2 focus-visible:outline-gold"
                   >
                     <PostMeta
-                      date={post.published_at}
+                      date={effectivePublishedAt(post)}
                       minutes={readingTimeMinutes(post.content_md)}
                       tags={post.tags}
                     />

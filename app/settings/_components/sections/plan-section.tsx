@@ -149,7 +149,7 @@ export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
         </div>
         {plan === "free" ? (
           <div className="text-[13px] text-muted-foreground py-5 text-center">
-            No charges yet — you&rsquo;re on the Free plan.
+            No charges yet — you&rsquo;re on the free Discovery plan.
           </div>
         ) : (
           <div className="flex items-center justify-between gap-4 flex-wrap">

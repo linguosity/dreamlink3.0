@@ -144,11 +144,11 @@ export default function UserAvatar({ size = 'md' }: UserAvatarProps) {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium">{user.email}</p>
             <p className="text-xs text-muted-foreground">
-              {subscription === "premium" 
-                ? "Premium Plan" 
-                : subscription === "pro" 
-                  ? "Pro Plan" 
-                  : "Free Plan"}
+              {subscription === "visionary"
+                ? "Insight Plan"
+                : subscription === "prophet"
+                  ? "Journey Plan"
+                  : "Discovery Plan"}
             </p>
           </div>
         </DropdownMenuLabel>

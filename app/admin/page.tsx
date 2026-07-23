@@ -13,6 +13,7 @@ import { RecentSignups, type SignupItem } from "./_components/recent-signups";
 import { RecentIssues } from "./_components/recent-issues";
 import { SystemStatus } from "./_components/system-status";
 import SiteSettingsCard from "./components/SiteSettingsCard";
+import SocialLinksCard from "./components/SocialLinksCard";
 import FounderTasksCard from "./_components/founder-tasks-card";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -413,7 +414,11 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2">
           <RecentIssues items={m.recentErrors} />
         </div>
-        <SiteSettingsCard />
+        <div className="space-y-3.5">
+          <SiteSettingsCard />
+          {/* Landing-footer social icons — hidden until a URL is saved */}
+          <SocialLinksCard />
+        </div>
       </div>
 
       {/* System status (env-configuration checks) */}

@@ -199,10 +199,10 @@ export default function PrivacyPage() {
               exercise any of these rights or to request full account deletion,
               contact us at{" "}
               <a
-                href="mailto:brandon@linguosity.ai"
+                href="mailto:DreamRiverTechnologies@gmail.com"
                 className="text-primary underline"
               >
-                brandon@linguosity.ai
+                DreamRiverTechnologies@gmail.com
               </a>
               . We will respond to requests within 30 days.
             </p>
@@ -219,10 +219,10 @@ export default function PrivacyPage() {
               information. To exercise your California privacy rights, contact us
               at{" "}
               <a
-                href="mailto:brandon@linguosity.ai"
+                href="mailto:DreamRiverTechnologies@gmail.com"
                 className="text-primary underline"
               >
-                brandon@linguosity.ai
+                DreamRiverTechnologies@gmail.com
               </a>
               .
             </p>
@@ -285,10 +285,10 @@ export default function PrivacyPage() {
               If you have questions about this Privacy Policy or wish to exercise
               your data rights, contact us at{" "}
               <a
-                href="mailto:brandon@linguosity.ai"
+                href="mailto:DreamRiverTechnologies@gmail.com"
                 className="text-primary underline"
               >
-                brandon@linguosity.ai
+                DreamRiverTechnologies@gmail.com
               </a>
               .
             </p>

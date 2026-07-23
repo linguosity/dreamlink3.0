@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       ? body.path.replace(/[\r\n]/g, " ").slice(0, 300)
       : "(unknown)";
 
-  const supportEmail = process.env.SUPPORT_EMAIL || "support@dreamriver.io";
+  const supportEmail = process.env.SUPPORT_EMAIL || "DreamRiverTechnologies@gmail.com";
 
   if (!process.env.RESEND_API_KEY) {
     // Friendly degradation: the widget shows this message verbatim.

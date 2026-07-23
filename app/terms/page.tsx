@@ -27,8 +27,8 @@ export default function TermsPage() {
             </h2>
             <p>
               DreamRiver is an AI-powered dream journaling and analysis platform
-              that provides biblical and spiritual interpretations of dream
-              content. The Service uses artificial intelligence to generate
+              that provides biblical interpretations of dream content. The
+              Service uses artificial intelligence to generate
               analysis, imagery, and scripture references based on user-submitted
               dream descriptions.
             </p>
@@ -68,7 +68,7 @@ export default function TermsPage() {
             <p>
               Dream analyses, scripture references, and generated images are
               produced by artificial intelligence and are provided for
-              informational and spiritual reflection purposes only. They do not
+              informational and reflective purposes only. They do not
               constitute professional psychological, medical, or theological
               advice. You should not rely solely on AI-generated interpretations
               for important life decisions. Always consult qualified
@@ -148,10 +148,10 @@ export default function TermsPage() {
             <p>
               If you have questions about these Terms, please contact us at{" "}
               <a
-                href="mailto:brandon@linguosity.ai"
+                href="mailto:DreamRiverTechnologies@gmail.com"
                 className="text-primary underline"
               >
-                brandon@linguosity.ai
+                DreamRiverTechnologies@gmail.com
               </a>
               .
             </p>

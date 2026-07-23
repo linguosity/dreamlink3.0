@@ -7,7 +7,9 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import SiteHeader from "@/components/SiteHeader";
+import { LocalDateTime } from "@/components/LocalDateTime";
 import {
+  effectivePublishedAt,
   getPostBySlugForAdmin,
   getPublishedPostBySlug,
   readingTimeMinutes,
@@ -22,12 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPublishedPostBySlug(slug);
   if (!post) {
-    // Admins can preview drafts at their future URL (see below) — make sure
-    // those pages are never indexed, even if a crawler somehow had a session.
+    // Admins can preview drafts (and scheduled-but-not-yet-due posts) at
+    // their future URL (see below) — make sure those pages are never
+    // indexed, even if a crawler somehow had a session.
     const draft = await getPostBySlugForAdmin(slug);
     if (draft) {
+      const label = draft.status === "scheduled" ? "Scheduled" : "Draft";
       return {
-        title: `[Draft] ${draft.seo_title || draft.title} — The DreamRiver Journal`,
+        title: `[${label}] ${draft.seo_title || draft.title} — The DreamRiver Journal`,
         robots: { index: false, follow: false },
       };
     }
@@ -48,7 +52,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       type: "article",
-      publishedTime: post.published_at ?? undefined,
+      // Effective publish date: lazily-published scheduled posts keep
+      // published_at NULL, so scheduled_for is their public date.
+      publishedTime: effectivePublishedAt(post) ?? undefined,
       authors: [post.author_name],
       images: post.cover_image_url ? [{ url: post.cover_image_url }] : undefined,
     },
@@ -75,13 +81,16 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   const minutes = readingTimeMinutes(post.content_md);
+  // COALESCE(published_at, scheduled_for) — the public date for scheduled
+  // posts that went live lazily without a publish click.
+  const publicDate = effectivePublishedAt(post);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
     description: post.seo_description || post.excerpt || undefined,
     image: post.cover_image_url || undefined,
-    datePublished: post.published_at || undefined,
+    datePublished: publicDate || undefined,
     dateModified: post.updated_at,
     author: { "@type": "Person", name: post.author_name },
     publisher: {
@@ -106,11 +115,25 @@ export default async function BlogPostPage({ params }: Props) {
         {isDraftPreview ? (
           <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
             <strong className="uppercase tracking-[0.14em] text-[11px] font-bold text-gold">
-              Draft preview
+              {post.status === "scheduled" ? "Scheduled" : "Draft preview"}
             </strong>
             <span className="text-cream/70">
-              Only admins can see this page — readers get a 404 until you
-              publish.
+              {post.status === "scheduled" && post.scheduled_for ? (
+                <>
+                  Scheduled for{" "}
+                  <LocalDateTime
+                    iso={post.scheduled_for}
+                    className="text-cream"
+                  />{" "}
+                  — it goes live on its own then. Until that moment only
+                  admins can see this page.
+                </>
+              ) : (
+                <>
+                  Only admins can see this page — readers get a 404 until you
+                  publish.
+                </>
+              )}
             </span>
             <Link
               href={`/admin/blog/${post.id}`}
@@ -133,9 +156,9 @@ export default async function BlogPostPage({ params }: Props) {
         <header className="mt-6">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-cream/50 font-semibold">
             {post.tags[0] ? <span className="text-gold">{post.tags[0]}</span> : null}
-            {post.published_at ? (
-              <time dateTime={post.published_at}>
-                {new Date(post.published_at).toLocaleDateString("en-US", {
+            {publicDate ? (
+              <time dateTime={publicDate}>
+                {new Date(publicDate).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
                   year: "numeric",

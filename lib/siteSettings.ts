@@ -99,6 +99,138 @@ export async function setComingSoonEnabled(
   comingSoonCache = { value: enabled, fetchedAt: Date.now() };
 }
 
+// ---------------------------------------------------------------------------
+// Social links (landing-footer icons)
+//
+// Stored in site_settings under key = 'social_links' as a JSONB object of
+// platform key -> https profile URL. The landing footer renders for anonymous
+// visitors, so reads use the PUBLIC anon-key client — migration
+// 20260710000001_social_links_setting.sql grants public SELECT on this key
+// only (writes stay admin/service-role). An icon shows only for platforms
+// with a valid https:// URL; an empty object hides them all.
+// ---------------------------------------------------------------------------
+
+/** Platforms the landing footer knows how to render (keys match the JSONB). */
+export const SOCIAL_PLATFORMS = [
+  { key: "x", label: "X" },
+  { key: "instagram", label: "Instagram" },
+  { key: "youtube", label: "YouTube" },
+  { key: "tiktok", label: "TikTok" },
+] as const;
+
+export type SocialPlatformKey = (typeof SOCIAL_PLATFORMS)[number]["key"];
+
+/** True when `value` is a well-formed https:// URL — the only kind we link. */
+export function isValidSocialUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 2048) return false;
+  try {
+    return new URL(trimmed).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Keep only entries whose value is a valid https:// URL. Unknown platform
+ * keys are accepted harmlessly (consumers render only the platforms they
+ * have icons for); malformed values are dropped silently.
+ */
+function coerceSocialLinks(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (isValidSocialUrl(raw)) out[key] = raw.trim();
+  }
+  return out;
+}
+
+let socialLinksCache: CachedFlag<Record<string, string>> | null = null;
+
+function getAnonClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error("Missing Supabase anon env vars");
+  }
+  return createSupabaseClient(url, key);
+}
+
+/**
+ * Reads the admin-managed social profile URLs (cached 30s per instance).
+ * Anon-safe: uses the public anon key + the public-read RLS policy, so it
+ * works while rendering for logged-out visitors. Returns `{}` on ANY error —
+ * the footer then simply renders no icons.
+ */
+export async function getSocialLinks(): Promise<Record<string, string>> {
+  if (
+    socialLinksCache &&
+    Date.now() - socialLinksCache.fetchedAt < CACHE_TTL_MS
+  ) {
+    return socialLinksCache.value;
+  }
+
+  try {
+    const supabase = getAnonClient();
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "social_links")
+      .maybeSingle();
+
+    const value = error || !data ? {} : coerceSocialLinks(data.value);
+    socialLinksCache = { value, fetchedAt: Date.now() };
+    return value;
+  } catch (err) {
+    console.error("getSocialLinks failed; returning {}:", err);
+    return {};
+  }
+}
+
+/**
+ * Overwrites the social links and invalidates the local cache. Only known
+ * platform keys are persisted; blank values are dropped (blank = icon
+ * hidden); any non-blank value that is not a valid https:// URL throws.
+ * Caller MUST verify the user is an admin (see app/admin/actions.ts).
+ */
+export async function setSocialLinks(
+  links: Record<string, string>,
+  updatedBy: string | null = null,
+): Promise<void> {
+  const clean: Record<string, string> = {};
+  for (const { key, label } of SOCIAL_PLATFORMS) {
+    const raw = links[key];
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.trim();
+    if (trimmed.length === 0) continue; // blank = hide the icon
+    if (!isValidSocialUrl(trimmed)) {
+      throw new Error(`${label}: enter a full https:// URL or leave it blank.`);
+    }
+    clean[key] = trimmed;
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert(
+      {
+        key: "social_links",
+        value: clean,
+        updated_by: updatedBy,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" },
+    );
+
+  if (error) {
+    console.error("setSocialLinks failed:", error);
+    throw new Error(`Failed to save social links: ${error.message}`);
+  }
+
+  socialLinksCache = { value: clean, fetchedAt: Date.now() };
+}
+
 /**
  * Email allowlist for admins who should always bypass the coming-soon gate
  * even before they have a profile row with `is_admin = true`.

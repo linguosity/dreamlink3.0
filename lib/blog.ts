@@ -9,10 +9,11 @@ export interface BlogPost {
   cover_image_url: string | null;
   author_name: string;
   tags: string[];
-  status: "draft" | "published";
+  status: "draft" | "scheduled" | "published";
   seo_title: string | null;
   seo_description: string | null;
   published_at: string | null;
+  scheduled_for: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,27 +21,67 @@ export interface BlogPost {
 /** Canonical site origin for SEO surfaces (sitemap, OG, JSON-LD). */
 export const SITE_URL = "https://dreamriver.io";
 
+/**
+ * PostgREST `.or()` filter mirroring the blog_posts public-read RLS policy:
+ *
+ *   status = 'published' OR (status = 'scheduled' AND scheduled_for <= now())
+ *
+ * "Lazy publish": there is no cron flipping scheduled rows to published — a
+ * scheduled post simply becomes publicly visible the moment now() passes its
+ * scheduled_for. RLS enforces this for anon sessions; every public query also
+ * applies this filter so admin sessions (whose RLS can read everything) see
+ * the same public lists as everyone else.
+ */
+export function publicPostsOrFilter(now: Date = new Date()): string {
+  return `status.eq.published,and(status.eq.scheduled,scheduled_for.lte.${now.toISOString()})`;
+}
+
+/**
+ * Effective publish date for ordering + display:
+ * COALESCE(published_at, scheduled_for). A lazily-published scheduled post
+ * keeps published_at NULL, so its scheduled_for is its public date.
+ */
+export function effectivePublishedAt(
+  post: Pick<BlogPost, "published_at" | "scheduled_for">
+): string | null {
+  return post.published_at ?? post.scheduled_for ?? null;
+}
+
+/** Newest-first by effective publish date (ISO strings compare lexically). */
+function byEffectiveDateDesc(
+  a: Pick<BlogPost, "published_at" | "scheduled_for">,
+  b: Pick<BlogPost, "published_at" | "scheduled_for">
+): number {
+  return (effectivePublishedAt(b) ?? "").localeCompare(
+    effectivePublishedAt(a) ?? ""
+  );
+}
+
 export async function getPublishedPosts(): Promise<BlogPost[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("blog_posts")
     .select("*")
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
-  return (data as BlogPost[] | null) ?? [];
+    .or(publicPostsOrFilter());
+  return (((data as BlogPost[] | null) ?? []) as BlogPost[]).sort(
+    byEffectiveDateDesc
+  );
 }
 
 /** Lightweight preview shape for cross-surface post cards (no content_md). */
 export type BlogPostPreview = Pick<
   BlogPost,
-  "id" | "slug" | "title" | "excerpt" | "tags" | "published_at"
+  "id" | "slug" | "title" | "excerpt" | "tags" | "published_at" | "scheduled_for"
 >;
 
 /**
- * Newest N published posts with columns trimmed for preview cards
+ * Newest N publicly-visible posts with columns trimmed for preview cards
  * (components/RecentPosts on /landing and the dashboard). Same anon-safe
- * status=published filter as getPublishedPosts, so logged-out visitors get
- * exactly what RLS already allows; drafts never surface here.
+ * filter as getPublishedPosts (published OR scheduled-and-due), so logged-out
+ * visitors get exactly what RLS already allows; drafts and not-yet-due
+ * scheduled posts never surface here. Sorted in JS by the effective publish
+ * date (COALESCE(published_at, scheduled_for)) since PostgREST can't order by
+ * that expression — the blog is small, so fetching then slicing is fine.
  */
 export async function getRecentPublishedPosts(
   limit = 3
@@ -48,11 +89,11 @@ export async function getRecentPublishedPosts(
   const supabase = await createClient();
   const { data } = await supabase
     .from("blog_posts")
-    .select("id, slug, title, excerpt, tags, published_at")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(limit);
-  return (data as BlogPostPreview[] | null) ?? [];
+    .select("id, slug, title, excerpt, tags, published_at, scheduled_for")
+    .or(publicPostsOrFilter());
+  return (((data as BlogPostPreview[] | null) ?? []) as BlogPostPreview[])
+    .sort(byEffectiveDateDesc)
+    .slice(0, limit);
 }
 
 export async function getPublishedPostBySlug(
@@ -62,9 +103,9 @@ export async function getPublishedPostBySlug(
   const { data } = await supabase
     .from("blog_posts")
     .select("*")
-    .eq("status", "published")
     .eq("slug", slug)
-    .single();
+    .or(publicPostsOrFilter())
+    .maybeSingle();
   return (data as BlogPost | null) ?? null;
 }
 

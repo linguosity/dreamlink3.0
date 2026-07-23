@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@/utils/supabase/server";
-import { SITE_URL } from "@/lib/blog";
+import { publicPostsOrFilter, SITE_URL } from "@/lib/blog";
 
 // NOTE: VERCEL_URL is the *deployment* host (…vercel.app), not the custom
 // domain — using it here made sitemap URLs point away from dreamriver.io.
@@ -22,14 +22,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/sign-up`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
   ];
 
-  // Published blog posts. Sitemap generation must never crash the route,
-  // so fall back to static pages when the table isn't reachable.
+  // Publicly-visible blog posts: published, plus scheduled posts whose
+  // go-live time has passed (lazy publish — matches the public-read RLS
+  // policy; see publicPostsOrFilter). Sitemap generation must never crash
+  // the route, so fall back to static pages when the table isn't reachable.
   try {
     const supabase = await createClient();
     const { data } = await supabase
       .from("blog_posts")
       .select("slug, updated_at")
-      .eq("status", "published");
+      .or(publicPostsOrFilter());
 
     const posts: MetadataRoute.Sitemap = (data ?? []).map(
       (p: { slug: string; updated_at: string }) => ({

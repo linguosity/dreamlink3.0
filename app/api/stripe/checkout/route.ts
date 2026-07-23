@@ -21,6 +21,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // ---- Pre-launch gate (2026-07-22) --------------------------------------
+    // Until Stripe passes end-to-end testing, only admins can start a live
+    // checkout. Flip by setting ALLOW_PUBLIC_CHECKOUT=true in Vercel — no
+    // code change needed at launch. Server-side on purpose: a UI-only
+    // disable could be bypassed with a direct POST.
+    if (process.env.ALLOW_PUBLIC_CHECKOUT !== "true") {
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single();
+      if (!(profile as { is_admin?: boolean } | null)?.is_admin) {
+        return NextResponse.json(
+          { error: "Subscriptions are opening soon — thanks for your patience!" },
+          { status: 403 }
+        );
+      }
+    }
+
     const { priceKey } = await request.json();
     const priceId = PLAN_PRICES[priceKey];
 
@@ -35,9 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe();
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // VERCEL_URL is the deployment host (…vercel.app), NOT the custom domain.
+    // Success/cancel must return to dreamriver.io or the customer lands on a
+    // domain where their session cookies don't exist.
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://dreamriver.io"
+        : "http://localhost:3000";
 
     // Reuse the existing Stripe customer and block double-subscribing (Bug 5).
     const { data: existing } = await supabase

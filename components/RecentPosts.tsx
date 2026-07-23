@@ -11,13 +11,18 @@
 //     dream gallery: 2–3 titles + dates and a single "Journal →" link. All
 //     app-variant links carry utm_source=app&utm_medium=dashboard.
 //
-// IMPORTANT: renders null while there are zero PUBLISHED posts, so both
-// surfaces invisibly no-op until the first post ships (all current posts are
-// drafts). Fetches at request time via the cookie-scoped Supabase client —
-// same render model as /blog itself; no ISR/revalidate.
+// IMPORTANT: renders null while there are zero publicly-visible posts
+// (published, or scheduled with scheduled_for in the past — lazy publish),
+// so both surfaces invisibly no-op until the first post ships. Fetches at
+// request time via the cookie-scoped Supabase client — same render model as
+// /blog itself; no ISR/revalidate.
 
 import Link from "next/link";
-import { getRecentPublishedPosts, type BlogPostPreview } from "@/lib/blog";
+import {
+  effectivePublishedAt,
+  getRecentPublishedPosts,
+  type BlogPostPreview,
+} from "@/lib/blog";
 
 interface RecentPostsProps {
   variant: "landing" | "app";
@@ -37,9 +42,10 @@ export default async function RecentPosts({
   variant,
   limit = 3,
 }: RecentPostsProps) {
-  // Anon-safe: only status=published rows are selected (matches the /blog RLS
-  // path for logged-out visitors). Swallow failures — a missing blog table
-  // (migration not yet applied) must never take down landing or the dashboard.
+  // Anon-safe: only publicly-visible rows are selected (published OR
+  // scheduled-and-due; matches the /blog RLS path for logged-out visitors).
+  // Swallow failures — a missing blog table (migration not yet applied) must
+  // never take down landing or the dashboard.
   let posts: BlogPostPreview[] = [];
   try {
     posts = await getRecentPublishedPosts(limit);
@@ -74,7 +80,7 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
             id="journal-heading"
             className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white mt-3 mb-3"
           >
-            Go deeper into biblical dreams
+            Go deeper into scriptural dream symbolism
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
             Plain-language articles on dream symbols in scripture,
@@ -84,7 +90,8 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 [&>*]:h-full">
           {posts.map((post) => {
-            const dateLabel = formatPostDate(post.published_at);
+            const publicDate = effectivePublishedAt(post);
+            const dateLabel = formatPostDate(publicDate);
             return (
               <Link
                 key={post.id}
@@ -102,7 +109,7 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
                     </span>
                   ) : null}
                   {dateLabel ? (
-                    <time dateTime={post.published_at ?? undefined}>
+                    <time dateTime={publicDate ?? undefined}>
                       {dateLabel}
                     </time>
                   ) : null}
@@ -160,7 +167,8 @@ function AppJournalStrip({ posts }: { posts: BlogPostPreview[] }) {
       </div>
       <ul className="mt-3 space-y-2">
         {shown.map((post) => {
-          const dateLabel = formatPostDate(post.published_at);
+          const publicDate = effectivePublishedAt(post);
+          const dateLabel = formatPostDate(publicDate);
           return (
             <li
               key={post.id}
@@ -174,7 +182,7 @@ function AppJournalStrip({ posts }: { posts: BlogPostPreview[] }) {
               </Link>
               {dateLabel ? (
                 <time
-                  dateTime={post.published_at ?? undefined}
+                  dateTime={publicDate ?? undefined}
                   className="shrink-0 text-xs text-muted-foreground"
                 >
                   {dateLabel}

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PenLine, Plus } from "lucide-react";
+import { LocalDateTime } from "@/components/LocalDateTime";
+import { ImportPosts } from "./_components/import-posts";
 import type { BlogPost } from "@/lib/blog";
 
 export const metadata = { title: "Blog — DreamRiver Admin" };
@@ -13,7 +15,7 @@ export default async function AdminBlogPage() {
   const { data } = await supabase
     .from("blog_posts")
     .select(
-      "id, slug, title, excerpt, status, author_name, published_at, updated_at"
+      "id, slug, title, excerpt, status, author_name, published_at, scheduled_for, updated_at"
     )
     .order("updated_at", { ascending: false });
 
@@ -26,12 +28,13 @@ export default async function AdminBlogPage() {
     | "status"
     | "author_name"
     | "published_at"
+    | "scheduled_for"
     | "updated_at"
   >[];
 
   return (
     <main className="p-6 md:p-8 max-w-5xl">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div>
           <h1 className="font-serif text-2xl font-semibold">Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -45,6 +48,9 @@ export default async function AdminBlogPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Batch import (.md files with front-matter) + per-file results. */}
+      <ImportPosts />
 
       {posts.length === 0 ? (
         <Card>
@@ -70,14 +76,31 @@ export default async function AdminBlogPage() {
                   {post.title}
                 </span>
                 <Badge
-                  variant={post.status === "published" ? "default" : "secondary"}
+                  variant={
+                    post.status === "published"
+                      ? "default"
+                      : post.status === "scheduled"
+                        ? "outline"
+                        : "secondary"
+                  }
+                  className={
+                    post.status === "scheduled"
+                      ? "border-amber-500/50 text-amber-700 dark:text-gold"
+                      : undefined
+                  }
                 >
                   {post.status}
                 </Badge>
                 <span className="ml-auto text-xs text-muted-foreground">
-                  {post.status === "published" && post.published_at
-                    ? `Published ${new Date(post.published_at).toLocaleDateString()}`
-                    : `Edited ${new Date(post.updated_at).toLocaleDateString()}`}
+                  {post.status === "scheduled" && post.scheduled_for ? (
+                    <>
+                      Goes live <LocalDateTime iso={post.scheduled_for} />
+                    </>
+                  ) : post.status === "published" && post.published_at ? (
+                    `Published ${new Date(post.published_at).toLocaleDateString()}`
+                  ) : (
+                    `Edited ${new Date(post.updated_at).toLocaleDateString()}`
+                  )}
                 </span>
               </div>
               {post.excerpt ? (

@@ -235,7 +235,7 @@ export function StepPlan({ data, update, next, back }: StepProps) {
     <div>
       <StepBadge name="compass" />
       <h2 style={H2}>Choose how you&rsquo;ll begin</h2>
-      <p style={SUB}>Start free with 3 dream credits this month. Upgrade anytime for unlimited readings.</p>
+      <p style={SUB}>Start free with 3 dream credits. Upgrade anytime for more interpretations.</p>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
         <div style={{ display: "inline-flex", gap: 3, padding: 3, background: "oklch(0.95 0.012 80)", borderRadius: 100, border: "1px solid var(--warm-line)" }}>
           {([["monthly", "Monthly"], ["yearly", "Yearly"]] as const).map(([id, lab]) => (
@@ -252,7 +252,7 @@ export function StepPlan({ data, update, next, back }: StepProps) {
       </div>
       <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
         <PlanCard active={plan === "free"} onClick={() => update({ plan: "free" })} icon="leaf" name="Discovery" price="$0" per="to start"
-          features={["3 dream credits this month", "Still Waters & Flowing River readings", "Private dream journal", "Scripture references"]} />
+          features={["3 dream credits at signup", "Still Waters & Flowing River readings", "Private dream journal", "Scripture references"]} />
         <PlanCard active={plan === "visionary"} onClick={() => update({ plan: "visionary" })} icon="crown" name="Insight" price={price} per={per} effective={effective} badge="Most chosen" highlight
           features={["30 dream interpretations / month", "All reading levels — incl. Celestial & Scholarly", "AI dream imagery for every entry", "Pattern & theme insights", "Priority analysis"]} />
       </div>
@@ -315,7 +315,7 @@ function PendingModal({
           <span style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", color: "var(--gold-deep)" }}>Insight</span> ({price}{per}) is ready.
         </p>
         <div style={{ padding: "12px 14px", background: "oklch(0.98 0.008 80)", border: "1px solid var(--warm-line)", borderRadius: 11, marginBottom: 20, textAlign: "left" }}>
-          <Check checked={data.notifyUpgrade !== false} onChange={(v) => update({ notifyUpgrade: v })}>Email me when Visionary upgrades go live</Check>
+          <Check checked={data.notifyUpgrade !== false} onChange={(v) => update({ notifyUpgrade: v })}>Email me when Insight upgrades go live</Check>
         </div>
         <GoldBtn full onClick={onProceed}>Continue with free for now</GoldBtn>
         <div onClick={onClose} style={{ fontSize: 13, color: "var(--warm-muted)", fontWeight: 600, marginTop: 14, cursor: "pointer" }}>Back to plans</div>
@@ -341,12 +341,12 @@ export function StepDone({ data, restart, onFinish }: { data: OnboardingData; re
         {name ? <>Welcome, <span style={{ fontStyle: "italic" }}>{name}</span>.</> : "Welcome to the river."}
       </h2>
       <p style={{ fontSize: 15, color: "var(--warm-muted)", lineHeight: 1.6, maxWidth: "36ch", margin: "0 auto 26px" }}>
-        Your free account is ready with <strong style={{ color: "var(--warm-darker)" }}>3 dream credits</strong> this month, set to <strong style={{ color: "var(--gold-deep)" }}>{levelName}</strong> readings.
+        Your free account is ready with <strong style={{ color: "var(--warm-darker)" }}>3 dream credits</strong>, set to <strong style={{ color: "var(--gold-deep)" }}>{levelName}</strong> readings.
       </p>
       <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 30 }}>
         <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--warm-line)", borderRadius: 12 }}>
           <div style={{ fontFamily: FONTS.SERIF, fontSize: 26, color: "var(--gold-deep)", lineHeight: 1 }}>3</div>
-          <div style={{ fontSize: 11.5, color: "var(--warm-muted)", marginTop: 4 }}>credits this month</div>
+          <div style={{ fontSize: 11.5, color: "var(--warm-muted)", marginTop: 4 }}>credits to start</div>
         </div>
         <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--warm-line)", borderRadius: 12 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}><Icon name="shieldCheck" size={26} color="var(--gold-deep)" stroke={1.5} /></div>
@@ -356,7 +356,7 @@ export function StepDone({ data, restart, onFinish }: { data: OnboardingData; re
       <GoldBtn full onClick={onFinish}><Icon name="penLine" size={18} color="var(--night-deep)" stroke={2} /> Write your first dream</GoldBtn>
       {data.notifyUpgrade !== false && data.plan === "visionary" && (
         <div style={{ fontSize: 12, color: "var(--warm-muted)", marginTop: 16, display: "flex", gap: 7, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="bell" size={14} color="var(--gold-deep)" stroke={1.7} /> We&rsquo;ll email you when Visionary upgrades open.
+          <Icon name="bell" size={14} color="var(--gold-deep)" stroke={1.7} /> We&rsquo;ll email you when Insight upgrades open.
         </div>
       )}
       <div onClick={restart} style={{ fontSize: 12, color: "var(--warm-muted)", marginTop: 22, cursor: "pointer", opacity: 0.7 }}>↺ Restart onboarding</div>
