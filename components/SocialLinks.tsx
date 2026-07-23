@@ -53,7 +53,7 @@ export default async function SocialLinks() {
   if (visible.length === 0) return null;
 
   return (
-    <>
+    <div className="mt-6 flex gap-3">
       {visible.map(({ key, name, svg }) => (
         <a
           key={key}
@@ -68,6 +68,6 @@ export default async function SocialLinks() {
           {svg}
         </a>
       ))}
-    </>
+    </div>
   );
 }
