@@ -543,9 +543,7 @@ export default async function LandingPage() {
 
             <NewsletterForm />
 
-            <div className="mt-6 flex gap-3">
-              <SocialLinks />
-            </div>
+            <SocialLinks />
 
             {/* slot: App Store / Google Play badges */}
             <div className="mt-6 flex gap-3" aria-label="Download the app">
