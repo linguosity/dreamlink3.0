@@ -79,15 +79,32 @@ function ResultIcon({ status }: { status: ImportFileResult["status"] }) {
   }
 }
 
+const MD_NAME = /\.(md|markdown)$/i;
+
 export function ImportPosts() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [results, setResults] = useState<ImportFileResult[] | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  // dragenter/dragleave fire for every child node — count depth instead of
+  // toggling a boolean so the highlight doesn't flicker.
+  const dragDepth = useRef(0);
 
-  async function onFilesChosen(list: FileList | null) {
+  async function onFilesChosen(list: FileList | File[] | null) {
     if (!list || list.length === 0) return;
-    const files = Array.from(list);
+    const all = Array.from(list);
+    // Drag & drop can hand us anything — keep Markdown, reject the rest loudly.
+    const rejected = all.filter((f) => !MD_NAME.test(f.name));
+    const files = all.filter((f) => MD_NAME.test(f.name));
+    if (rejected.length > 0) {
+      toast.error(
+        `Only Markdown (.md) files can be imported — skipped ${rejected
+          .map((f) => f.name)
+          .join(", ")}. Click the ? for the exact format.`
+      );
+    }
+    if (files.length === 0) return;
     // Read everything client-side first; oversized files fail locally
     // without blocking the rest of the batch.
     const localFailures: ImportFileResult[] = [];
@@ -137,16 +154,73 @@ export function ImportPosts() {
 
   return (
     <div className="mb-6">
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Import posts — drop Markdown files here or press Enter to browse"
+        title="Markdown (.md) files with a front-matter header — click the ? for the exact format"
+        onClick={() => !isPending && inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !isPending) {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          dragDepth.current += 1;
+          setIsDragging(true);
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          dragDepth.current -= 1;
+          if (dragDepth.current <= 0) {
+            dragDepth.current = 0;
+            setIsDragging(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          dragDepth.current = 0;
+          setIsDragging(false);
+          if (!isPending) onFilesChosen(Array.from(e.dataTransfer.files));
+        }}
+        className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-lg border border-dashed px-4 py-3 text-sm cursor-pointer transition-colors focus-ring
+          ${
+            isDragging
+              ? "border-primary bg-primary/5 text-foreground"
+              : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+          } ${isPending ? "opacity-60 pointer-events-none" : ""}`}
+      >
+        {isPending ? (
+          <Loader2 className="size-4 shrink-0 animate-spin" />
+        ) : (
+          <FileUp className="size-4 shrink-0" />
+        )}
+        <span>
+          {isPending ? (
+            "Importing…"
+          ) : (
+            <>
+              Drag &amp; drop{" "}
+              <span className="font-medium text-foreground">
+                Markdown (.md)
+              </span>{" "}
+              files here, or click to browse
+            </>
+          )}
+        </span>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-6 w-6 p-0 shrink-0"
               title="Import file format"
               aria-label="Import file format help"
+              onClick={(e) => e.stopPropagation()}
             >
               <HelpCircle className="size-4" />
             </Button>
@@ -203,26 +277,13 @@ export function ImportPosts() {
             </p>
           </PopoverContent>
         </Popover>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => inputRef.current?.click()}
-          disabled={isPending}
-        >
-          {isPending ? (
-            <Loader2 className="size-4 mr-1.5 animate-spin" />
-          ) : (
-            <FileUp className="size-4 mr-1.5" />
-          )}
-          {isPending ? "Importing…" : "Import posts"}
-        </Button>
         <input
           ref={inputRef}
           type="file"
           accept=".md,.markdown,text/markdown"
           multiple
           className="hidden"
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => onFilesChosen(e.target.files)}
         />
       </div>
