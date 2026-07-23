@@ -6,6 +6,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { slugify } from "@/lib/blog";
+import {
+  isImportPlanMode,
+  planAssignments,
+  planStartError,
+  type ImportPlan,
+} from "./_lib/import-plan";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -236,8 +242,11 @@ function parseScheduledFor(raw: string): string | null {
 export interface ImportFileResult {
   file: string;
   slug: string | null;
-  /** created = draft; scheduled = draft-with-go-live-time; skipped = slug exists. */
-  status: "created" | "scheduled" | "skipped" | "error";
+  /**
+   * created = draft; published = live immediately; scheduled = has a go-live
+   * time (from its own front-matter or the import plan); skipped = slug exists.
+   */
+  status: "created" | "published" | "scheduled" | "skipped" | "error";
   message: string;
   /** Set for created/scheduled (and skipped when the existing post is known) — links to /admin/blog/<id>. */
   id: string | null;
@@ -246,12 +255,19 @@ export interface ImportFileResult {
 
 /**
  * Import .md files (front-matter: title + slug required; excerpt, seo_title,
- * seo_description, tags, scheduled_for optional). Rows are created as draft,
- * or scheduled when scheduled_for is given. NEVER overwrites an existing
- * slug — those files are skipped and reported.
+ * seo_description, tags, scheduled_for optional) under an optional publish
+ * plan. No plan (or mode "draft") is today's behavior: rows are created as
+ * draft, or scheduled when the file's front-matter has scheduled_for. Plan
+ * modes: "publish" = status published + published_at now; "daily"/"weekly"
+ * = status scheduled at times recomputed HERE from plan.startAt via the
+ * shared planAssignments helper — client-computed dates are never trusted.
+ * A file's own front-matter scheduled_for ALWAYS wins over the plan and
+ * consumes no daily/weekly slot. NEVER overwrites an existing slug — those
+ * files are skipped and reported.
  */
 export async function importPostsAction(
-  files: { name: string; content: string }[]
+  files: { name: string; content: string }[],
+  plan?: ImportPlan
 ): Promise<{ results: ImportFileResult[] } | { error: string }> {
   try {
     const { supabase } = await requireAdmin();
@@ -260,11 +276,38 @@ export async function importPostsAction(
       return { error: "Import at most 50 files at a time." };
     }
 
+    // Validate the plan before touching anything — a bad plan imports nothing.
+    const effectivePlan: ImportPlan = plan ?? { mode: "draft" };
+    if (!isImportPlanMode(effectivePlan.mode)) {
+      return { error: "Unknown import plan mode." };
+    }
+    const planError = planStartError(effectivePlan);
+    if (planError) return { error: planError };
+
+    // Recompute every assignment server-side with the same shared helper the
+    // client preview uses. "Has own schedule" comes from the authoritative
+    // front-matter parse: any non-empty scheduled_for value claims the slot
+    // exemption (even one that later fails to parse as a date — that file
+    // errors out, but the other files' slots don't shift under them).
+    const parsedFiles = files.map((f) => parseFrontMatter(f.content));
+    const assignments = planAssignments(
+      parsedFiles.map((p) => ({
+        hasOwnSchedule:
+          p !== null &&
+          typeof p.meta.scheduled_for === "string" &&
+          p.meta.scheduled_for.trim() !== "",
+      })),
+      effectivePlan
+    );
+
     const results: ImportFileResult[] = [];
     const seenSlugs = new Set<string>();
+    const publishedSlugs: string[] = [];
     let createdAny = false;
 
-    for (const file of files) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const assignment = assignments[i];
       const fail = (message: string, slug: string | null = null) =>
         results.push({
           file: file.name,
@@ -275,7 +318,7 @@ export async function importPostsAction(
           scheduled_for: null,
         });
 
-      const parsed = parseFrontMatter(file.content);
+      const parsed = parsedFiles[i];
       if (!parsed) {
         fail(
           'No front-matter found — the file must start with a "---" block (see format help).'
@@ -347,6 +390,22 @@ export async function importPostsAction(
           ? meta.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : [];
 
+      // Apply the plan. The file's own front-matter scheduled_for (parsed
+      // above) always wins, regardless of mode.
+      let status: "draft" | "scheduled" | "published" = "draft";
+      let rowScheduledFor: string | null = null;
+      let publishedAt: string | null = null;
+      if (scheduledFor) {
+        status = "scheduled";
+        rowScheduledFor = scheduledFor;
+      } else if (assignment.kind === "publish") {
+        status = "published";
+        publishedAt = new Date().toISOString();
+      } else if (assignment.kind === "scheduled") {
+        status = "scheduled";
+        rowScheduledFor = assignment.scheduledFor;
+      }
+
       const row = {
         slug,
         title,
@@ -354,8 +413,9 @@ export async function importPostsAction(
           (typeof meta.excerpt === "string" && meta.excerpt.trim()) || null,
         content_md: body,
         tags,
-        status: scheduledFor ? "scheduled" : "draft",
-        scheduled_for: scheduledFor,
+        status,
+        scheduled_for: rowScheduledFor,
+        published_at: publishedAt,
         seo_title:
           (typeof meta.seo_title === "string" && meta.seo_title.trim()) || null,
         seo_description:
@@ -387,24 +447,43 @@ export async function importPostsAction(
       }
 
       createdAny = true;
+      if (status === "published") publishedSlugs.push(slug);
       const pastDue =
-        scheduledFor !== null && new Date(scheduledFor).getTime() <= Date.now();
+        rowScheduledFor !== null &&
+        new Date(rowScheduledFor).getTime() <= Date.now();
+      const ownSchedule = scheduledFor !== null;
+      let resultStatus: ImportFileResult["status"];
+      let message: string;
+      if (status === "published") {
+        resultStatus = "published";
+        message = "Published — live on dreamriver.io now.";
+      } else if (status === "scheduled") {
+        resultStatus = "scheduled";
+        message = pastDue
+          ? ownSchedule
+            ? "The file's own scheduled_for is already past, so it is publicly visible now."
+            : "Scheduled time is already past, so it is publicly visible now."
+          : ownSchedule
+            ? "Kept the file's own scheduled_for from its front-matter."
+            : "Scheduled by your import plan.";
+      } else {
+        resultStatus = "created";
+        message = "Created as a draft.";
+      }
       results.push({
         file: file.name,
         slug,
-        status: scheduledFor ? "scheduled" : "created",
-        message: scheduledFor
-          ? pastDue
-            ? "Scheduled time is already past, so it is publicly visible now."
-            : "Scheduled — goes live on its own at the time below."
-          : "Created as a draft.",
+        status: resultStatus,
+        message,
         id: (inserted as { id: string }).id,
-        scheduled_for: scheduledFor,
+        scheduled_for: rowScheduledFor,
       });
     }
 
     if (createdAny) {
       revalidateBlog();
+      // Published imports are live right now — drop their page caches too.
+      for (const slug of publishedSlugs) revalidatePath(`/blog/${slug}`);
       revalidatePath("/admin/blog");
     }
     return { results };
