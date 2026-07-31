@@ -23,7 +23,7 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
 import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
-import { OPENAI_MODEL } from "@/lib/openai";
+import { getModelForDepth } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { checkMonthlyCredits, checkGlobalDailyDreamCap } from "@/lib/monthlyCredits";
 import { sanitizeTags } from "@/lib/tags";
@@ -289,6 +289,15 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
       tags: sanitizeTags(tags),
       bible_refs: bibleRefs,
       raw_analysis_enc: encryptJson(analysisResult),
+      // Cost telemetry (migration 20260731000001). These same numbers go to
+      // chatgpt_interactions below, but utils/pricing.ts reads them off the
+      // dream row — denormalizing here is what makes the admin cost footer
+      // show a real figure instead of $0. model_used is recorded per row
+      // because per-tier overrides (OPENAI_MODEL_PROFOUND) mean two rows in
+      // this table can carry prices that differ by ~10×.
+      input_tokens: analysisUsage.inputTokens,
+      output_tokens: analysisUsage.outputTokens,
+      model_used: getModelForDepth(combo.depth),
     };
     if (dreamTitle?.trim()) updateData.title = dreamTitle;
 
@@ -321,7 +330,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
         .from("chatgpt_interactions")
         .insert({
           dream_entry_id: dreamId,
-          model: OPENAI_MODEL,
+          model: getModelForDepth(combo.depth),
           temperature: 0.7,
           input_tokens: analysisUsage.inputTokens,
           output_tokens: analysisUsage.outputTokens,

@@ -25,10 +25,22 @@ const INITIAL_POLL_DELAY_MS = 500;
 const BACKOFF_MULTIPLIER = 1.3;
 const MAX_POLL_DELAY_MS = 4000;
 
-// Square 512×512 — thumbnail-optimized for DreamCard grid display
-// ~75% smaller file size vs 1024×1024 with faster generation
-const IMAGE_WIDTH = 512;
-const IMAGE_HEIGHT = 512;
+// Square 1024×1024 (raised from 512 on 2026-07-31).
+//
+// FLUX.2 [klein] bills a FLAT RATE FOR THE FIRST MEGAPIXEL, then adds per
+// additional MP. At 512×512 we were generating 0.26 MP and paying the full
+// first-megapixel price — buying a megapixel and using a quarter of it.
+// 1024×1024 is 1.05 MP: same ~$0.015/image, 4× the pixels.
+//   https://docs.bfl.ml/quick_start/pricing
+//
+// Tradeoff (the 512 default was a deliberate thumbnail optimization, not an
+// oversight): ~4× the bytes in Supabase Storage. At the time of the change
+// the bucket held 77 objects / 14.6 MB against the 1 GB free-tier ceiling
+// (1.4%), so there is ample headroom — but this is the knob to turn back
+// first if storage becomes the binding constraint. Env-overridable so that
+// can happen without a deploy.
+const IMAGE_WIDTH = Number(process.env.DREAM_IMAGE_WIDTH) || 1024;
+const IMAGE_HEIGHT = Number(process.env.DREAM_IMAGE_HEIGHT) || 1024;
 
 /**
  * Builds a FLUX.2 [klein] image prompt following BFL's prompting guide:
