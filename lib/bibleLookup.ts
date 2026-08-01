@@ -165,6 +165,32 @@ const REF_RE =
   /^\(?\s*((?:[1-3]\s+)?[A-Za-z][A-Za-z.\s]*?)\s+(\d+)\s*:\s*(\d+)(?:\s*-\s*(\d+))?\s*\)?$/;
 
 /**
+ * Strips characters that models emit inside citation strings but REF_RE can't
+ * match, so a citation that is semantically fine doesn't silently become
+ * status:"not_found" and lose its verse text.
+ *
+ * Observed in eval on 2026-07-31 (gpt-5.6-luna, but nothing here is
+ * model-specific — gpt-4.1-mini can produce the same):
+ *   'Lamentations 3:22–23'  en-dash range → REF_RE only accepts ASCII '-'
+ *   'Titus 3:5–6)'          en-dash plus a stray paren
+ *   'John 6:35﻿'       zero-width joiner / BOM appended
+ *
+ * The prompt asks for "(Book Chapter:Verse)" and gives only single-verse
+ * examples, so nothing steers range punctuation. Sanitizing on the read side
+ * is the durable fix — the prompt can drift, this can't.
+ */
+function sanitizeCitation(raw: string): string {
+  return (raw ?? "")
+    // zero-width + BOM + word-joiner + soft hyphen
+    .replace(/[​-‍﻿⁠­]/g, "")
+    // en/em/figure/minus dashes → ASCII hyphen
+    .replace(/[‐-―−]/g, "-")
+    // non-breaking + narrow no-break space → plain space
+    .replace(/[  ]/g, " ")
+    .trim();
+}
+
+/**
  * Best-effort canonicalization of a citation string without touching the
  * verse index: trims whitespace and fixes book-name variants —
  * 'Psalm 23:4' → 'Psalms 23:4', 'Song of Songs 2:4' → 'Song of Solomon 2:4',
@@ -178,7 +204,7 @@ const REF_RE =
  * below already applies the same normalization internally.
  */
 export function normalizeCitation(rawCitation: string): string {
-  const citation = (rawCitation ?? "").trim();
+  const citation = sanitizeCitation(rawCitation);
   const match = citation.match(REF_RE);
   if (!match) return citation;
 
@@ -196,7 +222,7 @@ export function normalizeCitation(rawCitation: string): string {
 }
 
 export function lookupVerse(rawCitation: string): VerseLookupResult {
-  const citation = (rawCitation ?? "").trim();
+  const citation = sanitizeCitation(rawCitation);
   const match = citation.match(REF_RE);
 
   if (!match) {
