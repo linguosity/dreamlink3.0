@@ -20,6 +20,7 @@ import {
   getOpenAIClient,
   getOpenRouterClient,
   getModelForDepth,
+  modelTuning,
   OPENAI_FALLBACK_MODELS,
   OPENROUTER_MODEL,
   getDreamAnalysisSchemaForDepth,
@@ -618,7 +619,7 @@ ${depthInstructions}
         {
           model: target.model,
           input: messages,
-          temperature: 0.7,
+          ...modelTuning(target.model),
           max_output_tokens: spec.maxOutputTokens,
           text: {
             format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
@@ -664,7 +665,7 @@ ${depthInstructions}
         {
           model: target.model,
           input: messages,
-          temperature: 0.7,
+          ...modelTuning(target.model),
           max_output_tokens: SECTION_MAX_OUTPUT_TOKENS,
         },
         requestOptions,

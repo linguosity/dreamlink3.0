@@ -286,7 +286,7 @@ function getSystemItems() {
     },
     {
       label: "AI Analysis",
-      detail: `OpenAI ${process.env.OPENAI_MODEL || "gpt-4.1-mini"} · Edge`,
+      detail: `OpenAI ${process.env.OPENAI_MODEL || "gpt-5.6-luna"} · Edge`,
       status: configured(Boolean(process.env.OPENAI_API_KEY)),
     },
     {

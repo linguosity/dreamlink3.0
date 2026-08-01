@@ -11,14 +11,19 @@
 //   reproduce verses verbatim.
 
 import OpenAI from "openai";
+import type { ReasoningEffort } from "openai/resources/shared";
 import { z } from "zod";
 import { AnalysisDepth } from "@/schema/profile";
 
 // ── Model configuration ─────────────────────────────────────────────
 // Reads from OPENAI_MODEL env var so you can hot-swap without a deploy.
-// Falls back to gpt-4.1-mini — a fast, cost-effective model with full
-// structured output support and strong instruction following.
-export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+// Defaults to gpt-5.6-luna — fast, cheap ($0.20/$1.20 per 1M after the
+// 2026-07-30 price cut), full structured-output support on the Responses API.
+//
+// ⚠️ The gpt-4.1 family (gpt-4.1, gpt-4.1-mini) reaches its FINAL OpenAI API
+// cutoff on 2026-10-14. Nothing in this file may default to it. See
+// MODEL_COST_REVIEW_2026-07-31.md in the repo root.
+export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
 
 // Per-tier model overrides. Deep/profound are the paid tiers, so they can be
 // pointed at a newer/stronger model (e.g. an A/B of a gpt-5.x variant)
@@ -45,17 +50,65 @@ export function getModelForDepth(depth: string): string {
 // Ordered fallback models, tried in sequence when the primary model fails
 // with a retryable error (429 / 5xx / connection timeout). Comma-separated
 // env var so the chain can be re-ordered without a deploy:
-//   OPENAI_FALLBACK_MODELS="gpt-4.1,gpt-4o-mini"
+//   OPENAI_FALLBACK_MODELS="gpt-5.6-terra,gpt-5.5"
 // Note this protects against single-MODEL failures and brownouts. For
 // whole-provider outages, lib/dreamAnalysis additionally makes one final
 // cross-provider attempt through OpenRouter after this ladder is exhausted —
 // dark until OPENROUTER_API_KEY is set (see getOpenRouterClient below).
 export const OPENAI_FALLBACK_MODELS: string[] = (
-  process.env.OPENAI_FALLBACK_MODELS || "gpt-4.1"
+  process.env.OPENAI_FALLBACK_MODELS || "gpt-5.6-terra"
 )
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
+
+// ── Reasoning-model request tuning ──────────────────────────────────
+// The gpt-5.x family are reasoning models. Two things differ from gpt-4.1:
+//
+//   1. They spend REASONING TOKENS that count against max_output_tokens and
+//      bill at the output rate. Measured 2026-07-31 on gpt-5.6-luna: default
+//      effort spent ~139 reasoning tokens per section call and one run in an
+//      early sample consumed all 600 and returned status="incomplete" —
+//      which surfaces here as a JSON parse error and a FALLBACK_ANALYSIS.
+//   2. They REJECT `temperature` outright ("Unsupported parameter") unless
+//      reasoning effort is "none".
+//
+// Setting effort to "none" fixes both: 5/5 clean parses in testing, ~147
+// output tokens per call (vs 244 on gpt-4.1-mini), and temperature accepted.
+// Our prompts already carry the analytic structure; we are not asking the
+// model to plan, so we are not paying for reasoning we do not use.
+//
+// Valid values for gpt-5.6: none | low | medium | high | xhigh | max.
+// ("minimal" is NOT valid on this family — it 400s.)
+export const OPENAI_REASONING_EFFORT =
+  process.env.OPENAI_REASONING_EFFORT || "none";
+
+/** True for models that take a `reasoning` param and reject bare temperature. */
+export function isReasoningModel(model: string): boolean {
+  return /^(gpt-5|o[1-9])/i.test(model);
+}
+
+/**
+ * Per-model request params for the Responses API. Keeps call sites in
+ * lib/dreamAnalysis.ts from having to know which family they're talking to.
+ * Non-reasoning models get plain temperature; reasoning models additionally
+ * get an explicit effort so they don't silently burn the output budget.
+ */
+export function modelTuning(model: string, temperature = 0.7) {
+  if (!isReasoningModel(model)) return { temperature };
+  return {
+    temperature,
+    reasoning: {
+      // ⚠️ Cast required: the pinned SDK (openai 4.104.0) types ReasoningEffort
+      // as 'low' | 'medium' | 'high' | null — it predates the gpt-5.x efforts.
+      // The API accepts 'none' (verified 2026-07-31 against gpt-5.6-luna; the
+      // same call also confirms 'minimal' 400s on this family). Drop the cast
+      // once the SDK is upgraded — note that's a v4 → v7 major bump and wants
+      // its own PR, not a drive-by.
+      effort: OPENAI_REASONING_EFFORT as ReasoningEffort,
+    },
+  };
+}
 
 // ── Singleton client ────────────────────────────────────────────────
 // Works in Node.js serverless and Edge runtimes (SDK v4 uses native fetch).
@@ -75,11 +128,16 @@ export function getOpenAIClient(): OpenAI {
 // ladder is exhausted, lib/dreamAnalysis makes one final attempt through
 // OpenRouter — a second OpenAI-SDK client pointed at their OpenAI-compatible
 // API. OPENROUTER_MODEL accepts ANY OpenRouter model slug (e.g.
-// "openai/gpt-4.1-mini", "google/gemini-2.5-flash",
-// "anthropic/claude-3.5-haiku"); structured outputs via
+// "openai/gpt-5.6-luna", "google/gemini-3.1-flash",
+// "deepseek/deepseek-v4-flash"); structured outputs via
 // response_format json_schema work on compatible models.
+//
+// Defaulted to DeepSeek V4-Flash ($0.14/$0.28 per 1M — the cheapest credible
+// option on the board) precisely BECAUSE this path is failover-only. We do
+// not want DeepSeek on the primary path for intimate journal content (data
+// residency), but it is an excellent third rung when OpenAI is down.
 export const OPENROUTER_MODEL =
-  process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-haiku";
+  process.env.OPENROUTER_MODEL || "deepseek/deepseek-v4-flash";
 
 let _openRouterClient: OpenAI | null = null;
 

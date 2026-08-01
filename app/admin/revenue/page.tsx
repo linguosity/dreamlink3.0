@@ -109,8 +109,10 @@ async function getRevenueMetrics() {
       .reduce((sum, p) => sum + (p.amount ?? 0), 0) / 100;
 
   // AI spend (last 30d): token costs at the rates in utils/pricing.ts
-  // (pinned to gpt-4.1-mini — update when the model changes) + image costs
-  // as stamped at generation time.
+  // (pinned to the gpt-5.6-luna rate — update when the model changes) + image
+  // costs as stamped at generation time. Rows produced under a per-tier
+  // override (OPENAI_MODEL_PROFOUND=…terra) will under-report until this
+  // reads the per-row model_used column added in migration 20260731000001.
   let aiSpend30dUsd = 0;
   ((aiUsage30d.data || []) as Array<{
     input_tokens: number | null;

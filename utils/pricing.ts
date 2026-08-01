@@ -4,19 +4,26 @@
 // DreamCard. Update these constants when OpenAI or BFL change their rates.
 // All values are USD.
 //
-// gpt-4.1-mini (public OpenAI pricing):
-//   input  $0.40 per 1M tokens  →  $0.0000004 per token
-//   output $1.60 per 1M tokens  →  $0.0000016 per token
+// gpt-5.6-luna (public OpenAI pricing, after the 2026-07-30 price cut):
+//   input  $0.20 per 1M tokens  →  $0.0000002 per token
+//   output $1.20 per 1M tokens  →  $0.0000012 per token
+// (was gpt-4.1-mini at $0.40 / $1.60 — that family's final API cutoff is
+//  2026-10-14; see MODEL_COST_REVIEW_2026-07-31.md)
 //
-// FLUX.2 [klein] 9B at 512×512 via BFL:
-//   no per-tier published price as of writing; we approximate based on the
-//   internal budget note in docs/business-launch-guide.md (~$0.015 / image).
-//   Tweak FLUX_IMAGE_COST_USD here if BFL publishes a firm number.
+// ⚠️ These constants assume OPENAI_MODEL is the Luna-class default. If you
+// point OPENAI_MODEL_PROFOUND at Terra ($2.00 / $12.00) for an A/B, the
+// admin cost footer will UNDER-report those rows by ~10×. Per-row accuracy
+// needs a `model_used` column — see the same memo, action A5.
+//
+// FLUX.2 [klein] 9B via BFL — now a published rate, not an estimate:
+//   "FLUX.2 [klein] 9B — from $0.015" · https://docs.bfl.ml/quick_start/pricing
+//   Flat for the first megapixel, so 1024×1024 (1.05 MP) bills the same as
+//   the old 512×512 (0.26 MP) did.
 
-export const OPENAI_INPUT_USD_PER_1K = 0.0004; // $0.40 / 1M tokens
-export const OPENAI_OUTPUT_USD_PER_1K = 0.0016; // $1.60 / 1M tokens
+export const OPENAI_INPUT_USD_PER_1K = 0.0002; // $0.20 / 1M tokens
+export const OPENAI_OUTPUT_USD_PER_1K = 0.0012; // $1.20 / 1M tokens
 
-/** USD attributed to one successful FLUX.2 [klein] 9B 512×512 generation. */
+/** USD attributed to one successful FLUX.2 [klein] 9B ≤1 MP generation. */
 export const FLUX_IMAGE_COST_USD = 0.015;
 
 export interface DreamCostBreakdown {
