@@ -115,6 +115,15 @@ const BookIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const MaximizeIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M15 3h6v6" />
+    <path d="M9 21H3v-6" />
+    <path d="M21 3l-7 7" />
+    <path d="M3 21l7-7" />
+  </svg>
+);
+
 const PuzzleIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0l-1.568-1.568a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736a.997.997 0 0 0 .289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0l-1.568-1.568a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736c-.049.322.059.648.289.878l1.568 1.568c.47.47.47 1.229 0 1.698l-1.42 1.42c-.47.47-1.229.47-1.698 0L4.58 19.439a.997.997 0 0 0-.878-.289l-2.736.419a1 1 0 0 0-.844.844l-.419 2.736" />
@@ -435,6 +444,9 @@ const BIBLE_VERSES: Record<string, string> = {
 
 export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
+  // Lightbox for the header artwork — the header render is small by design,
+  // so this is where the 1024² generation actually gets seen at size.
+  const [imageExpanded, setImageExpanded] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
   const [activeTab, setActiveTab] = useState("analysis");
@@ -1629,47 +1641,88 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       {/* Detail Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
-          {/* No w-full: width:auto + -mx-6 expands to full DialogContent width; w-full clamps to the padded 552px and leaves a gap on the right. */}
-          {(cardImageUrl || isPollingCardImage) && (
-            // aspect-square, not h-80: the artwork is generated square (1024×1024
-            // as of 2026-07-31), and a fixed 320px height with object-cover
-            // cropped ~47% of it away at the one place a user actually looks.
-            <div className="relative aspect-square -mx-6 -mt-6 mb-4 bg-muted">
-              {cardImageUrl ? (
-                <Image
-                  src={cardImageUrl}
-                  alt={`AI-generated artwork for the dream “${dream.title}”`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 600px"
-                  // unoptimized for the same reason as the card face: the Next
-                  // optimizer intermittently fails to fetch private Supabase
-                  // signed URLs (query-token auth) and leaves the image blank.
-                  // The card was fixed for this; the dialog never was.
-                  unoptimized
-                />
-              ) : (
-                <DreamImageShimmer />
-              )}
-            </div>
-          )}
+          {/* Split header: title/date/tags on the left, artwork on the right.
+              Previously the square artwork was full-bleed above everything —
+              on a 600px dialog that is a ~600px image, so the entire viewport
+              was filled before a single word of interpretation. Side-by-side
+              cuts the art to ~215px and lifts roughly four lines of analysis
+              above the fold, without going back to the h-80 crop that threw
+              away half the 1024² render.
 
-          <DialogHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <DialogTitle>{dream.title}</DialogTitle>
+              Stacks below sm: a 38% column on a phone is ~130px, too small to
+              be worth looking at and it squeezes the title to a few words per
+              line. Image goes first when stacked so it still reads as the
+              visual anchor. */}
+          <DialogHeader className="space-y-0">
+            <div className="flex flex-col-reverse sm:grid sm:grid-cols-[minmax(0,1fr)_38%] gap-3 sm:gap-4 items-start">
+              <div className="min-w-0 w-full">
+                <div className="flex items-start justify-between gap-2">
+                  {/* font-serif = DM Serif Display, the headline face from the
+                      v2 Moonwater rollout. At this size the sans reads like a
+                      UI label rather than the title of a piece of writing. */}
+                  <DialogTitle className="font-serif text-xl leading-tight">
+                    {dream.title}
+                  </DialogTitle>
+                  <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit shrink-0">esc</span>
+                </div>
                 <DialogDescription className="sr-only">Dream analysis details</DialogDescription>
-                <div className="flex items-center text-xs text-muted-foreground mt-1">
-                  <CalendarIcon className="h-3 w-3 mr-1" />
+                <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+                  <CalendarIcon className="h-3 w-3 mr-1 shrink-0" />
                   {dateObj.toLocaleDateString('en-US', {
-                    weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                   })}
                 </div>
+                {/* Tags promoted out of the dialog footer. They used to sit
+                    below the entire analysis, so on a profound reading you had
+                    to scroll ~1,800px to see them. Here they also fill the
+                    vertical space a short title leaves beside a square image. */}
+                {dream.tags && dream.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {dream.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs capitalize">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
-              <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit">esc</span>
+
+              {(cardImageUrl || isPollingCardImage) && (
+                <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted">
+                  {cardImageUrl ? (
+                    // Click to expand: the header render is only ~215px, and
+                    // the artwork is half of what a subscriber is paying for —
+                    // the 1024² upgrade has to be visible somewhere at size.
+                    <button
+                      type="button"
+                      onClick={() => setImageExpanded(true)}
+                      className="group absolute inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`View full-size artwork for “${dream.title}”`}
+                    >
+                      <Image
+                        src={cardImageUrl}
+                        alt={`AI-generated artwork for the dream “${dream.title}”`}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, 230px"
+                        // unoptimized for the same reason as the card face: the
+                        // Next optimizer intermittently fails to fetch private
+                        // Supabase signed URLs (query-token auth) and leaves the
+                        // image blank. The card was fixed for this; the dialog
+                        // never was.
+                        unoptimized
+                      />
+                      <span className="absolute bottom-1.5 right-1.5 rounded bg-black/55 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <MaximizeIcon className="h-3 w-3" />
+                      </span>
+                    </button>
+                  ) : (
+                    <DreamImageShimmer />
+                  )}
+                </div>
+              )}
             </div>
           </DialogHeader>
           
@@ -1815,22 +1868,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           </div>
           </FeatureHint>
 
-          {/* Footer: tags, bible refs, actions — stacked on mobile, side-by-side on desktop */}
+          {/* Footer: bible refs, actions — stacked on mobile, side-by-side on desktop.
+              Tags moved up into the dialog header (see the split header above),
+              where they're visible without scrolling past the whole analysis. */}
           <div className="pt-4 border-t space-y-3">
-            {dream.tags && dream.tags.length > 0 && (
-              <div>
-                <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Tags
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {dream.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {dream.bible_refs && dream.bible_refs.length > 0 && isMounted && (
               <div>
@@ -1942,6 +1983,33 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Artwork lightbox. The header render is deliberately small so the
+          interpretation clears the fold, so this is where a 1024² generation
+          is actually seen at full size. Nested outside the detail Dialog so
+          closing it doesn't close the dream. */}
+      <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
+        <DialogContent className="sm:max-w-[min(90vw,900px)] p-0 overflow-hidden bg-transparent border-0 shadow-none">
+          <DialogTitle className="sr-only">
+            Full-size artwork for “{dream.title}”
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            AI-generated artwork accompanying this dream. Press escape to close.
+          </DialogDescription>
+          {cardImageUrl && (
+            <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted">
+              <Image
+                src={cardImageUrl}
+                alt={`AI-generated artwork for the dream “${dream.title}”`}
+                fill
+                className="object-contain"
+                sizes="(max-width: 640px) 100vw, 900px"
+                unoptimized
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
