@@ -932,17 +932,36 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     }
   }, [isOpen, dream.id, dream.bible_refs]);
 
-  // Calculate modal height
+  // Keep the tab panel a constant height so switching Analysis <-> Original
+  // Dream doesn't resize the dialog. An original dream is often a couple of
+  // sentences while its profound analysis runs ~1,000 words, so the panel
+  // could collapse by well over a thousand pixels on a tab click — the dialog
+  // jumps under the cursor and the scroll position lurches.
+  //
+  // This replaces an earlier attempt that measured both panels in a 100ms
+  // setTimeout and never applied the result. It couldn't have worked: Radix
+  // unmounts the inactive TabsContent, so originalContentRef.current was
+  // always null and originalHeight was always 0.
+  //
+  // Analysis is the default tab and effectively always the taller one, so its
+  // height is the floor. ResizeObserver rather than a fixed timeout because
+  // the height moves as fonts settle and scripture popovers hydrate. Latch to
+  // the max seen so late-loading content can grow the floor but never shrink
+  // it mid-session, which would reintroduce the jump it exists to prevent.
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        const analysisHeight = analysisContentRef.current?.offsetHeight || 0;
-        const originalHeight = originalContentRef.current?.offsetHeight || 0;
-        const maxHeight = Math.max(analysisHeight, originalHeight);
-        setModalHeight(maxHeight);
-      }, 100);
+    if (!isOpen) {
+      setModalHeight(null);
+      return;
     }
-  }, [isOpen, dream]);
+    const el = analysisContentRef.current;
+    if (!el) return;
+    const measure = () =>
+      setModalHeight((prev) => Math.max(prev ?? 0, el.offsetHeight));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, activeTab, dream.id]);
 
   // Analytics: a dream's analysis was opened in the detail dialog. No-ops
   // without consent (see lib/analytics). Skips example/placeholder cards and
@@ -1468,9 +1487,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         )}>
           <CardHeader className="p-3 pb-1">
             <div className="flex justify-between items-start gap-2">
+              {/* Editorial scale: the grid should read like a magazine index,
+                  not a file list. DM Serif Display matches the dialog title
+                  this card opens, so the two share one voice at two sizes.
+                  drop-shadow rather than a heavier scrim — at this size the
+                  title covers more of the artwork, and darkening the whole
+                  top band to guarantee contrast would bury the image. */}
               <CardTitle className={cn(
-                "text-sm leading-5 flex-1 min-w-0",
-                (cardImageUrl || isPollingCardImage) && "text-white"
+                "font-serif text-lg leading-tight flex-1 min-w-0",
+                (cardImageUrl || isPollingCardImage) &&
+                  "text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.55)]"
               )}>
                 <div className="break-words line-clamp-2">
                   {searchTerms.length > 0
@@ -1658,9 +1684,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <div className="min-w-0 w-full">
                 <div className="flex items-start justify-between gap-2">
                   {/* font-serif = DM Serif Display, the headline face from the
-                      v2 Moonwater rollout. At this size the sans reads like a
-                      UI label rather than the title of a piece of writing. */}
-                  <DialogTitle className="font-serif text-xl leading-tight">
+                      v2 Moonwater rollout. Editorial scale — this sits directly
+                      above the interpretation, so it should carry the weight of
+                      an article headline rather than a UI label. Steps down on
+                      mobile, where 28px of serif over a ~200px column wraps to
+                      four or five lines. */}
+                  <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight">
                     {dream.title}
                   </DialogTitle>
                   <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit shrink-0">esc</span>
@@ -1745,7 +1774,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               </FeatureHint>
             </TabsList>
 
-            <div>
+            {/* minHeight pins the panel to the analysis height so the shorter
+                Original Dream tab can't collapse the dialog. See the
+                ResizeObserver effect above. */}
+            <div style={modalHeight ? { minHeight: modalHeight } : undefined}>
               <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
                 <div ref={analysisContentRef}>
                   {/* Summary section removed as requested */}
