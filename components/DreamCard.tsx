@@ -225,6 +225,22 @@ try {
   TooltipTrigger = ({ children, asChild, ...props }: any) => <div {...props}>{children}</div>;
 }
 
+// Import popover components with error handling. Used for the scripture chips
+// instead of Tooltip — Radix Tooltip never opens on touch, so verse text was
+// unreachable on mobile. Follows the same defensive require pattern as above.
+let Popover: any, PopoverContent: any, PopoverTrigger: any;
+try {
+  const popoverModule = require("@/components/ui/popover");
+  Popover = popoverModule.Popover;
+  PopoverContent = popoverModule.PopoverContent;
+  PopoverTrigger = popoverModule.PopoverTrigger;
+} catch (e) {
+  console.error("Failed to load popover components:", e);
+  Popover = ({ children, ...props }: any) => <span {...props}>{children}</span>;
+  PopoverContent = ({ children, ...props }: any) => <div className="z-50 rounded-md border bg-popover p-4 text-popover-foreground shadow-md" {...props}>{children}</div>;
+  PopoverTrigger = ({ children, asChild, ...props }: any) => <span {...props}>{children}</span>;
+}
+
 // Import skeleton component with error handling
 let Skeleton: any;
 try {
@@ -1044,6 +1060,51 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     }
   };
 
+  // Section headings the server-side composer emits as their own paragraph.
+  // Kept in sync with DEEP_SECTIONS / PROFOUND_SECTIONS in lib/dreamAnalysis.ts —
+  // matching on the exact strings is deliberate: the composer writes plain text,
+  // so this is the only signal that a line is a heading rather than prose.
+  const SECTION_HEADINGS = new Set([
+    "Dream Symbols",
+    "How this might apply to your life right now",
+    "Three Lenses on This Dream",
+    "For your prayer or journal",
+  ]);
+
+  /**
+   * Renders a composed analysis with its structure intact.
+   *
+   * composeAnalysis() in lib/dreamAnalysis.ts joins the core prose and each
+   * section with "\n\n", and writes section headings as their own line. Passing
+   * that straight into a <div> let HTML collapse every blank line, so a ~1,000
+   * word profound reading rendered as ONE paragraph with its three headings
+   * buried inline as sentence fragments — i.e. the paid tiers' entire
+   * differentiator was invisible. Split on the blank lines and promote the
+   * known headings to real <h3>s.
+   */
+  const renderAnalysis = (text: string | undefined, refs?: string[]) => {
+    if (!text) return null;
+    const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+    return (
+      <div className="space-y-3 text-sm text-muted-foreground max-w-[65ch]">
+        {blocks.map((block, i) =>
+          SECTION_HEADINGS.has(block) ? (
+            <h3
+              key={i}
+              className="text-sm font-semibold text-foreground pt-2 first:pt-0"
+            >
+              {block}
+            </h3>
+          ) : (
+            <p key={i} className="whitespace-pre-wrap">
+              {formatBibleCitations(block, refs)}
+            </p>
+          ),
+        )}
+      </div>
+    );
+  };
+
   // Function to format Bible citations in parentheses with tooltips
   const formatBibleCitations = (text: string | undefined, refs?: string[]) => {
     if (!text || !refs || refs.length === 0) return text;
@@ -1059,7 +1120,13 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       <TooltipProvider delayDuration={200} skipDelayDuration={0}>
         {text.split(/(\([^)]*\))/).map((part, index) => {
           // Check if this part contains a Bible reference
-          const refMatch = part.match(/\(([\w\s]+\d+:\d+)\)/);
+          // Ranges matter: `[\w\s]` excluded '-', so "(James 1:14-15)" never
+          // matched and verse ranges silently lost their tooltip — even though
+          // end_verse is a first-class column and expandVerseRange() exists to
+          // serve exactly these. lib/bibleLookup.ts also normalizes unicode
+          // dashes to ASCII, so accept those here rather than dropping the
+          // citation on a stray en-dash.
+          const refMatch = part.match(/\(([\w\s]+\d+:\d+(?:\s*[-‐-―−]\s*\d+)?)\)/);
           
           if (refMatch) {
             const reference = refMatch[1];
@@ -1303,12 +1370,22 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               // Serve the Supabase signed URL directly instead of routing it
               // through the Next image optimizer. The optimizer intermittently
               // fails to fetch private signed URLs (query-token auth), which
-              // left cards blank on load. These are already small 512px FLUX
-              // images, so skipping optimization costs little.
+              // left cards blank on load.
+              //
+              // ⚠️ COST NOTE (2026-07-31): generation moved 512² → 1024², so
+              // `sizes` above is inert while this is set and every card in the
+              // grid now downloads the full 1024² original — ~4× the bytes of
+              // when this tradeoff was made. Revisit if mobile data or Vercel
+              // Fast Origin Transfer becomes a constraint; the fix is a signed
+              // -URL-aware loader, not simply dropping `unoptimized`.
               unoptimized
               onError={() => setImageError(true)}
             />
+            {/* Scrim is darkest at the bottom but the title/date sit at the top
+                over only 20% black — white-on-pale artwork fails WCAG AA there.
+                Added a matching top stop rather than darkening the whole image. */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
           </div>
         ) : isPollingCardImage ? (
           <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 overflow-hidden">
@@ -1554,15 +1631,22 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
           {/* No w-full: width:auto + -mx-6 expands to full DialogContent width; w-full clamps to the padded 552px and leaves a gap on the right. */}
           {(cardImageUrl || isPollingCardImage) && (
-            <div className="relative h-80 -mx-6 -mt-6 mb-4 bg-muted">
+            // aspect-square, not h-80: the artwork is generated square (1024×1024
+            // as of 2026-07-31), and a fixed 320px height with object-cover
+            // cropped ~47% of it away at the one place a user actually looks.
+            <div className="relative aspect-square -mx-6 -mt-6 mb-4 bg-muted">
               {cardImageUrl ? (
                 <Image
                   src={cardImageUrl}
-                  alt="Dream visualization"
+                  alt={`AI-generated artwork for the dream “${dream.title}”`}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 100vw, 600px"
-                  priority={true}
+                  // unoptimized for the same reason as the card face: the Next
+                  // optimizer intermittently fails to fetch private Supabase
+                  // signed URLs (query-token auth) and leaves the image blank.
+                  // The card was fixed for this; the dialog never was.
+                  unoptimized
                 />
               ) : (
                 <DreamImageShimmer />
@@ -1614,13 +1698,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   {/* Summary section removed as requested */}
 
                   {dream.formatted_analysis ? (
-                    <div className="text-sm text-muted-foreground max-w-[65ch]">
-                      {formatBibleCitations(dream.formatted_analysis, dream.bible_refs)}
-                    </div>
+                    renderAnalysis(dream.formatted_analysis, dream.bible_refs)
                   ) : dream.analysis_summary ? (
-                    <div className="text-sm text-muted-foreground max-w-[65ch]">
-                      {formatBibleCitations(dream.analysis_summary, dream.bible_refs)}
-                    </div>
+                    renderAnalysis(dream.analysis_summary, dream.bible_refs)
                   ) : (
                     <div className="space-y-2 max-w-[65ch]">
                       {dream.topic_sentence && (
@@ -1757,41 +1837,53 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                   Scripture
                 </div>
+                {/* Popover, not Tooltip. Radix Tooltip opens on hover/focus
+                    only — it never opens on touch, and Badge renders a <div>
+                    (not focusable), so the hydrated KJV text was unreachable
+                    for every mobile and keyboard user. On a product whose core
+                    claim is scripture grounding, that is the scripture being
+                    invisible to most of its readers. Popover opens on click,
+                    which works on every input method. */}
                 <div className="flex flex-wrap gap-1.5">
-                  <TooltipProvider delayDuration={200} skipDelayDuration={0}>
-                    {dream.bible_refs.map((ref, index) => {
-                      const { text: verseText, isFallback, source } = getVerseText(ref);
-                      return (
-                        <Tooltip key={index}>
-                          <TooltipTrigger asChild>
-                            {/* F05 (v2 Moonwater): scripture chip reads as a
-                                quoted reference — cream-soft surface, gold-deep
-                                text (AA ≥4.5:1; bright gold in dark mode),
-                                hairline gold border. */}
-                            <Badge
-                              variant="outline"
-                              className="text-xs flex items-center gap-1 font-semibold bg-cream-soft text-gold-deep dark:text-gold border-[oklch(0.85_0.08_75)]"
-                            >
-                              <BookIcon className="h-2 w-2" />
-                              {ref}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="max-w-[300px] text-xs">
+                  {dream.bible_refs.map((ref, index) => {
+                    const { text: verseText, isFallback, source } = getVerseText(ref);
+                    const missing = source === "missing" || source === "missing-range";
+                    return (
+                      <Popover key={index}>
+                        <PopoverTrigger asChild>
+                          {/* F05 (v2 Moonwater): scripture chip reads as a
+                              quoted reference — cream-soft surface, gold-deep
+                              text (AA ≥4.5:1; bright gold in dark mode),
+                              hairline gold border. Now a real <button> so it
+                              is keyboard-reachable and has a 24px tap target. */}
+                          <button
+                            type="button"
+                            aria-label={`Read ${ref}`}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              missing
+                                ? "bg-muted text-muted-foreground border-muted-foreground/30"
+                                : "bg-cream-soft text-gold-deep dark:text-gold border-[oklch(0.85_0.08_75)]"
+                            }`}
+                          >
+                            <BookIcon className="h-2 w-2" />
+                            {ref}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="max-w-[300px] text-xs" side="top">
+                          {missing ? (
+                            // Pastoral, not dev-flavoured. A citation we could
+                            // not resolve should read as a pointer to look it
+                            // up, never as an error message.
+                            <div className="text-muted-foreground italic">
+                              We couldn’t load the text for {ref} — it’s worth
+                              looking up in your own Bible.
+                            </div>
+                          ) : (
+                            <>
                               <div>{verseText}</div>
                               {isFallback && (
                                 <div className="text-[10px] italic text-muted-foreground mt-1">
                                   Note: Using standard verse text
-                                </div>
-                              )}
-                              {source === "missing" && (
-                                <div className="text-[10px] italic text-red-500 mt-1">
-                                  Warning: No verse text found
-                                </div>
-                              )}
-                              {source === "missing-range" && (
-                                <div className="text-[10px] italic text-red-500 mt-1">
-                                  Warning: No verse text found for this range
                                 </div>
                               )}
                               {source.startsWith("expanded") && (
@@ -1799,17 +1891,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                                   Note: Combined from individual verses
                                 </div>
                               )}
-                              {source.includes("range") && !source.includes("missing") && (
-                                <div className="text-[10px] italic text-green-500 mt-1">
+                              {source.includes("range") && (
+                                <div className="text-[10px] italic text-muted-foreground mt-1">
                                   {ref}
                                 </div>
                               )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </TooltipProvider>
+                            </>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -16,6 +16,17 @@ import ShareButtons from './share-buttons';
 // Always fetch fresh — the owner can revoke sharing at any moment.
 export const dynamic = 'force-dynamic';
 
+// Kept in sync with DEEP_SECTIONS / PROFOUND_SECTIONS in lib/dreamAnalysis.ts
+// and with SECTION_HEADINGS in components/DreamCard.tsx. The composer writes
+// plain text, so matching the exact strings is the only way to tell a heading
+// from prose.
+const SHARED_SECTION_HEADINGS = new Set([
+  'Dream Symbols',
+  'How this might apply to your life right now',
+  'Three Lenses on This Dream',
+  'For your prayer or journal',
+]);
+
 async function loadDream(token: string): Promise<SharedDream | null> {
   try {
     return await getSharedDream(token);
@@ -112,10 +123,31 @@ export default async function SharedDreamPage(props: {
             </div>
           )}
 
-          {dream.analysis_summary && (
+          {(dream.formatted_analysis || dream.analysis_summary) && (
             <div className="mb-4">
               <h2 className="text-lg font-medium mb-2">Analysis</h2>
-              <p className="text-muted-foreground max-w-[65ch]">{dream.analysis_summary}</p>
+              {/* The composer joins prose and section headings with "\n\n".
+                  Rendering that in a bare <p> let HTML collapse every blank
+                  line, so a shared profound reading arrived as one wall of
+                  text with its headings buried mid-sentence — on the one
+                  surface built for people who don't have an account yet. */}
+              <div className="space-y-3 text-muted-foreground max-w-[65ch]">
+                {(dream.formatted_analysis || dream.analysis_summary)!
+                  .split(/\n{2,}/)
+                  .map((b: string) => b.trim())
+                  .filter(Boolean)
+                  .map((block: string, i: number) =>
+                    SHARED_SECTION_HEADINGS.has(block) ? (
+                      <h3 key={i} className="text-base font-semibold text-foreground pt-2">
+                        {block}
+                      </h3>
+                    ) : (
+                      <p key={i} className="whitespace-pre-wrap">
+                        {block}
+                      </p>
+                    ),
+                  )}
+              </div>
             </div>
           )}
 
