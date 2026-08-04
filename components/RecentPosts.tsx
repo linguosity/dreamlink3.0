@@ -144,12 +144,28 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
    Visually quiet strip for the logged-in dashboard: mono eyebrow (echoes the
    greeting's date eyebrow), 2–3 truncated title rows + dates, one Journal
    link. Muted tokens only — must not compete with the dream-entry flow. */
-function AppJournalStrip({ posts }: { posts: BlogPostPreview[] }) {
-  const shown = posts.slice(0, 3);
+/**
+ * Editorial "journal note" — the newest post gets a real headline, its excerpt,
+ * and a read link; any further posts stay as a quiet title list underneath.
+ *
+ * Previously this rendered three truncated titles in a muted box, which asked
+ * the reader to care about a link with no reason to click it. The excerpt is
+ * already written (it's the SEO meta description) and was going unused in-app.
+ *
+ * This is also the only row on the dashboard with content on day one: the
+ * featured-dream and symbol-thread rows are both empty for a new account, so
+ * without this the dashboard reads unfinished until someone has journalled.
+ */
+export function AppJournalStrip({ posts }: { posts: BlogPostPreview[] }) {
+  const [lead, ...rest] = posts.slice(0, 3);
+  if (!lead) return null;
+  const leadDate = effectivePublishedAt(lead);
+  const leadLabel = formatPostDate(leadDate);
+
   return (
     <aside
       aria-labelledby="journal-strip-label"
-      className="rounded-xl border border-border bg-muted/40 px-4 py-4 sm:px-5"
+      className="border-t border-border pt-5"
     >
       <div className="flex items-baseline justify-between gap-4">
         <span
@@ -158,40 +174,62 @@ function AppJournalStrip({ posts }: { posts: BlogPostPreview[] }) {
         >
           From the Journal
         </span>
-        <Link
-          href="/blog?utm_source=app&utm_medium=dashboard"
-          className="whitespace-nowrap text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-ring rounded"
-        >
-          Journal →
-        </Link>
+        {leadLabel ? (
+          <time
+            dateTime={leadDate ?? undefined}
+            className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+          >
+            {leadLabel}
+          </time>
+        ) : null}
       </div>
-      <ul className="mt-3 space-y-2">
-        {shown.map((post) => {
-          const publicDate = effectivePublishedAt(post);
-          const dateLabel = formatPostDate(publicDate);
-          return (
-            <li
-              key={post.id}
-              className="flex items-baseline justify-between gap-3 min-w-0"
-            >
-              <Link
-                href={`/blog/${post.slug}?utm_source=app&utm_medium=dashboard`}
-                className="min-w-0 truncate text-sm text-foreground/90 hover:text-foreground hover:underline underline-offset-4 focus-ring rounded"
+
+      <Link
+        href={`/blog/${lead.slug}?utm_source=app&utm_medium=dashboard`}
+        className="group mt-3 block focus-ring rounded"
+      >
+        <h3 className="font-serif text-[22px] leading-tight text-balance group-hover:underline underline-offset-4 decoration-1">
+          {lead.title}
+        </h3>
+        {lead.excerpt ? (
+          <p className="mt-2 max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
+            {lead.excerpt}
+          </p>
+        ) : null}
+        <span className="mt-2.5 inline-block text-[13px] text-primary">
+          Read the piece →
+        </span>
+      </Link>
+
+      {rest.length > 0 ? (
+        <ul className="mt-4 space-y-1.5 border-t border-border/60 pt-3">
+          {rest.map((post) => {
+            const publicDate = effectivePublishedAt(post);
+            const dateLabel = formatPostDate(publicDate);
+            return (
+              <li
+                key={post.id}
+                className="flex items-baseline justify-between gap-3 min-w-0"
               >
-                {post.title}
-              </Link>
-              {dateLabel ? (
-                <time
-                  dateTime={publicDate ?? undefined}
-                  className="shrink-0 text-xs text-muted-foreground"
+                <Link
+                  href={`/blog/${post.slug}?utm_source=app&utm_medium=dashboard`}
+                  className="min-w-0 truncate text-sm text-foreground/90 hover:text-foreground hover:underline underline-offset-4 focus-ring rounded"
                 >
-                  {dateLabel}
-                </time>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+                  {post.title}
+                </Link>
+                {dateLabel ? (
+                  <time
+                    dateTime={publicDate ?? undefined}
+                    className="shrink-0 text-xs text-muted-foreground"
+                  >
+                    {dateLabel}
+                  </time>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </aside>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
@@ -91,9 +91,19 @@ interface AnimatedDreamGridProps {
   maxRowItems?: number;
   /** Set by the server based on profile.is_admin — gates the cost footer on each card. */
   isAdmin?: boolean;
+  /** Greeting + composer, rendered inside the wrap grid spanning the card
+   *  columns. Only meaningful when `rail` is present. */
+  header?: ReactNode;
+  /** Editorial rail (symbol thread + latest journal note). When present the
+   *  grid switches to wrap mode: lg:grid-cols-4 with the rail pinned to the
+   *  last column spanning the head row + first card row — cards flow beside
+   *  it 3-up, then claim the full width. On mobile the rail renders after
+   *  the cards so editorial content never pushes the gallery down. */
+  rail?: ReactNode;
 }
 
-export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = false }: AnimatedDreamGridProps) {
+export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = false, header, rail }: AnimatedDreamGridProps) {
+  const railMode = Boolean(rail);
   // Access search context
   const { keywords, isLoading, isSearchEnabled } = useSearch();
 
@@ -190,48 +200,56 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     }
   }, [dreams]);
 
-  // If no dreams (and no pending submission), show empty state
-  if ((!dreams || dreams.length === 0) && !pendingDream) {
-    return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8">
-        <div className="bg-muted rounded-full p-8 mb-6">
-          <Search className="h-12 w-12 text-muted-foreground" />
-        </div>
-        <h3 className="text-2xl mb-3">No dreams recorded yet</h3>
-        <p className="text-muted-foreground max-w-md mb-6">
-          Your dream journal is empty. Start by recording your first dream above to receive AI-powered spiritual interpretations and biblical insights.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Dreams are where spiritual wisdom awakens. Each one is a message waiting to be understood.
-        </p>
+  // If no dreams (and no pending submission), show empty state. In rail mode
+  // this becomes a block inside the wrap grid further down, so the header
+  // slot (greeting + composer) and the rail always stay on the page.
+  const emptyJournal = (!dreams || dreams.length === 0) && !pendingDream;
+  const emptyJournalNode = (
+    <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+      <div className="bg-muted rounded-full p-8 mb-6">
+        <Search className="h-12 w-12 text-muted-foreground" />
       </div>
-    );
+      <h3 className="text-2xl mb-3">No dreams recorded yet</h3>
+      <p className="text-muted-foreground max-w-md mb-6">
+        Your dream journal is empty. Start by recording your first dream above to receive AI-powered spiritual interpretations and biblical insights.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Dreams are where spiritual wisdom awakens. Each one is a message waiting to be understood.
+      </p>
+    </div>
+  );
+  if (!railMode && emptyJournal) {
+    return emptyJournalNode;
   }
 
   // Show no results state (client-side only)
-  if (isMounted && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0) {
-    return (
-      <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-        <div className="bg-muted rounded-full p-6 mb-4">
-          <Search className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg mb-2">No dreams found</h3>
-        <p className="text-muted-foreground max-w-md">
-          We couldn't find any dreams matching all of:{' '}
-          {keywords.map((kw, i) => (
-            <span key={i} className="font-medium">
-              "{kw}"{i < keywords.length - 1 ? ', ' : ''}
-            </span>
-          ))}
-          <br />
-          Try removing some keywords or using different terms.
-        </p>
+  const searchNoResults =
+    isMounted && isSearchEnabled && keywords.length > 0 && filteredDreams.length === 0;
+  const searchNoResultsNode = (
+    <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+      <div className="bg-muted rounded-full p-6 mb-4">
+        <Search className="h-8 w-8 text-muted-foreground" />
       </div>
-    );
+      <h3 className="text-lg mb-2">No dreams found</h3>
+      <p className="text-muted-foreground max-w-md">
+        We couldn't find any dreams matching all of:{' '}
+        {keywords.map((kw, i) => (
+          <span key={i} className="font-medium">
+            "{kw}"{i < keywords.length - 1 ? ', ' : ''}
+          </span>
+        ))}
+        <br />
+        Try removing some keywords or using different terms.
+      </p>
+    </div>
+  );
+  if (!railMode && searchNoResults) {
+    return searchNoResultsNode;
   }
   
   // Show loading state (client-side only)
-  if (isMounted && isSearchEnabled && isLoading) {
+  const searchLoading = isMounted && isSearchEnabled && isLoading;
+  if (!railMode && searchLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -343,6 +361,158 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
 
   const hasVisibleCards = renderOrder.length > 0 || showPlaceholder;
 
+  // Shared pieces used by both the classic and wrap-mode returns.
+  const filterPillButtons = GALLERY_FILTERS.map(({ label, enabled }) => {
+    const isActive = activeFilter === label;
+    return (
+      <button
+        key={label}
+        type="button"
+        role="tab"
+        aria-selected={isActive}
+        disabled={!enabled}
+        onClick={() => enabled && setActiveFilter(label)}
+        title={!enabled ? 'Coming soon' : undefined}
+        className={
+          isActive
+            ? 'px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold'
+            : enabled
+              ? 'px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors'
+              : 'px-2.5 py-1 rounded-md text-muted-foreground/40 cursor-not-allowed'
+        }
+      >
+        {label}
+      </button>
+    );
+  });
+
+  const noVisibleCardsNode = (
+    <div className="min-h-[240px] flex flex-col items-center justify-center text-center p-8">
+      <h3 className="text-lg mb-1">
+        {activeFilter === 'Starred'
+          ? 'No starred dreams yet'
+          : activeFilter === 'This month'
+            ? 'No dreams this month'
+            : 'No dreams to show'}
+      </h3>
+      <p className="text-muted-foreground max-w-md text-sm">
+        {activeFilter === 'Starred'
+          ? 'Tap the star on any dream to save it here for quick access.'
+          : 'Try a different filter, or record a new dream above.'}
+      </p>
+    </div>
+  );
+
+  const cardItems = (
+    <AnimatePresence initial={false}>
+      {/* Optimistic placeholder — stays visible through analysis and
+          disappears only once the real server row lands in the grid.
+          For matrix submissions we still show one placeholder; the
+          remaining rows arrive via router.refresh. */}
+      {showPlaceholder && placeholderDream && (
+        <motion.div
+          key={placeholderKey}
+          layout
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{
+            type: 'tween',
+            duration: 0.3,
+            ease: 'easeOut'
+          }}
+          className="col-span-1"
+        >
+          <DreamCard
+            dream={placeholderDream}
+            loading={analyzedDream === null}
+            isAdmin={isAdmin}
+          />
+        </motion.div>
+      )}
+      {renderOrder.map((item) =>
+        item.type === 'standalone' ? (
+          <motion.div
+            key={item.dream.id}
+            layout
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
+            className="col-span-1"
+          >
+            <DreamCard
+              dream={item.dream}
+              loading={item.dream.id === loadingDreamId}
+              searchTerms={isMounted && isSearchEnabled ? keywords : []}
+              isAdmin={isAdmin}
+            />
+          </motion.div>
+        ) : (
+          <ComparisonGroup
+            key={item.groupId}
+            groupId={item.groupId}
+            dreams={item.dreams}
+            loadingDreamId={loadingDreamId}
+            searchTerms={isMounted && isSearchEnabled ? keywords : []}
+            isAdmin={isAdmin}
+          />
+        ),
+      )}
+    </AnimatePresence>
+  );
+
+  // ── Wrap (rail) mode ──────────────────────────────────────────
+  // One shared grid: the header slot spans the card columns, the rail pins
+  // to the last lg column spanning the head row + first card row, and cards
+  // auto-flow beside it, then claim the full width. On mobile the order is
+  // header → cards → rail, so editorial content never pushes the gallery
+  // below the fold.
+  if (railMode) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="col-span-full lg:col-span-3 min-w-0">
+          {header}
+          <div className="flex items-baseline justify-between gap-4 flex-wrap mt-9 mb-1">
+            <h2 className="font-serif text-[22px] font-normal leading-tight">
+              Your dream gallery
+            </h2>
+            {!(isMounted && isSearchEnabled) && (
+              <div
+                className="flex gap-1 text-[12.5px]"
+                role="tablist"
+                aria-label="Filter dreams"
+              >
+                {filterPillButtons}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside
+          aria-label="Patterns and Journal"
+          className="col-span-full order-last lg:order-none lg:col-span-1 lg:col-start-4 lg:row-start-1 lg:row-span-2 min-w-0 flex flex-col gap-6 lg:border-l lg:border-border lg:pl-5"
+        >
+          {rail}
+        </aside>
+
+        {searchLoading ? (
+          [1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="col-span-1 h-64 w-full bg-muted animate-pulse rounded-md" />
+          ))
+        ) : emptyJournal ? (
+          <div className="col-span-full lg:col-span-3">{emptyJournalNode}</div>
+        ) : searchNoResults ? (
+          <div className="col-span-full lg:col-span-3">{searchNoResultsNode}</div>
+        ) : !hasVisibleCards ? (
+          <div className="col-span-full lg:col-span-3">{noVisibleCardsNode}</div>
+        ) : (
+          cardItems
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Gallery filter pills — wired to real filtering. Hidden while a
@@ -353,105 +523,15 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           role="tablist"
           aria-label="Filter dreams"
         >
-          {GALLERY_FILTERS.map(({ label, enabled }) => {
-            const isActive = activeFilter === label;
-            return (
-              <button
-                key={label}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                disabled={!enabled}
-                onClick={() => enabled && setActiveFilter(label)}
-                title={!enabled ? 'Coming soon' : undefined}
-                className={
-                  isActive
-                    ? 'px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold'
-                    : enabled
-                      ? 'px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors'
-                      : 'px-2.5 py-1 rounded-md text-muted-foreground/40 cursor-not-allowed'
-                }
-              >
-                {label}
-              </button>
-            );
-          })}
+          {filterPillButtons}
         </div>
       )}
 
       {!hasVisibleCards ? (
-        <div className="min-h-[240px] flex flex-col items-center justify-center text-center p-8">
-          <h3 className="text-lg mb-1">
-            {activeFilter === 'Starred'
-              ? 'No starred dreams yet'
-              : activeFilter === 'This month'
-                ? 'No dreams this month'
-                : 'No dreams to show'}
-          </h3>
-          <p className="text-muted-foreground max-w-md text-sm">
-            {activeFilter === 'Starred'
-              ? 'Tap the star on any dream to save it here for quick access.'
-              : 'Try a different filter, or record a new dream above.'}
-          </p>
-        </div>
+        noVisibleCardsNode
       ) : (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px]">
-      <AnimatePresence initial={false}>
-        {/* Optimistic placeholder — stays visible through analysis and
-            disappears only once the real server row lands in the grid.
-            For matrix submissions we still show one placeholder; the
-            remaining rows arrive via router.refresh. */}
-        {showPlaceholder && placeholderDream && (
-          <motion.div
-            key={placeholderKey}
-            layout
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{
-              type: 'tween',
-              duration: 0.3,
-              ease: 'easeOut'
-            }}
-            className="col-span-1"
-          >
-            <DreamCard
-              dream={placeholderDream}
-              loading={analyzedDream === null}
-              isAdmin={isAdmin}
-            />
-          </motion.div>
-        )}
-        {renderOrder.map((item) =>
-          item.type === 'standalone' ? (
-            <motion.div
-              key={item.dream.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
-              className="col-span-1"
-            >
-              <DreamCard
-                dream={item.dream}
-                loading={item.dream.id === loadingDreamId}
-                searchTerms={isMounted && isSearchEnabled ? keywords : []}
-                isAdmin={isAdmin}
-              />
-            </motion.div>
-          ) : (
-            <ComparisonGroup
-              key={item.groupId}
-              groupId={item.groupId}
-              dreams={item.dreams}
-              loadingDreamId={loadingDreamId}
-              searchTerms={isMounted && isSearchEnabled ? keywords : []}
-              isAdmin={isAdmin}
-            />
-          ),
-        )}
-      </AnimatePresence>
+      {cardItems}
     </div>
       )}
     </div>

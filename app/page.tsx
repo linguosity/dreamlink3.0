@@ -18,7 +18,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import CompactDreamInput from "@/components/CompactDreamInput";
 import AnimatedDreamGrid from "@/components/AnimatedDreamGrid";
-import RecentPosts from "@/components/RecentPosts";
+import { AppJournalStrip } from "@/components/RecentPosts";
+import SymbolThread, { selectSymbolThread } from "@/components/SymbolThread";
+import { getRecentPublishedPosts } from "@/lib/blog";
 import { Sparkles } from "lucide-react";
 
 function formatJournalDate(d: Date): string {
@@ -170,9 +172,51 @@ export default async function MainPage() {
   // is built. Mockup spec: hi-fi-journal lines 112–136.
   const showPatternHint = false;
 
+  // Editorial rail: latest journal posts + the active recurring-symbol
+  // thread, resolved before render so the page can pick its layout up
+  // front. Rail has content → wrap grid (cards flow around it); both
+  // empty (new account, no published posts) → classic single column.
+  // Swallow blog failures — a missing table must never take down the
+  // dashboard.
+  let posts: Awaited<ReturnType<typeof getRecentPublishedPosts>> = [];
+  try {
+    posts = await getRecentPublishedPosts(3);
+  } catch {
+    posts = [];
+  }
+  const thread = selectSymbolThread(dreams);
+  const hasRail = Boolean(thread) || posts.length > 0;
+
+  const greeting = (
+    <header>
+      <div className="font-mono text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
+        {today}
+      </div>
+      <h2 className="font-serif text-[clamp(1.75rem,4vw,2.75rem)] leading-tight text-balance mt-2">
+        Welcome back
+        {firstName ? (
+          <>
+            , <span className="italic">{firstName}</span>.
+          </>
+        ) : (
+          "."
+        )}
+      </h2>
+      <p className="text-[15px] text-muted-foreground mt-1.5">
+        {dreamCount === 0
+          ? "Begin your first entry below."
+          : `${dreamCount} dream${dreamCount === 1 ? "" : "s"} journaled.`}
+      </p>
+    </header>
+  );
+
   return (
     <div className="container py-6 sm:py-10 relative">
-      <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 relative z-10">
+      <div
+        className={`${
+          hasRail ? "max-w-4xl lg:max-w-6xl" : "max-w-4xl"
+        } mx-auto space-y-8 sm:space-y-10 relative z-10`}
+      >
         {/* Visually hidden H1 for SEO and screen readers */}
         <h1 className="sr-only">DreamRiver Dream Journal</h1>
 
@@ -203,43 +247,61 @@ export default async function MainPage() {
           </div>
         )}
 
-        {/* Greeting — date eyebrow + serif welcome with italic name. */}
-        <header>
-          <div className="font-mono text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
-            {today}
-          </div>
-          <h2 className="font-serif text-[clamp(1.75rem,4vw,2.75rem)] leading-tight text-balance mt-2">
-            Welcome back
-            {firstName ? (
+        {hasRail ? (
+          /* Editorial spread — one shared grid. Greeting + composer span
+             the card columns; the rail (symbol thread + latest journal
+             note) pins to the right column; cards flow beside it, then
+             claim the full width once past it. Mobile order stays
+             entry → cards → editorial rows. */
+          <AnimatedDreamGrid
+            dreams={dreams || []}
+            isAdmin={Boolean(profile.is_admin)}
+            header={
               <>
-                , <span className="italic">{firstName}</span>.
+                {greeting}
+                <div className="mt-8">
+                  <CompactDreamInput userId={user.id} />
+                </div>
               </>
-            ) : (
-              "."
-            )}
-          </h2>
-          <p className="text-[15px] text-muted-foreground mt-1.5">
-            {dreamCount === 0
-              ? "Begin your first entry below."
-              : `${dreamCount} dream${dreamCount === 1 ? "" : "s"} journaled.`}
-          </p>
-        </header>
+            }
+            rail={
+              <>
+                {/* Recurring-symbol thread — renders null until a tag has
+                    appeared on 3+ distinct days. First rail row: its own
+                    top hairline drops on lg, where the rail's left rule
+                    takes over. */}
+                <SymbolThread
+                  dreams={dreams || []}
+                  className="lg:border-t-0 lg:pt-0"
+                />
+                {/* Latest journal note — lead post with excerpt, older
+                    titles beneath. Renders null with no published posts. */}
+                <AppJournalStrip posts={posts} />
+              </>
+            }
+          />
+        ) : (
+          <>
+            {greeting}
 
-        {/* Dream Input */}
-        <div>
-          <CompactDreamInput userId={user.id} />
-        </div>
+            {/* Dream Input */}
+            <div>
+              <CompactDreamInput userId={user.id} />
+            </div>
 
-        {/* Gallery — serif heading, then the grid (the grid renders its own
-            interactive filter pills: All / This month / Starred). */}
-        <div>
-          <div className="flex items-baseline justify-between mb-5 gap-4 flex-wrap">
-            <h2 className="font-serif text-[28px] font-normal leading-tight">
-              Your dream gallery
-            </h2>
-          </div>
-          <AnimatedDreamGrid dreams={dreams || []} isAdmin={Boolean(profile.is_admin)} />
-        </div>
+            {/* Gallery — serif heading, then the grid (the grid renders
+                its own interactive filter pills). */}
+            <div>
+              <div className="flex items-baseline justify-between mb-5 gap-4 flex-wrap">
+                <h2 className="font-serif text-[28px] font-normal leading-tight">
+                  Your dream gallery
+                </h2>
+              </div>
+
+              <AnimatedDreamGrid dreams={dreams || []} isAdmin={Boolean(profile.is_admin)} />
+            </div>
+          </>
+        )}
 
         {/* Pattern-emerging insight — gentle nudge once enough dreams accumulate. */}
         {showPatternHint && (
@@ -268,9 +330,6 @@ export default async function MainPage() {
           </aside>
         )}
 
-        {/* Journal cross-link — quiet blog-discovery strip below the gallery.
-            Renders nothing until the first blog post is published. */}
-        <RecentPosts variant="app" limit={3} />
       </div>
     </div>
   );
