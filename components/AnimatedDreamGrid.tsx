@@ -456,6 +456,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
             loadingDreamId={loadingDreamId}
             searchTerms={isMounted && isSearchEnabled ? keywords : []}
             isAdmin={isAdmin}
+            railMode={railMode}
           />
         ),
       )}
@@ -554,6 +555,12 @@ interface ComparisonGroupProps {
   loadingDreamId: string | null;
   searchTerms: string[];
   isAdmin?: boolean;
+  /** In rail (wrap) mode the group must NOT span the rail's column: a
+   *  col-span-full item can't fit in the rows the rail occupies, so grid
+   *  auto-placement (which preserves order) pushes the group AND every card
+   *  after it below the rail — the whole gallery ends up under the
+   *  editorial column. Spanning only the card columns keeps it in flow. */
+  railMode?: boolean;
 }
 
 function ComparisonGroup({
@@ -562,6 +569,7 @@ function ComparisonGroup({
   loadingDreamId,
   searchTerms,
   isAdmin = false,
+  railMode = false,
 }: ComparisonGroupProps) {
   const created = dreams[0]?.created_at
     ? new Date(dreams[0].created_at)
@@ -596,7 +604,9 @@ function ComparisonGroup({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
-      className="col-span-full rounded-xl border-2 border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 p-4"
+      className={`${
+        railMode ? 'col-span-full lg:col-span-3' : 'col-span-full'
+      } rounded-xl border-2 border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 p-4`}
     >
       <header className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
