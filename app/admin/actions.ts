@@ -8,6 +8,14 @@
 import { createClient } from "@/utils/supabase/server";
 import { setComingSoonEnabled, setSocialLinks } from "@/lib/siteSettings";
 import { setTestimonials, type Testimonial } from "@/lib/testimonials";
+import {
+  getAnalyticsDigestConfig,
+  setAnalyticsDigestConfig,
+} from "@/lib/analyticsDigest";
+import {
+  coerceAnalyticsDigestConfig,
+  type AnalyticsDigestConfig,
+} from "@/lib/analyticsDigestConfig";
 import { revalidatePath } from "next/cache";
 
 async function requireAdmin() {
@@ -81,6 +89,30 @@ export async function saveSocialLinksAction(
     // Landing footer reads these server-side; drop its cache.
     revalidatePath("/landing");
     revalidatePath("/admin");
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: message };
+  }
+}
+
+export async function saveAnalyticsDigestAction(
+  input: Omit<AnalyticsDigestConfig, "lastSentOn">,
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    const user = await requireAdmin();
+    // Preserve the dedupe ledger (lastSentOn) across saves — the form never
+    // sees it, and losing it could double-send on the next tick.
+    const current = await getAnalyticsDigestConfig();
+    const candidate = coerceAnalyticsDigestConfig({
+      ...input,
+      lastSentOn: current.lastSentOn,
+    });
+    if (candidate.recipients.length === 0) {
+      throw new Error("Add at least one valid recipient email.");
+    }
+    await setAnalyticsDigestConfig(candidate, user.id);
+    revalidatePath("/admin/system");
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";

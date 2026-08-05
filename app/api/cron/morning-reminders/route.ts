@@ -40,6 +40,7 @@ import {
   type CronRunSummary,
 } from "@/lib/cron";
 import { captureError } from "@/lib/sentry";
+import { runAnalyticsDigestTick } from "@/lib/analyticsDigest";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Vercel Hobby plan limit
@@ -142,7 +143,19 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json(summary);
+    // Piggyback: evaluate the founders' analytics digest once per day on
+    // this same cron slot (Vercel Hobby caps the account at 2 cron jobs and
+    // both are taken). Fully isolated — a digest failure must never affect
+    // reminder sends, and vice versa. See lib/analyticsDigest.ts.
+    let analyticsDigest: unknown = null;
+    try {
+      analyticsDigest = await runAnalyticsDigestTick();
+    } catch (err) {
+      console.error("[cron/morning-reminders] analytics digest tick failed:", err);
+      analyticsDigest = { status: "error" };
+    }
+
+    return NextResponse.json({ ...summary, analyticsDigest });
   } catch (err) {
     console.error("[cron/morning-reminders] run failed:", err);
     captureError(err, {

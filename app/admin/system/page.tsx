@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetHintsCard } from "./ResetHintsCard";
 import { TestimonialsCard } from "./TestimonialsCard";
+import { AnalyticsDigestCard } from "./AnalyticsDigestCard";
 import { TestImageCard } from "./TestImageCard";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 import { HINT_IDS, type HintId } from "@/lib/hints/types";
@@ -245,6 +246,9 @@ export default async function SystemPage() {
 
       {/* Landing testimonials — admin-managed rotating social proof */}
       <TestimonialsCard initial={testimonials} userCount={userCount} />
+
+      {/* Founders' analytics digest — metrics, cadence, send time, recipients */}
+      <AnalyticsDigestCard />
 
       {/* Onboarding hints — admin self-service reset */}
       <ResetHintsCard initialDismissed={dismissedHints} />
