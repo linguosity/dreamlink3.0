@@ -309,6 +309,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook handler error:", error);
+    // Release the claim (best-effort) so Stripe's retry can actually
+    // re-attempt the work instead of being short-circuited by the duplicate
+    // check above. Mirrors the claim-release pattern in lib/emails/send.ts.
+    try {
+      await admin.from("stripe_events").delete().eq("event_id", event.id);
+    } catch {
+      /* swallow — never propagate; at-most-once is the fallback */
+    }
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 }
