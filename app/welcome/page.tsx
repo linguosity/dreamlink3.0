@@ -12,7 +12,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Lockup, Starfield, Pips, GoldBtn, Icon, FONTS } from "./_components/atoms";
+import { Lockup, Starfield, Pips, PrimaryBtn, Icon, FONTS } from "./_components/atoms";
 import {
   StepWelcome, StepReading, StepEmail, StepVerify, StepProfile, StepPlan, StepDone,
 } from "./_components/steps";
@@ -61,7 +61,7 @@ function TermsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div style={{ padding: "16px 28px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end" }}>
-          <GoldBtn onClick={onClose}>Got it</GoldBtn>
+          <PrimaryBtn onClick={onClose}>Got it</PrimaryBtn>
         </div>
       </div>
     </div>

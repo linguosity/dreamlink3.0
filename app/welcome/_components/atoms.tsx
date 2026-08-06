@@ -1,16 +1,20 @@
 "use client";
 
 // Shared UI atoms for the onboarding flow. Ported from the design handoff
-// prototype, using lucide-react (already a dependency) and the existing
-// MoonwaterMark brand component. Inline styles intentionally mirror the
-// prototype's tokens; colors come from the CSS variables in globals.css.
+// prototype, using lucide-react (already a dependency) and the v3 "Deep
+// Current" <DrLogo/> mark (via BrandIcon). Inline styles intentionally
+// mirror the prototype's tokens; colors come from the CSS variables in
+// globals.css.
 //
 // v3 Deep Current: this file is always light-mode (never wrapped in `.dark`),
 // so it reaches for the FIXED brand tokens (--indigo, --violet, --navy-900,
 // --mist, …) rather than the semantic --primary/--foreground pair, exactly
 // like app/coming-soon/page.tsx. Gold → Indigo (dark fill, needs light
 // text); Gold Light's one background use (a badge) → Violet (also a dark
-// fill); Night/Night-Deep → Navy 900/Accent Ink.
+// fill); Night/Night-Deep → Navy 900/Accent Ink. PrimaryBtn (below) was
+// GoldBtn under the retired v2 palette; renamed so the component's own name
+// doesn't contradict "no gold anywhere" (HANDOFF-v3.md §8) even though it
+// already rendered Indigo.
 
 import * as React from "react";
 import {
@@ -88,7 +92,7 @@ export function Starfield() {
   );
 }
 
-export function GoldBtn({
+export function PrimaryBtn({
   children, onClick, disabled, full, style = {},
 }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; full?: boolean; style?: React.CSSProperties }) {
   return (
@@ -213,9 +217,9 @@ export function NavRow({
       {back && <GhostBtn onClick={back}><Icon name="arrowLeft" size={16} stroke={2} /> Back</GhostBtn>}
       {skip && <GhostBtn onClick={skip} style={{ marginLeft: back ? 0 : "auto" }}>Skip for now</GhostBtn>}
       <div style={{ flex: 1 }} />
-      <GoldBtn onClick={next} disabled={disabled}>
+      <PrimaryBtn onClick={next} disabled={disabled}>
         {nextLabel} <Icon name="arrowRight" size={17} color={disabled ? "var(--muted-foreground)" : "var(--accent-ink)"} stroke={2.2} />
-      </GoldBtn>
+      </PrimaryBtn>
     </div>
   );
 }

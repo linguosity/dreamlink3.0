@@ -10,7 +10,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Icon, AppIcon, GoldBtn, StepBadge, TextField, Check, NavRow, FONTS,
+  Icon, AppIcon, PrimaryBtn, StepBadge, TextField, Check, NavRow, FONTS,
 } from "./atoms";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import type { OnboardingData, ReadingDepthId } from "../onboarding-lib";
@@ -56,7 +56,7 @@ export function StepWelcome({ next }: { next: () => void }) {
           </div>
         ))}
       </div>
-      <GoldBtn full onClick={next}>Begin <Icon name="arrowRight" size={18} color="var(--accent-ink)" stroke={2.2} /></GoldBtn>
+      <PrimaryBtn full onClick={next}>Begin <Icon name="arrowRight" size={18} color="var(--accent-ink)" stroke={2.2} /></PrimaryBtn>
       <div style={{ fontSize: 12.5, color: "var(--muted-foreground)", marginTop: 16 }}>
         Already have an account?{" "}
         <Link href="/sign-in" style={{ color: "var(--indigo)", fontWeight: 600 }}>Sign in</Link>
@@ -327,7 +327,7 @@ function PendingModal({
         <div style={{ padding: "12px 14px", background: "var(--mist)", border: "1px solid var(--line)", borderRadius: 11, marginBottom: 20, textAlign: "left" }}>
           <Check checked={data.notifyUpgrade !== false} onChange={(v) => update({ notifyUpgrade: v })}>Email me when Insight upgrades go live</Check>
         </div>
-        <GoldBtn full onClick={onProceed}>Continue with free for now</GoldBtn>
+        <PrimaryBtn full onClick={onProceed}>Continue with free for now</PrimaryBtn>
         <div onClick={onClose} style={{ fontSize: 13, color: "var(--muted-foreground)", fontWeight: 600, marginTop: 14, cursor: "pointer" }}>Back to plans</div>
       </div>
     </div>
@@ -363,7 +363,7 @@ export function StepDone({ data, restart, onFinish }: { data: OnboardingData; re
           <div style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>email verified</div>
         </div>
       </div>
-      <GoldBtn full onClick={onFinish}><Icon name="penLine" size={18} color="var(--accent-ink)" stroke={2} /> Write your first dream</GoldBtn>
+      <PrimaryBtn full onClick={onFinish}><Icon name="penLine" size={18} color="var(--accent-ink)" stroke={2} /> Write your first dream</PrimaryBtn>
       {data.notifyUpgrade !== false && data.plan === "visionary" && (
         <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 16, display: "flex", gap: 7, alignItems: "center", justifyContent: "center" }}>
           <Icon name="bell" size={14} color="var(--indigo)" stroke={1.7} /> We&rsquo;ll email you when Insight upgrades open.

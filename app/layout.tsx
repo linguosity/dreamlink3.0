@@ -42,10 +42,10 @@ const defaultUrl =
     : "http://localhost:3000";
 
 // ① Next.js Metadata API
-// F13/F14 (v2 Moonwater): wire the new icon set + og:image. Icons live in
-// /public/brand and were rendered from the same SVG paths the React mark
-// uses, so the raster matches the in-app vector exactly. og:image points
-// at /og — a dynamic route that stamps the Night/Moonwater social card.
+// v3 "Deep Current": wire the new icon set + og:image. Icons live in
+// /public/brand and were rendered from the same dr-logo mark the React
+// component uses, so the raster matches the in-app vector exactly. og:image
+// points at /og — a dynamic route that stamps the Navy 900 social card.
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "DreamRiver – Dream Journal",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
     other: [
-      { rel: "mask-icon", url: "/brand/icon-master.svg", color: "#0E1A30" },
+      { rel: "mask-icon", url: "/brand/icon-master.svg", color: "#0A0E33" },
     ],
   },
   openGraph: {
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
 // themeColor must live in the viewport export since Next 14+
 // (it was emitting an "Unsupported metadata themeColor" warning on every route).
 export const viewport: Viewport = {
-  themeColor: "#0E1A30",
+  themeColor: "#0A0E33",
 };
 
 // v3 "Deep Current" type system (HANDOFF-v3.md §3):

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { DrLogo } from "@/components/brand/DrLogo";
 
 const FULL_DREAM_TEXT =
   "I was walking across a bridge over a river of golden light…";
@@ -42,15 +42,15 @@ export default function PhoneMockup() {
     >
       {/* App nav — free-floating mark (no squircle — the phone chrome is
           already a container at this size); avatar is a flat Indigo fill
-          (no gradient outside the logo, HANDOFF-v3.md §0/§8). */}
+          (no gradient outside the logo, HANDOFF-v3.md §0/§8). Mono tone
+          pinned to a fixed Indigo (not --primary) because this screen is
+          always-light regardless of the app's ambient theme — see the
+          outer page's own fixed-token note. */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-[var(--line)]">
         <div className="flex items-center gap-1.5">
-          <MoonwaterMark
-            size={14}
-            moonColor="var(--navy-900)"
-            waveTop="var(--navy-900)"
-            waveBottom="var(--indigo)"
-          />
+          <span style={{ color: "var(--indigo)" }}>
+            <DrLogo variant="mark" tone="mono" size={14} />
+          </span>
           <span className="wordmark text-[13px] text-foreground">
             DreamRiver
           </span>

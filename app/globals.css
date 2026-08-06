@@ -328,12 +328,57 @@
 
 /* v3 "Deep Current" wordmark — Quicksand 500, per HANDOFF-v3.md §3/§4.
  * Logo only; never a UI face, never italic. Use the <Wordmark/> component
- * (or better, <DrLogo variant="horizontal|lockup">) rather than this class
- * directly when possible — that keeps the lockup consistent. */
+ * (or better, <DrLogo variant="lockup">, which pairs it with the mark)
+ * rather than this class directly when possible — that keeps the lockup
+ * consistent. */
 .wordmark {
   font-family: var(--font-logo);
   font-weight: 500;
   letter-spacing: 0.005em;
+}
+
+/* <DrLogo/> layout — ported from assets/dr-logo.js's injected stylesheet.
+ * font-family uses var(--font-logo) (next/font-loaded Quicksand) rather
+ * than the source's literal 'Quicksand' string, which would resolve to a
+ * same-named system font instead of the loaded webfont. */
+.dr-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--sz) * 0.28);
+  line-height: 1;
+}
+.dr-logo.is-stacked {
+  flex-direction: column;
+  gap: calc(var(--sz) * 0.22);
+}
+.dr-logo-mark {
+  display: block;
+}
+.dr-logo-mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dr-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--sz) * 0.12);
+}
+.dr-logo.is-stacked .dr-logo-text {
+  align-items: center;
+}
+.dr-logo-word {
+  font-family: var(--font-logo);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+}
+.dr-logo-tag {
+  font-family: var(--font-logo);
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
