@@ -316,8 +316,9 @@ export function AnalysisSection({
           className="rounded-[var(--radius-lg)] border p-5 mt-4 shadow-sm"
           style={{
             borderColor: "oklch(0.85 0.10 75)",
-            background:
-              "linear-gradient(180deg, oklch(0.99 0.02 75), var(--card))",
+            // Flat fill — was a top-to-card gradient (HANDOFF-v3.md §0/§8,
+            // "no gradient outside the logo").
+            background: "oklch(0.97 0.02 75)",
           }}
         >
           <div className="flex items-center justify-between mb-3">

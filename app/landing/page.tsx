@@ -384,7 +384,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Journey (coming soon) */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-gradient-to-br from-accent/40 to-secondary p-7 sm:p-8">
+            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-secondary p-7 sm:p-8">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                   Journey
@@ -476,11 +476,13 @@ export default async function LandingPage() {
 
       {/* ── Final CTA ──────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-navy-900 py-20 sm:py-24 lg:py-28">
-        {/* moon-glow halo above the heading */}
+        {/* Soft flat halo above the heading — was a radial gradient; flat
+            translucent fill + blur keeps the glow without a gradient
+            (HANDOFF-v3.md §0/§8, "no gradient outside the logo"). */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full
-                     bg-[radial-gradient(ellipse,oklch(0.5_0.12_75/0.25)_0%,transparent_60%)]"
+          className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-3xl
+                     bg-[oklch(0.5_0.12_75/0.14)]"
         />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-balance text-mist text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">

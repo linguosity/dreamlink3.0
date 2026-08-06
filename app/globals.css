@@ -272,6 +272,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+    /* HANDOFF-v3.md §3: "Body never below 16px; line-height 1.55." Explicit
+     * rather than relying on the browser default, per dr-tokens.css's own
+     * base body rule (verbatim: font-size:16px;line-height:1.55). */
+    font-size: 16px;
+    line-height: 1.55;
   }
   /* Headings default to Newsreader (editorial face) for warmth + character.
    * Components that need the UI face instead (buttons, labels, nav — see

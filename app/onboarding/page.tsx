@@ -170,7 +170,7 @@ export default function OnboardingPage() {
   // ── Render ────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-accent/30 via-background to-accent/30 px-4 py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         {/* Back button (steps 2-4) */}
         {step > 1 && step < 5 && (

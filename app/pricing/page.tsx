@@ -88,7 +88,7 @@ const plans: Plan[] = [
     priceBase: "prophet",
     popular: false,
     comingSoon: true,
-    color: "bg-gradient-to-br from-accent/40 to-secondary",
+    color: "bg-secondary",
   },
 ];
 
@@ -169,7 +169,7 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
             Unlock Divine Insights
           </h1>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
