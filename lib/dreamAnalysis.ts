@@ -400,8 +400,8 @@ function composeAnalysis(
 
 // Citation-only fallback. Verse text is hydrated downstream via lib/bibleLookup
 // in the dream-entries route, so this object only needs to satisfy the post-
-// refactor schema: { citation: string }. Server-side hydration fills in the
-// canonical book/chapter/verse/text.
+// refactor schema: { citation: string, theme: string }. Server-side hydration
+// fills in the canonical book/chapter/verse/text; theme is used as written.
 const FALLBACK_ANALYSIS: DreamAnalysis = {
   topicSentence: "Your dream contains spiritual symbolism.",
   supportingPoints: [
@@ -417,9 +417,9 @@ const FALLBACK_ANALYSIS: DreamAnalysis = {
     "Your dream reveals important spiritual insights for your journey.",
   dreamTitle: "Sacred Journey Vision",
   biblicalReferences: [
-    { citation: "Psalms 23:4" },
-    { citation: "Proverbs 3:5-6" },
-    { citation: "2 Corinthians 5:17" },
+    { citation: "Psalms 23:4", theme: "steady presence" },
+    { citation: "Proverbs 3:5-6", theme: "divine guidance" },
+    { citation: "2 Corinthians 5:17", theme: "spiritual renewal" },
   ],
   tags: ["spiritual journey", "divine guidance", "faith"],
 };
@@ -513,7 +513,7 @@ ${dbPrompt.format_instructions}
 - NEVER start with ${forbiddenPhrases}
 - Begin directly with the spiritual theme or insight without introductory phrases
 - For each supporting point, include exactly one Bible citation in the supportingPoints prose (e.g., "(Genesis 1:1)" or "(1 Peter 5:8)"). Use full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
-- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation only — do not include verse text. The application retrieves verse text from a canonical KJV source.
+- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation, plus a short "theme" phrase (2-4 words, e.g. "crossing waters") naming why THAT specific verse was matched — not the dream's overall theme, the reason for that one citation. Do not include verse text; the application retrieves it from a canonical KJV source.
 - Tags: each tag must name something CONCRETE from this specific dream — a symbol, place, action, emotion, or biblical motif actually present in the dream or analysis (e.g. 'flood waters', 'lost teeth', 'childhood home', 'wilderness season'). Lowercase noun phrases, 1-2 words. Never generic labels like 'faith', 'spirituality', 'dreams', 'spiritual journey', or 'divine guidance'.
 
 ${readingLevelInstructions}
@@ -542,7 +542,7 @@ Additional instruction:
 - Use parenthetical citations (Book Chapter:Verse) with full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
 - Make the concluding sentence actionable but gentle
 - Personalize the one-sentence summary to speak directly to the dreamer about their spiritual journey
-- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide only the citation string — do not include verse text. The application retrieves verse text from a canonical KJV source.
+- The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation string plus a short "theme" phrase (2-4 words, e.g. "crossing waters") naming why THAT specific verse was matched — not the dream's overall theme, the reason for that one citation. Do not include verse text; the application retrieves it from a canonical KJV source.
 
 ${readingLevelInstructions}
 ${depthInstructions}

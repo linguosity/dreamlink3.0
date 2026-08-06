@@ -248,11 +248,11 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     // citation in bible_refs so the prose still references it.
     interface HydratedRef {
       index: number;
-      original: { citation?: string } | null;
+      original: { citation?: string; theme?: string } | null;
       lookup: VerseLookupResult;
     }
     const hydratedRefs: HydratedRef[] = biblicalReferences.map(
-      (ref: { citation?: string } | null, index: number) => ({
+      (ref: { citation?: string; theme?: string } | null, index: number) => ({
         index,
         original: ref,
         lookup: lookupVerse(ref?.citation ?? ""),
@@ -308,7 +308,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     // to its placeholder for them.
     const citations = hydratedRefs
       .filter(({ lookup }: HydratedRef) => lookup.status !== "not_found")
-      .map(({ index, lookup }: HydratedRef) => ({
+      .map(({ index, lookup, original }: HydratedRef) => ({
         dream_entry_id: dreamId,
         bible_book: lookup.book,
         chapter: lookup.chapter,
@@ -316,6 +316,12 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
         end_verse: lookup.endVerse,
         full_text: lookup.text,
         citation_order: index + 1,
+        // HANDOFF-v3.md §5 item 2 ("themed verse citations") — the model's
+        // own reason for matching this verse, persisted as written. Trimmed
+        // to a sane display length so a model that ignores the "2-4 words"
+        // instruction can't blow out the scripture chip; null (not "") when
+        // absent so the UI can cleanly fall back to the bare reference.
+        theme: original?.theme?.trim().slice(0, 80) || null,
       }));
 
     await Promise.all([

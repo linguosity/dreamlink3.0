@@ -51,6 +51,7 @@ export type Database = {
           id: string
           source: string | null
           supporting_text: string | null
+          theme: string | null
           verse: number | null
         }
         Insert: {
@@ -64,6 +65,7 @@ export type Database = {
           id?: string
           source?: string | null
           supporting_text?: string | null
+          theme?: string | null
           verse?: number | null
         }
         Update: {
@@ -77,6 +79,7 @@ export type Database = {
           id?: string
           source?: string | null
           supporting_text?: string | null
+          theme?: string | null
           verse?: number | null
         }
         Relationships: [
@@ -241,6 +244,7 @@ export type Database = {
           image_url: string | null
           is_public: boolean
           is_starred: boolean
+          last_regenerated_at: string | null
           meaningful: boolean | null
           original_text: string | null
           original_text_enc: string | null
@@ -248,6 +252,7 @@ export type Database = {
           raw_analysis: Json | null
           raw_analysis_enc: string | null
           reading_level_used: string | null
+          regeneration_count: number
           search_vector: unknown
           share_scope: string | null
           share_token: string | null
@@ -274,6 +279,7 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
+          last_regenerated_at?: string | null
           meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
@@ -281,6 +287,7 @@ export type Database = {
           raw_analysis?: Json | null
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
+          regeneration_count?: number
           search_vector?: unknown
           share_scope?: string | null
           share_token?: string | null
@@ -307,6 +314,7 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
+          last_regenerated_at?: string | null
           meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
@@ -314,6 +322,7 @@ export type Database = {
           raw_analysis?: Json | null
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
+          regeneration_count?: number
           search_vector?: unknown
           share_scope?: string | null
           share_token?: string | null
