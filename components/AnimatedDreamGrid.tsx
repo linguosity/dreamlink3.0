@@ -375,7 +375,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         title={!enabled ? 'Coming soon' : undefined}
         className={
           isActive
-            ? 'px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold'
+            ? 'px-2.5 py-1 rounded-md bg-primary text-primary-foreground font-semibold'
             : enabled
               ? 'px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors'
               : 'px-2.5 py-1 rounded-md text-muted-foreground/40 cursor-not-allowed'
@@ -628,7 +628,7 @@ function ComparisonGroup({
             {(showDepthBadge || showReadingLevelBadge || showAestheticBadge) && (
               <div className="absolute -top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[90%] justify-end">
                 {showDepthBadge && dream.analysis_depth && (
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-900 text-white shadow-sm">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-navy-900 text-mist shadow-sm">
                     {DEPTH_LABELS[dream.analysis_depth] ?? dream.analysis_depth}
                   </span>
                 )}

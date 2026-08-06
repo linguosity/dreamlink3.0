@@ -102,7 +102,7 @@ function ResultIcon({ status }: { status: ImportFileResult["status"] }) {
       );
     case "scheduled":
       return (
-        <CalendarClock className="size-4 shrink-0 text-amber-600 dark:text-gold" />
+        <CalendarClock className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
       );
     case "skipped":
       return <MinusCircle className="size-4 shrink-0 text-muted-foreground" />;

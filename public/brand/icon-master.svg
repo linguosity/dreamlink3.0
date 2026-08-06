@@ -1,17 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-      <rect x="0" y="0" width="512" height="512" rx="113" ry="113" fill="#0E1A30"/>
-      <defs>
-        <radialGradient id="hl" cx="50%" cy="0%" r="65%">
-          <stop offset="0%"  stop-color="#3a4870" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="#3a4870" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <rect x="0" y="0" width="512" height="512" rx="113" ry="113" fill="url(#hl)"/>
-      <svg x="97" y="97" width="317" height="317" viewBox="0 0 64 64">
-        <g transform="rotate(15 32 25)">
-          <path d="M32 11 A14 14 0 1 0 32 39 A9 14 0 1 1 32 11 Z" fill="#D4A247"/>
-        </g>
-        <path d="M14 56 C 22 50, 26 50, 32 56 C 38 62, 42 62, 50 56" stroke="#D4A247"  stroke-width="3.2" stroke-linecap="round" fill="none"/>
-        <path d="M10 48 C 18 42, 22 42, 30 48 C 38 54, 42 54, 54 48"    stroke="#F5ECD6" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-      </svg>
-    </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="270 160 714 700" width="714" height="700"><defs><linearGradient id="drm" x1="0.1" y1="0.05" x2="0.92" y2="0.95"><stop offset="0" stop-color="#111A8C"></stop><stop offset="0.55" stop-color="#2036BE"></stop><stop offset="1" stop-color="#6E35EE"></stop></linearGradient><mask id="drc"><rect x="270" y="160" width="714" height="700" fill="#000"></rect><circle cx="642" cy="372" r="187" fill="#fff"></circle><circle cx="726" cy="326" r="173" fill="#000"></circle></mask></defs><rect x="440" y="170" width="410" height="410" fill="url(#drm)" mask="url(#drc)"></rect><path d="M790 250 Q800 303 852 313 Q800 323 790 376 Q780 323 728 313 Q780 303 790 250Z" fill="url(#drm)"></path><g fill="url(#drm)"><rect x="290" y="586" width="678" height="23" rx="11.5"></rect><rect x="568" y="632" width="332" height="23" rx="11.5"></rect><rect x="358" y="674" width="367" height="23" rx="11.5"></rect><rect x="443" y="724" width="375" height="23" rx="11.5"></rect><rect x="535" y="771" width="187" height="23" rx="11.5"></rect><rect x="588" y="819" width="84" height="23" rx="11.5"></rect></g></svg>

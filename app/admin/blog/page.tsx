@@ -85,7 +85,7 @@ export default async function AdminBlogPage() {
                   }
                   className={
                     post.status === "scheduled"
-                      ? "border-amber-500/50 text-amber-700 dark:text-gold"
+                      ? "border-amber-500/50 text-amber-700 dark:text-amber-400"
                       : undefined
                   }
                 >

@@ -44,33 +44,34 @@ export default function SocialProof({
       <div className="flex items-start gap-3 justify-center lg:justify-start">
         <div
           aria-hidden="true"
-          className="w-9 h-9 shrink-0 rounded-full bg-[color:var(--night-soft)]
-                     ring-2 ring-[color:var(--night)] text-[10px] font-semibold
-                     text-[color:var(--cream)] flex items-center justify-center"
+          className="w-9 h-9 shrink-0 rounded-full bg-[color:var(--navy-800)]
+                     ring-2 ring-[color:var(--navy-900)] text-[10px] font-semibold
+                     text-[color:var(--mist)] flex items-center justify-center"
         >
           {initials(t.author)}
         </div>
         <div className="flex flex-col items-start min-w-0">
-          <div className="flex gap-0.5 text-[color:var(--gold)]" aria-label="5 out of 5 stars">
+          <div className="flex gap-0.5 text-[color:var(--violet-lt)]" aria-label="5 out of 5 stars">
             {[...Array(5)].map((_, s) => (
               <Star key={s} className="w-4 h-4 fill-current" aria-hidden="true" />
             ))}
           </div>
-          {/* key on the text forces a fresh fade-in per rotation */}
+          {/* key on the text forces a fresh fade-in per rotation. Weight
+              carries emphasis, never italic (HANDOFF-v3.md §3/§4). */}
           <blockquote
             key={i}
-            className="mt-1.5 text-sm text-[oklch(0.86_0.02_75)] italic leading-relaxed
+            className="mt-1.5 text-sm text-[color:var(--mist-2)] font-medium leading-relaxed
                        animate-fade-in max-w-[46ch] text-left"
           >
             “{t.quote}”
           </blockquote>
-          <p className="mt-1 text-xs font-medium text-[color:var(--cream)]">
+          <p className="mt-1 text-xs font-medium text-[color:var(--mist)]">
             — {t.author}
           </p>
           {showCount && (
-            <p className="mt-2 text-sm text-[oklch(0.80_0.025_75)]">
+            <p className="mt-2 text-sm text-[color:var(--mist-2)]">
               Joined by{" "}
-              <span className="font-semibold text-[color:var(--cream)]">
+              <span className="font-semibold text-[color:var(--mist)]">
                 {userCount.toLocaleString()}+ believers
               </span>
             </p>

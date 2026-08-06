@@ -73,7 +73,7 @@ export function FounderTasksList({ tasks }: { tasks: FounderTask[] }) {
             type="checkbox"
             checked={done}
             onChange={() => toggle(t)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-[color:var(--gold-deep)] cursor-pointer"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary cursor-pointer"
           />
           {ownerBadge(t.owner)}
           <span className="min-w-0">

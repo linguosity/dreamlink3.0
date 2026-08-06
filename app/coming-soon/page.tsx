@@ -10,8 +10,17 @@
 // Mobile collapses to single column with the mockup above the copy.
 //
 // Animations are pure CSS in app/globals.css (water-bg, ripple-line,
-// shimmer-overlay, animate-phone-float). Countdown + typewriter are the
-// only client-state pieces.
+// animate-phone-float). Countdown + typewriter are the only client-state
+// pieces.
+//
+// Text on this page uses the FIXED (theme-invariant) Deep Current brand
+// tokens — var(--mist), var(--violet-lt), var(--navy-800) — rather than the
+// semantic var(--foreground)/var(--muted-foreground) pair. This splash is
+// always dark regardless of the visitor's OS/app theme, and critically the
+// nested <PhoneMockup> (an always-LIGHT illustration of the in-app UI) uses
+// those same semantic tokens for its own text — wrapping this page in a
+// `.dark` class to get themed tokens here would leak dark-mode values into
+// that nested light mockup via normal CSS inheritance.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -39,17 +48,16 @@ export const metadata: Metadata = {
 
 export default function ComingSoonPage() {
   return (
-    // F02 (v2 Moonwater): splash moves from a light sky gradient to Night.
+    // The splash renders on the flat Navy 900 surface (`water-bg-night`).
     // Same atmosphere as the app icon — they reinforce each other on social.
-    // The `water-bg-night` class swaps the gradient base; ripple-lines stay
-    // visible because they're white-on-translucent. Foreground type goes cream.
+    // Ripple-lines stay visible because they're white-on-translucent.
+    // Foreground type goes Mist (fixed near-white, see file header note).
     <div
       className="relative min-h-screen overflow-hidden"
-      style={{ color: "var(--cream)" }}
+      style={{ color: "var(--mist)" }}
     >
-      {/* Animated water background — Night gradient + ripples */}
+      {/* Animated water background — Navy 900 + ripples */}
       <div className="water-bg water-bg-night" aria-hidden="true">
-        <div className="shimmer-overlay" aria-hidden="true" />
         {[35, 48, 62, 75, 88].map((top, i) => (
           <div
             key={top}
@@ -66,20 +74,20 @@ export default function ComingSoonPage() {
 
       {/* Foreground content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header — F01: contained Moonwater + italic-serif wordmark on cream */}
+        {/* Header — contained mark + wordmark on Mist */}
         <header className="px-6 sm:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <BrandIcon size={28} alt="" />
             <span
               className="wordmark text-[22px]"
-              style={{ color: "var(--cream)" }}
+              style={{ color: "var(--mist)" }}
             >
               DreamRiver
             </span>
           </div>
           <span
             className="text-[13px] font-medium"
-            style={{ color: "oklch(0.78 0.05 75)" }}
+            style={{ color: "var(--violet-lt)" }}
           >
             {LAUNCH_LABEL}
           </span>
@@ -100,30 +108,32 @@ export default function ComingSoonPage() {
 
             {/* Copy + form + countdown */}
             <div className="md:order-1 md:col-start-1 text-center md:text-left">
-              {/* Eyebrow pill — F02: gold-on-translucent-night */}
+              {/* Eyebrow pill — Violet Light accent on translucent Navy glass */}
               <div
                 className="inline-flex items-center px-4 py-1.5 rounded-full mb-5 text-[13px] font-semibold tracking-wide backdrop-blur-sm"
                 style={{
-                  background: "oklch(0.3 0.06 252 / 0.55)",
-                  border: "1px solid oklch(0.65 0.13 75 / 0.5)",
-                  color: "var(--gold-light)",
+                  background:
+                    "color-mix(in oklab, var(--navy-800) 55%, transparent)",
+                  border:
+                    "1px solid color-mix(in oklab, var(--violet-lt) 50%, transparent)",
+                  color: "var(--violet-lt)",
                 }}
               >
                 ✦ Launching June 1, 2026
               </div>
 
-              {/* Headline — 48px (md+), scales down on mobile. Cream on Night. */}
+              {/* Headline — 48px (md+), scales down on mobile. Mist on Navy. */}
               <h1
                 className="font-serif leading-[1.12] text-balance mb-4 text-[clamp(2rem,7vw,3rem)]"
-                style={{ color: "var(--cream)" }}
+                style={{ color: "var(--mist)" }}
               >
                 Discover Biblical Insight through your Dreams
               </h1>
 
-              {/* Subhead — muted cream */}
+              {/* Subhead — muted Mist */}
               <p
                 className="text-[17px] leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-8"
-                style={{ color: "oklch(0.82 0.04 75)" }}
+                style={{ color: "var(--mist-2)" }}
               >
                 Record your dreams and receive scripture-rooted reflections,
                 recurring themes, and spiritual insight to help you pray,
@@ -137,7 +147,9 @@ export default function ComingSoonPage() {
 
               <p
                 className="text-[12px] mt-3"
-                style={{ color: "oklch(0.72 0.04 75 / 0.75)" }}
+                style={{
+                  color: "color-mix(in oklab, var(--mist-2) 75%, transparent)",
+                }}
               >
                 Free to start. No spam, ever. Unsubscribe anytime.
               </p>
@@ -146,7 +158,7 @@ export default function ComingSoonPage() {
               <div className="mt-10">
                 <div
                   className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3 text-center md:text-left"
-                  style={{ color: "oklch(0.78 0.05 75)" }}
+                  style={{ color: "var(--violet-lt)" }}
                 >
                   Launching in
                 </div>
@@ -158,28 +170,34 @@ export default function ComingSoonPage() {
           </div>
         </main>
 
-        {/* Footer — muted cream so it stays subordinate on Night */}
+        {/* Footer — muted Mist so it stays subordinate on Navy */}
         <footer
           className="px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px]"
-          style={{ color: "oklch(0.72 0.04 75 / 0.7)" }}
+          style={{ color: "color-mix(in oklab, var(--mist-2) 70%, transparent)" }}
         >
           <span>© {new Date().getFullYear()} DreamRiver. All rights reserved.</span>
           <div className="flex items-center gap-5">
             <Link
               href="/privacy"
-              className="transition-colors hover:text-[var(--cream)]"
+              className="transition-colors hover:text-[var(--mist)]"
             >
               Privacy
             </Link>
             <Link
               href="/terms"
-              className="transition-colors hover:text-[var(--cream)]"
+              className="transition-colors hover:text-[var(--mist)]"
             >
               Terms
             </Link>
             <Link
+              href="/ai-disclosure"
+              className="transition-colors hover:text-[var(--mist)]"
+            >
+              AI Disclosure
+            </Link>
+            <Link
               href="/sign-in"
-              className="transition-colors opacity-60 hover:opacity-100 hover:text-[var(--cream)]"
+              className="transition-colors opacity-60 hover:opacity-100 hover:text-[var(--mist)]"
             >
               Sign in
             </Link>

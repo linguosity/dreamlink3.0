@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getSharedDream, type SharedDream } from '@/lib/sharedDream';
+import { AiDisclosure } from '@/components/brand/AiDisclosure';
 import ShareButtons from './share-buttons';
 
 // Always fetch fresh — the owner can revoke sharing at any moment.
@@ -126,6 +127,14 @@ export default async function SharedDreamPage(props: {
           {(dream.formatted_analysis || dream.analysis_summary) && (
             <div className="mb-4">
               <h2 className="text-lg font-medium mb-2">Analysis</h2>
+              {/* AI disclosure, above the reading and carrying the mark
+                  (HANDOFF-v3.md §5 item 1). This page is the only DreamRiver
+                  surface a stranger ever sees, so it is the one that most
+                  needs to say what produced the words. */}
+              <AiDisclosure
+                verseCount={dream.citations.length}
+                className="mb-4 max-w-[65ch]"
+              />
               {/* The composer joins prose and section headings with "\n\n".
                   Rendering that in a bare <p> let HTML collapse every blank
                   line, so a shared profound reading arrived as one wall of
@@ -151,12 +160,37 @@ export default async function SharedDreamPage(props: {
             </div>
           )}
 
-          {/* AI-transparency label — one quiet line under the interpretation,
-              mirroring the same disclosure in DreamCard's analysis view. */}
-          {(dream.dream_summary || dream.analysis_summary) && (
-            <p className="text-xs text-muted-foreground opacity-70">
-              Interpretation generated with AI, grounded in the verses above.
-            </p>
+          {/* Themed verse citations (§5 item 2). The disclosure above says the
+              reading is "grounded in the verses below" — before this, there
+              were no verses below, only a references array the page never
+              rendered. Each verse now shows the theme it was matched on, so a
+              reader can check the link between dream and scripture rather
+              than take it on trust. */}
+          {dream.citations.length > 0 && (
+            <div className="mb-4">
+              <h2 className="text-lg font-medium mb-2">Verses matched</h2>
+              <div className="max-w-[65ch]">
+                {dream.citations.map((citation, i) => (
+                  <div key={i} className="border-t py-3.5">
+                    <div className="mb-1.5 flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm font-medium text-primary">
+                        {citation.reference}
+                      </span>
+                      {citation.theme && (
+                        <span className="text-[13px] text-muted-foreground">
+                          · matched on {citation.theme}
+                        </span>
+                      )}
+                    </div>
+                    {citation.text && (
+                      <p className="font-serif text-[15.5px] leading-relaxed">
+                        {citation.text}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="flex justify-between items-center mt-6 pt-4 border-t">

@@ -14,6 +14,15 @@
 import { getAdminClient } from "@/utils/supabase/admin";
 import { decryptDreamRow } from "@/lib/crypto";
 
+/** One matched verse, as rendered on the share page. `theme` is the short
+ *  phrase the model matched it on — "crossing waters" (HANDOFF-v3.md §5
+ *  item 2). Null for readings recorded before themes were persisted. */
+export interface SharedCitation {
+  reference: string;
+  text: string | null;
+  theme: string | null;
+}
+
 export interface SharedDream {
   scope: "summary" | "full";
   id: string;
@@ -27,6 +36,12 @@ export interface SharedDream {
   image_url: string | null;
   created_at: string | null;
   original_text?: string | null;
+  /** Resolved KJV citations with their themes. Safe to expose publicly: the
+   *  verse text is public-domain scripture and `bible_refs` already listed
+   *  the references. This is what makes the disclosure's "grounded in the
+   *  verses below" a checkable claim on the one page strangers ever see —
+   *  previously it pointed at verses the page did not render. */
+  citations: SharedCitation[];
 }
 
 // Fields safe to expose on any shared link (summary scope).
@@ -87,6 +102,33 @@ export async function getSharedDream(
 
   const result: Record<string, unknown> = { scope };
   for (const f of SUMMARY_FIELDS) result[f] = row[f as keyof typeof row];
+
+  // Matched verses, in the order the reading cites them. Fetched separately
+  // rather than as a nested select so a citations failure degrades to "no
+  // verses shown" instead of losing the whole shared dream.
+  let citations: SharedCitation[] = [];
+  const dreamId = row.id as string | undefined;
+  if (dreamId) {
+    const { data: citationRows, error: citationError } = await admin
+      .from("bible_citations")
+      .select("bible_book, chapter, verse, end_verse, full_text, citation_order, theme")
+      .eq("dream_entry_id", dreamId)
+      .order("citation_order", { ascending: true });
+
+    if (citationError) {
+      console.error("Error fetching shared dream citations:", citationError);
+    } else {
+      citations = (citationRows ?? []).map((c: any) => ({
+        reference:
+          `${c.bible_book ?? ""} ${c.chapter ?? ""}:${c.verse ?? ""}${
+            c.end_verse && c.end_verse !== c.verse ? `-${c.end_verse}` : ""
+          }`.trim(),
+        text: c.full_text ?? null,
+        theme: c.theme ?? null,
+      }));
+    }
+  }
+  result.citations = citations;
 
   if (scope === "full") {
     const decrypted = decryptDreamRow({

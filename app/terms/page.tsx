@@ -5,13 +5,13 @@ export default function TermsPage() {
     <div className="flex-1 w-full flex flex-col items-center px-4 py-12">
       <div className="max-w-2xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">Terms of Service</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           Last updated: March 2026
         </p>
 
-        <div className="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
+        <div className="space-y-6 text-muted-foreground leading-relaxed">
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               1. Acceptance of Terms
             </h2>
             <p>
@@ -22,7 +22,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               2. Description of Service
             </h2>
             <p>
@@ -35,7 +35,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               3. User Accounts
             </h2>
             <p>
@@ -48,7 +48,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               4. User Content
             </h2>
             <p>
@@ -62,7 +62,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               5. AI-Generated Content Disclaimer
             </h2>
             <p>
@@ -77,7 +77,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               6. Acceptable Use
             </h2>
             <p>
@@ -90,7 +90,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               7. Subscription &amp; Payments
             </h2>
             <p>
@@ -103,7 +103,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               8. Termination
             </h2>
             <p>
@@ -116,7 +116,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               9. Limitation of Liability
             </h2>
             <p>
@@ -130,7 +130,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               10. Changes to Terms
             </h2>
             <p>
@@ -142,7 +142,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               11. Contact
             </h2>
             <p>
@@ -161,7 +161,7 @@ export default function TermsPage() {
         <div className="pt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             &larr; Back to journal
           </Link>

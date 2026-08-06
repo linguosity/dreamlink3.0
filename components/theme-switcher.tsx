@@ -12,6 +12,15 @@ import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
+// Compact theme control used in the auth-page footer. The full three-way
+// control lives in /settings (see PreferencesSection) — this one exists so a
+// visitor who lands on sign-in in the wrong theme can fix it without an
+// account.
+//
+// Icon colour was hardcoded `text-white` under the v2 "Moonwater" navy
+// chrome. On the v3 Paper footer that rendered a white glyph on a near-white
+// surface — invisible, and a contrast failure against §8. It inherits the
+// muted token now, which is legible in both themes by construction.
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -35,19 +44,19 @@ const ThemeSwitcher = () => {
             <Sun
               key="light"
               size={ICON_SIZE}
-              className={"text-white hover:text-white"}
+              className="text-muted-foreground"
             />
           ) : theme === "dark" ? (
             <Moon
               key="dark"
               size={ICON_SIZE}
-              className={"text-white hover:text-white"}
+              className="text-muted-foreground"
             />
           ) : (
             <Laptop
               key="system"
               size={ICON_SIZE}
-              className={"text-white hover:text-white"}
+              className="text-muted-foreground"
             />
           )}
         </Button>

@@ -95,7 +95,7 @@ export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
               key={p.id}
               className={`relative rounded-[var(--radius-lg)] p-5 shadow-sm border ${
                 p.featured
-                  ? "border-primary border-2 bg-gradient-to-b from-primary/10 to-card"
+                  ? "border-primary border-2 bg-primary/10"
                   : "border-border bg-card"
               }`}
             >

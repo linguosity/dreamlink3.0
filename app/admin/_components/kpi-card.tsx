@@ -16,25 +16,25 @@ export function KpiCard({
   trend?: number;
   trendData?: number[];
   Icon?: LucideIcon;
-  variant?: "primary" | "gold";
+  variant?: "primary" | "violet";
 }) {
-  const accentBg = variant === "gold" ? "bg-[oklch(0.85_0.08_75/0.45)]" : "bg-primary/10";
+  const accentBg = variant === "violet" ? "bg-violet/15" : "bg-primary/10";
   const accentFg =
-    variant === "gold"
-      ? "text-[color:var(--gold-deep)]"
+    variant === "violet"
+      ? "text-violet"
       : "text-primary";
   const positive = (trend ?? 0) >= 0;
 
-  // v2 Moonwater: gold variant fills the entire card with a soft cream→gold
-  // gradient + warm gold border (matches hi-fi-admin "highlight" KPI). The
-  // value also renders in gold-deep so the card reads as the page's hero
+  // v3 Deep Current: the "violet" variant is the hero/highlight KPI — a flat
+  // Violet-tinted card (no gradient; §3 of the brand handoff reserves the
+  // gradient for the logo alone) so it still reads as the page's headline
   // metric, not just a tinted icon chip.
-  const isGold = variant === "gold";
-  const cardClass = isGold
-    ? "rounded-[var(--radius-lg)] border border-[oklch(0.85_0.08_75)] p-4 shadow-sm relative overflow-hidden bg-[linear-gradient(165deg,oklch(0.96_0.04_75),oklch(0.92_0.06_75))]"
+  const isHighlight = variant === "violet";
+  const cardClass = isHighlight
+    ? "rounded-[var(--radius-lg)] border border-violet/30 p-4 shadow-sm relative overflow-hidden bg-violet/10"
     : "rounded-[var(--radius-lg)] border bg-card p-4 shadow-sm relative overflow-hidden";
-  const valueClass = isGold
-    ? "font-serif text-3xl font-normal mt-1 leading-none text-[color:var(--gold-deep)]"
+  const valueClass = isHighlight
+    ? "font-serif text-3xl font-normal mt-1 leading-none text-violet"
     : "font-serif text-3xl font-normal mt-1 leading-none";
 
   return (

@@ -23,13 +23,10 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse, NextRequest } from "next/server";
 import crypto from 'crypto';
 import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
-import { getModelForDepth } from "@/lib/openai";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { checkMonthlyCredits, checkGlobalDailyDreamCap } from "@/lib/monthlyCredits";
-import { sanitizeTags } from "@/lib/tags";
-import { encrypt, encryptJson, decryptDreamRow } from "@/lib/crypto";
-import { runDreamAnalysis } from "@/lib/dreamAnalysis";
-import { lookupVerse, type VerseLookupResult } from "@/lib/bibleLookup";
+import { analyzeAndPersist } from "@/lib/analysisPersistence";
+import { encrypt, decryptDreamRow } from "@/lib/crypto";
 import { captureServerEvent } from "@/lib/analytics-server";
 import { sendCreditsExhaustedEmail } from "@/lib/emails/send";
 import {
@@ -49,22 +46,6 @@ const DEBUG = process.env.NODE_ENV === 'development';
 // Extend Vercel function timeout to 60s (requires Pro plan; Hobby is capped at 10s).
 // The OpenAI call alone takes 5–15s, so this is required for analysis to complete.
 export const maxDuration = 60;
-
-// Simple in-memory analysis cache (LRU-style with TTL)
-const analysisCache = new Map<string, { result: any; timestamp: number }>();
-const CACHE_TTL_MS = 3600000; // 1 hour
-const MAX_CACHE_SIZE = 100;
-
-function getAnalysisCacheKey(
-  dreamText: string,
-  readingLevel: string,
-  analysisDepth: string,
-): string {
-  return crypto
-    .createHash('sha256')
-    .update(`${dreamText}:${readingLevel}:${analysisDepth}`)
-    .digest('hex');
-}
 
 interface MatrixCombo {
   depth: AnalysisDepth;
@@ -187,175 +168,16 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
   }
   const dreamId: string = dreamData.id;
 
-  // 2. Run the OpenAI analysis (cache-keyed by depth + reading level).
-  // `runDreamAnalysis` now returns { analysis, usage }. We cache only the
-  // analysis — token usage describes a specific API call, so a cache hit
-  // should report zero tokens (no billable call happened).
-  let analysisResult: any = null;
-  let analysisUsage: { inputTokens: number | null; outputTokens: number | null } = {
-    inputTokens: null,
-    outputTokens: null,
-  };
-  try {
-    const cacheKey = getAnalysisCacheKey(dreamText, combo.readingLevel, combo.depth);
-    const cached = analysisCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      if (DEBUG) console.log('✅ Analysis cache hit', { depth: combo.depth });
-      analysisResult = cached.result;
-      // Cache hit: no OpenAI call was made for this dream entry.
-      analysisUsage = { inputTokens: 0, outputTokens: 0 };
-    } else {
-      // Call the shared analyzer directly. Going through the route handler
-      // with a synthetic NextRequest broke under parallel fan-out because
-      // multiple concurrent invocations corrupted each other's output.
-      const { analysis: fresh, usage } = await runDreamAnalysis({
-        dream: dreamText,
-        topic: "dream interpretation",
-        readingLevel: combo.readingLevel,
-        analysisDepth: combo.depth,
-      });
-      analysisResult = fresh;
-      analysisUsage = usage;
-
-      if (analysisCache.size >= MAX_CACHE_SIZE) {
-        const oldestKey = analysisCache.keys().next().value;
-        if (oldestKey) analysisCache.delete(oldestKey);
-      }
-      analysisCache.set(cacheKey, { result: analysisResult, timestamp: Date.now() });
-    }
-
-    const {
-      analysis,
-      topicSentence,
-      supportingPoints = [],
-      conclusionSentence,
-      personalizedSummary,
-      dreamTitle,
-      biblicalReferences = [],
-      tags = [],
-    } = analysisResult;
-
-    const formattedAnalysis =
-      analysis ||
-      `${topicSentence} ${supportingPoints.join(" ")} ${conclusionSentence}`;
-    const dreamSummary = analysis
-      ? analysis.split(".").slice(0, 2).join(".") + "."
-      : "";
-
-    // Hydrate model-emitted citations against canonical KJV. The model returns
-    // citation strings only; book/chapter/verse/text come from lib/bibleLookup.
-    // Misses are logged but do not block persistence — we keep the original
-    // citation in bible_refs so the prose still references it.
-    interface HydratedRef {
-      index: number;
-      original: { citation?: string } | null;
-      lookup: VerseLookupResult;
-    }
-    const hydratedRefs: HydratedRef[] = biblicalReferences.map(
-      (ref: { citation?: string } | null, index: number) => ({
-        index,
-        original: ref,
-        lookup: lookupVerse(ref?.citation ?? ""),
-      }),
-    );
-
-    const lookupMisses = hydratedRefs.filter(
-      (h: HydratedRef) => h.lookup.status === "not_found",
-    );
-    if (lookupMisses.length > 0) {
-      console.warn(
-        `Citation lookup miss (depth=${combo.depth}, dream=${dreamId}, n=${lookupMisses.length}/${hydratedRefs.length}): ${lookupMisses
-          .map((h: HydratedRef) => `"${(h.original?.citation ?? "").trim()}"`)
-          .join(", ")}`,
-      );
-    }
-
-    const bibleRefs = hydratedRefs
-      .map(({ original, lookup }: HydratedRef) =>
-        lookup.status === "not_found"
-          ? (original?.citation ?? "").trim()
-          : lookup.normalizedRef,
-      )
-      .filter(Boolean);
-
-    const updateData: any = {
-      dream_summary: dreamSummary,
-      analysis_summary: analysis,
-      topic_sentence: topicSentence,
-      supporting_points: supportingPoints,
-      conclusion_sentence: conclusionSentence,
-      formatted_analysis: formattedAnalysis,
-      personalized_summary: personalizedSummary || null,
-      tags: sanitizeTags(tags),
-      bible_refs: bibleRefs,
-      raw_analysis_enc: encryptJson(analysisResult),
-      // Cost telemetry (migration 20260731000001). These same numbers go to
-      // chatgpt_interactions below, but utils/pricing.ts reads them off the
-      // dream row — denormalizing here is what makes the admin cost footer
-      // show a real figure instead of $0. model_used is recorded per row
-      // because per-tier overrides (OPENAI_MODEL_PROFOUND) mean two rows in
-      // this table can carry prices that differ by ~10×.
-      input_tokens: analysisUsage.inputTokens,
-      output_tokens: analysisUsage.outputTokens,
-      model_used: getModelForDepth(combo.depth),
-    };
-    if (dreamTitle?.trim()) updateData.title = dreamTitle;
-
-    // Only persist citation rows we could resolve against KJV. Hallucinated
-    // citations (status === "not_found") are intentionally skipped here so
-    // we never store known-bad verse text — they remain in bible_refs above
-    // so the prose context survives, but the lookup route will fall through
-    // to its placeholder for them.
-    const citations = hydratedRefs
-      .filter(({ lookup }: HydratedRef) => lookup.status !== "not_found")
-      .map(({ index, lookup }: HydratedRef) => ({
-        dream_entry_id: dreamId,
-        bible_book: lookup.book,
-        chapter: lookup.chapter,
-        verse: lookup.verse,
-        end_verse: lookup.endVerse,
-        full_text: lookup.text,
-        citation_order: index + 1,
-      }));
-
-    await Promise.all([
-      adminSupabase
-        .from("dream_entries")
-        .update(updateData)
-        .eq("id", dreamId)
-        .then(({ error }) => {
-          if (error) console.error("Error updating dream with analysis:", error);
-        }),
-      adminSupabase
-        .from("chatgpt_interactions")
-        .insert({
-          dream_entry_id: dreamId,
-          model: getModelForDepth(combo.depth),
-          temperature: 0.7,
-          input_tokens: analysisUsage.inputTokens,
-          output_tokens: analysisUsage.outputTokens,
-        } as never)
-        .then(({ error }) => {
-          if (error) console.error("Error storing ChatGPT interaction:", error);
-        }),
-      citations.length > 0
-        ? adminSupabase
-            .from("bible_citations")
-            .insert(citations as never)
-            .then(({ error }) => {
-              if (error) console.error("Error saving Bible citations:", error);
-            })
-        : Promise.resolve(),
-    ]);
-  } catch (analysisError) {
-    console.error("Analysis failed for combo:", combo, analysisError);
-    await adminSupabase
-      .from("dream_entries")
-      .update({
-        dream_summary: "Analysis could not be completed at this time.",
-      })
-      .eq("id", dreamId);
-  }
+  // 2. Run the analysis and write it onto the row. Shared with the
+  //    "Read again" route (lib/analysisPersistence) so both paths produce
+  //    identically-shaped readings, citations, and cost telemetry.
+  const { analysis: analysisResult } = await analyzeAndPersist({
+    adminSupabase,
+    dreamId,
+    dreamText,
+    depth: combo.depth,
+    readingLevel: combo.readingLevel,
+  });
 
   return { id: dreamId, analysis: analysisResult, combo };
 }

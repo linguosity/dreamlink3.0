@@ -62,8 +62,8 @@ export default async function SocialLinks() {
           rel="noopener noreferrer"
           aria-label={`DreamRiver on ${name}`}
           className="tap inline-flex items-center justify-center rounded-full
-                     text-gray-300 hover:text-white transition-colors
-                     focus-ring focus-visible:ring-offset-slate-950"
+                     text-mist-2/80 hover:text-mist transition-colors
+                     focus-ring focus-visible:ring-offset-navy-900"
         >
           {svg}
         </a>

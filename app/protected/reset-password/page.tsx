@@ -1,43 +1,13 @@
-import { resetPasswordAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { permanentRedirect } from "next/navigation";
 
-export default async function ResetPassword(props: {
-  searchParams: Promise<Message>;
-}) {
-  const searchParams = await props.searchParams;
-  return (
-    <form className="flex flex-col w-full max-w-md p-4 gap-2 [&>input]:mb-4">
-      <h1 className="text-2xl font-medium">Reset password</h1>
-      <p className="text-sm text-foreground/60">
-        Please enter your new password below.
-      </p>
-      <Label htmlFor="password">New password</Label>
-      <Input
-        id="password"
-        type="password"
-        name="password"
-        autoComplete="new-password"
-        placeholder="New password"
-        minLength={8}
-        required
-      />
-      <Label htmlFor="confirmPassword">Confirm password</Label>
-      <Input
-        id="confirmPassword"
-        type="password"
-        name="confirmPassword"
-        autoComplete="new-password"
-        placeholder="Confirm password"
-        minLength={8}
-        required
-      />
-      <SubmitButton formAction={resetPasswordAction}>
-        Reset password
-      </SubmitButton>
-      <FormMessage message={searchParams} />
-    </form>
-  );
+/**
+ * `/protected/reset-password` moved to `/reset-password` (HANDOFF-v3.md §6 —
+ * reset-password is an auth-flow page, grouped with sign-in/sign-up/
+ * forgot-password, not a `/protected` dashboard route). Permanent (308)
+ * redirect keeps already-sent password-reset emails and old bookmarks
+ * working — see app/auth/callback/route.ts's SAFE_REDIRECT_PATHS, which
+ * still recognizes this path for exactly that reason.
+ */
+export default function ResetPasswordRedirect() {
+  permanentRedirect("/reset-password");
 }

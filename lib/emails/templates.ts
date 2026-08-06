@@ -11,9 +11,12 @@
 //     client blocks remote content,
 //   - a plain-text fallback per email for text-only clients + spam scoring.
 //
-// Palette mirrors the DreamRiver "Moonwater" tokens in app/globals.css
-// (hex equivalents from the comments there): night #0E1A30, night-deep
-// #08111F, night-soft #1A2748, cream/starlight #F5ECD6, gold #D4A247.
+// Palette mirrors the DreamRiver v3 "Deep Current" tokens in
+// app/globals.css / design_handoff_revamp/assets/dr-tokens.css. These
+// emails always render on a dark ("Night") card, so they use the tokens'
+// own dark-mode values directly: bg #070A24, surface #0E1440, line #252C66,
+// ink #F0EFFC, and the dark-mode accent swap Violet Light #B39BFF (never
+// Indigo on Night — indigo is unreadable there, per the token contract).
 
 import { getSupportEmail } from "@/lib/resend";
 
@@ -27,15 +30,19 @@ export interface EmailContent {
 // emails must always point at the canonical domain, never a preview URL.
 const SITE_URL = "https://dreamriver.io";
 
-// Brand hex tokens (see header comment for the oklch sources).
-const NIGHT = "#0E1A30";
-const CARD = "#1A2748";
-const CARD_BORDER = "#2A3A5F";
-const STARLIGHT = "#F5ECD6";
-const BODY_TEXT = "#C9D2E4";
-const MUTED = "#8B96B3";
-const GOLD = "#D4A247";
-const GOLD_LIGHT = "#E6C073";
+// Brand hex tokens (see header comment for the source values).
+const NIGHT = "#070A24";
+const CARD = "#0E1440";
+const CARD_BORDER = "#252C66";
+const STARLIGHT = "#F0EFFC";
+const BODY_TEXT = "#C7CCEC";
+const MUTED = "#8790BE";
+// v3 "Deep Current" accent. These carried the v2 names ACCENT / ACCENT_HI long
+// after their values became Violet Light — a rename, not a colour change. The
+// stale names outlived a whole palette and were the last thing in the codebase
+// still calling the accent "gold".
+const ACCENT = "#B39BFF";
+const ACCENT_HI = "#C9B8FF";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -56,7 +63,7 @@ function ctaButton(label: string, href: string): string {
   return `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:26px auto 6px auto;">
   <tr>
-    <td align="center" bgcolor="${GOLD}" style="border-radius:8px; background-color:${GOLD};">
+    <td align="center" bgcolor="${ACCENT}" style="border-radius:8px; background-color:${ACCENT};">
       <a href="${href}" target="_blank" style="display:inline-block; padding:13px 32px; font-family:${SANS}; font-size:15px; font-weight:bold; color:${NIGHT}; text-decoration:none; border-radius:8px;">${label}</a>
     </td>
   </tr>
@@ -89,7 +96,7 @@ function wrap(
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:100%;">
         <tr>
           <td align="center" style="padding:0 0 22px 0; font-family:${SERIF}; font-size:24px; letter-spacing:1px; color:${STARLIGHT};">
-            <span style="color:${GOLD};">&#10022;</span>&nbsp;DreamRiver
+            <span style="color:${ACCENT};">&#10022;</span>&nbsp;DreamRiver
           </td>
         </tr>
         <tr>
@@ -99,7 +106,7 @@ function wrap(
         </tr>
         <tr>
           <td align="center" style="padding:24px 8px 0 8px; font-family:${SANS}; font-size:12px; line-height:1.7; color:${MUTED};">
-            Questions? Just reply, or write to <a href="mailto:${support}" style="color:${GOLD_LIGHT}; text-decoration:underline;">${support}</a>.<br/>
+            Questions? Just reply, or write to <a href="mailto:${support}" style="color:${ACCENT_HI}; text-decoration:underline;">${support}</a>.<br/>
             You're receiving this because you have a DreamRiver account.<br/>
             <a href="${SITE_URL}/settings" style="color:${MUTED}; text-decoration:underline;">Manage email preferences</a>${unsubscribeHtml}<br/>
             DreamRiver &middot; <a href="${SITE_URL}" style="color:${MUTED}; text-decoration:underline;">dreamriver.io</a>
@@ -403,7 +410,7 @@ export function weeklyDigestEmail(params: {
         : "",
       creditsExhausted
         ? para(
-            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${GOLD_LIGHT}; text-decoration:underline;">the Insight plan</a> continues it — and your journal stays free either way.`,
+            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${ACCENT_HI}; text-decoration:underline;">the Insight plan</a> continues it — and your journal stays free either way.`,
           )
         : "",
       ctaButton("Open your journal", cta),

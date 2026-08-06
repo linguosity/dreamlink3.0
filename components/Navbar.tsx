@@ -84,17 +84,17 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b bg-background px-3 py-3 sm:px-4 sm:py-4">
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: Logo - flexible width on mobile.
-            v2 Moonwater: contained app-icon squircle + wordmark. The squircle
-            keeps the brand mark consistent with social, app-store, and splash. */}
+            Contained app-icon squircle + wordmark. The squircle keeps the
+            brand mark consistent with social, app-store, and splash. */}
         <div className="flex-shrink-0 flex items-center gap-2">
           <Link
             href="/"
             aria-label="DreamRiver"
-            className="inline-flex items-center gap-2 text-gray-900 dark:text-gray-100 no-brand-style"
+            className="inline-flex items-center gap-2 text-foreground no-brand-style"
           >
             <BrandIcon size={32} alt="" />
-            {/* v2 Moonwater: italic-serif wordmark on sm+; abbreviated "DR"
-                in Cormorant on mobile to mirror the brand voice. */}
+            {/* Wordmark on sm+ (Quicksand 500, never italic — HANDOFF-v3.md
+                §3/§4); abbreviated "DR" wordmark on mobile. */}
             <Wordmark className="hidden sm:inline text-xl" />
             <span className="wordmark sm:hidden text-xl" aria-hidden="true">DR</span>
           </Link>
@@ -172,7 +172,7 @@ export default function Navbar() {
                   {keywords.length > 0 && (
                     <button
                       type="button"
-                      className="h-5 w-5 p-0 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="h-5 w-5 p-0 flex items-center justify-center rounded-full hover:bg-accent"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

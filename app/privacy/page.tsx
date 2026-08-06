@@ -5,13 +5,13 @@ export default function PrivacyPage() {
     <div className="flex-1 w-full flex flex-col items-center px-4 py-12">
       <div className="max-w-2xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">Privacy Policy</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           Last updated: July 2026
         </p>
 
-        <div className="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
+        <div className="space-y-6 text-muted-foreground leading-relaxed">
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Information We Collect
             </h2>
             <p>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Cookies &amp; Analytics
             </h2>
             {/* <!-- JUSTIN REVIEW: this entire section is new. Please confirm
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               How We Use Your Data
             </h2>
             <p>
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Legal Basis for Processing (GDPR)
             </h2>
             <p>
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Data Storage &amp; Security
             </h2>
             <p>
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Third-Party Services
             </h2>
             <p>
@@ -157,7 +157,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Your Rights
             </h2>
             <p>
@@ -209,7 +209,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               California Privacy Rights (CCPA)
             </h2>
             <p>
@@ -229,7 +229,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Children&apos;s Privacy
             </h2>
             <p>
@@ -241,7 +241,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Data Retention
             </h2>
             <p>
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               International Data Transfers
             </h2>
             <p>
@@ -266,7 +266,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Changes to This Policy
             </h2>
             <p>
@@ -278,7 +278,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Contact
             </h2>
             <p>
@@ -298,7 +298,7 @@ export default function PrivacyPage() {
         <div className="pt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             &larr; Back to journal
           </Link>

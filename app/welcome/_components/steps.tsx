@@ -2,11 +2,15 @@
 
 // The 7 onboarding step screens + PlanCard + PendingModal. Ported from the
 // design handoff prototype into the codebase's React/TSX + atoms.
+//
+// v3 Deep Current: always light-mode (see atoms.tsx header note) — Gold →
+// Indigo, Gold Light's one background use → Violet, Night-Deep (paired text)
+// → Accent Ink, warm-hued oklch(...) chip/badge literals → Mist/Violet-050.
 
 import * as React from "react";
 import Link from "next/link";
 import {
-  Icon, AppIcon, GoldBtn, StepBadge, TextField, Check, NavRow, FONTS,
+  Icon, AppIcon, PrimaryBtn, StepBadge, TextField, Check, NavRow, FONTS,
 } from "./atoms";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import type { OnboardingData, ReadingDepthId } from "../onboarding-lib";
@@ -18,8 +22,8 @@ type StepProps = {
   back: () => void;
 };
 
-const H2: React.CSSProperties = { fontFamily: FONTS.SERIF, fontSize: 30, lineHeight: 1.12, color: "var(--warm-darker)", marginBottom: 8 };
-const SUB: React.CSSProperties = { fontSize: 14.5, color: "var(--warm-muted)", marginBottom: 24, lineHeight: 1.55 };
+const H2: React.CSSProperties = { fontFamily: FONTS.SERIF, fontSize: 30, lineHeight: 1.12, color: "var(--ink)", marginBottom: 8 };
+const SUB: React.CSSProperties = { fontSize: 14.5, color: "var(--muted-foreground)", marginBottom: 24, lineHeight: 1.55 };
 
 /* ── 0 · Welcome ── */
 export function StepWelcome({ next }: { next: () => void }) {
@@ -33,28 +37,29 @@ export function StepWelcome({ next }: { next: () => void }) {
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
         <BrandIcon size={84} alt="" />
       </div>
-      <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--gold-deep)", marginBottom: 14 }}>Welcome to</div>
-      <h1 style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", fontWeight: 500, fontSize: 40, lineHeight: 1.08, color: "var(--gold-deep)", marginBottom: 16 }}>DreamRiver</h1>
-      <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--warm-muted)", maxWidth: "38ch", margin: "0 auto 32px" }}>
+      <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--indigo)", marginBottom: 14 }}>Welcome to</div>
+      {/* Wordmark: Quicksand 500, never italic (HANDOFF-v3.md §3/§4). */}
+      <h1 style={{ fontFamily: FONTS.WORDMARK, fontWeight: 500, fontSize: 40, lineHeight: 1.08, color: "var(--indigo)", marginBottom: 16 }}>DreamRiver</h1>
+      <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--muted-foreground)", maxWidth: "38ch", margin: "0 auto 32px" }}>
         A quiet place to record your dreams and discover what God may be saying through them — every reading grounded in scripture.
       </p>
       <div style={{ display: "grid", gap: 12, textAlign: "left", maxWidth: 360, margin: "0 auto 34px" }}>
         {rows.map((r) => (
           <div key={r.t} style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: "oklch(0.95 0.04 80)", border: "1px solid oklch(0.87 0.07 80)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-deep)", flexShrink: 0 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 11, background: "var(--violet-050)", border: "1px solid var(--mist-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--indigo)", flexShrink: 0 }}>
               <Icon name={r.icon} size={19} stroke={1.7} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--warm-darker)" }}>{r.t}</div>
-              <div style={{ fontSize: 12.5, color: "var(--warm-muted)" }}>{r.d}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{r.t}</div>
+              <div style={{ fontSize: 12.5, color: "var(--muted-foreground)" }}>{r.d}</div>
             </div>
           </div>
         ))}
       </div>
-      <GoldBtn full onClick={next}>Begin <Icon name="arrowRight" size={18} color="var(--night-deep)" stroke={2.2} /></GoldBtn>
-      <div style={{ fontSize: 12.5, color: "var(--warm-muted)", marginTop: 16 }}>
+      <PrimaryBtn full onClick={next}>Begin <Icon name="arrowRight" size={18} color="var(--accent-ink)" stroke={2.2} /></PrimaryBtn>
+      <div style={{ fontSize: 12.5, color: "var(--muted-foreground)", marginTop: 16 }}>
         Already have an account?{" "}
-        <Link href="/sign-in" style={{ color: "var(--gold-deep)", fontWeight: 600 }}>Sign in</Link>
+        <Link href="/sign-in" style={{ color: "var(--indigo)", fontWeight: 600 }}>Sign in</Link>
       </div>
     </div>
   );
@@ -81,23 +86,23 @@ export function StepReading({ data, update, next, back }: StepProps) {
           return (
             <div key={l.id} onClick={() => update({ readingLevel: l.id })} style={{
               display: "flex", gap: 14, alignItems: "flex-start", padding: "15px 16px", borderRadius: 13, cursor: "pointer",
-              background: active ? "oklch(0.96 0.045 80)" : "white",
-              border: `1.5px solid ${active ? "var(--gold)" : "var(--warm-line)"}`,
-              outline: active ? "3px solid oklch(0.72 0.14 75 / 0.14)" : "3px solid transparent", transition: "all 0.15s",
+              background: active ? "var(--violet-050)" : "white",
+              border: `1.5px solid ${active ? "var(--indigo)" : "var(--line)"}`,
+              outline: active ? "3px solid color-mix(in oklab, var(--indigo) 14%, transparent)" : "3px solid transparent", transition: "all 0.15s",
             }}>
-              <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: active ? "var(--gold)" : "oklch(0.96 0.02 80)", color: active ? "var(--night-deep)" : "var(--gold-deep)", transition: "all 0.15s" }}>
+              <div style={{ width: 42, height: 42, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: active ? "var(--indigo)" : "var(--mist)", color: active ? "var(--accent-ink)" : "var(--indigo)", transition: "all 0.15s" }}>
                 <Icon name={l.icon} size={21} stroke={1.7} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: FONTS.SERIF, fontSize: 17, color: "var(--warm-darker)" }}>{l.name}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gold-deep)", background: "oklch(0.94 0.05 80)", padding: "2px 7px", borderRadius: 100 }}>{l.tag}</span>
-                  {l.rec && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--night-deep)", background: "var(--gold-light)", padding: "2px 7px", borderRadius: 100 }}>Recommended</span>}
+                  <span style={{ fontFamily: FONTS.SERIF, fontSize: 17, color: "var(--ink)" }}>{l.name}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--indigo)", background: "var(--violet-050)", padding: "2px 7px", borderRadius: 100 }}>{l.tag}</span>
+                  {l.rec && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent-ink)", background: "var(--violet)", padding: "2px 7px", borderRadius: 100 }}>Recommended</span>}
                 </div>
-                <div style={{ fontSize: 12.5, color: "var(--warm-muted)", lineHeight: 1.5 }}>{l.desc}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted-foreground)", lineHeight: 1.5 }}>{l.desc}</div>
               </div>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 2, border: `1.5px solid ${active ? "var(--gold)" : "var(--warm-line)"}`, background: active ? "var(--gold)" : "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {active && <Icon name="check" size={12} color="var(--night-deep)" stroke={3} />}
+              <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 2, border: `1.5px solid ${active ? "var(--indigo)" : "var(--line)"}`, background: active ? "var(--indigo)" : "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {active && <Icon name="check" size={12} color="var(--accent-ink)" stroke={3} />}
               </div>
             </div>
           );
@@ -120,18 +125,18 @@ export function StepEmail({ data, update, next, back, openTerms }: StepProps & {
       <div style={{ marginBottom: 20 }}>
         <TextField label="Email address" type="email" icon="mail" autoFocus value={data.email || ""} onChange={(v) => update({ email: v })} placeholder="you@example.com" />
       </div>
-      <div style={{ display: "grid", gap: 14, padding: "16px 18px", background: "oklch(0.98 0.008 80)", border: "1px solid var(--warm-line)", borderRadius: 12, marginBottom: 26 }}>
+      <div style={{ display: "grid", gap: 14, padding: "16px 18px", background: "var(--mist)", border: "1px solid var(--line)", borderRadius: 12, marginBottom: 26 }}>
         <Check checked={!!data.agreeTerms} onChange={(v) => update({ agreeTerms: v })}>
           I agree to the{" "}
-          <span onClick={(e) => { e.stopPropagation(); openTerms(); }} style={{ color: "var(--gold-deep)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>Terms &amp; Privacy Policy</span>, including how my dream entries are processed.
+          <span onClick={(e) => { e.stopPropagation(); openTerms(); }} style={{ color: "var(--indigo)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>Terms &amp; Privacy Policy</span>, including how my dream entries are processed.
         </Check>
         <Check checked={!!data.agreeResearch} onChange={(v) => update({ agreeResearch: v })}>
-          <span style={{ color: "var(--warm-muted)" }}>Optionally, use my anonymized dream <em>themes</em> (never the content) to improve interpretations for everyone.</span>
+          <span style={{ color: "var(--muted-foreground)" }}>Optionally, use my anonymized dream <em>themes</em> (never the content) to improve interpretations for everyone.</span>
         </Check>
       </div>
       <NavRow back={back} next={next} disabled={!canGo} nextLabel="Send verification code" />
       {!data.agreeTerms && valid && (
-        <div style={{ fontSize: 12, color: "var(--warm-muted)", textAlign: "center", marginTop: 12 }}>Please accept the terms to continue.</div>
+        <div style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center", marginTop: 12 }}>Please accept the terms to continue.</div>
       )}
     </div>
   );
@@ -161,18 +166,19 @@ export function StepVerify({ data, update, next, back }: StepProps) {
     <div style={{ textAlign: "center" }}>
       <div style={{ display: "flex", justifyContent: "center" }}><StepBadge name="mailCheck" /></div>
       <h2 style={H2}>Check your inbox</h2>
-      <p style={SUB}>We sent a 6-digit code to<br /><strong style={{ color: "var(--warm-darker)" }}>{data.email || "your email"}</strong></p>
+      <p style={SUB}>We sent a 6-digit code to<br /><strong style={{ color: "var(--ink)" }}>{data.email || "your email"}</strong></p>
       <div style={{ display: "flex", gap: 9, justifyContent: "center", marginBottom: 18 }} onPaste={onPaste}>
         {code.map((c, i) => (
           <input key={i} ref={(el) => { refs.current[i] = el; }} value={c} onChange={(e) => setDigit(i, e.target.value)} onKeyDown={(e) => onKey(i, e)}
             inputMode="numeric" maxLength={1} autoFocus={i === 0}
-            style={{ width: 46, height: 56, textAlign: "center", fontSize: 24, fontWeight: 700, fontFamily: FONTS.SERIF, color: "var(--warm-darker)", border: `1.5px solid ${c ? "var(--gold)" : "var(--warm-line)"}`, borderRadius: 12, background: "white", outline: "none", transition: "border 0.15s" }} />
+            style={{ width: 46, height: 56, textAlign: "center", fontSize: 24, fontWeight: 700, fontFamily: FONTS.SERIF, color: "var(--ink)", border: `1.5px solid ${c ? "var(--indigo)" : "var(--line)"}`, borderRadius: 12, background: "white", outline: "none", transition: "border 0.15s" }} />
         ))}
       </div>
-      <div style={{ fontSize: 12.5, color: "var(--warm-muted)", marginBottom: 26 }}>
+      <div style={{ fontSize: 12.5, color: "var(--muted-foreground)", marginBottom: 26 }}>
         Didn&rsquo;t get it?{" "}
-        <span onClick={() => { setResent(true); setTimeout(() => setResent(false), 2200); }} style={{ color: "var(--gold-deep)", fontWeight: 600, cursor: "pointer" }}>{resent ? "✓ Code resent" : "Resend code"}</span>
-        <span style={{ display: "block", marginTop: 6, opacity: 0.7, fontStyle: "italic" }}>Demo: enter any 6 digits to continue</span>
+        <span onClick={() => { setResent(true); setTimeout(() => setResent(false), 2200); }} style={{ color: "var(--indigo)", fontWeight: 600, cursor: "pointer" }}>{resent ? "✓ Code resent" : "Resend code"}</span>
+        {/* Emphasis is weight, never italic (HANDOFF-v3.md §3/§4). */}
+        <span style={{ display: "block", marginTop: 6, opacity: 0.7 }}>Demo: enter any 6 digits to continue</span>
       </div>
       <NavRow back={back} next={next} disabled={!filled} nextLabel="Verify & continue" />
     </div>
@@ -188,15 +194,15 @@ export function StepProfile({ data, update, next, back }: StepProps) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <StepBadge name="user" />
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gold-deep)", background: "oklch(0.95 0.04 80)", padding: "5px 11px", borderRadius: 100, border: "1px solid oklch(0.87 0.07 80)" }}>Optional</span>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--indigo)", background: "var(--violet-050)", padding: "5px 11px", borderRadius: 100, border: "1px solid var(--mist-2)" }}>Optional</span>
       </div>
       <h2 style={H2}>A little about you</h2>
       <p style={SUB}>This helps us tailor your readings — but it&rsquo;s entirely up to you. Skip it and DreamRiver works just the same.</p>
       <div style={{ display: "grid", gap: 18, marginBottom: 22 }}>
         <TextField label="First name" icon="user" optional value={data.firstName || ""} onChange={(v) => update({ firstName: v })} placeholder="What should we call you?" />
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--warm-darker)", marginBottom: 9 }}>
-            What draws you to DreamRiver? <span style={{ fontWeight: 400, color: "var(--warm-muted)", fontSize: 11.5 }}>· choose any</span>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", marginBottom: 9 }}>
+            What draws you to DreamRiver? <span style={{ fontWeight: 400, color: "var(--muted-foreground)", fontSize: 11.5 }}>· choose any</span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {DRAWS.map((d) => {
@@ -204,16 +210,16 @@ export function StepProfile({ data, update, next, back }: StepProps) {
               return (
                 <button key={d} type="button" onClick={() => toggle(d)} style={{
                   fontFamily: "inherit", fontSize: 13, fontWeight: on ? 600 : 500, cursor: "pointer", padding: "8px 14px", borderRadius: 100,
-                  background: on ? "var(--gold)" : "white", color: on ? "var(--night-deep)" : "var(--warm-dark)",
-                  border: `1px solid ${on ? "var(--gold)" : "var(--warm-line)"}`, transition: "all 0.15s",
+                  background: on ? "var(--indigo)" : "white", color: on ? "var(--accent-ink)" : "var(--ink)",
+                  border: `1px solid ${on ? "var(--indigo)" : "var(--line)"}`, transition: "all 0.15s",
                 }}>{d}</button>
               );
             })}
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", background: "oklch(0.98 0.008 80)", border: "1px solid var(--warm-line)", borderRadius: 10, marginBottom: 24, fontSize: 12, color: "var(--warm-muted)" }}>
-        <Icon name="lock" size={15} color="var(--gold-deep)" stroke={1.7} /> Private to your account. Never shared or sold.
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", background: "var(--mist)", border: "1px solid var(--line)", borderRadius: 10, marginBottom: 24, fontSize: 12, color: "var(--muted-foreground)" }}>
+        <Icon name="lock" size={15} color="var(--indigo)" stroke={1.7} /> Private to your account. Never shared or sold.
       </div>
       <NavRow back={back} next={next} skip={next} />
     </div>
@@ -237,15 +243,15 @@ export function StepPlan({ data, update, next, back }: StepProps) {
       <h2 style={H2}>Choose how you&rsquo;ll begin</h2>
       <p style={SUB}>Start free with 3 dream credits. Upgrade anytime for more interpretations.</p>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-        <div style={{ display: "inline-flex", gap: 3, padding: 3, background: "oklch(0.95 0.012 80)", borderRadius: 100, border: "1px solid var(--warm-line)" }}>
+        <div style={{ display: "inline-flex", gap: 3, padding: 3, background: "var(--mist)", borderRadius: 100, border: "1px solid var(--line)" }}>
           {([["monthly", "Monthly"], ["yearly", "Yearly"]] as const).map(([id, lab]) => (
             <button key={id} type="button" onClick={() => update({ cycle: id })} style={{
               fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "7px 18px", borderRadius: 100, border: "none",
-              background: cycle === id ? "white" : "transparent", color: cycle === id ? "var(--warm-darker)" : "var(--warm-muted)",
+              background: cycle === id ? "white" : "transparent", color: cycle === id ? "var(--ink)" : "var(--muted-foreground)",
               boxShadow: cycle === id ? "0 1px 3px oklch(0.2 0.02 250 / 0.12)" : "none", display: "inline-flex", alignItems: "center", gap: 7,
             }}>
               {lab}
-              {id === "yearly" && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gold-deep)", background: "oklch(0.94 0.06 80)", padding: "1px 6px", borderRadius: 100 }}>−36%</span>}
+              {id === "yearly" && <span style={{ fontSize: 10, fontWeight: 700, color: "var(--indigo)", background: "var(--violet-050)", padding: "1px 6px", borderRadius: 100 }}>−36%</span>}
             </button>
           ))}
         </div>
@@ -271,28 +277,31 @@ function PlanCard({
   return (
     <div onClick={onClick} style={{
       position: "relative", cursor: "pointer", borderRadius: 15, padding: "20px 20px 18px",
-      background: active ? (highlight ? "linear-gradient(160deg, oklch(0.97 0.03 80), oklch(0.95 0.05 80))" : "oklch(0.96 0.04 80)") : "white",
-      border: `1.5px solid ${active ? "var(--gold)" : "var(--warm-line)"}`,
-      outline: active ? "3px solid oklch(0.72 0.14 75 / 0.14)" : "3px solid transparent", transition: "all 0.15s",
+      // Flat fills — no gradient outside the logo (HANDOFF-v3.md §0/§8).
+      // Highlighted (recommended) plan gets the slightly more present Mist
+      // tint; a plain active selection stays on the paler Violet-050.
+      background: active ? (highlight ? "var(--mist)" : "var(--violet-050)") : "white",
+      border: `1.5px solid ${active ? "var(--indigo)" : "var(--line)"}`,
+      outline: active ? "3px solid color-mix(in oklab, var(--indigo) 14%, transparent)" : "3px solid transparent", transition: "all 0.15s",
     }}>
-      {badge && <div style={{ position: "absolute", top: -10, right: 18, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--night-deep)", background: "var(--gold)", padding: "3px 10px", borderRadius: 100, boxShadow: "0 2px 6px oklch(0.72 0.14 75 / 0.4)" }}>{badge}</div>}
+      {badge && <div style={{ position: "absolute", top: -10, right: 18, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--accent-ink)", background: "var(--indigo)", padding: "3px 10px", borderRadius: 100, boxShadow: "0 2px 6px color-mix(in oklab, var(--indigo) 40%, transparent)" }}>{badge}</div>}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: active ? "var(--gold)" : "oklch(0.96 0.02 80)", color: active ? "var(--night-deep)" : "var(--gold-deep)" }}>
+        <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: active ? "var(--indigo)" : "var(--mist)", color: active ? "var(--accent-ink)" : "var(--indigo)" }}>
           <Icon name={icon} size={19} stroke={1.7} />
         </div>
-        <div style={{ flex: 1 }}><div style={{ fontFamily: FONTS.SERIF, fontSize: 19, color: "var(--warm-darker)", lineHeight: 1 }}>{name}</div></div>
+        <div style={{ flex: 1 }}><div style={{ fontFamily: FONTS.SERIF, fontSize: 19, color: "var(--ink)", lineHeight: 1 }}>{name}</div></div>
         <div style={{ textAlign: "right" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 3, justifyContent: "flex-end" }}>
-            <span style={{ fontFamily: FONTS.SERIF, fontSize: 24, color: "var(--warm-darker)" }}>{price}</span>
-            <span style={{ fontSize: 12.5, color: "var(--warm-muted)" }}>{per}</span>
+            <span style={{ fontFamily: FONTS.SERIF, fontSize: 24, color: "var(--ink)" }}>{price}</span>
+            <span style={{ fontSize: 12.5, color: "var(--muted-foreground)" }}>{per}</span>
           </div>
-          {effective && <div style={{ fontSize: 11, color: "var(--gold-deep)", fontWeight: 600 }}>{effective}</div>}
+          {effective && <div style={{ fontSize: 11, color: "var(--indigo)", fontWeight: 600 }}>{effective}</div>}
         </div>
       </div>
       <div style={{ display: "grid", gap: 7 }}>
         {features.map((f) => (
-          <div key={f} style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 12.5, color: "var(--warm-dark)", lineHeight: 1.45 }}>
-            <Icon name="check" size={14} color="var(--gold-deep)" stroke={2.4} style={{ marginTop: 2 }} /><span>{f}</span>
+          <div key={f} style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 12.5, color: "var(--ink)", lineHeight: 1.45 }}>
+            <Icon name="check" size={14} color="var(--indigo)" stroke={2.4} style={{ marginTop: 2 }} /><span>{f}</span>
           </div>
         ))}
       </div>
@@ -306,19 +315,20 @@ function PendingModal({
   return (
     <div style={{ position: "absolute", inset: 0, background: "oklch(0.1 0.02 250 / 0.55)", backdropFilter: "blur(3px)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 20 }}>
       <div style={{ background: "white", borderRadius: 18, padding: "30px 28px", maxWidth: 380, width: "100%", boxShadow: "0 20px 50px oklch(0.1 0.02 250 / 0.4)", textAlign: "center", position: "relative" }}>
-        <div style={{ width: 54, height: 54, borderRadius: 15, margin: "0 auto 18px", background: "oklch(0.95 0.04 80)", border: "1px solid oklch(0.87 0.07 80)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-deep)" }}>
+        <div style={{ width: 54, height: 54, borderRadius: 15, margin: "0 auto 18px", background: "var(--violet-050)", border: "1px solid var(--mist-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--indigo)" }}>
           <Icon name="clock" size={26} stroke={1.7} />
         </div>
-        <h3 style={{ fontFamily: FONTS.SERIF, fontSize: 22, color: "var(--warm-darker)", marginBottom: 10 }}>Upgrades open soon</h3>
-        <p style={{ fontSize: 13.5, color: "var(--warm-muted)", lineHeight: 1.6, marginBottom: 20 }}>
+        <h3 style={{ fontFamily: FONTS.SERIF, fontSize: 22, color: "var(--ink)", marginBottom: 10 }}>Upgrades open soon</h3>
+        <p style={{ fontSize: 13.5, color: "var(--muted-foreground)", lineHeight: 1.6, marginBottom: 20 }}>
           Card payments aren&rsquo;t live just yet. Join free now with your 3 credits, and we&rsquo;ll email you the moment{" "}
-          <span style={{ fontFamily: FONTS.WORDMARK, fontStyle: "italic", color: "var(--gold-deep)" }}>Insight</span> ({price}{per}) is ready.
+          {/* Emphasis is weight, never italic (HANDOFF-v3.md §3/§4). */}
+          <span style={{ fontFamily: FONTS.WORDMARK, fontWeight: 500, color: "var(--indigo)" }}>Insight</span> ({price}{per}) is ready.
         </p>
-        <div style={{ padding: "12px 14px", background: "oklch(0.98 0.008 80)", border: "1px solid var(--warm-line)", borderRadius: 11, marginBottom: 20, textAlign: "left" }}>
+        <div style={{ padding: "12px 14px", background: "var(--mist)", border: "1px solid var(--line)", borderRadius: 11, marginBottom: 20, textAlign: "left" }}>
           <Check checked={data.notifyUpgrade !== false} onChange={(v) => update({ notifyUpgrade: v })}>Email me when Insight upgrades go live</Check>
         </div>
-        <GoldBtn full onClick={onProceed}>Continue with free for now</GoldBtn>
-        <div onClick={onClose} style={{ fontSize: 13, color: "var(--warm-muted)", fontWeight: 600, marginTop: 14, cursor: "pointer" }}>Back to plans</div>
+        <PrimaryBtn full onClick={onProceed}>Continue with free for now</PrimaryBtn>
+        <div onClick={onClose} style={{ fontSize: 13, color: "var(--muted-foreground)", fontWeight: 600, marginTop: 14, cursor: "pointer" }}>Back to plans</div>
       </div>
     </div>
   );
@@ -331,35 +341,35 @@ export function StepDone({ data, restart, onFinish }: { data: OnboardingData; re
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
-        <div style={{ position: "relative" }}>
-          <div style={{ position: "absolute", inset: -18, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.72 0.14 75 / 0.35) 0%, transparent 70%)" }} />
-          <BrandIcon size={88} alt="" />
-        </div>
+        {/* No gradient outside the logo (HANDOFF-v3.md §0/§8) — the v2 glow
+            ring behind the mark is gone. */}
+        <BrandIcon size={88} alt="" />
       </div>
-      <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--gold-deep)", marginBottom: 12 }}>You&rsquo;re in</div>
-      <h2 style={{ fontFamily: FONTS.SERIF, fontSize: 32, lineHeight: 1.1, color: "var(--warm-darker)", marginBottom: 14 }}>
-        {name ? <>Welcome, <span style={{ fontStyle: "italic" }}>{name}</span>.</> : "Welcome to the river."}
+      <div style={{ fontFamily: FONTS.MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--indigo)", marginBottom: 12 }}>You&rsquo;re in</div>
+      <h2 style={{ fontFamily: FONTS.SERIF, fontSize: 32, lineHeight: 1.1, color: "var(--ink)", marginBottom: 14 }}>
+        {/* Emphasis is weight, never italic (HANDOFF-v3.md §3/§4). */}
+        {name ? <>Welcome, <span style={{ fontWeight: 500 }}>{name}</span>.</> : "Welcome to the river."}
       </h2>
-      <p style={{ fontSize: 15, color: "var(--warm-muted)", lineHeight: 1.6, maxWidth: "36ch", margin: "0 auto 26px" }}>
-        Your free account is ready with <strong style={{ color: "var(--warm-darker)" }}>3 dream credits</strong>, set to <strong style={{ color: "var(--gold-deep)" }}>{levelName}</strong> readings.
+      <p style={{ fontSize: 15, color: "var(--muted-foreground)", lineHeight: 1.6, maxWidth: "36ch", margin: "0 auto 26px" }}>
+        Your free account is ready with <strong style={{ color: "var(--ink)" }}>3 dream credits</strong>, set to <strong style={{ color: "var(--indigo)" }}>{levelName}</strong> readings.
       </p>
       <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 30 }}>
-        <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--warm-line)", borderRadius: 12 }}>
-          <div style={{ fontFamily: FONTS.SERIF, fontSize: 26, color: "var(--gold-deep)", lineHeight: 1 }}>3</div>
-          <div style={{ fontSize: 11.5, color: "var(--warm-muted)", marginTop: 4 }}>credits to start</div>
+        <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--line)", borderRadius: 12 }}>
+          <div style={{ fontFamily: FONTS.SERIF, fontSize: 26, color: "var(--indigo)", lineHeight: 1 }}>3</div>
+          <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", marginTop: 4 }}>credits to start</div>
         </div>
-        <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--warm-line)", borderRadius: 12 }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}><Icon name="shieldCheck" size={26} color="var(--gold-deep)" stroke={1.5} /></div>
-          <div style={{ fontSize: 11.5, color: "var(--warm-muted)" }}>email verified</div>
+        <div style={{ flex: 1, maxWidth: 150, padding: "14px 12px", background: "white", border: "1px solid var(--line)", borderRadius: 12 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}><Icon name="shieldCheck" size={26} color="var(--indigo)" stroke={1.5} /></div>
+          <div style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>email verified</div>
         </div>
       </div>
-      <GoldBtn full onClick={onFinish}><Icon name="penLine" size={18} color="var(--night-deep)" stroke={2} /> Write your first dream</GoldBtn>
+      <PrimaryBtn full onClick={onFinish}><Icon name="penLine" size={18} color="var(--accent-ink)" stroke={2} /> Write your first dream</PrimaryBtn>
       {data.notifyUpgrade !== false && data.plan === "visionary" && (
-        <div style={{ fontSize: 12, color: "var(--warm-muted)", marginTop: 16, display: "flex", gap: 7, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="bell" size={14} color="var(--gold-deep)" stroke={1.7} /> We&rsquo;ll email you when Insight upgrades open.
+        <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 16, display: "flex", gap: 7, alignItems: "center", justifyContent: "center" }}>
+          <Icon name="bell" size={14} color="var(--indigo)" stroke={1.7} /> We&rsquo;ll email you when Insight upgrades open.
         </div>
       )}
-      <div onClick={restart} style={{ fontSize: 12, color: "var(--warm-muted)", marginTop: 22, cursor: "pointer", opacity: 0.7 }}>↺ Restart onboarding</div>
+      <div onClick={restart} style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 22, cursor: "pointer", opacity: 0.7 }}>↺ Restart onboarding</div>
     </div>
   );
 }

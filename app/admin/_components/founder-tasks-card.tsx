@@ -43,7 +43,7 @@ export default async function FounderTasksCard() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-[color:var(--gold-deep)]" />
+            <ClipboardList className="w-4 h-4 text-primary" />
             This week
             {week && (
               <span className="text-[11.5px] font-normal text-muted-foreground">

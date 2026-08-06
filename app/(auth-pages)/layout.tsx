@@ -17,6 +17,7 @@
 
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { FormMessage, Message } from "@/components/form-message";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -30,6 +31,16 @@ export default async function AuthLayout({
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   try {
+    // /reset-password is the one auth-pages route that's SUPPOSED to have a
+    // session: clicking the emailed reset link signs the visitor into a
+    // temporary Supabase "recovery" session via /auth/callback before they
+    // land here. Every other page in this group means the opposite (a
+    // session means "already signed in, go home") — so this route alone is
+    // exempt from that redirect, or nobody could ever reach the password
+    // form they just clicked through to.
+    const pathname = (await headers()).get("x-pathname") || "";
+    const isResetPassword = pathname === "/reset-password";
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -39,7 +50,7 @@ export default async function AuthLayout({
     // If we have a JWT error, don't redirect - just show the login page
     if (error && (error.message.includes('JWT') || error.message.includes('expired') || error.message.includes('token'))) {
       console.log("JWT expired, showing login page");
-    } else if (user) {
+    } else if (user && !isResetPassword) {
       // If already logged in, send them home—preserve any ?success=… query
       const params = searchParams ? new URLSearchParams(
         Object.entries(searchParams)

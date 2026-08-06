@@ -31,6 +31,11 @@ const SAFE_REDIRECT_PATHS = new Set<string>([
   "/account",
   "/settings",
   "/protected",
+  "/reset-password",
+  // Back-compat: password-reset emails sent before the HANDOFF-v3.md §6
+  // move still carry this in their link. app/protected/reset-password/
+  // now redirects to /reset-password itself, so this is a harmless second
+  // hop, not a dead end.
   "/protected/reset-password",
 ]);
 

@@ -49,22 +49,22 @@ export default function SiteHeader() {
      after:h-0.5 after:bg-primary after:origin-left after:transition-transform
      ${
        active === id
-         ? "text-gray-900 dark:text-white after:scale-x-100"
-         : "text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white after:scale-x-0"
+         ? "text-foreground after:scale-x-100"
+         : "text-muted-foreground hover:text-foreground after:scale-x-0"
      }`;
 
   return (
     <nav
       className={`sticky top-0 z-50 transition-shadow backdrop-blur-md
-                  bg-white/80 dark:bg-slate-950/80
-                  border-b border-gray-200/70 dark:border-slate-800/70
+                  bg-background/80
+                  border-b border-border
                   ${scrolled ? "shadow-sm" : "shadow-none"}`}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link
           href="/landing"
           aria-label="DreamRiver — home"
-          className="inline-flex items-center gap-2 focus-ring rounded text-xl text-gray-900 dark:text-white"
+          className="inline-flex items-center gap-2 focus-ring rounded text-xl text-foreground"
         >
           {/* DreamRiver logo — squircle + wordmark */}
           <BrandIcon size={32} alt="" />
@@ -84,13 +84,13 @@ export default function SiteHeader() {
           </Link>
           <Link
             href="/blog"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors focus-ring rounded px-1 py-0.5"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-0.5"
           >
             Journal
           </Link>
           <Link
             href="/sign-in"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors focus-ring rounded px-1 py-0.5"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-0.5"
           >
             Sign In
           </Link>
@@ -109,7 +109,7 @@ export default function SiteHeader() {
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen((v) => !v)}
-          className="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 rounded-lg text-gray-700 dark:text-gray-200 focus-ring"
+          className="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 rounded-lg text-foreground focus-ring"
         >
           <svg
             width="22"
@@ -141,41 +141,41 @@ export default function SiteHeader() {
       <div
         id="mobile-nav"
         hidden={!open}
-        className="md:hidden border-t border-gray-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-950"
+        className="md:hidden border-t border-border bg-background"
       >
         <div className="px-4 py-4 flex flex-col gap-1">
           <Link
             href="/landing#features"
             onClick={() => setOpen(false)}
-            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+            className="tap block py-3 px-2 text-base font-medium text-foreground rounded-md hover:bg-accent focus-ring"
           >
             Features
           </Link>
           <Link
             href="/landing#how-it-works"
             onClick={() => setOpen(false)}
-            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+            className="tap block py-3 px-2 text-base font-medium text-foreground rounded-md hover:bg-accent focus-ring"
           >
             How It Works
           </Link>
           <Link
             href="/landing#plans"
             onClick={() => setOpen(false)}
-            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+            className="tap block py-3 px-2 text-base font-medium text-foreground rounded-md hover:bg-accent focus-ring"
           >
             Plans
           </Link>
           <Link
             href="/blog"
             onClick={() => setOpen(false)}
-            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+            className="tap block py-3 px-2 text-base font-medium text-foreground rounded-md hover:bg-accent focus-ring"
           >
             Journal
           </Link>
           <Link
             href="/sign-in"
             onClick={() => setOpen(false)}
-            className="tap block py-3 px-2 text-base font-medium text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 focus-ring"
+            className="tap block py-3 px-2 text-base font-medium text-foreground rounded-md hover:bg-accent focus-ring"
           >
             Sign In
           </Link>

@@ -225,14 +225,14 @@ export default async function MainPage() {
         {showTestModeBanner && (
           <div
             role="status"
-            className="rounded-xl border-2 border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-start gap-3"
+            className="rounded-xl border-2 border-warning/50 bg-warning/10 px-4 py-3 flex items-start gap-3"
           >
             <span aria-hidden="true" className="text-lg">🧪</span>
             <div className="flex-1 text-sm">
-              <div className="font-medium text-amber-900 dark:text-amber-100">
+              <div className="font-medium text-foreground">
                 Test mode is on
               </div>
-              <div className="text-amber-800/80 dark:text-amber-200/80">
+              <div className="text-muted-foreground">
                 Each dream submission will generate{" "}
                 <strong>{adminTestModeMatrixSize} cards</strong> across your
                 comparison matrix. Image generation is deduped by aesthetic.
@@ -240,7 +240,7 @@ export default async function MainPage() {
             </div>
             <Link
               href="/settings"
-              className="text-xs font-medium text-amber-900 dark:text-amber-100 underline underline-offset-2 hover:no-underline whitespace-nowrap"
+              className="text-xs font-medium text-foreground underline underline-offset-2 hover:no-underline whitespace-nowrap"
             >
               Disable
             </Link>
@@ -305,10 +305,10 @@ export default async function MainPage() {
 
         {/* Pattern-emerging insight — gentle nudge once enough dreams accumulate. */}
         {showPatternHint && (
-          <aside className="rounded-2xl border border-[oklch(0.85_0.06_75)] bg-[oklch(0.96_0.025_75)] p-5 flex items-center gap-5">
+          <aside className="rounded-2xl border border-violet/30 bg-accent p-5 flex items-center gap-5">
             <div
               aria-hidden="true"
-              className="w-12 h-12 rounded-xl bg-[oklch(0.93_0.04_75)] border border-[oklch(0.85_0.08_75)] text-[color:var(--gold-deep)] grid place-items-center shrink-0"
+              className="w-12 h-12 rounded-xl bg-violet/15 border border-violet/30 text-primary grid place-items-center shrink-0"
             >
               <Sparkles className="w-5 h-5" />
             </div>

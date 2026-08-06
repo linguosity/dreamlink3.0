@@ -30,6 +30,7 @@ import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
 import ShareDreamButton from "@/components/ShareDreamButton";
+import { AiDisclosure } from "@/components/brand/AiDisclosure";
 import { track } from "@/lib/analytics";
 
 // Import UI components with error handling
@@ -156,7 +157,9 @@ const ShareIcon = ({ className }: { className?: string }) => (
 );
 
 // Star toggle icon. `filled` swaps between an outlined star (not starred)
-// and a solid gold star (starred).
+// and a solid Violet Light star (starred) — a fixed accent (not the
+// theme-following --primary) so it stays legible over both plain card
+// surfaces and dream-art photo backgrounds.
 const StarIcon = ({ className, filled }: { className?: string; filled?: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -355,10 +358,16 @@ function highlightTextLegacy(text: string, searchTerm: string): React.ReactNode 
   );
 }
 
-// Shimmer animation component for image placeholder
+// Shimmer animation component for image placeholder.
+//
+// v3 rule 2 — "the gradient belongs to the logo alone; every other surface is
+// flat" — so the RESTING surface is a flat Mist/Surface-2 fill. The only
+// gradient left is the travelling highlight, which is the shimmer itself
+// (a moving specular sweep, not a painted surface) and disappears the moment
+// the image lands. The old dark-mode stops were raw slate, not tokens.
 function DreamImageShimmer() {
   return (
-    <div className="relative w-full h-40 bg-gradient-to-r from-muted via-muted-foreground/10 to-muted dark:from-slate-800 dark:via-slate-700/20 dark:to-slate-800 overflow-hidden">
+    <div className="relative w-full h-40 bg-muted overflow-hidden">
       <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
     </div>
   );
@@ -464,6 +473,15 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   );
   const [isFeedbackPending, setIsFeedbackPending] = useState(false);
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
+  // Themed verse citations (HANDOFF-v3.md §5 item 2): reference -> the theme
+  // the model matched it on ("crossing waters"). Keyed identically to
+  // bibleVerses, both raw and normalized, so getVerseTheme can mirror
+  // getVerseText's lookup order. Empty for readings recorded before themes
+  // were persisted — those chips render as a bare reference, by design.
+  const [verseThemes, setVerseThemes] = useState<Record<string, string>>({});
+  // "Read again · 1 credit" (§5 item 4). Cost is stated on the control
+  // itself, never after the fact.
+  const [isRereading, setIsRereading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
   const [imageError, setImageError] = useState(false);
@@ -668,13 +686,26 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       }
     }
     
-    return { 
+    return {
       text: verseText || `Verse text not available for ${reference}`,
       isFallback,
       source
     };
   };
-  
+
+  // The theme this verse was matched on, for the "Isaiah 43:2 · crossing
+  // waters" chip (HANDOFF-v3.md §5 item 2). Mirrors getVerseText's raw-then-
+  // normalized lookup order, since the API keys themes exactly like verses.
+  // Returns null — not a placeholder — for readings that predate the theme
+  // column; a chip with no theme is the correct render, an invented one is
+  // not.
+  const getVerseTheme = (reference: string): string | null => {
+    const raw = verseThemes[reference];
+    if (raw) return raw;
+    const normalized = verseThemes[normalizeReference(reference)];
+    return normalized || null;
+  };
+
   // Track whether analysis timed out so we can show an error state
   const [analysisTimedOut, setAnalysisTimedOut] = useState(false);
 
@@ -895,9 +926,19 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               });
             }
             
+            // Themes ride along under a reserved key so the response body
+            // stays the flat {ref: text} map older clients index directly
+            // (see app/api/bible-verses/lookup). Split them back apart here.
+            const { _themes: themes, ...verses } = data as Record<string, any>;
+
             // Important: Create a new object to trigger re-render
-            const verseData = { ...data };
+            const verseData = { ...verses } as Record<string, string>;
             setBibleVerses(verseData);
+            setVerseThemes(
+              themes && typeof themes === "object"
+                ? (themes as Record<string, string>)
+                : {},
+            );
             
             // Verify if we got verse text for all references
             if (dream.bible_refs) {
@@ -1059,6 +1100,61 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     }
   };
 
+  // "Read again · 1 credit" (HANDOFF-v3.md §5 item 4). The cost is on the
+  // button face, and the confirm restates it — a re-read is one of the few
+  // one-tap actions in the product that spends money, so it gets a beat of
+  // friction rather than an undo it cannot offer.
+  const handleReadAgain = async () => {
+    if (empty || isRereading) return;
+    if (dream.id.startsWith('pending-')) return;
+
+    setIsRereading(true);
+    try {
+      const response = await fetch(`/api/dream-entries/${dream.id}/regenerate`, {
+        method: 'POST',
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        // Out of credits is the paywall moment, not an error — same
+        // treatment as the composer (see CompactDreamInput).
+        if (response.status === 402 && result?.code === 'out_of_credits') {
+          toast.error(result.error ?? "You're out of credits.");
+          router.push('/pricing');
+          return;
+        }
+        throw new Error(result?.error || `Re-read failed: ${response.status}`);
+      }
+
+      if (result?.dream) {
+        // Swap the reading in place. The scripture chips are keyed off
+        // bible_refs, so clearing the hydrated verse text forces the lookup
+        // effect to refetch text AND themes for the new citations rather
+        // than showing the previous reading's.
+        setDream((prev) => ({ ...prev, ...result.dream }));
+        setBibleVerses({});
+        setVerseThemes({});
+      } else {
+        router.refresh();
+      }
+
+      // A new reading deserves its own verdict — the old vote rated a
+      // reading that no longer exists.
+      setFeedbackChoice(null);
+      toast.success('A new reading is ready.');
+    } catch (error) {
+      console.error('Error re-reading dream:', error);
+      logClientError("dream_regenerate", error instanceof Error ? error.message : String(error), {
+        route: `/api/dream-entries/${dream.id}/regenerate`,
+      });
+      toast.error(
+        error instanceof Error ? error.message : 'Could not start a new reading.',
+      );
+    } finally {
+      setIsRereading(false);
+    }
+  };
+
   // Handle delete dream
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -1185,12 +1281,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         </div>
                       )}
                       {source === "missing" && (
-                        <div className="text-[10px] italic text-red-500 mt-1">
+                        <div className="text-[10px] italic text-destructive mt-1">
                           Warning: No verse text found
                         </div>
                       )}
                       {source === "missing-range" && (
-                        <div className="text-[10px] italic text-red-500 mt-1">
+                        <div className="text-[10px] italic text-destructive mt-1">
                           Warning: No verse text found for this range
                         </div>
                       )}
@@ -1200,7 +1296,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         </div>
                       )}
                       {source.includes("range") && !source.includes("missing") && (
-                        <div className="text-[10px] italic text-green-500 mt-1">
+                        <div className="text-[10px] italic text-success mt-1">
                           {reference}
                         </div>
                       )}
@@ -1323,7 +1419,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     return (
       <Card className="overflow-hidden transition-all aspect-square relative">
         {/* Shimmer background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted-foreground/5 to-muted dark:from-slate-800 dark:via-slate-700/10 dark:to-slate-800 overflow-hidden">
+        {/* Flat resting surface; only the travelling sweep is a gradient.
+            See DreamImageShimmer above. */}
+        <div className="absolute inset-0 bg-muted overflow-hidden">
           <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 dark:via-white/5 to-transparent" />
         </div>
 
@@ -1419,10 +1517,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
           </div>
         ) : isPollingCardImage ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 overflow-hidden">
+          // "Generating image…" tile. Flat Navy 900 (rule 2), not a slate
+          // gradient — this is the card face while artwork renders, so it is
+          // brand chrome, not a photo scrim. Fixed navy in both themes: it is
+          // replaced by artwork under a dark scrim either way, so nothing
+          // flashes on the swap. Label lifted from white/60 (2.9:1 on navy,
+          // a contrast failure) to white/80.
+          <div className="absolute inset-0 bg-navy-900 overflow-hidden">
             <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-white/60 text-xs">
+              <div className="flex items-center gap-2 text-white/80 text-xs">
                 <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -1520,7 +1624,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     className={cn(
                       "rounded-full p-0.5 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       isStarred
-                        ? "text-[color:var(--gold,#d4a843)]"
+                        ? "text-violet-light"
                         : (cardImageUrl || isPollingCardImage)
                           ? "text-white/70 hover:text-white"
                           : "text-muted-foreground hover:text-foreground"
@@ -1645,9 +1749,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <span className="truncate">
                 {hasOpenAi ? (
                   <>
-                    in <span className="text-emerald-300">{cost.inputTokens ?? 0}</span>
+                    in <span className="text-success">{cost.inputTokens ?? 0}</span>
                     {" / out "}
-                    <span className="text-amber-300">{cost.outputTokens ?? 0}</span>
+                    <span className="text-warning">{cost.outputTokens ?? 0}</span>
                   </>
                 ) : (
                   <span className="text-white/50">tokens pending…</span>
@@ -1780,7 +1884,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div style={modalHeight ? { minHeight: modalHeight } : undefined}>
               <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
                 <div ref={analysisContentRef}>
-                  {/* Summary section removed as requested */}
+                  {/* AI disclosure — ABOVE the reading, with the mark
+                      (HANDOFF-v3.md §5 item 1). It used to sit underneath,
+                      which is a footnote, not a disclosure: by the time you
+                      read it you have already taken the reading as given. */}
+                  {hasInterpretation && (
+                    <AiDisclosure
+                      verseCount={dream.bible_refs?.length}
+                      className="mb-4 max-w-[65ch]"
+                    />
+                  )}
 
                   {dream.formatted_analysis ? (
                     renderAnalysis(dream.formatted_analysis, dream.bible_refs)
@@ -1808,22 +1921,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     </div>
                   )}
 
-                  {/* AI-transparency label — one quiet line under the
-                      interpretation, mirrored on the public share page. */}
-                  {hasInterpretation && (
-                    <p className="mt-3 text-[11px] text-muted-foreground opacity-70">
-                      Interpretation generated with AI, grounded in the verses above.
-                    </p>
-                  )}
                 </div>
 
-                {/* One-tap feedback — owner-only (never on the public share
-                    page), skipped for example cards and optimistic
-                    placeholders that don't exist in the DB yet. */}
+                {/* One-tap feedback (§5 item 5) + "Read again" (§5 item 4).
+                    Owner-only — never on the public share page — and skipped
+                    for example cards and optimistic placeholders that don't
+                    exist in the DB yet. They sit together on purpose: "Not
+                    really" is a dead end without a way to act on it. */}
                 {hasInterpretation && !empty && !dream.id.startsWith('pending-') && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t pt-3.5">
                     <span className="text-xs text-muted-foreground">
-                      Was this reading meaningful?
+                      Did this reading feel meaningful?
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -1852,7 +1960,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                             : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
-                        No
+                        Not really
                       </button>
                     </div>
                     {feedbackChoice !== null && (
@@ -1863,6 +1971,38 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         Thank you.
                       </span>
                     )}
+
+                    {/* Re-generation, with the cost on the button face
+                        (§5 item 4). Never "Read again" alone — a control that
+                        spends money says so before it is pressed, not after.
+                        The confirm restates it because there is no undo. */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={isRereading}
+                          className="ml-auto rounded-full border border-input px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {isRereading ? 'Reading again…' : 'Read again · 1 credit'}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Read this dream again?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This uses 1 credit and replaces the interpretation
+                            and its verses with a fresh reading. Your dream
+                            itself is never changed.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleReadAgain} disabled={isRereading}>
+                            Read again · 1 credit
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )}
               </TabsContent>
@@ -1921,25 +2061,38 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   {dream.bible_refs.map((ref, index) => {
                     const { text: verseText, isFallback, source } = getVerseText(ref);
                     const missing = source === "missing" || source === "missing-range";
+                    // The theme this verse was matched on, rendered inline as
+                    // "Isaiah 43:2 · crossing waters" (HANDOFF-v3.md §5 item
+                    // 2). A component contract, not a tooltip: the reason a
+                    // verse is here is part of the citation, and a reason you
+                    // have to hover to see is a reason most readers never see.
+                    const theme = getVerseTheme(ref);
                     return (
                       <Popover key={index}>
                         <PopoverTrigger asChild>
-                          {/* F05 (v2 Moonwater): scripture chip reads as a
-                              quoted reference — cream-soft surface, gold-deep
-                              text (AA ≥4.5:1; bright gold in dark mode),
-                              hairline gold border. Now a real <button> so it
+                          {/* Scripture chip reads as a quoted reference —
+                              Mist surface, Indigo/Violet Light text (AA
+                              ≥4.5:1, auto-swaps in dark mode), Mist-2
+                              hairline border. Now a real <button> so it
                               is keyboard-reachable and has a 24px tap target. */}
                           <button
                             type="button"
-                            aria-label={`Read ${ref}`}
+                            aria-label={
+                              theme ? `Read ${ref}, matched on ${theme}` : `Read ${ref}`
+                            }
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               missing
                                 ? "bg-muted text-muted-foreground border-muted-foreground/30"
-                                : "bg-cream-soft text-gold-deep dark:text-gold border-[oklch(0.85_0.08_75)]"
+                                : "bg-mist text-primary border-mist-2"
                             }`}
                           >
                             <BookIcon className="h-2 w-2" />
                             {ref}
+                            {theme && (
+                              // Weight, not italics, carries the de-emphasis
+                              // (§3: "emphasis is weight 500, never italic").
+                              <span className="font-normal opacity-75">· {theme}</span>
+                            )}
                           </button>
                         </PopoverTrigger>
                         <PopoverContent className="max-w-[300px] text-xs" side="top">
@@ -1986,7 +2139,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-ring"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label="Delete this dream"
                     >
                       <Trash2Icon className="h-4 w-4 mr-1" />
@@ -2004,7 +2157,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteDream}
-                        className="bg-red-500 hover:bg-red-600"
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         disabled={isDeleting}
                       >
                         {isDeleting ? "Deleting..." : "Delete Dream"}

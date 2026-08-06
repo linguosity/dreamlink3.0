@@ -67,7 +67,8 @@ export async function GET(request: Request) {
           verse,
           end_verse,
           full_text,
-          citation_order
+          citation_order,
+          theme
         )
       `)
       .eq("id", dreamId)
@@ -83,6 +84,13 @@ export async function GET(request: Request) {
 
     // Format citations into a lookup map for the frontend
     const verseLookup: Record<string, string> = {};
+    // Themed verse citations (HANDOFF-v3.md §5 item 2) — ref -> theme,
+    // keyed the same way as verseLookup below (both the as-stored dream ref
+    // and its normalized form) so the caller can look either up directly.
+    // Citations recorded before the theme column existed simply have no
+    // entry here; the component contract is to render without one, not to
+    // block on it.
+    const themeLookup: Record<string, string> = {};
 
     const dreamRefs = dreamData?.bible_refs || [];
     const citations = (dreamData?.bible_citations || []) as Array<{
@@ -92,6 +100,7 @@ export async function GET(request: Request) {
       end_verse?: number;
       full_text: string;
       citation_order?: number;
+      theme?: string | null;
     }>;
 
     if (DEBUG) console.log(`Bible refs from dream_entries: ${dreamRefs.join(", ")}`);
@@ -139,7 +148,8 @@ export async function GET(request: Request) {
           if (citation) {
             // Add the exact reference as it appears in the dream_entries table
             verseLookup[ref] = citation.full_text;
-            
+            if (citation.theme) themeLookup[ref] = citation.theme;
+
             // Store mapping details for debugging
             verseMapping.push({
               reference: ref,
@@ -173,7 +183,8 @@ export async function GET(request: Request) {
       
       // Add normalized reference
       verseLookup[normalizedRef] = citation.full_text;
-      
+      if (citation.theme) themeLookup[normalizedRef] = citation.theme;
+
       // If this citation wasn't already mapped from the dream_refs array
       if (!verseMapping.some(item => item.normalizedReference === normalizedRef)) {
         // Store mapping details for debugging
@@ -373,6 +384,16 @@ export async function GET(request: Request) {
     // Create the final combined lookup, but ensure database values take precedence over fallbacks
     const combinedLookup = { ...verseLookup };
 
+    // Themed verse citations (HANDOFF-v3.md §5 item 2). The response body has
+    // always been a flat `{ reference: verseText }` map, and a deployed client
+    // indexes it directly by reference — so themes ride along under a reserved
+    // key rather than nesting the verses one level deeper. "_themes" can never
+    // collide with a real reference (every reference contains a space and a
+    // colon), and a client that predates this simply ignores the extra key.
+    // The current consumer (components/DreamCard.tsx) destructures it off
+    // before storing the verse map.
+    const responseBody = { ...combinedLookup, _themes: themeLookup };
+
     if (DEBUG) {
       // Debug the final lookup state
       console.log("Final verse lookup map size:", Object.keys(combinedLookup).length);
@@ -418,7 +439,7 @@ export async function GET(request: Request) {
       }
     }
     
-    return NextResponse.json(combinedLookup);
+    return NextResponse.json(responseBody);
   } catch (error) {
     console.error("Error processing Bible verse lookup:", error);
     return NextResponse.json(

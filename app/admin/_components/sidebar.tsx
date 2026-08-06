@@ -38,15 +38,14 @@ export function AdminSidebar({
   return (
     <aside className="bg-card/40 border-r border-border flex flex-col p-4 sticky top-0 h-screen overflow-y-auto">
       <div className="flex items-center gap-2.5 px-2 pb-4">
-        {/* v2 Moonwater (F06): contained app-icon squircle in the sidebar.
-            Replaces the blue-soft → blue-deep droplet placeholder so the
-            sidebar mark matches social, splash, and the iOS icon. */}
+        {/* Contained app-icon squircle in the sidebar, matching social,
+            splash, and the iOS icon. */}
         <BrandIcon size={32} />
         <div>
           <div className="font-serif text-base font-semibold leading-none">
             DreamRiver
           </div>
-          <div className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-gold-deep dark:text-gold mt-1">
+          <div className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-primary mt-1">
             Admin
           </div>
         </div>
@@ -64,10 +63,10 @@ export function AdminSidebar({
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              // F08 (v2 Moonwater): active row has a 3px gold-deep left edge.
+              // Active row gets a 3px primary left edge.
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-colors ${
                 active
-                  ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-[var(--gold-deep)] pl-[calc(0.75rem-3px)]"
+                  ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-primary pl-[calc(0.75rem-3px)]"
                   : "text-foreground hover:bg-muted"
               }`}
             >
@@ -80,7 +79,7 @@ export function AdminSidebar({
 
       <div className="flex-1" />
 
-      <div className="px-3.5 py-3 rounded-lg border border-border bg-cream/40">
+      <div className="px-3.5 py-3 rounded-lg border border-border bg-muted/40">
         <div className="text-[11px] font-medium text-muted-foreground mb-1">
           Build
         </div>

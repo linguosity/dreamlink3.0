@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MoonwaterMark } from "@/components/brand/MoonwaterMark";
+import { DrLogo } from "@/components/brand/DrLogo";
 
 const FULL_DREAM_TEXT =
   "I was walking across a bridge over a river of golden light…";
@@ -36,34 +36,28 @@ export default function PhoneMockup() {
     <div
       className="w-full h-full flex flex-col"
       style={{
-        background: "oklch(0.955 0.015 75)",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
+        background: "var(--paper)",
+        fontFamily: "var(--font-sans), system-ui, sans-serif",
       }}
     >
-      {/* App nav.
-          F01: free-floating Moonwater mark (no squircle — the phone chrome is
-          already a container at this size). Wordmark uses .wordmark (Cormorant
-          Garamond italic).
-          F10: avatar gradient repointed from blue-soft → gold to
-          night-soft → gold so it matches the brand palette. */}
-      <div className="px-4 py-2.5 flex items-center justify-between border-b border-[oklch(0.88_0.01_70)]">
+      {/* App nav — free-floating mark (no squircle — the phone chrome is
+          already a container at this size); avatar is a flat Indigo fill
+          (no gradient outside the logo, HANDOFF-v3.md §0/§8). Mono tone
+          pinned to a fixed Indigo (not --primary) because this screen is
+          always-light regardless of the app's ambient theme — see the
+          outer page's own fixed-token note. */}
+      <div className="px-4 py-2.5 flex items-center justify-between border-b border-[var(--line)]">
         <div className="flex items-center gap-1.5">
-          <MoonwaterMark
-            size={14}
-            moonColor="var(--night)"
-            waveTop="var(--night)"
-            waveBottom="var(--gold)"
-          />
+          <span style={{ color: "var(--indigo)" }}>
+            <DrLogo variant="mark" tone="mono" size={14} />
+          </span>
           <span className="wordmark text-[13px] text-foreground">
             DreamRiver
           </span>
         </div>
         <div
           className="w-[22px] h-[22px] rounded-full"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--night-soft), var(--gold))",
-          }}
+          style={{ background: "var(--indigo)" }}
           aria-hidden="true"
         />
       </div>
@@ -102,14 +96,14 @@ export default function PhoneMockup() {
           {["Isaiah 43:2", "Psalm 23:4"].map((v) => (
             <span
               key={v}
-              // F05: scripture pills move to cream + gold-deep text + hairline
-              // gold border. Reads as a quoted reference rather than a tag —
-              // the right vocabulary for scripture.
+              // Scripture pills: Mist background + Indigo text + a Mist-2
+              // hairline border. Reads as a quoted reference rather than a
+              // tag — the right vocabulary for scripture.
               className="text-[8px] px-2 py-0.5 rounded-full font-semibold"
               style={{
-                background: "var(--cream)",
-                color: "var(--gold-deep)",
-                border: "1px solid oklch(0.85 0.08 75)",
+                background: "var(--mist)",
+                color: "var(--indigo)",
+                border: "1px solid var(--mist-2)",
               }}
             >
               {v}
@@ -117,32 +111,32 @@ export default function PhoneMockup() {
           ))}
         </div>
 
-        {/* CTA — F04: gold pill with Night-Deep text. Replaces the old
-            sacred-blue. Bottom-nav active state below also moves to gold. */}
+        {/* CTA — flat Indigo pill with white text. Bottom-nav active state
+            below also moves to Indigo. */}
         <div
           className="rounded-full text-center py-2 text-[11px] font-bold transition-opacity duration-300"
           style={{
-            background: "var(--gold)",
-            color: "var(--night-deep)",
+            background: "var(--indigo)",
+            color: "var(--accent-ink)",
             opacity: showPills ? 1 : 0.5,
           }}
         >
           Get Interpretation
         </div>
 
-        {/* Interpretation preview */}
+        {/* Interpretation preview — flat Mist (no gradient outside the logo,
+            HANDOFF-v3.md §0/§8). */}
         <div
           className="mt-3 p-3 rounded-xl transition-opacity duration-500"
           style={{
-            background:
-              "linear-gradient(135deg, oklch(0.95 0.03 75), oklch(0.94 0.02 235))",
+            background: "var(--mist)",
             opacity: showPills ? 1 : 0,
             transitionDelay: showPills ? "0.3s" : "0s",
           }}
         >
           <div
             className="text-[9px] font-bold mb-1"
-            style={{ color: "oklch(0.65 0.16 60)" }}
+            style={{ color: "var(--indigo)" }}
           >
             ✦ Your Interpretation
           </div>
@@ -154,7 +148,7 @@ export default function PhoneMockup() {
       </div>
 
       {/* App bottom nav */}
-      <div className="flex justify-around py-2.5 border-t border-[oklch(0.88_0.01_70)]">
+      <div className="flex justify-around py-2.5 border-t border-[var(--line)]">
         {(["Journal", "Search", "Settings"] as const).map((label, i) => {
           const active = i === 0;
           return (
@@ -162,15 +156,15 @@ export default function PhoneMockup() {
               <div
                 className="w-[18px] h-[18px] rounded-md mx-auto mb-0.5"
                 style={{
-                  // F04: active nav icon picks up gold; inactive stays neutral.
-                  background: active ? "var(--gold)" : "oklch(0.88 0.01 70)",
+                  // Active nav icon picks up Indigo; inactive stays neutral.
+                  background: active ? "var(--indigo)" : "var(--mist-2)",
                 }}
                 aria-hidden="true"
               />
               <div
                 className="text-[7px]"
                 style={{
-                  color: active ? "var(--gold-deep)" : "oklch(0.55 0.02 250)",
+                  color: active ? "var(--indigo)" : "var(--muted-foreground)",
                 }}
               >
                 {label}

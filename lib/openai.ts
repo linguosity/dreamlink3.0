@@ -160,15 +160,21 @@ export function getOpenRouterClient(): OpenAI | null {
 }
 
 // ── Dream Analysis Zod Schemas ──────────────────────────────────────
-// The model only emits the citation string. Server-side hydration in
-// app/api/dream-entries/route.ts fills in book/chapter/verse/endVerse/text
-// from the canonical KJV via lib/bibleLookup.
+// The model only emits the citation string (and, as of HANDOFF-v3.md §5
+// item 2, a short theme). Server-side hydration in app/api/dream-entries/
+// route.ts fills in book/chapter/verse/endVerse/text from the canonical
+// KJV via lib/bibleLookup; theme is persisted as the model wrote it.
 
 export const BiblicalReferenceSchema = z.object({
   citation: z
     .string()
     .describe(
       "Standard citation in the format 'Book Chapter:Verse' or 'Book Chapter:Verse-EndVerse'. Examples: 'Genesis 1:1', '1 Peter 5:8', 'Romans 8:28-30'. Use full canonical book names (e.g. '1 Peter', not 'Peter'). Do not include the verse text — the application retrieves it separately.",
+    ),
+  theme: z
+    .string()
+    .describe(
+      "A short 2-4 word lowercase phrase naming WHY this specific verse was matched to the dream — the shared image, feeling, or motif, e.g. 'crossing waters', 'still water', 'divine guidance', 'dry ground crossing'. Rendered next to the citation as 'Isaiah 43:2 · crossing waters', so it must read naturally there. Never repeat the book name or the dream's own wording verbatim.",
     ),
 });
 

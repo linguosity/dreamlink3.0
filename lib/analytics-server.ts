@@ -25,7 +25,12 @@ export type ServerAnalyticsEvent =
   | "first_dream_submitted"
   | "credits_exhausted"
   | "checkout_started"
-  | "subscribed";
+  | "subscribed"
+  // A user spent a credit re-reading a dream they already had a reading for
+  // ("Read again", HANDOFF-v3.md §5 item 4). Paired with the Yes / Not really
+  // vote on the same interpretation, this is the signal for how often a first
+  // reading misses.
+  | "interpretation_regenerated";
 
 export type ServerEventProps = Record<string, string | number | boolean | null>;
 

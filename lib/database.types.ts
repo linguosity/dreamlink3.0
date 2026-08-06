@@ -51,6 +51,7 @@ export type Database = {
           id: string
           source: string | null
           supporting_text: string | null
+          theme: string | null
           verse: number | null
         }
         Insert: {
@@ -64,6 +65,7 @@ export type Database = {
           id?: string
           source?: string | null
           supporting_text?: string | null
+          theme?: string | null
           verse?: number | null
         }
         Update: {
@@ -77,6 +79,7 @@ export type Database = {
           id?: string
           source?: string | null
           supporting_text?: string | null
+          theme?: string | null
           verse?: number | null
         }
         Relationships: [
@@ -222,6 +225,38 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      credit_spends: {
+        Row: {
+          created_at: string
+          dream_entry_id: string | null
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream_entry_id?: string | null
+          id?: string
+          kind?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dream_entry_id?: string | null
+          id?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_spends_dream_entry_id_fkey"
+            columns: ["dream_entry_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dream_entries: {
         Row: {

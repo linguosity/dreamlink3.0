@@ -16,14 +16,14 @@
       "purpose": "any"
     },
     {
-      "src": "/brand/android-chrome-512.png",
+      "src": "/brand/android-chrome-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#0E1A30",
-  "background_color": "#0E1A30",
+  "theme_color": "#0A0E33",
+  "background_color": "#0A0E33",
   "display": "standalone",
   "start_url": "/"
 }

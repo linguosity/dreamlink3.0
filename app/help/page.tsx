@@ -9,7 +9,7 @@ export default function HelpPage() {
         <div className="space-y-6">
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">Recording a Dream</h2>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               Type your dream into the input box on the main page and press
               submit. DreamRiver will analyze your dream and return biblical
               insights within a few seconds.
@@ -18,7 +18,7 @@ export default function HelpPage() {
 
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">Understanding Your Analysis</h2>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               Each analysis includes a summary of your dream&apos;s themes, relevant
               Bible verses with full text, and a personalized reflection. Tap on
               any dream card to view the full analysis.
@@ -27,7 +27,7 @@ export default function HelpPage() {
 
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">Managing Your Journal</h2>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               You can delete any dream entry from your journal. Visit the
               Settings page to update your profile preferences, including your
               preferred Bible version and reading level.
@@ -36,7 +36,7 @@ export default function HelpPage() {
 
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">Need More Help?</h2>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               If you have questions or run into issues, reach out through our{" "}
               <Link href="/contact" className="text-primary underline">
                 Contact page
@@ -49,7 +49,7 @@ export default function HelpPage() {
         <div className="pt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             &larr; Back to journal
           </Link>

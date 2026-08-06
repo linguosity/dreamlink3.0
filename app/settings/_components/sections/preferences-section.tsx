@@ -7,7 +7,9 @@ import {
   Bell,
   BookOpen,
   Search,
+  Sun,
   Moon,
+  Laptop,
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -47,7 +49,7 @@ export function PreferencesSection({
   onSave: () => void;
   saving: boolean;
 }) {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [multiKeyword, setMultiKeyword] = useState(false);
 
@@ -69,12 +71,32 @@ export function PreferencesSection({
     );
   };
 
-  const handleDarkMode = (checked: boolean) => {
-    setTheme(checked ? "dark" : "light");
-    toast.success(`Switched to ${checked ? "dark" : "light"} mode`);
+  // HANDOFF-v3.md §7.6: dark is a first-class peer, and the app should
+  // respect prefers-color-scheme on first load. next-themes already does the
+  // second part (defaultTheme="system" in app/providers.tsx) — but a binary
+  // on/off switch quietly destroys it: the first tap writes an explicit
+  // "light" or "dark" and the user can never get back to following their OS
+  // again. Three states, with System as a real choice, is what keeps that
+  // promise honest.
+  const THEME_OPTIONS = [
+    { value: "light", label: "Light", Icon: Sun },
+    { value: "dark", label: "Dark", Icon: Moon },
+    { value: "system", label: "System", Icon: Laptop },
+  ] as const;
+
+  const handleTheme = (next: string) => {
+    setTheme(next);
+    toast.success(
+      next === "system"
+        ? "Matching your device"
+        : `Switched to ${next} mode`,
+    );
   };
 
-  const isDark = mounted && resolvedTheme === "dark";
+  // Before mount, `theme` is undefined and rendering any option as selected
+  // would be a guess that flickers. Fall back to "system", which is the
+  // provider's own default.
+  const activeTheme = mounted ? (theme ?? "system") : "system";
 
   return (
     <>
@@ -145,15 +167,46 @@ export function PreferencesSection({
               value={multiKeyword}
               onChange={handleMultiKeyword}
             />
-            <ToggleRow
-              id="pref-dark"
-              Icon={Moon}
-              title="Dark mode"
-              desc="Warm-tinted dark for nighttime"
-              value={isDark}
-              onChange={handleDarkMode}
-            />
           </div>
+
+          {/* Appearance — three states, not a switch. See handleTheme. */}
+          <div className="mt-3 pt-3.5 border-t border-border">
+            <Field label="Appearance" htmlFor="pref-theme-light">
+              <div
+                role="radiogroup"
+                aria-label="Appearance"
+                className="inline-flex gap-1 rounded-full border border-border bg-card p-1"
+              >
+                {THEME_OPTIONS.map(({ value, label, Icon }) => {
+                  const selected = activeTheme === value;
+                  return (
+                    <button
+                      key={value}
+                      id={`pref-theme-${value}`}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => handleTheme(value)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        selected
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {activeTheme === "system"
+                ? "Following your device — light by day, Night after dark."
+                : "Set here regardless of your device setting."}
+            </p>
+          </div>
+
           <div className="mt-3 pt-3.5 border-t border-border">
             <Field label="Language" htmlFor="pref-language">
               <Select
