@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles, Crown, Star } from 'lucide-react';
+import { DrLogo } from '@/components/brand/DrLogo';
 
 interface AuthNavigationProps {
   variant?: 'compact' | 'full';
@@ -44,8 +45,30 @@ export default function AuthNavigation({ variant = 'compact' }: AuthNavigationPr
   if (variant === 'compact') {
     return (
       <div className="space-y-4">
-        <h1 className="wordmark text-3xl text-center text-foreground">
-          DreamRiver
+        {/* Brand splash. HANDOFF-v3.md §4 reserves the full stacked lockup
+            WITH tagline for exactly three surfaces — marketing hero, splash,
+            and email signature — and this sign-in/sign-up screen is the
+            splash. It previously rendered the wordmark as bare text with no
+            mark at all, which meant the logo was absent from the first screen
+            a new user ever sees.
+
+            Two instances rather than one responsive instance: DrLogo derives
+            the mark width and BOTH type scales from its numeric `size` prop
+            and writes them as inline styles, so no CSS breakpoint can reach
+            them. 64 keeps the letter-spaced tagline (0.26em, uppercase)
+            inside a 375px viewport; 88 is the spec's splash weight above that.
+
+            The show/hide lives on plain wrapper spans, not on DrLogo itself:
+            `.dr-logo { display: inline-flex }` is declared outside any
+            @layer in globals.css, so it outranks Tailwind's layered `hidden`
+            and both copies would render. The wrappers have no such rule. */}
+        <h1 className="flex justify-center">
+          <span className="sm:hidden">
+            <DrLogo variant="lockup" size={64} tagline />
+          </span>
+          <span className="hidden sm:inline">
+            <DrLogo variant="lockup" size={88} tagline />
+          </span>
         </h1>
         <Card className="p-1 bg-muted/50 backdrop-blur-sm">
           <div className="flex rounded-md">
