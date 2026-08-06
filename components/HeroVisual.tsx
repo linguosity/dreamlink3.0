@@ -38,26 +38,26 @@ export default function HeroVisual() {
           }}
         >
           <div className="animate-float">
-            <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
+            <div className="bg-navy-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
               <div className="bg-paper rounded-[1.875rem] overflow-hidden h-full flex flex-col">
                 <div className="px-5 py-3 border-b border-black/5">
-                  <span className="wordmark text-[13px] text-gray-900">
+                  <span className="wordmark text-[13px] text-navy-900">
                     DreamRiver
                   </span>
                 </div>
 
                 <div className="px-5 py-4 flex-1 flex flex-col">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em]">
+                  <p className="text-[10px] font-medium text-navy-900/60 uppercase tracking-[0.12em]">
                     Dream journal
                   </p>
-                  <h3 className="text-sm text-gray-900 mt-1">New Entry</h3>
+                  <h3 className="text-sm text-navy-900 mt-1">New Entry</h3>
 
                   <div className="mt-3 bg-white/70 rounded-xl p-3 min-h-[88px]">
-                    <p className="text-[11px] text-gray-700 leading-relaxed">
+                    <p className="text-[11px] text-navy-900/75 leading-relaxed">
                       {typing.out}
                       <span
                         aria-hidden="true"
-                        className={`inline-block w-[1px] h-[10px] align-[-1px] ml-[1px] bg-gray-700
+                        className={`inline-block w-[1px] h-[10px] align-[-1px] ml-[1px] bg-navy-900/75
                                     ${showCaret ? "animate-caret" : "opacity-0"}`}
                       />
                     </p>
@@ -111,7 +111,7 @@ export default function HeroVisual() {
                     <p className="text-[10px] font-semibold text-indigo flex items-center gap-1">
                       <span aria-hidden="true">✦</span> Your Interpretation
                     </p>
-                    <p className="mt-1 text-[10px] text-gray-700 leading-relaxed">
+                    <p className="mt-1 text-[10px] text-navy-900/75 leading-relaxed">
                       Your dream of crossing a bridge over golden light speaks to a season of divine transition…
                     </p>
                   </div>

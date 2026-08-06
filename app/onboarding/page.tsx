@@ -176,7 +176,7 @@ export default function OnboardingPage() {
         {step > 1 && step < 5 && (
           <button
             onClick={goBack}
-            className="mb-6 flex items-center gap-1 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors text-sm"
+            className="mb-6 flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
             aria-label="Go back"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
                   ? "w-8 bg-primary"
                   : i + 1 < step
                     ? "w-4 bg-primary/60"
-                    : "w-4 bg-gray-200 dark:bg-slate-700"
+                    : "w-4 bg-muted"
               }`}
             />
           ))}
@@ -202,18 +202,18 @@ export default function OnboardingPage() {
 
         {/* ── Step 1: Welcome ──────────────────────────────────── */}
         {step === 1 && (
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 text-center animate-fade-in">
+          <div className="bg-card rounded-3xl shadow-xl p-8 sm:p-10 text-center animate-fade-in">
             {/* v2 Moonwater wordmark */}
-            <p className="wordmark text-3xl text-gray-900 dark:text-white mb-6">
+            <p className="wordmark text-3xl text-foreground mb-6">
               DreamRiver
             </p>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-2">
               Welcome,
               <br />
               {userName}!
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-lg mt-3 mb-8">
+            <p className="text-muted-foreground text-lg mt-3 mb-8">
               Let&apos;s set up your dream journal.
             </p>
 
@@ -225,7 +225,7 @@ export default function OnboardingPage() {
               Get Started.
             </Button>
 
-            <p className="text-xs text-gray-400 mt-4">
+            <p className="text-xs text-muted-foreground mt-4">
               Takes less than 2 minutes
             </p>
           </div>
@@ -233,8 +233,8 @@ export default function OnboardingPage() {
 
         {/* ── Step 2: Reading Level ────────────────────────────── */}
         {step === 2 && (
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-8">
+          <div className="bg-card rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-8">
               Reading Level.
             </h2>
 
@@ -246,13 +246,13 @@ export default function OnboardingPage() {
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     readingLevel === value
                       ? "border-primary bg-accent/40"
-                      : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500"
+                      : "border-border hover:border-primary"
                   }`}
                 >
-                  <p className="font-bold text-gray-900 dark:text-white text-sm">
+                  <p className="font-bold text-foreground text-sm">
                     {label}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {desc}
                   </p>
                 </button>
@@ -278,8 +278,8 @@ export default function OnboardingPage() {
 
         {/* ── Step 3: Bible Version ────────────────────────────── */}
         {step === 3 && (
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-8">
+          <div className="bg-card rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-8">
               Bible Version.
             </h2>
 
@@ -291,7 +291,7 @@ export default function OnboardingPage() {
                   className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                     bibleVersion === value
                       ? "border-primary bg-accent/40"
-                      : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500"
+                      : "border-border hover:border-primary"
                   }`}
                 >
                   {/* Radio indicator */}
@@ -299,14 +299,14 @@ export default function OnboardingPage() {
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       bibleVersion === value
                         ? "border-primary"
-                        : "border-gray-300 dark:border-slate-500"
+                        : "border-border"
                     }`}
                   >
                     {bibleVersion === value && (
                       <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                     )}
                   </div>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-foreground">
                     {label}
                   </span>
                 </button>
@@ -343,13 +343,13 @@ export default function OnboardingPage() {
 
         {/* ── Step 4: Write First Dream ────────────────────────── */}
         {step === 4 && (
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+          <div className="bg-card rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-2">
               Write Your
               <br />
               First Dream.
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               Describe it in as much detail as you remember.
             </p>
 
@@ -389,7 +389,7 @@ export default function OnboardingPage() {
 
         {/* ── Step 5: Analysis Result ──────────────────────────── */}
         {step === 5 && (
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
+          <div className="bg-card rounded-3xl shadow-xl p-8 sm:p-10 animate-fade-in">
             {analysis ? (
               <>
                 {/* Sparkle decoration */}
@@ -397,25 +397,25 @@ export default function OnboardingPage() {
                   <div className="text-amber-400 text-2xl">&#10022; &#10022; &#10022;</div>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-4 text-center">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-4 text-center">
                   {analysis.dreamTitle}
                 </h2>
 
                 {/* Analysis card */}
                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-5 mb-6">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {analysis.personalizedSummary || analysis.analysis}
                   </p>
 
                   {analysis.biblicalReferences.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800">
-                      <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                         Scripture Reference
                       </p>
                       {analysis.biblicalReferences.map((ref, i) => (
                         <p
                           key={i}
-                          className="text-sm text-gray-700 dark:text-gray-300 mb-1"
+                          className="text-sm text-muted-foreground mb-1"
                         >
                           <span className="font-semibold">
                             {ref.citation}
@@ -434,10 +434,10 @@ export default function OnboardingPage() {
               </>
             ) : (
               <>
-                <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4 text-center">
+                <h2 className="text-2xl font-extrabold text-foreground mb-4 text-center">
                   Dream Saved
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
+                <p className="text-muted-foreground text-sm text-center mb-6">
                   Your dream has been saved. You can view the full interpretation on your dashboard.
                 </p>
               </>

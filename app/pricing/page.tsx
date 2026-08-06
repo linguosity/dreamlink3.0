@@ -46,7 +46,7 @@ const plans: Plan[] = [
     cta: "Start Free",
     priceBase: null,
     popular: false,
-    color: "bg-gray-50 dark:bg-gray-900",
+    color: "bg-muted",
   },
   {
     name: "Insight",
@@ -169,7 +169,7 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
             Unlock Divine Insights
           </h1>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">

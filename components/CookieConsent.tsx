@@ -84,11 +84,11 @@ export default function CookieConsent() {
       className="fixed z-40 left-4 right-4 bottom-4
                  sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm
                  rounded-2xl shadow-xl ring-1 ring-black/5
-                 border border-gray-200 dark:border-gray-700
-                 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm
+                 border border-border
+                 bg-card/95 backdrop-blur-sm
                  p-4 sm:p-5 animate-fade-in"
     >
-      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+      <p className="text-sm text-muted-foreground leading-relaxed">
         We use essential cookies to keep you signed in and make the app work.
         With your permission, we&apos;d also like to use privacy-respecting
         analytics to understand how DreamRiver is used — never advertising or
@@ -110,7 +110,7 @@ export default function CookieConsent() {
         </button>
         <button
           onClick={decline}
-          className="tap inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
+          className="tap inline-flex items-center justify-center rounded-md border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors focus-ring"
         >
           Essential only
         </button>

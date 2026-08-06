@@ -6,7 +6,7 @@ export default function AboutPage() {
       <div className="max-w-2xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">About DreamRiver</h1>
 
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed">
           DreamRiver is an AI-powered dream journal that helps you explore the
           deeper meaning of your dreams through the lens of biblical wisdom.
           Record your dreams and receive personalized insights connecting your
@@ -15,7 +15,7 @@ export default function AboutPage() {
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">How It Works</h2>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             When you record a dream, our AI analyzes its themes, symbols, and
             emotions, then draws connections to relevant Bible passages. Each
             entry is stored in your private journal so you can revisit and
@@ -25,7 +25,7 @@ export default function AboutPage() {
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Your Privacy</h2>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             Your dreams are personal. All entries are private to your account
             and are never shared with other users. Read our{" "}
             <Link href="/privacy" className="text-primary underline">
@@ -38,7 +38,7 @@ export default function AboutPage() {
         <div className="pt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             &larr; Back to journal
           </Link>

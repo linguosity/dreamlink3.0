@@ -44,9 +44,9 @@ export default function NewsletterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
-        className="tap flex-1 rounded-full bg-slate-900 border border-slate-800
-                   text-white placeholder:text-gray-500 px-4 text-sm
-                   focus-ring focus-visible:ring-offset-slate-950"
+        className="tap flex-1 rounded-full bg-navy-900 border border-navy-800
+                   text-mist placeholder:text-mist-2/60 px-4 text-sm
+                   focus-ring focus-visible:ring-offset-navy-900"
       />
       <button
         type="submit"
@@ -55,7 +55,7 @@ export default function NewsletterForm() {
                    bg-primary hover:bg-primary-hover
                    text-primary-foreground text-sm font-medium px-5 transition-colors
                    disabled:opacity-60 disabled:cursor-not-allowed
-                   focus-ring focus-visible:ring-offset-slate-950"
+                   focus-ring focus-visible:ring-offset-navy-900"
       >
         {submitting ? "…" : "Subscribe"}
       </button>

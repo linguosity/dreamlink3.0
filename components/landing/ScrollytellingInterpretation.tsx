@@ -76,7 +76,7 @@ const TIER_LABEL: Record<AestheticTier, string> = {
 };
 
 const TIER_CHIP_CLASS: Record<AestheticTier, string> = {
-  free: "bg-gray-500/10 text-gray-600 dark:bg-[rgba(238,235,252,0.10)] dark:text-[rgba(238,235,252,0.72)]",
+  free: "bg-muted text-muted-foreground dark:bg-[rgba(238,235,252,0.10)] dark:text-[rgba(238,235,252,0.72)]",
   // text-primary auto-swaps to Violet Light in dark mode — no separate
   // dark:text needed.
   visionary: "bg-violet-050 text-primary dark:bg-[rgba(179,155,255,0.13)]",
@@ -254,7 +254,7 @@ export default function ScrollytellingInterpretation() {
         <span className="mb-3 inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-primary">
           In action
         </span>
-        <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white">
+        <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-foreground">
           A real interpretation
         </h2>
       </div>
@@ -276,7 +276,7 @@ export default function ScrollytellingInterpretation() {
                 <div className="font-mono text-[11px] tracking-[0.28em] text-primary">
                   {s.num}
                 </div>
-                <h3 className="mb-3 mt-2.5 font-serif text-[27px] font-normal text-gray-900 dark:text-white">
+                <h3 className="mb-3 mt-2.5 font-serif text-[27px] font-normal text-foreground">
                   {s.title}
                 </h3>
                 <p className="text-base leading-[1.65] text-muted-foreground">
@@ -289,7 +289,7 @@ export default function ScrollytellingInterpretation() {
 
         {/* Right: dream-journal card (pinned on desktop) */}
         <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-[4vh]">
-          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-200/70 dark:bg-card dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7">
+          <div className="rounded-2xl bg-card p-6 shadow-lg ring-1 ring-border dark:bg-card dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7">
             {/* Dream quote */}
             <div
               aria-hidden="true"
@@ -298,7 +298,7 @@ export default function ScrollytellingInterpretation() {
               &ldquo;
             </div>
             <blockquote
-              className="mt-2 italic text-gray-800 transition-[font-size,opacity] duration-[400ms] motion-reduce:transition-none dark:text-mist [font-family:var(--font-serif)]"
+              className="mt-2 italic text-foreground transition-[font-size,opacity] duration-[400ms] motion-reduce:transition-none dark:text-mist [font-family:var(--font-serif)]"
               style={
                 compactDream
                   ? {
@@ -322,7 +322,7 @@ export default function ScrollytellingInterpretation() {
                 Analysis:
               </div>
               <p
-                className="m-0 text-[15.5px] leading-[1.7] text-gray-600 transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(238,235,252,0.72)]"
+                className="m-0 text-[15.5px] leading-[1.7] text-muted-foreground transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(238,235,252,0.72)]"
                 // Like the dream quote, the analysis recedes (2-line clamp)
                 // once the artwork panel arrives, so the pinned card keeps
                 // fitting the viewport. Chips stay fully visible.
@@ -404,7 +404,7 @@ export default function ScrollytellingInterpretation() {
                 <div className="font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-primary">
                   As artwork
                 </div>
-                <div className="font-mono text-[11px] text-gray-500 dark:text-[rgba(238,235,252,0.6)]">
+                <div className="font-mono text-[11px] text-muted-foreground dark:text-[rgba(238,235,252,0.6)]">
                   {slide + 1} / {PRESETS.length}
                 </div>
               </div>
@@ -494,7 +494,7 @@ export default function ScrollytellingInterpretation() {
               {/* Label + controls */}
               <div className="mt-3 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="truncate text-[14.5px] font-semibold text-gray-800 dark:text-mist">
+                  <div className="truncate text-[14.5px] font-semibold text-foreground dark:text-mist">
                     {cur.name}
                   </div>
                   <span
@@ -551,7 +551,7 @@ export default function ScrollytellingInterpretation() {
               >
                 Interpret your own dream
               </Link>
-              <div className="mt-2.5 text-center text-[12.5px] text-gray-500 dark:text-[rgba(238,235,252,0.6)]">
+              <div className="mt-2.5 text-center text-[12.5px] text-muted-foreground dark:text-[rgba(238,235,252,0.6)]">
                 Free to start &middot; no card required
               </div>
             </div>

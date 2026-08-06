@@ -90,7 +90,7 @@ export default function Navbar() {
           <Link
             href="/"
             aria-label="DreamRiver"
-            className="inline-flex items-center gap-2 text-gray-900 dark:text-gray-100 no-brand-style"
+            className="inline-flex items-center gap-2 text-foreground no-brand-style"
           >
             <BrandIcon size={32} alt="" />
             {/* Wordmark on sm+ (Quicksand 500, never italic — HANDOFF-v3.md
@@ -172,7 +172,7 @@ export default function Navbar() {
                   {keywords.length > 0 && (
                     <button
                       type="button"
-                      className="h-5 w-5 p-0 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="h-5 w-5 p-0 flex items-center justify-center rounded-full hover:bg-accent"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

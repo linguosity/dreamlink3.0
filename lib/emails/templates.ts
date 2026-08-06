@@ -37,8 +37,12 @@ const CARD_BORDER = "#252C66";
 const STARLIGHT = "#F0EFFC";
 const BODY_TEXT = "#C7CCEC";
 const MUTED = "#8790BE";
-const GOLD = "#B39BFF";
-const GOLD_LIGHT = "#C9B8FF";
+// v3 "Deep Current" accent. These carried the v2 names ACCENT / ACCENT_HI long
+// after their values became Violet Light — a rename, not a colour change. The
+// stale names outlived a whole palette and were the last thing in the codebase
+// still calling the accent "gold".
+const ACCENT = "#B39BFF";
+const ACCENT_HI = "#C9B8FF";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -59,7 +63,7 @@ function ctaButton(label: string, href: string): string {
   return `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:26px auto 6px auto;">
   <tr>
-    <td align="center" bgcolor="${GOLD}" style="border-radius:8px; background-color:${GOLD};">
+    <td align="center" bgcolor="${ACCENT}" style="border-radius:8px; background-color:${ACCENT};">
       <a href="${href}" target="_blank" style="display:inline-block; padding:13px 32px; font-family:${SANS}; font-size:15px; font-weight:bold; color:${NIGHT}; text-decoration:none; border-radius:8px;">${label}</a>
     </td>
   </tr>
@@ -92,7 +96,7 @@ function wrap(
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:100%;">
         <tr>
           <td align="center" style="padding:0 0 22px 0; font-family:${SERIF}; font-size:24px; letter-spacing:1px; color:${STARLIGHT};">
-            <span style="color:${GOLD};">&#10022;</span>&nbsp;DreamRiver
+            <span style="color:${ACCENT};">&#10022;</span>&nbsp;DreamRiver
           </td>
         </tr>
         <tr>
@@ -102,7 +106,7 @@ function wrap(
         </tr>
         <tr>
           <td align="center" style="padding:24px 8px 0 8px; font-family:${SANS}; font-size:12px; line-height:1.7; color:${MUTED};">
-            Questions? Just reply, or write to <a href="mailto:${support}" style="color:${GOLD_LIGHT}; text-decoration:underline;">${support}</a>.<br/>
+            Questions? Just reply, or write to <a href="mailto:${support}" style="color:${ACCENT_HI}; text-decoration:underline;">${support}</a>.<br/>
             You're receiving this because you have a DreamRiver account.<br/>
             <a href="${SITE_URL}/settings" style="color:${MUTED}; text-decoration:underline;">Manage email preferences</a>${unsubscribeHtml}<br/>
             DreamRiver &middot; <a href="${SITE_URL}" style="color:${MUTED}; text-decoration:underline;">dreamriver.io</a>
@@ -406,7 +410,7 @@ export function weeklyDigestEmail(params: {
         : "",
       creditsExhausted
         ? para(
-            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${GOLD_LIGHT}; text-decoration:underline;">the Insight plan</a> continues it — and your journal stays free either way.`,
+            `One gentle note: you've used your 3 free interpretations, so new dreams aren't being interpreted right now. If the journey has been meaningful, <a href="${pricingUrl}" style="color:${ACCENT_HI}; text-decoration:underline;">the Insight plan</a> continues it — and your journal stays free either way.`,
           )
         : "",
       ctaButton("Open your journal", cta),

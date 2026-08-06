@@ -312,15 +312,13 @@ export function AnalysisSection({
 
       {/* Admin: Test Mode */}
       {isAdmin && (
-        <div
-          className="rounded-[var(--radius-lg)] border p-5 mt-4 shadow-sm"
-          style={{
-            borderColor: "oklch(0.85 0.10 75)",
-            // Flat fill — was a top-to-card gradient (HANDOFF-v3.md §0/§8,
-            // "no gradient outside the logo").
-            background: "oklch(0.97 0.02 75)",
-          }}
-        >
+        // Admin-only panel, deliberately set apart from the cards around it.
+        // What made it different was hue-75 gold-on-cream held as raw oklch —
+        // v2 Moonwater by another notation, and fixed-light, so it rendered a
+        // cream slab in dark mode. Violet border on the Violet-050 tinted
+        // surface reads as "this one is different" from the v3 palette, and
+        // both sides swap with the theme.
+        <div className="rounded-[var(--radius-lg)] border border-violet/40 bg-accent p-5 mt-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               <span className="w-8 h-8 rounded-lg bg-accent text-accent-foreground grid place-items-center">

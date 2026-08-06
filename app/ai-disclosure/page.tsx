@@ -18,13 +18,13 @@ export default function AiDisclosurePage() {
     <div className="flex-1 w-full flex flex-col items-center px-4 py-12">
       <div className="max-w-2xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">AI Disclosure</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           How DreamRiver uses AI, in plain language.
         </p>
 
-        <div className="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
+        <div className="space-y-6 text-muted-foreground leading-relaxed">
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               What&apos;s AI-generated
             </h2>
             <p>
@@ -40,7 +40,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               A starting point, not doctrine
             </h2>
             <p>
@@ -64,7 +64,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               How verses are matched
             </h2>
             <p>
@@ -80,7 +80,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Credits, shown before you spend them
             </h2>
             <p>
@@ -93,7 +93,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Re-reading a dream
             </h2>
             <p>
@@ -107,7 +107,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Your feedback shapes the model
             </h2>
             <p>
@@ -121,7 +121,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Reading level
             </h2>
             <p>
@@ -134,7 +134,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Where your data goes
             </h2>
             <p>
@@ -148,7 +148,7 @@ export default function AiDisclosurePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Questions
             </h2>
             <p>
@@ -165,7 +165,7 @@ export default function AiDisclosurePage() {
         <div className="pt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             &larr; Back to journal
           </Link>

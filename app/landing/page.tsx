@@ -179,13 +179,13 @@ export default async function LandingPage() {
       {/* ── How It Works ───────────────────────────────────────────── */}
       <section
         id="how-it-works"
-        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm"
+        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-background/60 backdrop-blur-sm"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-center text-gray-900 dark:text-white mb-3">
+          <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-center text-foreground mb-3">
             How It Works
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-12 lg:mb-16">
+          <p className="text-center text-muted-foreground max-w-xl mx-auto mb-12 lg:mb-16">
             Three simple steps from dream to scripture-grounded insight.
           </p>
 
@@ -215,10 +215,10 @@ export default async function LandingPage() {
                   </span>
                   <span className="sr-only">Step {step}:</span>
                 </div>
-                <h3 className="text-lg text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg text-foreground mb-2">
                   {title}
                 </h3>
-                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
                   {desc}
                 </p>
               </div>
@@ -233,13 +233,13 @@ export default async function LandingPage() {
       {/* ── Features ───────────────────────────────────────────────── */}
       <section
         id="features"
-        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm"
+        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-card/80 backdrop-blur-sm"
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-center text-gray-900 dark:text-white mb-3">
+          <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-center text-foreground mb-3">
             Features
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-12 lg:mb-16">
+          <p className="text-center text-muted-foreground max-w-xl mx-auto mb-12 lg:mb-16">
             Built for believers who want to discover meaningful insight in their dreams.
           </p>
 
@@ -250,8 +250,8 @@ export default async function LandingPage() {
               <Link
                 key={title}
                 href={href}
-                className="group flex flex-col bg-white dark:bg-slate-900 rounded-2xl
-                           ring-1 ring-gray-200/70 dark:ring-slate-800
+                className="group flex flex-col bg-card rounded-2xl
+                           ring-1 ring-border
                            p-6 sm:p-8 transition
                            hover:shadow-lg hover:-translate-y-1 hover:ring-violet-light
                            focus-ring"
@@ -261,10 +261,10 @@ export default async function LandingPage() {
                 >
                   <Icon className="w-6 h-6" aria-hidden="true" />
                 </div>
-                <h3 className="text-xl text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl text-foreground mb-2">
                   {title}
                 </h3>
-                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {desc}
                 </p>
               </Link>
@@ -279,17 +279,17 @@ export default async function LandingPage() {
           ($12.99/mo or $99.99/yr, 30/mo), Journey (coming soon). */}
       <section
         id="plans"
-        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm"
+        className="scroll-mt-20 py-20 sm:py-24 lg:py-32 bg-background/60 backdrop-blur-sm"
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 lg:mb-12">
             <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               Simple &amp; honest
             </p>
-            <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-gray-900 dark:text-white mt-3 mb-3">
+            <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-foreground mt-3 mb-3">
               Start free. Upgrade when you&rsquo;re ready.
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-lg mx-auto">
+            <p className="text-muted-foreground max-w-lg mx-auto">
               Create a free journal and get 3 dream interpretation credits —
               no credit card required.
             </p>
@@ -297,25 +297,25 @@ export default async function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {/* Discovery (free) */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 sm:p-8">
+            <div className="flex flex-col rounded-2xl border border-border bg-card p-7 sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                 Discovery
               </p>
               <div className="flex items-baseline gap-2 mt-3">
-                <span className="font-serif text-4xl text-gray-900 dark:text-white leading-none">
+                <span className="font-serif text-4xl text-foreground leading-none">
                   $0
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground">
                   free forever
                 </span>
               </div>
               <p className="mt-2 text-sm font-semibold text-primary">
                 3 dream analyses to start
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
+              <p className="text-sm text-muted-foreground mt-2 mb-5">
                 Begin your spiritual journey with essential dream insights.
               </p>
-              <ul className="grid gap-2.5 mb-7 text-sm text-gray-800 dark:text-gray-200">
+              <ul className="grid gap-2.5 mb-7 text-sm text-foreground">
                 {[
                   "3 AI dream analyses when you sign up",
                   "Dream art + biblical interpretation",
@@ -384,31 +384,31 @@ export default async function LandingPage() {
             </div>
 
             {/* Journey (coming soon) */}
-            <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-secondary p-7 sm:p-8">
+            <div className="flex flex-col rounded-2xl border border-border bg-secondary p-7 sm:p-8">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                   Journey
                 </p>
-                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300 bg-gray-200/80 dark:bg-slate-700 px-2.5 py-1 rounded-full">
+                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
                   Coming Soon
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-3">
-                <span className="font-serif text-4xl text-gray-900 dark:text-white leading-none">
+                <span className="font-serif text-4xl text-foreground leading-none">
                   $19.99
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">/month</span>
+                <span className="text-sm text-muted-foreground">/month</span>
               </div>
-              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1.5 text-xs text-muted-foreground">
                 or $179.99/yr &mdash; &asymp;$15.00/mo, save 25%
               </p>
               <p className="mt-2 text-sm font-semibold text-primary">
                 Unlimited dream analyses
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
+              <p className="text-sm text-muted-foreground mt-2 mb-5">
                 Unlimited access to divine wisdom and premium features.
               </p>
-              <ul className="grid gap-2.5 mb-7 text-sm text-gray-800 dark:text-gray-200">
+              <ul className="grid gap-2.5 mb-7 text-sm text-foreground">
                 {[
                   "Unlimited AI dream analyses",
                   "Deepest theological interpretations",
@@ -426,7 +426,7 @@ export default async function LandingPage() {
               </ul>
               <span
                 aria-disabled="true"
-                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-gray-400 text-base font-semibold cursor-not-allowed select-none"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full border border-border text-muted-foreground text-base font-semibold cursor-not-allowed select-none"
               >
                 Coming Soon
               </span>
@@ -436,22 +436,22 @@ export default async function LandingPage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────────────── */}
-      <section id="faq" className="scroll-mt-20 py-20 sm:py-24 bg-white dark:bg-slate-950">
+      <section id="faq" className="scroll-mt-20 py-20 sm:py-24 bg-background">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 lg:mb-12">
-            <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white mb-3">
+            <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-foreground mb-3">
               Frequently Asked Questions
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground">
               Everything you need to know before you start.
             </p>
           </div>
-          <div className="divide-y divide-gray-200 dark:divide-slate-800 border-y border-gray-200 dark:border-slate-800">
+          <div className="divide-y divide-border border-y border-border">
             {FAQS.map(({ q, a }) => (
               <details key={q} className="group py-4">
                 <summary
                   className="flex items-center justify-between cursor-pointer list-none gap-4
-                             text-base font-medium text-gray-900 dark:text-white
+                             text-base font-medium text-foreground
                              focus-ring rounded"
                 >
                   <span>{q}</span>
@@ -460,7 +460,7 @@ export default async function LandingPage() {
                     aria-hidden="true"
                   />
                 </summary>
-                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p className="mt-3 text-muted-foreground leading-relaxed">
                   {a}
                 </p>
               </details>
@@ -482,7 +482,7 @@ export default async function LandingPage() {
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-3xl
-                     bg-[oklch(0.5_0.12_75/0.14)]"
+                     bg-violet/25"
         />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-balance text-mist text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">
@@ -528,7 +528,7 @@ export default async function LandingPage() {
           {/* Brand block: spans 5/12 on desktop, full width on mobile */}
           <div className="md:col-span-5">
             <Wordmark className="text-mist text-xl" />
-            <p className="mt-3 text-sm text-[oklch(0.68_0.025_75)] max-w-xs leading-relaxed">
+            <p className="mt-3 text-sm text-mist-2/75 max-w-xs leading-relaxed">
               AI-powered dream interpretation with Biblical wisdom.
             </p>
 
@@ -549,7 +549,7 @@ export default async function LandingPage() {
           >
             <div>
               <h3 className="font-semibold text-mist mb-3 text-sm">Product</h3>
-              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
+              <ul className="space-y-2 text-sm text-mist-2/80">
                 <li>
                   <a href="#features" className="hover:text-mist transition-colors">
                     Features
@@ -573,7 +573,7 @@ export default async function LandingPage() {
 
             <div>
               <h3 className="font-semibold text-mist mb-3 text-sm">Support</h3>
-              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
+              <ul className="space-y-2 text-sm text-mist-2/80">
                 <li>
                   <Link href="/help" className="hover:text-mist transition-colors">
                     Help Center
@@ -589,7 +589,7 @@ export default async function LandingPage() {
 
             <div>
               <h3 className="font-semibold text-mist mb-3 text-sm">Legal</h3>
-              <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
+              <ul className="space-y-2 text-sm text-mist-2/80">
                 <li>
                   <Link href="/privacy" className="hover:text-mist transition-colors">
                     Privacy Policy
@@ -613,8 +613,8 @@ export default async function LandingPage() {
           </nav>
         </div>
 
-        <div className="border-t border-[oklch(0.28_0.03_250)]">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-center text-xs text-[oklch(0.55_0.02_250)]">
+        <div className="border-t border-navy-800">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-center text-xs text-mist-2/65">
             &copy; {new Date().getFullYear()} DreamRiver. All rights reserved.
           </div>
         </div>

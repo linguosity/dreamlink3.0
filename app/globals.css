@@ -295,9 +295,13 @@
       padding-bottom: 0;
     }
   }
-  /* Footer link styling (kept) */
+  /* Footer link styling. The site footer sits on a fixed Navy 900 panel in
+   * both themes, so these are the fixed light brand values (Mist-2 → Mist),
+   * not theme tokens — --foreground would go near-black on the navy in light
+   * mode. Was gray-100 → white, which is the same idea in an off-brand
+   * neutral. Both pass AA on Navy 900 (≈9:1 and ≈14:1). */
   footer a:not(.no-brand-style) {
-    @apply text-gray-100 hover:text-white transition-colors;
+    @apply text-mist-2 hover:text-mist transition-colors;
   }
   /* Buttons with hover state */
   .btn-primary, button[type="submit"] {
@@ -454,7 +458,9 @@
   width: 30%;
   height: 18px;
   border-radius: 9999px;
-  border: 1px solid rgba(191, 219, 254, 0.85);
+  /* Violet Light at low alpha — the ripple reads as the mark's own
+     accent rather than the Tailwind blue-200 it used to be. */
+  border: 1px solid rgba(179, 155, 255, 0.85);
   transform: translate(-50%, -50%) scale(0.6);
   opacity: 0;
   will-change: transform, opacity;
@@ -469,7 +475,7 @@
   width: 20%;
   height: 14px;
   border-radius: 9999px;
-  border: 1.5px solid rgba(147, 197, 253, 0.95);
+  border: 1.5px solid rgba(179, 155, 255, 0.95);
   transform: translate(-50%, -50%) scale(0.5);
   opacity: 0;
 }

@@ -51,7 +51,7 @@ export default function Signup() {
           water-bg) is enough. No gradient outside the logo (HANDOFF-v3.md
           §0/§8), so the old cream/moon-glow decorative layers are gone. */}
       <div className="relative w-full">
-        <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+        <Card className="w-full shadow-lg border-0 bg-card/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-3">
             <CardTitle className="text-xl">Create Your Free Journal</CardTitle>
             <CardDescription>
@@ -66,7 +66,7 @@ export default function Signup() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white dark:bg-slate-800 px-2 text-muted-foreground">
+                <span className="bg-card px-2 text-muted-foreground">
                   or sign up with email
                 </span>
               </div>
@@ -130,7 +130,7 @@ export default function Signup() {
         </Card>
 
         <div className="text-center mt-5">
-          <Link href="/landing" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+          <Link href="/landing" className="text-sm text-muted-foreground hover:text-foreground">
             ← Back to homepage
           </Link>
         </div>
