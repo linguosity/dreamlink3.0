@@ -7,6 +7,7 @@ type ErrorType =
   | "dream_delete"
   | "dream_star"
   | "dream_feedback"
+  | "dream_regenerate"
   | "network"
   | "unknown";
 

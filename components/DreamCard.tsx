@@ -30,6 +30,7 @@ import { logClientError } from "@/utils/errorLogger";
 import { FeatureHint } from "@/components/feature-hint";
 import { buildDreamCost, formatUsd } from "@/utils/pricing";
 import ShareDreamButton from "@/components/ShareDreamButton";
+import { AiDisclosure } from "@/components/brand/AiDisclosure";
 import { track } from "@/lib/analytics";
 
 // Import UI components with error handling
@@ -466,6 +467,15 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   );
   const [isFeedbackPending, setIsFeedbackPending] = useState(false);
   const [bibleVerses, setBibleVerses] = useState<Record<string, string>>({});
+  // Themed verse citations (HANDOFF-v3.md §5 item 2): reference -> the theme
+  // the model matched it on ("crossing waters"). Keyed identically to
+  // bibleVerses, both raw and normalized, so getVerseTheme can mirror
+  // getVerseText's lookup order. Empty for readings recorded before themes
+  // were persisted — those chips render as a bare reference, by design.
+  const [verseThemes, setVerseThemes] = useState<Record<string, string>>({});
+  // "Read again · 1 credit" (§5 item 4). Cost is stated on the control
+  // itself, never after the fact.
+  const [isRereading, setIsRereading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
   const [imageError, setImageError] = useState(false);
@@ -670,13 +680,26 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       }
     }
     
-    return { 
+    return {
       text: verseText || `Verse text not available for ${reference}`,
       isFallback,
       source
     };
   };
-  
+
+  // The theme this verse was matched on, for the "Isaiah 43:2 · crossing
+  // waters" chip (HANDOFF-v3.md §5 item 2). Mirrors getVerseText's raw-then-
+  // normalized lookup order, since the API keys themes exactly like verses.
+  // Returns null — not a placeholder — for readings that predate the theme
+  // column; a chip with no theme is the correct render, an invented one is
+  // not.
+  const getVerseTheme = (reference: string): string | null => {
+    const raw = verseThemes[reference];
+    if (raw) return raw;
+    const normalized = verseThemes[normalizeReference(reference)];
+    return normalized || null;
+  };
+
   // Track whether analysis timed out so we can show an error state
   const [analysisTimedOut, setAnalysisTimedOut] = useState(false);
 
@@ -897,9 +920,19 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               });
             }
             
+            // Themes ride along under a reserved key so the response body
+            // stays the flat {ref: text} map older clients index directly
+            // (see app/api/bible-verses/lookup). Split them back apart here.
+            const { _themes: themes, ...verses } = data as Record<string, any>;
+
             // Important: Create a new object to trigger re-render
-            const verseData = { ...data };
+            const verseData = { ...verses } as Record<string, string>;
             setBibleVerses(verseData);
+            setVerseThemes(
+              themes && typeof themes === "object"
+                ? (themes as Record<string, string>)
+                : {},
+            );
             
             // Verify if we got verse text for all references
             if (dream.bible_refs) {
@@ -1058,6 +1091,61 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
       toast.error('Could not save your feedback. Please try again.');
     } finally {
       setIsFeedbackPending(false);
+    }
+  };
+
+  // "Read again · 1 credit" (HANDOFF-v3.md §5 item 4). The cost is on the
+  // button face, and the confirm restates it — a re-read is one of the few
+  // one-tap actions in the product that spends money, so it gets a beat of
+  // friction rather than an undo it cannot offer.
+  const handleReadAgain = async () => {
+    if (empty || isRereading) return;
+    if (dream.id.startsWith('pending-')) return;
+
+    setIsRereading(true);
+    try {
+      const response = await fetch(`/api/dream-entries/${dream.id}/regenerate`, {
+        method: 'POST',
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        // Out of credits is the paywall moment, not an error — same
+        // treatment as the composer (see CompactDreamInput).
+        if (response.status === 402 && result?.code === 'out_of_credits') {
+          toast.error(result.error ?? "You're out of credits.");
+          router.push('/pricing');
+          return;
+        }
+        throw new Error(result?.error || `Re-read failed: ${response.status}`);
+      }
+
+      if (result?.dream) {
+        // Swap the reading in place. The scripture chips are keyed off
+        // bible_refs, so clearing the hydrated verse text forces the lookup
+        // effect to refetch text AND themes for the new citations rather
+        // than showing the previous reading's.
+        setDream((prev) => ({ ...prev, ...result.dream }));
+        setBibleVerses({});
+        setVerseThemes({});
+      } else {
+        router.refresh();
+      }
+
+      // A new reading deserves its own verdict — the old vote rated a
+      // reading that no longer exists.
+      setFeedbackChoice(null);
+      toast.success('A new reading is ready.');
+    } catch (error) {
+      console.error('Error re-reading dream:', error);
+      logClientError("dream_regenerate", error instanceof Error ? error.message : String(error), {
+        route: `/api/dream-entries/${dream.id}/regenerate`,
+      });
+      toast.error(
+        error instanceof Error ? error.message : 'Could not start a new reading.',
+      );
+    } finally {
+      setIsRereading(false);
     }
   };
 
@@ -1782,7 +1870,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div style={modalHeight ? { minHeight: modalHeight } : undefined}>
               <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
                 <div ref={analysisContentRef}>
-                  {/* Summary section removed as requested */}
+                  {/* AI disclosure — ABOVE the reading, with the mark
+                      (HANDOFF-v3.md §5 item 1). It used to sit underneath,
+                      which is a footnote, not a disclosure: by the time you
+                      read it you have already taken the reading as given. */}
+                  {hasInterpretation && (
+                    <AiDisclosure
+                      verseCount={dream.bible_refs?.length}
+                      className="mb-4 max-w-[65ch]"
+                    />
+                  )}
 
                   {dream.formatted_analysis ? (
                     renderAnalysis(dream.formatted_analysis, dream.bible_refs)
@@ -1810,22 +1907,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     </div>
                   )}
 
-                  {/* AI-transparency label — one quiet line under the
-                      interpretation, mirrored on the public share page. */}
-                  {hasInterpretation && (
-                    <p className="mt-3 text-[11px] text-muted-foreground opacity-70">
-                      Interpretation generated with AI, grounded in the verses above.
-                    </p>
-                  )}
                 </div>
 
-                {/* One-tap feedback — owner-only (never on the public share
-                    page), skipped for example cards and optimistic
-                    placeholders that don't exist in the DB yet. */}
+                {/* One-tap feedback (§5 item 5) + "Read again" (§5 item 4).
+                    Owner-only — never on the public share page — and skipped
+                    for example cards and optimistic placeholders that don't
+                    exist in the DB yet. They sit together on purpose: "Not
+                    really" is a dead end without a way to act on it. */}
                 {hasInterpretation && !empty && !dream.id.startsWith('pending-') && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t pt-3.5">
                     <span className="text-xs text-muted-foreground">
-                      Was this reading meaningful?
+                      Did this reading feel meaningful?
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -1854,7 +1946,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                             : "border-input text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
-                        No
+                        Not really
                       </button>
                     </div>
                     {feedbackChoice !== null && (
@@ -1865,6 +1957,38 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         Thank you.
                       </span>
                     )}
+
+                    {/* Re-generation, with the cost on the button face
+                        (§5 item 4). Never "Read again" alone — a control that
+                        spends money says so before it is pressed, not after.
+                        The confirm restates it because there is no undo. */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={isRereading}
+                          className="ml-auto rounded-full border border-input px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {isRereading ? 'Reading again…' : 'Read again · 1 credit'}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Read this dream again?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This uses 1 credit and replaces the interpretation
+                            and its verses with a fresh reading. Your dream
+                            itself is never changed.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleReadAgain} disabled={isRereading}>
+                            Read again · 1 credit
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )}
               </TabsContent>
@@ -1923,6 +2047,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   {dream.bible_refs.map((ref, index) => {
                     const { text: verseText, isFallback, source } = getVerseText(ref);
                     const missing = source === "missing" || source === "missing-range";
+                    // The theme this verse was matched on, rendered inline as
+                    // "Isaiah 43:2 · crossing waters" (HANDOFF-v3.md §5 item
+                    // 2). A component contract, not a tooltip: the reason a
+                    // verse is here is part of the citation, and a reason you
+                    // have to hover to see is a reason most readers never see.
+                    const theme = getVerseTheme(ref);
                     return (
                       <Popover key={index}>
                         <PopoverTrigger asChild>
@@ -1933,7 +2063,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                               is keyboard-reachable and has a 24px tap target. */}
                           <button
                             type="button"
-                            aria-label={`Read ${ref}`}
+                            aria-label={
+                              theme ? `Read ${ref}, matched on ${theme}` : `Read ${ref}`
+                            }
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               missing
                                 ? "bg-muted text-muted-foreground border-muted-foreground/30"
@@ -1942,6 +2074,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                           >
                             <BookIcon className="h-2 w-2" />
                             {ref}
+                            {theme && (
+                              // Weight, not italics, carries the de-emphasis
+                              // (§3: "emphasis is weight 500, never italic").
+                              <span className="font-normal opacity-75">· {theme}</span>
+                            )}
                           </button>
                         </PopoverTrigger>
                         <PopoverContent className="max-w-[300px] text-xs" side="top">
