@@ -82,8 +82,15 @@ export const metadata: Metadata = {
 
 // themeColor must live in the viewport export since Next 14+
 // (it was emitting an "Unsupported metadata themeColor" warning on every route).
+// Dark is a first-class peer, not a filter (HANDOFF-v3.md rule 4) — so the
+// browser/OS chrome follows the theme too. A single Navy 900 value painted a
+// dark address bar above a Paper page for every light-mode user. Values are
+// the --bg tokens: Paper in light, Night in dark.
 export const viewport: Viewport = {
-  themeColor: "#0A0E33",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBFAFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#070A24" },
+  ],
 };
 
 // v3 "Deep Current" type system (HANDOFF-v3.md §3):

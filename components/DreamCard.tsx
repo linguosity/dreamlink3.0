@@ -358,10 +358,16 @@ function highlightTextLegacy(text: string, searchTerm: string): React.ReactNode 
   );
 }
 
-// Shimmer animation component for image placeholder
+// Shimmer animation component for image placeholder.
+//
+// v3 rule 2 — "the gradient belongs to the logo alone; every other surface is
+// flat" — so the RESTING surface is a flat Mist/Surface-2 fill. The only
+// gradient left is the travelling highlight, which is the shimmer itself
+// (a moving specular sweep, not a painted surface) and disappears the moment
+// the image lands. The old dark-mode stops were raw slate, not tokens.
 function DreamImageShimmer() {
   return (
-    <div className="relative w-full h-40 bg-gradient-to-r from-muted via-muted-foreground/10 to-muted dark:from-slate-800 dark:via-slate-700/20 dark:to-slate-800 overflow-hidden">
+    <div className="relative w-full h-40 bg-muted overflow-hidden">
       <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
     </div>
   );
@@ -1413,7 +1419,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     return (
       <Card className="overflow-hidden transition-all aspect-square relative">
         {/* Shimmer background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted-foreground/5 to-muted dark:from-slate-800 dark:via-slate-700/10 dark:to-slate-800 overflow-hidden">
+        {/* Flat resting surface; only the travelling sweep is a gradient.
+            See DreamImageShimmer above. */}
+        <div className="absolute inset-0 bg-muted overflow-hidden">
           <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 dark:via-white/5 to-transparent" />
         </div>
 
@@ -1509,10 +1517,16 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
           </div>
         ) : isPollingCardImage ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 overflow-hidden">
+          // "Generating image…" tile. Flat Navy 900 (rule 2), not a slate
+          // gradient — this is the card face while artwork renders, so it is
+          // brand chrome, not a photo scrim. Fixed navy in both themes: it is
+          // replaced by artwork under a dark scrim either way, so nothing
+          // flashes on the swap. Label lifted from white/60 (2.9:1 on navy,
+          // a contrast failure) to white/80.
+          <div className="absolute inset-0 bg-navy-900 overflow-hidden">
             <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-white/60 text-xs">
+              <div className="flex items-center gap-2 text-white/80 text-xs">
                 <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />

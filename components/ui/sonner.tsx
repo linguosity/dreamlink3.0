@@ -15,21 +15,22 @@ export function Toaster({ ...props }: ToasterProps) {
       position="bottom-right"
       className="toaster group"
       toastOptions={{
-        // make each toast a white card with rounded corners & shadow,
-        // matching your site’s cards
+        // Toasts are cards, and cards are theme tokens. These classes were
+        // hardcoded bg-white / text-black / gray-200, which meant every toast
+        // in dark mode was a white slab — the one element on screen that
+        // ignored the theme, and it appears over the top of everything else.
         classNames: {
           toast:
-            "group bg-white text-black border border-gray-200 rounded-2xl shadow-md p-4 flex items-start gap-3",
-          // title styling
+            "group bg-card text-card-foreground border border-border rounded-2xl shadow-md p-4 flex items-start gap-3",
           title: "font-medium text-base",
-          // description styling
-          description: "text-sm text-gray-600",
-          // action button (e.g. Undo) in your primary brand color
+          description: "text-sm text-muted-foreground",
+          // Action button (e.g. Undo) in the brand primary — Indigo in light,
+          // Violet Light in dark, via the token swap.
           actionButton:
-            "ml-auto bg-primary text-primary-foreground px-3 py-1 rounded-lg text-sm font-semibold hover:bg-primary/90",
-          // cancel (close “×”) uses muted grey
-          cancelButton:
-            "text-gray-400 hover:text-gray-600",
+            "ml-auto bg-primary text-primary-foreground px-3 py-1 rounded-lg text-sm font-semibold hover:bg-primary-hover",
+          cancelButton: "text-muted-foreground hover:text-foreground",
+          closeButton:
+            "bg-card text-muted-foreground border-border hover:text-foreground",
         },
         // auto-dismiss after 8 seconds (long enough to read, short enough to not block)
         duration: 8000,
