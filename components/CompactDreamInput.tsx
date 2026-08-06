@@ -301,6 +301,22 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         : `You've used all ${credits.limit} of your free interpretations`
       : "Uses 1 credit";
 
+  // Dots for the credit meter. Only for plans with a countable allowance —
+  // an unlimited plan has nothing to meter, and admins bypass the gate. Capped
+  // at 5 dots so a 50-credit plan doesn't render a ribbon; past the cap the
+  // sentence beside it carries the real number.
+  const METER_MAX_DOTS = 5;
+  const creditMeterDots =
+    !credits || credits.is_admin || credits.unlimited || credits.limit <= 0
+      ? null
+      : (() => {
+          const total = Math.min(credits.limit, METER_MAX_DOTS);
+          const filled = Math.round(
+            (Math.max(0, credits.remaining) / credits.limit) * total,
+          );
+          return { total, filled };
+        })();
+
   return (
     <div className="w-full sm:max-w-2xl sm:mx-auto space-y-2">
       <form onSubmit={handleSubmit}>
@@ -308,7 +324,27 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
             The slot has a fixed height and renders from first paint, so the
             text arriving from /api/credits never shifts the composer, and it
             lives entirely outside the paywall dialog's flow. */}
-        <div className="h-4 mb-1 px-1 text-right" aria-live="polite">
+        <div
+          className="h-4 mb-1 px-1 flex items-center justify-end gap-2"
+          aria-live="polite"
+        >
+          {/* Credit meter — the brand sheet's own component (§5, "Credit
+              meter: always visible before a spend, never only after"). Filled
+              dots for credits remaining, hollow for spent, capped at 5 so a
+              50-credit plan doesn't render a dot ribbon. Decorative: the
+              sentence beside it already carries the count for screen readers. */}
+          {creditMeterDots !== null && (
+            <span className="flex items-center gap-1" aria-hidden="true">
+              {Array.from({ length: creditMeterDots.total }, (_, i) => (
+                <span
+                  key={i}
+                  className={`h-[7px] w-[7px] rounded-full ${
+                    i < creditMeterDots.filled ? "bg-primary" : "bg-border"
+                  }`}
+                />
+              ))}
+            </span>
+          )}
           {creditCostLine && (
             <span className="text-xs text-muted-foreground opacity-70">
               {creditCostLine}
