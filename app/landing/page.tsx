@@ -332,6 +332,7 @@ export default async function LandingPage() {
                   "Dream art + biblical interpretation",
                   "Standard reading levels",
                   "Dream journal storage & search",
+                  "Dream sharing",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
@@ -377,9 +378,7 @@ export default async function LandingPage() {
                   "30 AI dream analyses per month",
                   "Deeper analysis + all reading levels",
                   "Five image styles",
-                  "Export your dream journal",
                   "Dream sharing",
-                  "Priority processing",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <span aria-hidden className="text-gold mt-0.5">✓</span>
@@ -425,6 +424,7 @@ export default async function LandingPage() {
                   "Unlimited AI dream analyses",
                   "Deepest theological interpretations",
                   "All eight image styles",
+                  "Dream sharing",
                   "Early access to new features",
                   "API access",
                   "Priority support",
