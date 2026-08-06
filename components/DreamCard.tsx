@@ -1281,12 +1281,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         </div>
                       )}
                       {source === "missing" && (
-                        <div className="text-[10px] italic text-red-500 mt-1">
+                        <div className="text-[10px] italic text-destructive mt-1">
                           Warning: No verse text found
                         </div>
                       )}
                       {source === "missing-range" && (
-                        <div className="text-[10px] italic text-red-500 mt-1">
+                        <div className="text-[10px] italic text-destructive mt-1">
                           Warning: No verse text found for this range
                         </div>
                       )}
@@ -1296,7 +1296,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                         </div>
                       )}
                       {source.includes("range") && !source.includes("missing") && (
-                        <div className="text-[10px] italic text-green-500 mt-1">
+                        <div className="text-[10px] italic text-success mt-1">
                           {reference}
                         </div>
                       )}
@@ -1749,9 +1749,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
               <span className="truncate">
                 {hasOpenAi ? (
                   <>
-                    in <span className="text-emerald-300">{cost.inputTokens ?? 0}</span>
+                    in <span className="text-success">{cost.inputTokens ?? 0}</span>
                     {" / out "}
-                    <span className="text-amber-300">{cost.outputTokens ?? 0}</span>
+                    <span className="text-warning">{cost.outputTokens ?? 0}</span>
                   </>
                 ) : (
                   <span className="text-white/50">tokens pending…</span>
@@ -2139,7 +2139,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-ring"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label="Delete this dream"
                     >
                       <Trash2Icon className="h-4 w-4 mr-1" />
@@ -2157,7 +2157,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteDream}
-                        className="bg-red-500 hover:bg-red-600"
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         disabled={isDeleting}
                       >
                         {isDeleting ? "Deleting..." : "Delete Dream"}

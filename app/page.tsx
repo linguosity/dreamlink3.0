@@ -225,14 +225,14 @@ export default async function MainPage() {
         {showTestModeBanner && (
           <div
             role="status"
-            className="rounded-xl border-2 border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-start gap-3"
+            className="rounded-xl border-2 border-warning/50 bg-warning/10 px-4 py-3 flex items-start gap-3"
           >
             <span aria-hidden="true" className="text-lg">🧪</span>
             <div className="flex-1 text-sm">
-              <div className="font-medium text-amber-900 dark:text-amber-100">
+              <div className="font-medium text-foreground">
                 Test mode is on
               </div>
-              <div className="text-amber-800/80 dark:text-amber-200/80">
+              <div className="text-muted-foreground">
                 Each dream submission will generate{" "}
                 <strong>{adminTestModeMatrixSize} cards</strong> across your
                 comparison matrix. Image generation is deduped by aesthetic.
@@ -240,7 +240,7 @@ export default async function MainPage() {
             </div>
             <Link
               href="/settings"
-              className="text-xs font-medium text-amber-900 dark:text-amber-100 underline underline-offset-2 hover:no-underline whitespace-nowrap"
+              className="text-xs font-medium text-foreground underline underline-offset-2 hover:no-underline whitespace-nowrap"
             >
               Disable
             </Link>

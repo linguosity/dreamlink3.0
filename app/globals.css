@@ -50,6 +50,13 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 
+  /* Status colours from dr-tokens.css. They swap per-theme like everything
+   * else (Success #127A5B → #5FD6AC, Warn #9A5B00 → #F0B457), which raw
+   * Tailwind emerald-/amber-* picks cannot do without a hand-written
+   * `dark:` twin on every use. */
+  --color-success: var(--success);
+  --color-warning: var(--warn);
+
   /* Brand-specific (DreamRiver v3 "Deep Current" palette, from dr-tokens.css)
    * Fixed, theme-invariant brand colors — the mark's own navy → indigo →
    * violet range, plus the light-mode-only Mist/Paper surfaces. Use for
