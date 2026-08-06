@@ -599,6 +599,11 @@ export default async function LandingPage() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/ai-disclosure" className="hover:text-mist transition-colors">
+                    AI Disclosure
+                  </Link>
+                </li>
+                <li>
                   <CookiePreferencesLink className="hover:text-mist transition-colors" />
                 </li>
               </ul>

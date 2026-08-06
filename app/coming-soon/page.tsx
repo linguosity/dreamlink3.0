@@ -190,6 +190,12 @@ export default function ComingSoonPage() {
               Terms
             </Link>
             <Link
+              href="/ai-disclosure"
+              className="transition-colors hover:text-[var(--mist)]"
+            >
+              AI Disclosure
+            </Link>
+            <Link
               href="/sign-in"
               className="transition-colors opacity-60 hover:opacity-100 hover:text-[var(--mist)]"
             >

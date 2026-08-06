@@ -190,7 +190,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     const origin = headersList.get("origin") || "http://localhost:3000";
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
+      redirectTo: `${origin}/auth/callback?redirect_to=/reset-password`,
     });
 
     if (error) {
@@ -225,7 +225,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     if (!parsed.success) {
       const firstError = parsed.error.errors[0]?.message || "Invalid input";
       redirect(
-        `/protected/reset-password?error=${encodeURIComponent(firstError)}`
+        `/reset-password?error=${encodeURIComponent(firstError)}`
       );
     }
 
@@ -239,11 +239,11 @@ export const resetPasswordAction = async (formData: FormData) => {
 
     if (error) {
       console.error(error.message);
-      redirect("/protected/reset-password?error=Password update failed");
+      redirect("/reset-password?error=Password update failed");
     }
 
     redirect(
-      `/protected/reset-password?success=${encodeURIComponent(
+      `/reset-password?success=${encodeURIComponent(
         "Password updated successfully."
       )}`
     );
@@ -253,7 +253,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     }
     console.error("Unexpected error during reset password:", error);
     redirect(
-      "/protected/reset-password?error=An unexpected error occurred. Please try again."
+      "/reset-password?error=An unexpected error occurred. Please try again."
     );
   }
 };
