@@ -11,9 +11,12 @@
 //     client blocks remote content,
 //   - a plain-text fallback per email for text-only clients + spam scoring.
 //
-// Palette mirrors the DreamRiver "Moonwater" tokens in app/globals.css
-// (hex equivalents from the comments there): night #0E1A30, night-deep
-// #08111F, night-soft #1A2748, cream/starlight #F5ECD6, gold #D4A247.
+// Palette mirrors the DreamRiver v3 "Deep Current" tokens in
+// app/globals.css / design_handoff_revamp/assets/dr-tokens.css. These
+// emails always render on a dark ("Night") card, so they use the tokens'
+// own dark-mode values directly: bg #070A24, surface #0E1440, line #252C66,
+// ink #F0EFFC, and the dark-mode accent swap Violet Light #B39BFF (never
+// Indigo on Night — indigo is unreadable there, per the token contract).
 
 import { getSupportEmail } from "@/lib/resend";
 
@@ -27,15 +30,15 @@ export interface EmailContent {
 // emails must always point at the canonical domain, never a preview URL.
 const SITE_URL = "https://dreamriver.io";
 
-// Brand hex tokens (see header comment for the oklch sources).
-const NIGHT = "#0E1A30";
-const CARD = "#1A2748";
-const CARD_BORDER = "#2A3A5F";
-const STARLIGHT = "#F5ECD6";
-const BODY_TEXT = "#C9D2E4";
-const MUTED = "#8B96B3";
-const GOLD = "#D4A247";
-const GOLD_LIGHT = "#E6C073";
+// Brand hex tokens (see header comment for the source values).
+const NIGHT = "#070A24";
+const CARD = "#0E1440";
+const CARD_BORDER = "#252C66";
+const STARLIGHT = "#F0EFFC";
+const BODY_TEXT = "#C7CCEC";
+const MUTED = "#8790BE";
+const GOLD = "#B39BFF";
+const GOLD_LIGHT = "#C9B8FF";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";

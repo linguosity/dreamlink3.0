@@ -156,7 +156,9 @@ const ShareIcon = ({ className }: { className?: string }) => (
 );
 
 // Star toggle icon. `filled` swaps between an outlined star (not starred)
-// and a solid gold star (starred).
+// and a solid Violet Light star (starred) — a fixed accent (not the
+// theme-following --primary) so it stays legible over both plain card
+// surfaces and dream-art photo backgrounds.
 const StarIcon = ({ className, filled }: { className?: string; filled?: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -1520,7 +1522,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     className={cn(
                       "rounded-full p-0.5 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       isStarred
-                        ? "text-[color:var(--gold,#d4a843)]"
+                        ? "text-violet-light"
                         : (cardImageUrl || isPollingCardImage)
                           ? "text-white/70 hover:text-white"
                           : "text-muted-foreground hover:text-foreground"
@@ -1924,10 +1926,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     return (
                       <Popover key={index}>
                         <PopoverTrigger asChild>
-                          {/* F05 (v2 Moonwater): scripture chip reads as a
-                              quoted reference — cream-soft surface, gold-deep
-                              text (AA ≥4.5:1; bright gold in dark mode),
-                              hairline gold border. Now a real <button> so it
+                          {/* Scripture chip reads as a quoted reference —
+                              Mist surface, Indigo/Violet Light text (AA
+                              ≥4.5:1, auto-swaps in dark mode), Mist-2
+                              hairline border. Now a real <button> so it
                               is keyboard-reachable and has a 24px tap target. */}
                           <button
                             type="button"
@@ -1935,7 +1937,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               missing
                                 ? "bg-muted text-muted-foreground border-muted-foreground/30"
-                                : "bg-cream-soft text-gold-deep dark:text-gold border-[oklch(0.85_0.08_75)]"
+                                : "bg-mist text-primary border-mist-2"
                             }`}
                           >
                             <BookIcon className="h-2 w-2" />

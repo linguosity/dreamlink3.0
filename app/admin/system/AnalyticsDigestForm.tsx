@@ -93,7 +93,7 @@ export default function AnalyticsDigestForm({
           type="checkbox"
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
-          className="h-4 w-4 accent-[color:var(--gold)]"
+          className="h-4 w-4 accent-primary"
         />
         Send analytics emails
       </label>
@@ -200,7 +200,7 @@ export default function AnalyticsDigestForm({
                 onChange={(e) =>
                   setSections((s) => ({ ...s, [key]: e.target.checked }))
                 }
-                className="h-4 w-4 accent-[color:var(--gold)]"
+                className="h-4 w-4 accent-primary"
               />
               {label}
             </label>

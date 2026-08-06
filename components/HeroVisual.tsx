@@ -39,7 +39,7 @@ export default function HeroVisual() {
         >
           <div className="animate-float">
             <div className="bg-gray-900 rounded-[2.25rem] p-1.5 shadow-xl aspect-[9/17]">
-              <div className="bg-cream rounded-[1.875rem] overflow-hidden h-full flex flex-col">
+              <div className="bg-paper rounded-[1.875rem] overflow-hidden h-full flex flex-col">
                 <div className="px-5 py-3 border-b border-black/5">
                   <span className="wordmark text-[13px] text-gray-900">
                     DreamRiver
@@ -67,13 +67,13 @@ export default function HeroVisual() {
                     className={`mt-3 flex gap-2 transition-opacity duration-500
                                 ${showPills ? "opacity-100" : "opacity-0"}`}
                   >
-                    {/* F05: scripture pills — cream + gold-deep + hairline gold border */}
+                    {/* Scripture pills — Mist + Indigo + a Mist-2 hairline border. */}
                     <span
                       className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
                       style={{
-                        background: "var(--cream)",
-                        color: "var(--gold-deep)",
-                        border: "1px solid oklch(0.85 0.08 75)",
+                        background: "var(--mist)",
+                        color: "var(--indigo)",
+                        border: "1px solid var(--mist-2)",
                       }}
                     >
                       Isaiah 43:2
@@ -81,9 +81,9 @@ export default function HeroVisual() {
                     <span
                       className="text-[9px] px-2.5 py-1 rounded-full font-semibold"
                       style={{
-                        background: "var(--cream)",
-                        color: "var(--gold-deep)",
-                        border: "1px solid oklch(0.85 0.08 75)",
+                        background: "var(--mist)",
+                        color: "var(--indigo)",
+                        border: "1px solid var(--mist-2)",
                       }}
                     >
                       Psalm 23:4
@@ -108,7 +108,7 @@ export default function HeroVisual() {
                     className={`mt-4 rounded-xl bg-accent/60 p-3 transition-opacity duration-700
                                 ${showPills ? "opacity-100" : "opacity-0"}`}
                   >
-                    <p className="text-[10px] font-semibold text-amber-warm flex items-center gap-1">
+                    <p className="text-[10px] font-semibold text-indigo flex items-center gap-1">
                       <span aria-hidden="true">✦</span> Your Interpretation
                     </p>
                     <p className="mt-1 text-[10px] text-gray-700 leading-relaxed">

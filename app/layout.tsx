@@ -16,7 +16,7 @@ import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { Cormorant_Garamond, DM_Sans, DM_Serif_Display } from "next/font/google";
+import { Jost, Newsreader, Quicksand } from "next/font/google";
 import { createClient } from "@/utils/supabase/server";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -86,32 +86,35 @@ export const viewport: Viewport = {
   themeColor: "#0E1A30",
 };
 
-// DM Sans for body, DM Serif Display for headlines, Cormorant Garamond for the wordmark.
-// All three expose CSS variables consumed by --font-sans / --font-serif / --font-cormorant in globals.css.
-const dmSans = DM_Sans({
+// v3 "Deep Current" type system (HANDOFF-v3.md §3):
+//   Jost       — display + UI: headings, buttons, labels, forms.
+//   Newsreader — editorial: dream entries, interpretations, scripture, blog.
+//   Quicksand  — wordmark only, never a UI face.
+// All three expose CSS variables consumed by --font-sans / --font-serif /
+// --font-logo in globals.css.
+const jost = Jost({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-dm-sans",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-jost",
+  weight: ["300", "400", "500", "600"],
 });
 
-const dmSerifDisplay = DM_Serif_Display({
+const newsreader = Newsreader({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-dm-serif",
-  weight: ["400"],
+  variable: "--font-newsreader",
+  weight: ["300", "400", "500"],
+  style: ["normal"],
 });
 
-// v2 Moonwater wordmark — italic serif "DreamRiver" per the brand audit.
-// Loaded as a CSS variable so the .wordmark class in globals.css can pick
-// it up. Italic 500 is the canonical weight; we load roman 500 too in case
-// any tertiary surface needs the upright form.
-const cormorantGaramond = Cormorant_Garamond({
+// Wordmark-only face — "DreamRiver" is always set in Quicksand 500, never
+// italic. Loaded as a CSS variable so the .wordmark class in globals.css
+// (and <DrLogo/>) can pick it up.
+const quicksand = Quicksand({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-cormorant",
+  variable: "--font-quicksand",
   weight: ["500"],
-  style: ["italic", "normal"],
 });
 
 export default async function RootLayout({
@@ -166,7 +169,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable}`}
+      className={`${jost.variable} ${newsreader.variable} ${quicksand.variable}`}
       suppressHydrationWarning
     >
       <body className="text-foreground">

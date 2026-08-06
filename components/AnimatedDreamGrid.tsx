@@ -375,7 +375,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         title={!enabled ? 'Coming soon' : undefined}
         className={
           isActive
-            ? 'px-2.5 py-1 rounded-md bg-[color:var(--gold)] text-[color:var(--night-deep)] font-semibold'
+            ? 'px-2.5 py-1 rounded-md bg-primary text-primary-foreground font-semibold'
             : enabled
               ? 'px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground transition-colors'
               : 'px-2.5 py-1 rounded-md text-muted-foreground/40 cursor-not-allowed'

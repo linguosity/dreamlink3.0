@@ -486,7 +486,7 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
           }
           className={
             status === "scheduled"
-              ? "border-amber-500/50 text-amber-700 dark:text-gold"
+              ? "border-amber-500/50 text-amber-700 dark:text-amber-400"
               : undefined
           }
         >
@@ -786,7 +786,7 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
                   className="mt-1 font-mono text-xs"
                 />
                 {status !== "draft" ? (
-                  <p className="text-[11px] text-amber-700 dark:text-gold mt-1">
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1">
                     {status === "scheduled"
                       ? "Changing the slug changes the address it will go live at."
                       : "Changing the slug of a published post breaks its old link."}

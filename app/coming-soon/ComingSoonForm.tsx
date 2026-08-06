@@ -74,14 +74,16 @@ export default function ComingSoonForm() {
   return (
     <form
       onSubmit={onSubmit}
-      // F02 (v2 Moonwater): pill is reframed for the Night background.
-      // Translucent dark fill + warm gold hairline reads as a frosted
-      // night-water surface rather than the daytime sky frosted-glass.
+      // v3 Deep Current: pill is framed for the Navy background. Translucent
+      // Navy-800 fill + a Violet Light hairline reads as frosted night-water
+      // glass rather than the daytime sky frosted-glass.
       className="flex w-full max-w-[440px] rounded-full overflow-hidden backdrop-blur-md"
       style={{
-        border: "1.5px solid oklch(0.65 0.13 75 / 0.4)",
-        background: "oklch(0.2 0.05 252 / 0.45)",
-        boxShadow: "0 2px 24px oklch(0.1 0.05 252 / 0.4)",
+        border:
+          "1.5px solid color-mix(in oklab, var(--violet-lt) 40%, transparent)",
+        background: "color-mix(in oklab, var(--navy-800) 45%, transparent)",
+        boxShadow:
+          "0 2px 24px color-mix(in oklab, var(--navy-900) 40%, transparent)",
       }}
     >
       <label className="sr-only" htmlFor="coming-soon-email">
@@ -97,7 +99,7 @@ export default function ComingSoonForm() {
         placeholder="your@email.com"
         className="flex-1 min-w-0 px-5 py-3.5 bg-transparent text-[15px] outline-none"
         style={{
-          color: "var(--cream)",
+          color: "var(--mist)",
           // placeholder color via inline style requires the ::placeholder
           // selector — we set it via a CSS variable consumed in globals.css
           // (see .coming-soon-input::placeholder). Falls back acceptably
@@ -107,12 +109,12 @@ export default function ComingSoonForm() {
       <button
         type="submit"
         disabled={submitting}
-        // F03 (v2 Moonwater): CTA repainted from sacred-blue to gold with
-        // night-deep text. Same brand pairing as the app icon.
+        // v3 Deep Current: flat Indigo CTA with white text. Same brand
+        // pairing as the app icon.
         className="px-7 py-3.5 text-[14px] font-bold tracking-wide whitespace-nowrap transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
         style={{
-          background: "var(--gold)",
-          color: "var(--night-deep)",
+          background: "var(--indigo)",
+          color: "var(--accent-ink)",
         }}
       >
         {submitting ? "Joining…" : "Join Waitlist"}

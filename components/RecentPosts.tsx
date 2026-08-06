@@ -64,7 +64,7 @@ export default async function RecentPosts({
 
 /* ── Landing variant ─────────────────────────────────────────────────────
    Mirrors the Features/Plans section rhythm: translucent light band,
-   gold eyebrow, centered serif heading, 3-up card grid. */
+   Indigo eyebrow, centered serif heading, 3-up card grid. */
 function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
   return (
     <section
@@ -73,7 +73,7 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 lg:mb-12">
-          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--gold-deep)] dark:text-gold">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
             From the Journal
           </p>
           <h2
@@ -99,12 +99,12 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
                 className="group flex flex-col bg-white dark:bg-slate-900 rounded-2xl
                            ring-1 ring-gray-200/70 dark:ring-slate-800
                            p-6 sm:p-8 transition
-                           hover:shadow-lg hover:-translate-y-1 hover:ring-gold-light
+                           hover:shadow-lg hover:-translate-y-1 hover:ring-violet-light
                            focus-ring"
               >
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 dark:text-gray-400">
                   {post.tags[0] ? (
-                    <span className="text-[color:var(--gold-deep)] dark:text-gold">
+                    <span className="text-primary">
                       {post.tags[0]}
                     </span>
                   ) : null}
@@ -114,7 +114,7 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
                     </time>
                   ) : null}
                 </p>
-                <h3 className="text-xl text-gray-900 dark:text-white leading-snug mt-3 mb-2 group-hover:text-[color:var(--gold-deep)] dark:group-hover:text-gold-light transition-colors">
+                <h3 className="text-xl text-gray-900 dark:text-white leading-snug mt-3 mb-2 group-hover:text-primary transition-colors">
                   {post.title}
                 </h3>
                 {post.excerpt ? (
@@ -130,7 +130,7 @@ function LandingJournalSection({ posts }: { posts: BlogPostPreview[] }) {
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8 lg:mt-10">
           <Link
             href="/blog?utm_source=landing&utm_medium=journal_section"
-            className="text-[color:var(--gold-deep)] dark:text-gold font-semibold hover:underline underline-offset-4 focus-ring rounded"
+            className="text-primary font-semibold hover:underline underline-offset-4 focus-ring rounded"
           >
             Read the Journal →
           </Link>

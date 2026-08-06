@@ -39,11 +39,10 @@ export function RecentSignups({ items }: { items: SignupItem[] }) {
                   <div
                     className="w-[26px] h-[26px] rounded-full grid place-items-center text-white text-[10px] font-semibold shrink-0"
                     style={{
-                      // v2 Moonwater: uniform night-soft → gold gradient (matches
-                      // settings ProfileCard and hi-fi-admin spec). Hash-tinted
-                      // ocean colors were a v1 holdover.
-                      background:
-                        "linear-gradient(135deg, var(--night-soft), var(--gold))",
+                      // v3 Deep Current: flat Indigo fill (matches the settings
+                      // ProfileCard default avatar). Flat by design — the
+                      // gradient is reserved for the logo alone.
+                      background: "var(--indigo)",
                     }}
                     aria-hidden
                   >
@@ -57,12 +56,12 @@ export function RecentSignups({ items }: { items: SignupItem[] }) {
                   {s.plan && s.plan !== "free" && (
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize ${
-                        // v2 Moonwater: prophet chip mirrors settings — night
-                        // background + gold-light text — so the premium tier
-                        // reads identically everywhere.
+                        // v3 Deep Current: prophet chip mirrors settings —
+                        // Navy 900 background + Violet Light text — so the
+                        // premium tier reads identically everywhere.
                         s.plan === "prophet"
-                          ? "bg-[var(--night)] text-[var(--gold-light)]"
-                          : "bg-[oklch(0.95_0.05_75)] text-[color:var(--gold-deep)]"
+                          ? "bg-navy-900 text-violet-light"
+                          : "bg-mist text-navy-800"
                       }`}
                     >
                       {s.plan}

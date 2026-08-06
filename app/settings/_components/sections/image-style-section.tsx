@@ -10,8 +10,11 @@ import {
 } from "@/schema/imageAesthetic";
 import { SectionHead } from "../section-head";
 
-// Per-aesthetic gradient stamps. Mirrors the warm-blue/gold palette so the
-// picker tiles read as one family rather than a random rainbow.
+// Per-aesthetic gradient stamps. These are content/style-preview swatches —
+// each one depicts what a given IMAGE aesthetic looks like (analogous to a
+// paint-color picker), not brand UI chrome, so the v3 "no gradient outside
+// the logo" rule (HANDOFF-v3.md §0/§8) does not apply to them. Left as-is;
+// only the stale palette-name comment has been corrected.
 const AESTHETIC_GRADIENT: Record<ImageAesthetic, string> = {
   [ImageAesthetic.SACRED_OIL_PAINTING]:
     "linear-gradient(135deg, oklch(0.45 0.10 60), oklch(0.30 0.05 30))",

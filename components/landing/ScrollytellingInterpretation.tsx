@@ -76,10 +76,14 @@ const TIER_LABEL: Record<AestheticTier, string> = {
 };
 
 const TIER_CHIP_CLASS: Record<AestheticTier, string> = {
-  free: "bg-gray-500/10 text-gray-600 dark:bg-[rgba(245,236,214,0.10)] dark:text-[rgba(245,236,214,0.72)]",
-  visionary:
-    "bg-[oklch(0.95_0.05_75)] text-[color:var(--gold-deep)] dark:bg-[rgba(212,162,71,0.13)] dark:text-[color:var(--gold-light)]",
-  prophet: "bg-[color:var(--night)] text-[color:var(--gold-light)] dark:bg-[color:var(--night-deep)]",
+  free: "bg-gray-500/10 text-gray-600 dark:bg-[rgba(238,235,252,0.10)] dark:text-[rgba(238,235,252,0.72)]",
+  // text-primary auto-swaps to Violet Light in dark mode — no separate
+  // dark:text needed.
+  visionary: "bg-violet-050 text-primary dark:bg-[rgba(179,155,255,0.13)]",
+  // A self-contained "on dark" badge (Navy 900 + Violet Light), same
+  // treatment regardless of page theme — see admin RecentSignups / settings
+  // Sidebar's identical prophet-tier chip.
+  prophet: "bg-navy-900 text-violet-light",
 };
 
 /** Interpretation copy, split for the line-by-line reveal. */
@@ -189,7 +193,7 @@ export default function ScrollytellingInterpretation() {
   const compactDream = artOn && !staticAll;
 
   const zoneClass =
-    "mt-[22px] border-t border-[rgba(14,26,48,0.09)] pt-5 transition-[opacity,transform] duration-[400ms] ease-out motion-reduce:transition-none dark:border-[rgba(245,236,214,0.12)]";
+    "mt-[22px] border-t border-[rgba(14,26,48,0.09)] pt-5 transition-[opacity,transform] duration-[400ms] ease-out motion-reduce:transition-none dark:border-[rgba(238,235,252,0.12)]";
   const zoneStyle = (on: boolean): CSSProperties =>
     on
       ? { opacity: 1, transform: "none" }
@@ -243,11 +247,11 @@ export default function ScrollytellingInterpretation() {
     <section
       ref={sectionRef}
       id="sample-interpretation"
-      className="scroll-mt-20 bg-[color:var(--cream-soft)] dark:bg-[color:var(--night)]"
+      className="scroll-mt-20 bg-paper dark:bg-navy-900"
     >
       {/* Section header */}
       <div className="mx-auto max-w-4xl px-4 pt-20 text-center sm:px-6 sm:pt-24 lg:px-8">
-        <span className="mb-3 inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] dark:text-[color:var(--gold-light)]">
+        <span className="mb-3 inline-block font-mono text-[11px] uppercase tracking-[0.32em] text-primary">
           In action
         </span>
         <h2 className="text-balance text-[clamp(1.75rem,3.5vw,2.5rem)] text-gray-900 dark:text-white">
@@ -269,13 +273,13 @@ export default function ScrollytellingInterpretation() {
                 className="max-w-[380px] transition-opacity duration-[400ms] ease-out motion-reduce:transition-none"
                 style={{ opacity: staticAll || effStep === i ? 1 : 0.38 }}
               >
-                <div className="font-mono text-[11px] tracking-[0.28em] text-[color:var(--gold-deep)] dark:text-[color:var(--gold-light)]">
+                <div className="font-mono text-[11px] tracking-[0.28em] text-primary">
                   {s.num}
                 </div>
                 <h3 className="mb-3 mt-2.5 font-serif text-[27px] font-normal text-gray-900 dark:text-white">
                   {s.title}
                 </h3>
-                <p className="text-base leading-[1.65] text-[#4A4335] dark:text-[rgba(245,236,214,0.78)]">
+                <p className="text-base leading-[1.65] text-muted-foreground">
                   {s.body}
                 </p>
               </div>
@@ -285,16 +289,16 @@ export default function ScrollytellingInterpretation() {
 
         {/* Right: dream-journal card (pinned on desktop) */}
         <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-[4vh]">
-          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-200/70 dark:bg-[color:var(--night-soft)] dark:ring-[rgba(245,236,214,0.13)] sm:px-8 sm:py-7">
+          <div className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-200/70 dark:bg-card dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7">
             {/* Dream quote */}
             <div
               aria-hidden="true"
-              className="select-none text-6xl leading-[0.6] text-gold [font-family:var(--font-cormorant),Georgia,serif]"
+              className="select-none text-6xl leading-[0.6] text-primary [font-family:var(--font-serif)]"
             >
               &ldquo;
             </div>
             <blockquote
-              className="mt-2 italic text-gray-800 transition-[font-size,opacity] duration-[400ms] motion-reduce:transition-none dark:text-[color:var(--cream)] [font-family:var(--font-cormorant),Georgia,serif]"
+              className="mt-2 italic text-gray-800 transition-[font-size,opacity] duration-[400ms] motion-reduce:transition-none dark:text-mist [font-family:var(--font-serif)]"
               style={
                 compactDream
                   ? {
@@ -314,11 +318,11 @@ export default function ScrollytellingInterpretation() {
 
             {/* Interpretation + verses */}
             <div aria-hidden={!interpOn} className={zoneClass} style={zoneStyle(interpOn)}>
-              <div className="mb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-[color:var(--gold-deep)] dark:text-[color:var(--gold-light)]">
+              <div className="mb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-primary">
                 Analysis:
               </div>
               <p
-                className="m-0 text-[15.5px] leading-[1.7] text-gray-600 transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(245,236,214,0.72)]"
+                className="m-0 text-[15.5px] leading-[1.7] text-gray-600 transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(238,235,252,0.72)]"
                 // Like the dream quote, the analysis recedes (2-line clamp)
                 // once the artwork panel arrives, so the pinned card keeps
                 // fitting the viewport. Chips stay fully visible.
@@ -366,25 +370,25 @@ export default function ScrollytellingInterpretation() {
                           setHover((h) => (h === v.id ? null : h));
                           setPinned((p) => (p === v.id ? null : p));
                         }}
-                        className={`tap inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[oklch(0.85_0.08_75)] bg-[color:var(--cream)] px-3.5 py-[5px] text-[13px] font-medium text-[color:var(--gold-deep)] transition-colors hover:border-gold focus-ring dark:border-[rgba(212,162,71,0.4)] dark:bg-[rgba(212,162,71,0.13)] dark:text-[color:var(--gold-light)] ${
+                        className={`tap inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-mist-2 bg-mist px-3.5 py-[5px] text-[13px] font-medium text-primary transition-colors hover:border-primary focus-ring dark:border-[rgba(179,155,255,0.4)] dark:bg-[rgba(179,155,255,0.13)] ${
                           interpOn && !verseHintDone ? "animate-verse-hint" : ""
                         }`}
                       >
                         <BookOpen aria-hidden="true" className="h-3 w-3 opacity-70" />
-                        <span className="underline decoration-[color:var(--gold)] decoration-dotted underline-offset-[3px]">
+                        <span className="underline decoration-primary decoration-dotted underline-offset-[3px]">
                           {v.ref}
                         </span>
                       </button>
                       <span
                         role="tooltip"
                         id={`pop-${v.id}`}
-                        className="pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 z-40 w-[290px] max-w-[72vw] -translate-x-1/2 rounded-xl bg-[color:var(--night)] px-[18px] py-4 text-[color:var(--cream)] shadow-[0_12px_32px_rgba(8,17,31,0.35)] transition-opacity duration-150 dark:bg-[color:var(--night-deep)]"
+                        className="pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 z-40 w-[290px] max-w-[72vw] -translate-x-1/2 rounded-xl bg-navy-900 px-[18px] py-4 text-mist shadow-[0_12px_32px_rgba(8,17,31,0.35)] transition-opacity duration-150"
                         style={{ opacity: visible ? 1 : 0, visibility: visible ? "visible" : "hidden" }}
                       >
-                        <span className="block text-[16px] italic leading-[1.55] [font-family:var(--font-cormorant),Georgia,serif]">
+                        <span className="block text-[16px] italic leading-[1.55] [font-family:var(--font-serif)]">
                           &ldquo;{v.text}&rdquo;
                         </span>
-                        <span className="mt-2.5 block font-mono text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--gold-light)]">
+                        <span className="mt-2.5 block font-mono text-[10.5px] uppercase tracking-[0.14em] text-violet-light">
                           {v.ref} &middot; KJV
                         </span>
                       </span>
@@ -397,10 +401,10 @@ export default function ScrollytellingInterpretation() {
             {/* Artwork carousel (card-stack) */}
             <div aria-hidden={!artOn} className={zoneClass} style={zoneStyle(artOn)}>
               <div className="mb-3 flex items-baseline justify-between gap-3">
-                <div className="font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-[color:var(--gold-deep)] dark:text-[color:var(--gold-light)]">
+                <div className="font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-primary">
                   As artwork
                 </div>
-                <div className="font-mono text-[11px] text-gray-500 dark:text-[rgba(245,236,214,0.6)]">
+                <div className="font-mono text-[11px] text-gray-500 dark:text-[rgba(238,235,252,0.6)]">
                   {slide + 1} / {PRESETS.length}
                 </div>
               </div>
@@ -451,7 +455,7 @@ export default function ScrollytellingInterpretation() {
                   setDrag(0);
                   setDragging(false);
                 }}
-                className="relative h-[clamp(180px,28vh,320px)] w-full cursor-grab touch-pan-y overflow-hidden rounded-xl bg-[color:var(--cream)] focus-ring dark:bg-[color:var(--night-deep)]"
+                className="relative h-[clamp(180px,28vh,320px)] w-full cursor-grab touch-pan-y overflow-hidden rounded-xl bg-mist focus-ring dark:bg-navy-900"
               >
                 <div className="absolute inset-x-[18px] inset-y-3.5">
                   {PRESETS.map((p, i) => (
@@ -476,7 +480,7 @@ export default function ScrollytellingInterpretation() {
                   <Link
                     href="/pricing"
                     aria-label={`Unlock the ${TIER_LABEL[cur.tier]} tier — see pricing`}
-                    className="absolute right-3 top-3 z-20 flex items-center gap-1.5 rounded-full bg-[rgba(8,17,31,0.82)] px-3 py-1.5 text-xs font-semibold text-[color:var(--gold-light)] backdrop-blur-sm transition-colors hover:bg-[rgba(8,17,31,0.95)] focus-ring"
+                    className="absolute right-3 top-3 z-20 flex items-center gap-1.5 rounded-full bg-[rgba(8,17,31,0.82)] px-3 py-1.5 text-xs font-semibold text-violet-light backdrop-blur-sm transition-colors hover:bg-[rgba(8,17,31,0.95)] focus-ring"
                   >
                     <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true">
                       <rect x="1" y="5" width="8" height="6" rx="1.5" fill="currentColor" />
@@ -490,7 +494,7 @@ export default function ScrollytellingInterpretation() {
               {/* Label + controls */}
               <div className="mt-3 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="truncate text-[14.5px] font-semibold text-gray-800 dark:text-[color:var(--cream)]">
+                  <div className="truncate text-[14.5px] font-semibold text-gray-800 dark:text-mist">
                     {cur.name}
                   </div>
                   <span
@@ -505,7 +509,7 @@ export default function ScrollytellingInterpretation() {
                     aria-label="Previous style"
                     onClick={() => goTo(slide - 1, "arrow")}
                     disabled={slide === 0}
-                    className="tap h-8 w-8 rounded-full border border-[oklch(0.85_0.08_75)] bg-white text-[17px] leading-none text-[color:var(--gold-deep)] transition-colors hover:border-gold disabled:pointer-events-none disabled:opacity-35 focus-ring dark:border-[rgba(212,162,71,0.4)] dark:bg-transparent dark:text-[color:var(--gold-light)]"
+                    className="tap h-8 w-8 rounded-full border border-mist-2 bg-white text-[17px] leading-none text-primary transition-colors hover:border-primary disabled:pointer-events-none disabled:opacity-35 focus-ring dark:border-[rgba(179,155,255,0.4)] dark:bg-transparent"
                   >
                     &lsaquo;
                   </button>
@@ -514,7 +518,7 @@ export default function ScrollytellingInterpretation() {
                     aria-label="Next style"
                     onClick={() => goTo(slide + 1, "arrow")}
                     disabled={slide === PRESETS.length - 1}
-                    className="tap h-8 w-8 rounded-full border border-[oklch(0.85_0.08_75)] bg-white text-[17px] leading-none text-[color:var(--gold-deep)] transition-colors hover:border-gold disabled:pointer-events-none disabled:opacity-35 focus-ring dark:border-[rgba(212,162,71,0.4)] dark:bg-transparent dark:text-[color:var(--gold-light)]"
+                    className="tap h-8 w-8 rounded-full border border-mist-2 bg-white text-[17px] leading-none text-primary transition-colors hover:border-primary disabled:pointer-events-none disabled:opacity-35 focus-ring dark:border-[rgba(179,155,255,0.4)] dark:bg-transparent"
                   >
                     &rsaquo;
                   </button>
@@ -531,7 +535,7 @@ export default function ScrollytellingInterpretation() {
                     onClick={() => goTo(i, "dot")}
                     className="h-2 w-2 rounded-full border-0 p-0 transition-[background,transform] duration-200 focus-ring"
                     style={{
-                      background: i === slide ? "var(--gold)" : "oklch(0.85 0.08 75)",
+                      background: i === slide ? "var(--primary)" : "var(--line)",
                       transform: i === slide ? "scale(1.25)" : "none",
                     }}
                   />
@@ -543,11 +547,11 @@ export default function ScrollytellingInterpretation() {
             <div aria-hidden={!ctaOn} className={zoneClass} style={zoneStyle(ctaOn)}>
               <Link
                 href="/sign-up"
-                className="tap flex min-h-12 items-center justify-center rounded-xl bg-gold text-[15.5px] font-semibold tracking-[0.01em] text-[color:var(--night-deep)] transition-colors hover:bg-[color:var(--gold-deep)] hover:text-[color:var(--cream-soft)] focus-ring"
+                className="tap flex min-h-12 items-center justify-center rounded-xl bg-primary text-[15.5px] font-semibold tracking-[0.01em] text-primary-foreground transition-colors hover:bg-primary-hover focus-ring"
               >
                 Interpret your own dream
               </Link>
-              <div className="mt-2.5 text-center text-[12.5px] text-gray-500 dark:text-[rgba(245,236,214,0.6)]">
+              <div className="mt-2.5 text-center text-[12.5px] text-gray-500 dark:text-[rgba(238,235,252,0.6)]">
                 Free to start &middot; no card required
               </div>
             </div>

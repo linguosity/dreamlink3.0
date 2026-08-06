@@ -38,13 +38,13 @@ function htmlPage(title: string, message: string, status: number): NextResponse 
 <meta name="robots" content="noindex"/>
 <title>${title} · DreamRiver</title>
 </head>
-<body style="margin:0; padding:48px 16px; background-color:#0E1A30; font-family:Arial, Helvetica, sans-serif;">
+<body style="margin:0; padding:48px 16px; background-color:#070A24; font-family:Arial, Helvetica, sans-serif;">
   <div style="max-width:480px; margin:0 auto; text-align:center;">
-    <div style="font-family:Georgia, 'Times New Roman', serif; font-size:24px; letter-spacing:1px; color:#F5ECD6; margin-bottom:22px;"><span style="color:#D4A247;">&#10022;</span>&nbsp;DreamRiver</div>
-    <div style="background-color:#1A2748; border:1px solid #2A3A5F; border-radius:12px; padding:36px 32px; text-align:left;">
-      <h1 style="margin:0 0 14px 0; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:normal; color:#F5ECD6;">${title}</h1>
-      <p style="margin:0; font-size:15px; line-height:1.65; color:#C9D2E4;">${message}</p>
-      <p style="margin:18px 0 0 0; font-size:13px; line-height:1.6; color:#8B96B3;">You can change this anytime in <a href="https://dreamriver.io/settings" style="color:#E6C073;">Settings</a>.</p>
+    <div style="font-family:'Trebuchet MS', Verdana, sans-serif; font-weight:bold; font-size:24px; letter-spacing:1px; color:#F0EFFC; margin-bottom:22px;"><span style="color:#B39BFF;">&#10022;</span>&nbsp;DreamRiver</div>
+    <div style="background-color:#0E1440; border:1px solid #252C66; border-radius:12px; padding:36px 32px; text-align:left;">
+      <h1 style="margin:0 0 14px 0; font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:normal; color:#F0EFFC;">${title}</h1>
+      <p style="margin:0; font-size:15px; line-height:1.65; color:#C7CCEC;">${message}</p>
+      <p style="margin:18px 0 0 0; font-size:13px; line-height:1.6; color:#8790BE;">You can change this anytime in <a href="https://dreamriver.io/settings" style="color:#B39BFF;">Settings</a>.</p>
     </div>
   </div>
 </body>

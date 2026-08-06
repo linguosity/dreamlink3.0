@@ -1,5 +1,6 @@
 // Inline-SVG sparkline. Stateless, server-renderable.
-// Variant "primary" uses --primary blue; "gold" uses --gold for accent metrics.
+// Variant "primary" uses --primary (Indigo); "violet" uses --violet for
+// highlighted/accent metrics.
 export function Sparkline({
   data,
   width = 220,
@@ -9,7 +10,7 @@ export function Sparkline({
   data: number[];
   width?: number;
   height?: number;
-  variant?: "primary" | "gold";
+  variant?: "primary" | "violet";
 }) {
   if (data.length === 0) return null;
   const max = Math.max(...data, 1);
@@ -24,7 +25,7 @@ export function Sparkline({
     .join(" ");
   const areaPoints = `0,${height} ${points} ${width},${height}`;
   const stroke =
-    variant === "gold" ? "var(--gold)" : "var(--primary)";
+    variant === "violet" ? "var(--violet)" : "var(--primary)";
   const gradId = `spark-grad-${variant}`;
 
   return (

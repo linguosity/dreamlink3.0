@@ -102,7 +102,7 @@ export default async function BlogPostPage({ params }: Props) {
   };
 
   return (
-    <div className="dark w-full min-h-screen bg-night text-cream">
+    <div className="dark w-full min-h-screen bg-background text-foreground">
       <SiteHeader />
       {!isDraftPreview ? (
         <script
@@ -113,17 +113,17 @@ export default async function BlogPostPage({ params }: Props) {
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-10 sm:pt-14 pb-16 sm:pb-24">
         {isDraftPreview ? (
-          <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
-            <strong className="uppercase tracking-[0.14em] text-[11px] font-bold text-gold">
+          <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm">
+            <strong className="uppercase tracking-[0.14em] text-[11px] font-bold text-primary">
               {post.status === "scheduled" ? "Scheduled" : "Draft preview"}
             </strong>
-            <span className="text-cream/70">
+            <span className="text-foreground/70">
               {post.status === "scheduled" && post.scheduled_for ? (
                 <>
                   Scheduled for{" "}
                   <LocalDateTime
                     iso={post.scheduled_for}
-                    className="text-cream"
+                    className="text-foreground"
                   />{" "}
                   — it goes live on its own then. Until that moment only
                   admins can see this page.
@@ -137,7 +137,7 @@ export default async function BlogPostPage({ params }: Props) {
             </span>
             <Link
               href={`/admin/blog/${post.id}`}
-              className="text-gold underline underline-offset-4 hover:text-gold-light"
+              className="text-primary underline underline-offset-4 hover:text-primary-hover"
             >
               Back to editor
             </Link>
@@ -147,15 +147,15 @@ export default async function BlogPostPage({ params }: Props) {
         <nav className="text-sm">
           <Link
             href="/blog"
-            className="text-cream/60 hover:text-gold transition-colors"
+            className="text-foreground/60 hover:text-primary transition-colors"
           >
             ← The Journal
           </Link>
         </nav>
 
         <header className="mt-6">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-cream/50 font-semibold">
-            {post.tags[0] ? <span className="text-gold">{post.tags[0]}</span> : null}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-foreground/50 font-semibold">
+            {post.tags[0] ? <span className="text-primary">{post.tags[0]}</span> : null}
             {publicDate ? (
               <time dateTime={publicDate}>
                 {new Date(publicDate).toLocaleDateString("en-US", {
@@ -172,11 +172,11 @@ export default async function BlogPostPage({ params }: Props) {
             {post.title}
           </h1>
           {post.excerpt ? (
-            <p className="text-cream/70 text-base sm:text-lg mt-4 leading-relaxed">
+            <p className="text-foreground/70 text-base sm:text-lg mt-4 leading-relaxed">
               {post.excerpt}
             </p>
           ) : null}
-          <p className="text-sm text-cream/50 mt-4">By {post.author_name}</p>
+          <p className="text-sm text-foreground/50 mt-4">By {post.author_name}</p>
         </header>
 
         {post.cover_image_url ? (
@@ -184,7 +184,7 @@ export default async function BlogPostPage({ params }: Props) {
           <img
             src={post.cover_image_url}
             alt=""
-            className="w-full rounded-xl mt-8 border border-cream/10"
+            className="w-full rounded-xl mt-8 border border-border"
           />
         ) : null}
 
@@ -195,17 +195,17 @@ export default async function BlogPostPage({ params }: Props) {
         </article>
 
         {/* CTA */}
-        <aside className="mt-12 sm:mt-16 rounded-2xl border border-gold/25 bg-night-soft/40 p-6 sm:p-8 text-center">
+        <aside className="mt-12 sm:mt-16 rounded-2xl border border-primary/25 bg-card/40 p-6 sm:p-8 text-center">
           <h2 className="font-serif text-xl sm:text-2xl font-semibold">
             Bring your own dream to the water
           </h2>
-          <p className="text-cream/70 text-sm mt-2 max-w-sm mx-auto">
+          <p className="text-foreground/70 text-sm mt-2 max-w-sm mx-auto">
             DreamRiver interprets your dreams through a biblical lens — free to
             start.
           </p>
           <Link
             href="/sign-up"
-            className="inline-block mt-5 rounded-full bg-gold text-night-deep font-semibold px-6 py-2.5 text-sm hover:bg-gold-light transition-colors focus-visible:outline-2 focus-visible:outline-cream"
+            className="inline-block mt-5 rounded-full bg-primary text-primary-foreground font-semibold px-6 py-2.5 text-sm hover:bg-primary-hover transition-colors focus-visible:outline-2 focus-visible:outline-foreground"
           >
             Try DreamRiver free
           </Link>

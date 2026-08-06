@@ -305,10 +305,10 @@ export default async function MainPage() {
 
         {/* Pattern-emerging insight — gentle nudge once enough dreams accumulate. */}
         {showPatternHint && (
-          <aside className="rounded-2xl border border-[oklch(0.85_0.06_75)] bg-[oklch(0.96_0.025_75)] p-5 flex items-center gap-5">
+          <aside className="rounded-2xl border border-violet/30 bg-accent p-5 flex items-center gap-5">
             <div
               aria-hidden="true"
-              className="w-12 h-12 rounded-xl bg-[oklch(0.93_0.04_75)] border border-[oklch(0.85_0.08_75)] text-[color:var(--gold-deep)] grid place-items-center shrink-0"
+              className="w-12 h-12 rounded-xl bg-violet/15 border border-violet/30 text-primary grid place-items-center shrink-0"
             >
               <Sparkles className="w-5 h-5" />
             </div>

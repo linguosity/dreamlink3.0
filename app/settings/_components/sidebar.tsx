@@ -37,16 +37,11 @@ const PLAN_LABEL: Record<SubscriptionPlan, string> = {
 };
 
 function planBadgeClass(plan: SubscriptionPlan) {
-  // F09 (v2 Moonwater): premium tier badge picks up the "gold on night"
-  // motif — Prophet renders as gold-light text on a Night pill, the same
-  // sacred-night-and-gold pairing that anchors the brand mark. Visionary
-  // stays on pale-gold; Free stays neutral.
-  if (plan === "prophet") return "bg-[var(--night)] text-[var(--gold-light)]";
-  // Visionary: gold-tinted parchment background with gold-deep text — matches
-  // hi-fi-settings spec (oklch(0.95 0.05 75) / var(--gold-deep)) and reads
-  // tonally lighter than the Prophet night-on-gold pill.
-  if (plan === "visionary")
-    return "bg-[oklch(0.95_0.05_75)] text-[color:var(--gold-deep)]";
+  // v3 Deep Current: premium tier badge mirrors admin's recent-signups chip —
+  // Prophet renders as Violet Light text on a Navy 900 pill, Visionary stays
+  // on Mist with Navy 800 text, Free stays neutral. Flat by design.
+  if (plan === "prophet") return "bg-navy-900 text-violet-light";
+  if (plan === "visionary") return "bg-mist text-navy-800";
   return "bg-muted text-muted-foreground";
 }
 
@@ -75,11 +70,10 @@ export function ProfileCard({
         <div
           className="w-14 h-14 rounded-full grid place-items-center text-white font-semibold font-serif text-lg shrink-0"
           style={{
-            // F10 (v2 Moonwater): default-avatar gradient was blue-deep →
-            // blue-soft. Repoint to night-soft → gold so it matches the
-            // brand's "night and gold" pairing.
-            background:
-              "linear-gradient(135deg, var(--night-soft), var(--gold))",
+            // v3 Deep Current: flat Indigo fill (matches admin's
+            // recent-signups avatar). Flat by design — the gradient is
+            // reserved for the logo alone.
+            background: "var(--indigo)",
           }}
           aria-hidden
         >
@@ -146,14 +140,14 @@ export function SidebarNav({
             type="button"
             onClick={() => onSelect(id)}
             aria-current={active ? "page" : undefined}
-            // F08 (v2 Moonwater): active sidebar rows get a 3px gold-deep
-            // left edge in addition to the pale-gold background. The vertical
+            // v3 Deep Current: active sidebar rows get a 3px primary (Indigo)
+            // left edge in addition to the tinted background. The vertical
             // edge is the brand's recurring accent — appears on scripture
-            // quotes and gold CTAs too. The pale background alone is too
+            // quotes and primary CTAs too. The tinted background alone is too
             // low-contrast without the edge.
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-colors text-left ${
               active
-                ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-[var(--gold-deep)] pl-[calc(0.75rem-3px)]"
+                ? "bg-primary/10 text-primary font-medium border-l-[3px] border-l-primary pl-[calc(0.75rem-3px)]"
                 : "text-foreground hover:bg-muted"
             }`}
           >
@@ -177,13 +171,14 @@ export function UpgradeCTA({ plan }: { plan: SubscriptionPlan }) {
     <div
       className="mt-4 p-4 rounded-xl border"
       style={{
-        background:
-          "linear-gradient(135deg, oklch(0.95 0.04 75), oklch(0.99 0.01 75))",
-        borderColor: "oklch(0.88 0.06 75)",
+        // v3 Deep Current: flat Violet-tinted card — no gradient outside the
+        // logo (HANDOFF-v3.md §0/§8).
+        background: "var(--surface-2)",
+        borderColor: "var(--violet-lt)",
       }}
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-gold-deep" />
+        <Sparkles className="w-3.5 h-3.5 text-primary" />
         <div className="text-xs font-semibold text-accent-foreground">
           {headline}
         </div>

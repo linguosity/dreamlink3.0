@@ -26,11 +26,10 @@ import ScrollytellingInterpretation from "@/components/landing/ScrollytellingInt
 import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
-// v2 Moonwater: feature icon chips read as a unified pale-gold set
+// v3 Deep Current: feature icon chips read as a unified pale-violet set
 // (no purple/teal one-offs). Background + border mirror the "step" circles
 // from the How-It-Works section above.
-const FEATURE_ICON =
-  "text-[color:var(--gold-deep)] bg-[oklch(0.95_0.05_75)] ring-1 ring-[oklch(0.85_0.08_75)]";
+const FEATURE_ICON = "text-primary bg-violet-050 ring-1 ring-mist-2";
 
 const STEPS = [
   {
@@ -109,20 +108,10 @@ export default async function LandingPage() {
       <SiteHeader />
 
       {/* ── Hero Section ───────────────────────────────────────────── */}
-      {/* v2 Moonwater: Night gradient + cream type + two soft moon-glow
-          radials (one gold upper-right, one blue lower-left) per hi-fi-splash. */}
-      <section className="relative overflow-hidden bg-[linear-gradient(160deg,var(--night-deep)_0%,var(--night)_50%,var(--night-soft)_100%)]">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-32 right-32 w-[360px] h-[360px] rounded-full
-                     bg-[radial-gradient(circle,oklch(0.5_0.12_75/0.30)_0%,transparent_60%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-24 -left-16 w-[260px] h-[260px] rounded-full
-                     bg-[radial-gradient(circle,oklch(0.4_0.08_245/0.35)_0%,transparent_60%)]"
-        />
-
+      {/* v3 Deep Current: flat Navy 900 ground + Mist type. No gradient
+          outside the logo (HANDOFF-v3.md §0/§8) — the v2 night gradient and
+          the v2 gold/blue moon-glow radials are gone. */}
+      <section className="relative overflow-hidden bg-navy-900">
         <div
           className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8
                      pt-[calc(theme(spacing.16)+env(safe-area-inset-top))]
@@ -132,14 +121,14 @@ export default async function LandingPage() {
             {/* Copy */}
             <div className="text-center lg:text-left">
               <h1
-                className="leading-[1.05] tracking-tight text-[color:var(--cream)] text-balance
+                className="leading-[1.05] tracking-tight text-mist text-balance
                            text-[clamp(2rem,5.5vw,4rem)]
                            max-w-[14ch] mx-auto lg:mx-0 lg:max-w-[18ch]"
               >
                 Discover Biblical Insight through your Dreams
               </h1>
 
-              <p className="mt-6 text-base sm:text-lg lg:text-xl text-[oklch(0.82_0.02_75)] max-w-prose mx-auto lg:mx-0 leading-relaxed">
+              <p className="mt-6 text-base sm:text-lg lg:text-xl text-mist-2 max-w-prose mx-auto lg:mx-0 leading-relaxed">
                 Record your dreams and receive scripture-rooted reflections,
                 recurring themes, and spiritual insight to help you pray,
                 reflect, and understand.
@@ -162,16 +151,16 @@ export default async function LandingPage() {
                   href="#sample-interpretation"
                   className="w-full sm:w-auto whitespace-nowrap
                              inline-flex items-center justify-center h-12 px-7 rounded-full
-                             border border-[oklch(0.35_0.03_250)]
-                             text-[color:var(--cream)] text-base font-medium
-                             hover:bg-[oklch(0.30_0.07_252/0.45)] transition-colors
+                             border border-navy-800
+                             text-mist text-base font-medium
+                             hover:bg-navy-800/45 transition-colors
                              focus-ring"
                 >
                   See an example
                 </a>
               </div>
 
-              <p className="mt-4 text-sm text-[oklch(0.70_0.03_75)]">
+              <p className="mt-4 text-sm text-mist-2">
                 Start free. No credit card required.
               </p>
 
@@ -212,8 +201,8 @@ export default async function LandingPage() {
             {STEPS.map(({ step, title, desc, Icon }) => (
               <div key={step} className="flex flex-col items-center text-center">
                 <div className="relative w-16 h-16 rounded-full flex items-center justify-center
-                                bg-gradient-to-br from-accent to-accent/60
-                                text-[color:var(--gold-deep)] dark:text-gold
+                                bg-accent
+                                text-primary
                                 ring-1 ring-accent mb-4">
                   <Icon className="w-7 h-7" aria-hidden="true" />
                   <span
@@ -264,7 +253,7 @@ export default async function LandingPage() {
                 className="group flex flex-col bg-white dark:bg-slate-900 rounded-2xl
                            ring-1 ring-gray-200/70 dark:ring-slate-800
                            p-6 sm:p-8 transition
-                           hover:shadow-lg hover:-translate-y-1 hover:ring-gold-light
+                           hover:shadow-lg hover:-translate-y-1 hover:ring-violet-light
                            focus-ring"
               >
                 <div
@@ -294,7 +283,7 @@ export default async function LandingPage() {
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 lg:mb-12">
-            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--gold-deep)] dark:text-gold">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               Simple &amp; honest
             </p>
             <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-gray-900 dark:text-white mt-3 mb-3">
@@ -309,7 +298,7 @@ export default async function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {/* Discovery (free) */}
             <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 sm:p-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--gold-deep)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                 Discovery
               </p>
               <div className="flex items-baseline gap-2 mt-3">
@@ -320,7 +309,7 @@ export default async function LandingPage() {
                   free forever
                 </span>
               </div>
-              <p className="mt-2 text-sm font-semibold text-[color:var(--gold-deep)]">
+              <p className="mt-2 text-sm font-semibold text-primary">
                 3 dream analyses to start
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
@@ -335,7 +324,7 @@ export default async function LandingPage() {
                   "Dream sharing",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
-                    <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
+                    <span aria-hidden className="text-primary mt-0.5">✓</span>
                     {f}
                   </li>
                 ))}
@@ -349,31 +338,31 @@ export default async function LandingPage() {
             </div>
 
             {/* Insight (Night card, most popular) */}
-            <div className="relative overflow-hidden flex flex-col rounded-2xl border border-night-soft bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] p-7 sm:p-8">
+            <div className="relative overflow-hidden flex flex-col rounded-2xl border border-navy-800 bg-navy-900 p-7 sm:p-8">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-light">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-light">
                   Insight
                 </p>
-                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-night-deep bg-gold px-2.5 py-1 rounded-full">
+                <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-navy-900 bg-violet-light px-2.5 py-1 rounded-full">
                   Most Popular
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-3">
-                <span className="font-serif text-4xl text-cream leading-none">
+                <span className="font-serif text-4xl text-mist leading-none">
                   $12.99
                 </span>
-                <span className="text-sm text-cream/60">/month</span>
+                <span className="text-sm text-mist/60">/month</span>
               </div>
-              <p className="mt-1.5 text-xs text-cream/60">
+              <p className="mt-1.5 text-xs text-mist/60">
                 or $99.99/yr &mdash; &asymp;$8.33/mo, save 36%
               </p>
-              <p className="mt-2 text-sm font-semibold text-gold-light">
+              <p className="mt-2 text-sm font-semibold text-violet-light">
                 30 dream analyses / month
               </p>
-              <p className="text-sm text-cream/60 mt-2 mb-5">
+              <p className="text-sm text-mist/60 mt-2 mb-5">
                 Unlock deeper spiritual insights with enhanced AI analysis.
               </p>
-              <ul className="grid gap-2.5 mb-7 text-sm text-cream/90">
+              <ul className="grid gap-2.5 mb-7 text-sm text-mist/90">
                 {[
                   "30 AI dream analyses per month",
                   "Deeper analysis + all reading levels",
@@ -381,14 +370,14 @@ export default async function LandingPage() {
                   "Dream sharing",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
-                    <span aria-hidden className="text-gold mt-0.5">✓</span>
+                    <span aria-hidden className="text-violet-light mt-0.5">✓</span>
                     {f}
                   </li>
                 ))}
               </ul>
               <Link
                 href="/sign-up"
-                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-gold hover:bg-gold-light text-night-deep text-base font-semibold transition-colors focus-ring"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-violet-light hover:bg-mist text-navy-900 text-base font-semibold transition-colors focus-ring"
               >
                 Upgrade to Insight
               </Link>
@@ -397,7 +386,7 @@ export default async function LandingPage() {
             {/* Journey (coming soon) */}
             <div className="flex flex-col rounded-2xl border border-gray-200 dark:border-slate-800 bg-gradient-to-br from-accent/40 to-secondary p-7 sm:p-8">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--gold-deep)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                   Journey
                 </p>
                 <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-gray-600 dark:text-gray-300 bg-gray-200/80 dark:bg-slate-700 px-2.5 py-1 rounded-full">
@@ -413,7 +402,7 @@ export default async function LandingPage() {
               <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                 or $179.99/yr &mdash; &asymp;$15.00/mo, save 25%
               </p>
-              <p className="mt-2 text-sm font-semibold text-[color:var(--gold-deep)]">
+              <p className="mt-2 text-sm font-semibold text-primary">
                 Unlimited dream analyses
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-5">
@@ -430,7 +419,7 @@ export default async function LandingPage() {
                   "Priority support",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
-                    <span aria-hidden className="text-[color:var(--gold-deep)] mt-0.5">✓</span>
+                    <span aria-hidden className="text-primary mt-0.5">✓</span>
                     {f}
                   </li>
                 ))}
@@ -486,7 +475,7 @@ export default async function LandingPage() {
       <RecentPosts variant="landing" limit={3} />
 
       {/* ── Final CTA ──────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[linear-gradient(165deg,var(--night)_0%,var(--night-deep)_100%)] py-20 sm:py-24 lg:py-28">
+      <section className="relative overflow-hidden bg-navy-900 py-20 sm:py-24 lg:py-28">
         {/* moon-glow halo above the heading */}
         <div
           aria-hidden="true"
@@ -494,7 +483,7 @@ export default async function LandingPage() {
                      bg-[radial-gradient(ellipse,oklch(0.5_0.12_75/0.25)_0%,transparent_60%)]"
         />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-balance text-[color:var(--cream)] text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">
+          <h2 className="text-balance text-mist text-[clamp(2rem,4vw,3rem)] leading-tight mb-8 max-w-3xl mx-auto">
             Begin Your Spiritual Dream Journey Today
           </h2>
 
@@ -508,7 +497,7 @@ export default async function LandingPage() {
                          transition-[background-color,box-shadow,transform] duration-150
                          hover:shadow-lg hover:shadow-primary/30
                          active:translate-y-px
-                         focus-ring focus-visible:ring-offset-[color:var(--night)]"
+                         focus-ring focus-visible:ring-offset-navy-900"
             >
               Start Your Dream Journal &mdash; Free
             </Link>
@@ -516,15 +505,15 @@ export default async function LandingPage() {
               href="#sample-interpretation"
               className="w-full sm:w-auto whitespace-nowrap
                          inline-flex items-center justify-center h-12 px-6 rounded-full
-                         text-[oklch(0.78_0.025_75)] hover:text-[color:var(--cream)] text-base font-medium
+                         text-mist-2 hover:text-mist text-base font-medium
                          underline underline-offset-4
-                         focus-ring focus-visible:ring-offset-[color:var(--night)]"
+                         focus-ring focus-visible:ring-offset-navy-900"
             >
               See an example
             </a>
           </div>
 
-          <p className="mt-8 text-sm text-[oklch(0.65_0.03_75)] max-w-md mx-auto">
+          <p className="mt-8 text-sm text-mist-2/80 max-w-md mx-auto">
             This app is not affiliated with any particular church or
             denomination. All are welcome.
           </p>
@@ -532,11 +521,11 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className="bg-[color:var(--night-deep)] border-t border-[oklch(0.28_0.03_250)]">
+      <footer className="bg-navy-900 border-t border-navy-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid gap-10 md:grid-cols-12">
           {/* Brand block: spans 5/12 on desktop, full width on mobile */}
           <div className="md:col-span-5">
-            <Wordmark className="text-[color:var(--cream)] text-xl" />
+            <Wordmark className="text-mist text-xl" />
             <p className="mt-3 text-sm text-[oklch(0.68_0.025_75)] max-w-xs leading-relaxed">
               AI-powered dream interpretation with Biblical wisdom.
             </p>
@@ -557,23 +546,23 @@ export default async function LandingPage() {
             aria-label="Footer"
           >
             <div>
-              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Product</h3>
+              <h3 className="font-semibold text-mist mb-3 text-sm">Product</h3>
               <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <a href="#features" className="hover:text-[color:var(--cream)] transition-colors">
+                  <a href="#features" className="hover:text-mist transition-colors">
                     Features
                   </a>
                 </li>
                 <li>
                   <Link
                     href="/blog?utm_source=landing&utm_medium=footer"
-                    className="hover:text-[color:var(--cream)] transition-colors"
+                    className="hover:text-mist transition-colors"
                   >
                     Journal
                   </Link>
                 </li>
                 <li>
-                  <Link href="/sign-up" className="hover:text-[color:var(--cream)] transition-colors">
+                  <Link href="/sign-up" className="hover:text-mist transition-colors">
                     Start Free
                   </Link>
                 </li>
@@ -581,15 +570,15 @@ export default async function LandingPage() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Support</h3>
+              <h3 className="font-semibold text-mist mb-3 text-sm">Support</h3>
               <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <Link href="/help" className="hover:text-[color:var(--cream)] transition-colors">
+                  <Link href="/help" className="hover:text-mist transition-colors">
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-[color:var(--cream)] transition-colors">
+                  <Link href="/contact" className="hover:text-mist transition-colors">
                     Contact
                   </Link>
                 </li>
@@ -597,20 +586,20 @@ export default async function LandingPage() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-[color:var(--cream)] mb-3 text-sm">Legal</h3>
+              <h3 className="font-semibold text-mist mb-3 text-sm">Legal</h3>
               <ul className="space-y-2 text-sm text-[oklch(0.7_0.025_75)]">
                 <li>
-                  <Link href="/privacy" className="hover:text-[color:var(--cream)] transition-colors">
+                  <Link href="/privacy" className="hover:text-mist transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-[color:var(--cream)] transition-colors">
+                  <Link href="/terms" className="hover:text-mist transition-colors">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <CookiePreferencesLink className="hover:text-[color:var(--cream)] transition-colors" />
+                  <CookiePreferencesLink className="hover:text-mist transition-colors" />
                 </li>
               </ul>
             </div>

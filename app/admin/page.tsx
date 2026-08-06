@@ -330,7 +330,7 @@ export default async function AdminDashboard() {
         <div>
           <h1 className="font-serif text-[28px] leading-[1.1]">Overview</h1>
           <p className="text-[13px] text-muted-foreground mt-1">
-            <span className="wordmark text-[color:var(--gold-deep)]">DreamRiver</span>{" "}
+            <span className="wordmark text-primary">DreamRiver</span>{" "}
             activity and health · last 14 days
           </p>
         </div>
@@ -379,7 +379,7 @@ export default async function AdminDashboard() {
           trend={m.subsTrend}
           trendData={m.subsSparkline}
           Icon={CreditCard}
-          variant="gold"
+          variant="violet"
         />
         <KpiCard
           label="AI Calls Today"
@@ -388,7 +388,7 @@ export default async function AdminDashboard() {
           trend={m.aiCallsTrend}
           trendData={m.aiCallsSparkline}
           Icon={Sparkles}
-          variant="gold"
+          variant="violet"
         />
       </div>
 

@@ -249,14 +249,14 @@ export default function PricingPage() {
                     <p className="text-sm font-medium text-muted-foreground mb-0.5">
                       {isFree ? "Dream Analyses" : "Monthly Dream Analyses"}
                     </p>
-                    <p className="text-xl font-bold text-gold-deep dark:text-gold">{plan.credits}</p>
+                    <p className="text-xl font-bold text-primary">{plan.credits}</p>
                   </div>
                 </div>
 
                 <ul className="space-y-2.5 mb-6">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-gold-deep dark:text-gold flex-shrink-0 mt-0.5" />
+                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <span className="text-base leading-relaxed">{feature}</span>
                     </li>
                   ))}

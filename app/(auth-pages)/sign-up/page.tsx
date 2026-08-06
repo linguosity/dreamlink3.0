@@ -47,17 +47,9 @@ export default function Signup() {
     // (Previously: a second min-h-screen wrapper + badge + h1 + brand icon
     // pushed the submit button below the fold even on desktop.)
     <div className="relative w-full">
-      {/* Full-viewport gradient + moon-glow, per hi-fi-signup; fixed so it
-          doesn't add layout height. Sits above the layout's -z-[5] overlay. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-[4] bg-[linear-gradient(165deg,var(--cream-soft)_0%,oklch(0.93_0.025_230)_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed top-[8%] left-1/2 -translate-x-1/2 -z-[3] w-[360px] h-[220px] rounded-full
-                   bg-[radial-gradient(ellipse,oklch(0.85_0.06_75/0.5)_0%,transparent_60%)]"
-      />
+      {/* v3 Deep Current: the layout's own -z-[5] overlay (over the flat
+          water-bg) is enough. No gradient outside the logo (HANDOFF-v3.md
+          §0/§8), so the old cream/moon-glow decorative layers are gone. */}
       <div className="relative w-full">
         <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-3">

@@ -1,6 +1,6 @@
-// Stateless bar chart. Last bar gets a deeper gold gradient so today reads
-// as "current" — the rest of the bars share a soft cream-to-gold gradient
-// (v2 Moonwater, per hi-fi-admin.jsx).
+// Stateless bar chart. Last bar is flat Indigo so today reads as "current";
+// the rest of the bars share a flat Mist tone. Flat by design — v3 "Deep
+// Current" reserves the gradient for the logo alone (HANDOFF-v3.md §0/§8).
 export function DreamsBarChart({
   data,
 }: {
@@ -32,9 +32,7 @@ export function DreamsBarChart({
                 style={{
                   height: `${pct}%`,
                   minHeight: d.count ? 3 : 0,
-                  background: isLast
-                    ? "linear-gradient(to top, var(--gold-deep), var(--gold))"
-                    : "linear-gradient(to top, oklch(0.85 0.04 75), oklch(0.92 0.05 75))",
+                  background: isLast ? "var(--indigo)" : "var(--mist-2)",
                 }}
               />
             </div>

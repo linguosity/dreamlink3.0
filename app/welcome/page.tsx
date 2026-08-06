@@ -31,16 +31,16 @@ function TermsModal({ onClose }: { onClose: () => void }) {
   ];
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "oklch(0.06 0.02 250 / 0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--warm-paper)", borderRadius: 20, maxWidth: 540, width: "100%", maxHeight: "86vh", display: "flex", flexDirection: "column", boxShadow: "0 30px 70px oklch(0.05 0.02 250 / 0.5)", overflow: "hidden" }}>
-        <div style={{ padding: "24px 28px 18px", borderBottom: "1px solid var(--warm-line)", display: "flex", alignItems: "center", gap: 13 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "oklch(0.95 0.04 80)", border: "1px solid oklch(0.87 0.07 80)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-deep)", flexShrink: 0 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--paper)", borderRadius: 20, maxWidth: 540, width: "100%", maxHeight: "86vh", display: "flex", flexDirection: "column", boxShadow: "0 30px 70px oklch(0.05 0.02 250 / 0.5)", overflow: "hidden" }}>
+        <div style={{ padding: "24px 28px 18px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 13 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--violet-050)", border: "1px solid var(--mist-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--indigo)", flexShrink: 0 }}>
             <Icon name="fileText" size={20} stroke={1.7} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: FONTS.SERIF, fontSize: 20, color: "var(--warm-darker)", lineHeight: 1.1 }}>Terms &amp; Data Collection</div>
-            <div style={{ fontSize: 11.5, color: "var(--warm-muted)", marginTop: 2 }}>Plain-language summary · draft for review</div>
+            <div style={{ fontFamily: FONTS.SERIF, fontSize: 20, color: "var(--ink)", lineHeight: 1.1 }}>Terms &amp; Data Collection</div>
+            <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", marginTop: 2 }}>Plain-language summary · draft for review</div>
           </div>
-          <div onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--warm-muted)" }}>
+          <div onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--muted-foreground)" }}>
             <Icon name="x" size={18} stroke={2} />
           </div>
         </div>
@@ -48,19 +48,19 @@ function TermsModal({ onClose }: { onClose: () => void }) {
           <div style={{ display: "grid", gap: 18 }}>
             {sections.map((s) => (
               <div key={s.h}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--warm-darker)", marginBottom: 5, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--gold)" }} />{s.h}
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 5, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--indigo)" }} />{s.h}
                 </div>
-                <p style={{ fontSize: 13, color: "var(--warm-dark)", lineHeight: 1.6 }}>{s.b}</p>
+                <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6 }}>{s.b}</p>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 22, padding: "12px 15px", background: "oklch(0.96 0.025 80)", border: "1px solid oklch(0.88 0.05 80)", borderRadius: 11, fontSize: 11.5, color: "var(--gold-deep)", lineHeight: 1.55, display: "flex", gap: 9 }}>
+          <div style={{ marginTop: 22, padding: "12px 15px", background: "var(--violet-050)", border: "1px solid var(--mist-2)", borderRadius: 11, fontSize: 11.5, color: "var(--indigo)", lineHeight: 1.55, display: "flex", gap: 9 }}>
             <Icon name="shieldCheck" size={16} stroke={1.7} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>This is a product draft, not final legal copy. Have counsel review before launch.</span>
           </div>
         </div>
-        <div style={{ padding: "16px 28px", borderTop: "1px solid var(--warm-line)", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ padding: "16px 28px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end" }}>
           <GoldBtn onClick={onClose}>Got it</GoldBtn>
         </div>
       </div>
@@ -107,10 +107,9 @@ export default function WelcomePage() {
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       padding: "32px 20px", position: "relative",
-      background:
-        "radial-gradient(ellipse 80% 50% at 75% -8%, oklch(0.5 0.12 75 / 0.30) 0%, transparent 58%)," +
-        "radial-gradient(ellipse 70% 55% at 5% 110%, oklch(0.35 0.07 245 / 0.40) 0%, transparent 55%)," +
-        "linear-gradient(160deg, var(--night-deep) 0%, var(--night) 55%, var(--night-soft) 130%)",
+      // Flat Navy 900 — no gradient outside the logo (HANDOFF-v3.md §0/§8);
+      // the v2 gold + blue glow radials are gone.
+      background: "var(--navy-900)",
     }}>
       <style>{`
         @keyframes ob-twinkle { 0%,100% { opacity: 0.25; } 50% { opacity: 0.85; } }
@@ -126,19 +125,19 @@ export default function WelcomePage() {
       <Starfield />
       <div style={{ width: "100%", maxWidth: 520, position: "relative", zIndex: 2 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, padding: "0 4px" }}>
-          <Lockup size={30} word={21} color="var(--cream)" />
+          <Lockup size={30} word={21} color="var(--mist)" />
           {showProgress
             ? <Pips total={STEPS.length - 2} current={step - 1} />
-            : <span style={{ fontFamily: FONTS.MONO, fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "oklch(0.72 0.03 80)" }}>Get started</span>}
+            : <span style={{ fontFamily: FONTS.MONO, fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mist-2)" }}>Get started</span>}
         </div>
         <div className="ob-card" style={{
-          background: "var(--warm-paper)", border: "1px solid oklch(0.86 0.02 80)", borderRadius: 24,
+          background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 24,
           padding: "38px 40px 34px", boxShadow: "0 30px 70px oklch(0.05 0.02 250 / 0.5), 0 2px 0 oklch(1 0 0 / 0.5) inset",
           position: "relative", overflow: "hidden",
         }}>
           <div className="ob-pane" key={id}>{pane}</div>
         </div>
-        <div style={{ textAlign: "center", marginTop: 22, fontSize: 12, color: "oklch(0.72 0.03 80)" }}>
+        <div style={{ textAlign: "center", marginTop: 22, fontSize: 12, color: "var(--mist-2)" }}>
           Not affiliated with any church or denomination · All are welcome
         </div>
       </div>
