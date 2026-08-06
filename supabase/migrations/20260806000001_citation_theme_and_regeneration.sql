@@ -1,37 +1,57 @@
 -- 20260806000001_citation_theme_and_regeneration.sql
 --
--- Two additive, independent schema pieces for HANDOFF-v3.md §5
--- ("AI transparency — required, not optional"):
+-- Two additive schema pieces for HANDOFF-v3.md §5 ("AI transparency —
+-- required, not optional").
 --
+-- ⚠ DEPLOY ORDER: apply this migration BEFORE deploying the code that reads
+--   it. app/api/bible-verses/lookup selects bible_citations.theme; against a
+--   database without that column PostgREST rejects the whole select and the
+--   scripture popovers go quiet. The credit path is deliberately more
+--   forgiving — see the note on credit_spends below — but the citation path
+--   is not, so migrate first.
+--
+-- ────────────────────────────────────────────────────────────────────
 -- 1. bible_citations.theme
---    Item 2, "Themed verse citations": each scripture citation should carry
---    the short theme it was matched on ("Isaiah 43:2 · crossing waters"),
---    rendered next to the reference itself rather than hidden behind a
---    tooltip/popover. The model is now asked for this alongside the
---    citation (see lib/openai.ts's BiblicalReferenceSchema and
---    lib/dreamAnalysis.ts's prompt instructions) and it is persisted here
---    by app/api/dream-entries/route.ts and app/api/dream-entries/[id]/
---    regenerate/route.ts. Nullable: existing citation rows, and any future
---    row where the model omits a theme, simply render without one (the UI
---    falls back to the bare reference).
 --
--- 2. dream_entries.regeneration_count / last_regenerated_at
---    Item 4, "Re-generation": "Read again · 1 credit". Re-running an
---    existing interpretation doesn't create a new dream_entries row (it is
---    the same dream), so lib/monthlyCredits.ts's existing row-count gate —
---    which governs dream *creation* and is left completely untouched here
---    — can't see it. Rather than build a full monthly-resetting ledger for
---    this one action, app/api/dream-entries/[id]/regenerate additionally
---    caps regenerations per dream (regeneration_count) on top of requiring
---    the account to already be within its normal plan-level credit
---    allowance. This is a deliberate simplification — see that route's own
---    comment and the rebrand handoff report for the tradeoff — but it is
---    enough to ship a working, abuse-bounded "Read again" today.
+-- §5 item 2, "Themed verse citations": each scripture citation carries the
+-- short theme it was matched on ("Isaiah 43:2 · crossing waters"), rendered
+-- beside the reference itself rather than hidden behind a tooltip. The model
+-- is now asked for it alongside the citation (lib/openai.ts's
+-- BiblicalReferenceSchema, lib/dreamAnalysis.ts's prompts) and it is
+-- persisted by lib/analysisPersistence.ts.
 --
--- No RLS change required for either column: bible_citations and
--- dream_entries already restrict select/update to the owning user (see
--- 20260307000001_add_rls_policies.sql), and these are additive
--- nullable/defaulted columns that inherit those existing policies.
+-- Nullable by design: the ~all existing citation rows predate the column and
+-- will never have one, and a model that skips it must not break the render.
+-- The UI falls back to the bare reference.
+--
+-- ────────────────────────────────────────────────────────────────────
+-- 2. credit_spends
+--
+-- §5 item 4, "Re-generation": the "Read again · 1 credit" button. That label
+-- has to be true, and today it cannot be: lib/monthlyCredits.ts measures
+-- usage by COUNTING dream_entries rows, and re-reading a dream updates a row
+-- rather than inserting one. A re-run would therefore be silently free —
+-- which is the same class of dishonesty as §5 item 3's "never disclose cost
+-- after deduction", pointed the other way.
+--
+-- Rather than rebuild credit accounting (a change to the live money path,
+-- and out of scope for a rebrand), this adds a narrow ledger for spends that
+-- are NOT a new dream row. checkMonthlyCredits() now reports
+--     used = (dream_entries rows in window) + (credit_spends rows in window)
+-- using the identical window for both: lifetime for free (credits are granted
+-- once at signup and never refresh), current calendar month for paid.
+--
+-- Deliberately fail-soft on the read side: if this table is missing or the
+-- count query errors, lib/monthlyCredits.ts logs and treats ledger spend as
+-- zero rather than failing the free tier closed. Applying a migration and
+-- shipping code are separate human actions; a gap between them must not lock
+-- every free user out of creating dreams. The WRITE side (the re-generation
+-- route) fails closed instead — it records the spend before calling the
+-- model, and aborts if it cannot.
+--
+-- `kind` is text rather than an enum so a future non-dream spend (a re-drawn
+-- image, say) is an insert, not a migration.
+-- ────────────────────────────────────────────────────────────────────
 
 alter table public.bible_citations
   add column if not exists theme text;
@@ -39,14 +59,36 @@ alter table public.bible_citations
 comment on column public.bible_citations.theme is
   'Short phrase (2-4 words) naming why this verse was matched to the dream, e.g. "crossing waters" for Isaiah 43:2. Rendered next to the citation itself, not behind a tooltip (HANDOFF-v3.md S5 item 2). Null for citations recorded before this column existed, or when the model omits one.';
 
-alter table public.dream_entries
-  add column if not exists regeneration_count integer not null default 0;
+create table if not exists public.credit_spends (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users (id) on delete cascade,
+  dream_entry_id uuid references public.dream_entries (id) on delete set null,
+  kind           text not null default 'regeneration',
+  created_at     timestamptz not null default now()
+);
 
-alter table public.dream_entries
-  add column if not exists last_regenerated_at timestamptz;
+comment on table public.credit_spends is
+  'Ledger of credits spent by actions that do NOT create a dream_entries row. Counted alongside the dream row count by lib/monthlyCredits.ts, so "Read again - 1 credit" (HANDOFF-v3.md S5 item 4) actually costs one credit.';
+comment on column public.credit_spends.dream_entry_id is
+  'The dream this spend re-read. ON DELETE SET NULL: deleting a dream must not refund credits already spent on it.';
+comment on column public.credit_spends.kind is
+  'What was bought. Currently only "regeneration". Text, not an enum, so a new spend type is an insert rather than a migration.';
 
-comment on column public.dream_entries.regeneration_count is
-  'How many times this dream''s interpretation has been re-run via "Read again" (HANDOFF-v3.md S5 item 4). Gates a small per-dream ceiling in app/api/dream-entries/[id]/regenerate, in addition to (not instead of) the account''s normal credit allowance from lib/monthlyCredits.ts, which counts dream_entries rows and does not itself see regenerations.';
+-- The only read pattern is "count this user's spends, optionally since the
+-- start of the month", on the hot path of every dream submission.
+create index if not exists credit_spends_user_created_idx
+  on public.credit_spends (user_id, created_at desc);
 
-comment on column public.dream_entries.last_regenerated_at is
-  'Timestamp of the most recent "Read again" re-run, if any. Null until the first regeneration.';
+alter table public.credit_spends enable row level security;
+
+-- Users may read their own spend history (a future "where did my credits go"
+-- surface). Nobody may INSERT/UPDATE/DELETE through an anon/authenticated
+-- key: rows are written exclusively by the server via the service-role
+-- client, which bypasses RLS. A user who could insert here could not gain
+-- credits, but a user who could DELETE could refund themselves, so no write
+-- policy is granted at all.
+drop policy if exists "credit_spends_select_own" on public.credit_spends;
+create policy "credit_spends_select_own"
+  on public.credit_spends
+  for select
+  using (auth.uid() = user_id);

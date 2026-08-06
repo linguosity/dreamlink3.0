@@ -226,6 +226,38 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_spends: {
+        Row: {
+          created_at: string
+          dream_entry_id: string | null
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream_entry_id?: string | null
+          id?: string
+          kind?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dream_entry_id?: string | null
+          id?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_spends_dream_entry_id_fkey"
+            columns: ["dream_entry_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dream_entries: {
         Row: {
           analysis_depth: string | null
@@ -244,7 +276,6 @@ export type Database = {
           image_url: string | null
           is_public: boolean
           is_starred: boolean
-          last_regenerated_at: string | null
           meaningful: boolean | null
           original_text: string | null
           original_text_enc: string | null
@@ -252,7 +283,6 @@ export type Database = {
           raw_analysis: Json | null
           raw_analysis_enc: string | null
           reading_level_used: string | null
-          regeneration_count: number
           search_vector: unknown
           share_scope: string | null
           share_token: string | null
@@ -279,7 +309,6 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
-          last_regenerated_at?: string | null
           meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
@@ -287,7 +316,6 @@ export type Database = {
           raw_analysis?: Json | null
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
-          regeneration_count?: number
           search_vector?: unknown
           share_scope?: string | null
           share_token?: string | null
@@ -314,7 +342,6 @@ export type Database = {
           image_url?: string | null
           is_public?: boolean
           is_starred?: boolean
-          last_regenerated_at?: string | null
           meaningful?: boolean | null
           original_text?: string | null
           original_text_enc?: string | null
@@ -322,7 +349,6 @@ export type Database = {
           raw_analysis?: Json | null
           raw_analysis_enc?: string | null
           reading_level_used?: string | null
-          regeneration_count?: number
           search_vector?: unknown
           share_scope?: string | null
           share_token?: string | null

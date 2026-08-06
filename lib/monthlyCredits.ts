@@ -44,8 +44,52 @@ function secondsUntilNextMonth(now = new Date()): number {
 }
 
 /**
+ * Credits spent by actions that do NOT insert a dream_entries row — today
+ * only "Read again" re-generations (HANDOFF-v3.md §5 item 4). See
+ * supabase/migrations/20260806000001 for why this exists as a side ledger
+ * rather than a rewrite of credit accounting.
+ *
+ * Fails SOFT, on purpose, for both tiers: applying a migration and deploying
+ * code are separate human actions, and in the window between them this table
+ * does not exist. Treating that as "no extra spend" degrades to exactly
+ * today's behaviour. Treating it as an error would fail the free tier CLOSED
+ * and lock every free user out of creating dreams — a far worse outcome than
+ * an uncounted re-read.
+ */
+async function countLedgerSpends(
+  userId: string,
+  sinceISO: string | null,
+): Promise<number> {
+  try {
+    const admin = getAdminClient();
+    let query = admin
+      .from("credit_spends")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (sinceISO) query = query.gte("created_at", sinceISO);
+    const { count, error } = await query;
+    if (error) {
+      console.error(
+        "[monthlyCredits] credit_spends count failed, counting 0 (is migration 20260806000001 applied?):",
+        error.message,
+      );
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err: any) {
+    console.error(
+      "[monthlyCredits] credit_spends count threw, counting 0:",
+      err?.message ?? err,
+    );
+    return 0;
+  }
+}
+
+/**
  * Check whether `userId` is under their plan's credit cap. One dream entry =
- * one credit (it bundles the analysis + image).
+ * one credit (it bundles the analysis + image). One re-generation of an
+ * existing dream also = one credit, recorded in `credit_spends` because it
+ * updates a row instead of inserting one.
  *
  * FREE tier: the cap is LIFETIME — 3 credits granted once at signup, never
  * refreshed (product decision 2026-07-02; marketing copy says "3 to start").
@@ -60,6 +104,9 @@ export async function checkMonthlyCredits(
 ): Promise<CreditCheckResult> {
   const limit = monthlyCreditCap(plan);
   const isFree = plan === "free";
+  // Free = lifetime window (no date filter); paid = current calendar month.
+  // The ledger uses the identical window so the two counts stay comparable.
+  const sinceISO = isFree ? null : startOfMonthISO();
 
   try {
     const admin = getAdminClient();
@@ -67,11 +114,13 @@ export async function checkMonthlyCredits(
       .from("dream_entries")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId);
-    // Free = lifetime window (no date filter); paid = current calendar month.
-    if (!isFree) {
-      query = query.gte("created_at", startOfMonthISO());
+    if (sinceISO) {
+      query = query.gte("created_at", sinceISO);
     }
-    const { count, error } = await query;
+    const [{ count, error }, ledgerSpends] = await Promise.all([
+      query,
+      countLedgerSpends(userId, sinceISO),
+    ]);
 
     if (error) {
       console.error(
@@ -82,7 +131,7 @@ export async function checkMonthlyCredits(
       return { allowed: !isFree, used: 0, limit };
     }
 
-    const used = count ?? 0;
+    const used = (count ?? 0) + ledgerSpends;
     const allowed = used < limit;
     return {
       allowed,
