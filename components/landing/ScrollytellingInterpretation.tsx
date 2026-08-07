@@ -287,8 +287,14 @@ export default function ScrollytellingInterpretation() {
           ))}
         </div>
 
-        {/* Right: dream-journal card (pinned on desktop) */}
-        <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-[4vh]">
+        {/* Right: dream-journal card (pinned on desktop).
+            top-20 (5rem/80px), NOT a vh value: <SiteHeader/> is `sticky top-0`
+            and 4rem tall, so anything under 4rem parks this card behind it. The
+            old `top-[4vh]` resolved to ~36px on a 900px-tall viewport — the card
+            slid under the nav for the whole pinned scroll. 5rem clears the 4rem
+            header with 1rem to spare, and matches the `scroll-mt-20` the section
+            anchors already use to clear the same header. */}
+        <div className="order-1 pt-3 lg:order-2 lg:sticky lg:top-20">
           <div className="rounded-2xl bg-card p-6 shadow-lg ring-1 ring-border dark:bg-card dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7">
             {/* Dream quote */}
             <div
