@@ -23,6 +23,7 @@ import NewsletterForm from "@/components/NewsletterForm";
 import SocialProof from "@/components/SocialProof";
 import RecentPosts from "@/components/RecentPosts";
 import ScrollytellingInterpretation from "@/components/landing/ScrollytellingInterpretation";
+import DepthComparison from "@/components/landing/DepthComparison";
 import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
@@ -229,6 +230,14 @@ export default async function LandingPage() {
 
       {/* ── Sample Interpretation (scrollytelling demo) ───────────── */}
       <ScrollytellingInterpretation />
+
+      {/* ── Depth comparison ───────────────────────────────────────
+          Deliberately AFTER the scrolly section and outside it: that
+          section drives its card from scroll position, and a click-control
+          on a scroll-driven card overwrites the visitor's choice on the
+          next scroll event. Reuses the same demo dream so the comparison
+          lands against something already read. */}
+      <DepthComparison />
 
       {/* ── Features ───────────────────────────────────────────────── */}
       <section
