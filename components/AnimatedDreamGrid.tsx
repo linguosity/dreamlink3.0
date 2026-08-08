@@ -232,10 +232,10 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       </div>
       <h3 className="text-lg mb-2">No dreams found</h3>
       <p className="text-muted-foreground max-w-md">
-        We couldn't find any dreams matching all of:{' '}
+        We couldn’t find any dreams matching all of:{' '}
         {keywords.map((kw, i) => (
           <span key={i} className="font-medium">
-            "{kw}"{i < keywords.length - 1 ? ', ' : ''}
+            “{kw}”{i < keywords.length - 1 ? ', ' : ''}
           </span>
         ))}
         <br />

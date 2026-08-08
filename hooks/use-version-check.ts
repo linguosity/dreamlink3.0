@@ -5,7 +5,6 @@ export function useVersionCheck() {
   const currentVersion = useRef<string | null>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     
     async function checkVersion() {
       try {
@@ -33,7 +32,7 @@ export function useVersionCheck() {
     // visible (audit: a 30s no-store poll from the root layout meant constant
     // background network churn on every open tab).
     checkVersion();
-    interval = setInterval(() => {
+    const interval = setInterval(() => {
       if (document.visibilityState === "visible") checkVersion();
     }, 5 * 60 * 1000);
 

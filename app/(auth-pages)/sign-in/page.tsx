@@ -88,7 +88,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           <CardFooter className="flex flex-col space-y-4 border-t pt-4">
             <div className="text-center space-y-3">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Don’t have an account?{" "}
                 <Link className="text-primary font-medium hover:underline" href="/sign-up" prefetch={true}>
                   Create your free journal
                 </Link>
