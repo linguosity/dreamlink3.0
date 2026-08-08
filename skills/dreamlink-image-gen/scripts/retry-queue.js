@@ -267,7 +267,7 @@ async function getQueueStats(supabaseClient) {
     avgWaitTimeMs: 0,
   };
 
-  let waitTimes = [];
+  const waitTimes = [];
 
   for (const entry of data) {
     stats[entry.status]++;

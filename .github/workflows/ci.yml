@@ -1,0 +1,54 @@
+# Lint, typecheck and unit tests on every push and PR.
+#
+# None of these ran in CI before. The only workflow was e2e-on-preview, which
+# waits on a Vercel preview deployment and takes ~20 minutes — so nothing gave
+# fast feedback, and nothing ran the unit suite at all. That is a large part of
+# how the suite drifted to 14 failures and `npm run lint` came to point at a
+# command Next 16 had removed.
+#
+# Deliberately independent of Vercel: it needs no preview, no secrets and no
+# deployment, so it reports in about a minute and works on forks.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes the previous run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Matches engines.node and .nvmrc, so CI runs what Vercel runs.
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Lint is currently 0 errors / ~134 warnings. Warnings are not failed
+      # here on purpose: the React Compiler hook rules flag a real backlog that
+      # wants restructuring effects under test, and failing on it from day one
+      # would just teach everyone to ignore a red build. Errors do fail.
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test

@@ -462,7 +462,7 @@ export function AnalysisSection({
               <br />
               <br />
               One image is generated per unique aesthetic. OpenAI calls run in
-              parallel, but every submission still costs N analyses' worth of
+              parallel, but every submission still costs N analyses’ worth of
               tokens. Save?
             </AlertDialogDescription>
           </AlertDialogHeader>

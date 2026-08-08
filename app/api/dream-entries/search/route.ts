@@ -66,6 +66,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute the FTS query
+    // `dreams` is reassigned in the ILIKE fallback below when the full-text
+    // query errors, so this destructuring stays `let`.
     let { data: dreams, error } = await dreamQuery;
 
     // Handle errors
