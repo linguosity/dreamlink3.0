@@ -193,18 +193,35 @@ export default function DepthComparison() {
           })}
         </div>
 
-        {/* Panels — all rendered, inactive ones hidden (SEO + a11y). */}
-        <div className="mt-8">
+        {/* Panels — all three stacked in ONE grid cell, so the container is
+            always as tall as the tallest reading.
+
+            This is load-bearing, not cosmetic. The readings are 1, 2 and 3
+            paragraphs long. Letting the container resize on switch reflows
+            everything below it AND slides the segmented control itself out
+            from under the cursor mid-comparison — caught while clicking
+            through the deployed preview, where every other click landed on
+            the wrong tab. A comparison control that moves when you use it
+            defeats the purpose.
+
+            Inactive panels use `invisible` (visibility: hidden) rather than
+            `hidden` (display: none): visibility:hidden still reserves the
+            grid cell — which is the whole point — while correctly removing
+            the content from the a11y tree and the tab order. It stays in
+            the DOM for SEO either way. */}
+        <div className="mt-8 grid">
           {READINGS.map((r, i) => {
             const plan = PLAN_FOR_DEPTH[r.depth];
+            const on = i === active;
             return (
               <div
                 key={r.depth}
                 role="tabpanel"
                 id={`depth-panel-${r.depth}`}
                 aria-labelledby={`depth-tab-${r.depth}`}
-                hidden={i !== active}
-                className="rounded-2xl bg-card p-6 shadow-lg ring-1 ring-border dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7"
+                className={`col-start-1 row-start-1 rounded-2xl bg-card p-6 shadow-lg ring-1 ring-border dark:ring-[rgba(238,235,252,0.13)] sm:px-8 sm:py-7 ${
+                  on ? "" : "invisible pointer-events-none"
+                }`}
               >
                 {/* Plan chip + what this depth does */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
