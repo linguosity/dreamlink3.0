@@ -201,6 +201,14 @@ export default function ScrollytellingInterpretation() {
           opacity: 0,
           transform: "translateY(12px)",
           pointerEvents: "none",
+          // visibility:hidden, not just opacity:0 — a collapsed zone still
+          // contains focusable content (the CTA's <Link>, for one), and
+          // pointerEvents only stops the mouse. Without this, a keyboard user
+          // tabs into a link that is clipped to maxHeight:0 and invisible,
+          // inside a wrapper marked aria-hidden — focus lands somewhere the
+          // screen reader has been told does not exist. Costs nothing
+          // visually: opacity is already 0 and the zone is already clipped.
+          visibility: "hidden",
           maxHeight: 0,
           overflow: "hidden",
           paddingTop: 0,
@@ -324,8 +332,26 @@ export default function ScrollytellingInterpretation() {
 
             {/* Interpretation + verses */}
             <div aria-hidden={!interpOn} className={zoneClass} style={zoneStyle(interpOn)}>
-              <div className="mb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-primary">
-                Analysis:
+              {/* "One of three depths" plants the idea that depth is a dial
+                  before the comparison block below lets anyone turn it —
+                  introduce, then explore.
+
+                  Deliberately NOT a specific tier name and deliberately NOT
+                  interactive. Not a tier name because this demo shows three
+                  verses against a two-sentence reading, which doesn't map
+                  cleanly onto any one row of the comparison block below —
+                  naming one would have the same page contradict itself. Not
+                  interactive because a click-control here would sit inside a
+                  card whose zones open and close on scroll, so a visitor
+                  would be trying to compare inside a window that closes on
+                  the next trackpad twitch. */}
+              <div className="mb-2.5 flex items-baseline justify-between gap-3">
+                <span className="font-mono text-[11px] font-medium uppercase tracking-[0.32em] text-primary">
+                  Analysis:
+                </span>
+                <span className="shrink-0 rounded-full bg-violet-050 px-2 py-0.5 text-[10.5px] font-medium tracking-[0.02em] text-primary dark:bg-[rgba(179,155,255,0.13)]">
+                  One of three depths
+                </span>
               </div>
               <p
                 className="m-0 text-[15.5px] leading-[1.7] text-muted-foreground transition-opacity duration-[400ms] motion-reduce:transition-none dark:text-[rgba(238,235,252,0.72)]"
