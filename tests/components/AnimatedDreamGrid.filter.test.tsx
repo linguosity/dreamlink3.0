@@ -3,18 +3,25 @@ import { render, screen } from '@testing-library/react';
 import AnimatedDreamGrid from '@/components/AnimatedDreamGrid';
 import { SearchProvider } from '@/context/search-context';
 
-// Mock the DreamCard component
-vi.mock('next/dynamic', () => ({
-  default: () => {
-    return function MockDreamCard({ dream }: any) {
-      return (
-        <div data-testid={`dream-card-${dream.id}`}>
+// Stub DreamCard so this stays a test of the grid's own filtering rather than
+// of the card's internals.
+//
+// This previously mocked next/dynamic, which stopped having any effect when
+// AnimatedDreamGrid switched to a direct `import DreamCard from './DreamCard'`
+// — the grid was dynamic-importing with ssr:false, so the whole journal
+// rendered as skeletons until hydration and wrecked LCP (see the note at the
+// top of the component). The mock kept passing through a mechanism nothing
+// used, so the real card rendered and the testid was never found. Mocking the
+// module the component actually imports is what makes this assert anything.
+vi.mock('@/components/DreamCard', () => ({
+  default: function MockDreamCard({ dream }: any) {
+    return (
+      <div data-testid={`dream-card-${dream.id}`}>
         <div>{dream.title}</div>
         <div>{dream.original_text}</div>
-        </div>
-      );
-    };
-  }
+      </div>
+    );
+  },
 }));
 
 describe('AnimatedDreamGrid Filtering', () => {
@@ -53,9 +60,15 @@ describe('AnimatedDreamGrid Filtering', () => {
   
   it('should render placeholder when no dreams are provided', () => {
     render(<SearchProvider><AnimatedDreamGrid dreams={[]} /></SearchProvider>);
-    
-    // Check for placeholder
-    expect(screen.getByTestId('dream-card-placeholder')).toBeInTheDocument();
+
+    // Asserts on what the reader actually sees rather than a
+    // data-testid="dream-card-placeholder" that the component has never had —
+    // this test could only ever have failed. Querying the heading also means
+    // the empty state can be restyled freely and only breaks here if the
+    // message itself goes missing.
+    expect(
+      screen.getByRole('heading', { name: /no dreams recorded yet/i }),
+    ).toBeInTheDocument();
   });
   
   // Will be added after implementing filtering

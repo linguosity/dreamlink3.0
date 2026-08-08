@@ -1,189 +1,211 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextResponse } from 'next/server';
 
-// Mock the OpenAI API response
-const mockOpenAIResponse = {
-  status: 200,
-  ok: true,
-  json: vi.fn().mockResolvedValue({
-    choices: [
-      {
-        message: {
-          content: JSON.stringify({
-            topicSentence: "Your dream reflects a spiritual journey of renewal and guidance.",
-            supportingPoints: [
-              "The water symbolizes spiritual cleansing and regeneration (John 7:38).",
-              "The path represents divine guidance through life's challenges (Psalm 23:4).",
-              "The light signifies God's truth illuminating your way (John 8:12)."
-            ],
-            conclusionSentence: "Consider how God might be inviting you to experience spiritual renewal in your current circumstances.",
-            analysis: "Your dream reflects a spiritual journey of renewal and guidance. The water symbolizes spiritual cleansing and regeneration (John 7:38). The path represents divine guidance through life's challenges (Psalm 23:4). The light signifies God's truth illuminating your way (John 8:12). Consider how God might be inviting you to experience spiritual renewal in your current circumstances."
-          })
-        }
-      }
-    ]
-  })
+// This file used to mock global.fetch with canned OpenAI payloads and assert
+// the handler surfaced them. The route has not spoken HTTP to OpenAI for some
+// time — it delegates to runDreamAnalysis(), which uses the SDK — so the fetch
+// mocks were inert. The two "passing" cases were satisfied by
+// FALLBACK_ANALYSIS, which happens to carry the same four properties they
+// checked for, and the third asserted a 500 on API failure that this route
+// deliberately never returns: a failed analysis degrades to the fallback
+// rather than erroring, because a usable reading beats an error page.
+//
+// Rewritten to mock the seam the route actually has and to assert what the
+// route is actually responsible for: auth, input validation, clamping depth to
+// plan, and the response envelope.
+
+vi.mock('next/server', () => ({
+  NextResponse: {
+    json: vi.fn((data, init) => ({ data, init })),
+  },
+}));
+
+const analysisFixture = {
+  topicSentence: 'Your dream reflects a spiritual journey of renewal.',
+  supportingPoints: [
+    'The water symbolizes cleansing (John 7:38).',
+    'The path represents guidance (Psalm 23:4).',
+    'The light signifies truth (John 8:12).',
+  ],
+  conclusionSentence: 'Consider how renewal is being offered to you.',
+  analysis: 'Full analysis prose.',
 };
 
-// Sample dream for testing
-const sampleDream = "I was walking beside a clear river on a sunlit path. The water was sparkling and I felt peaceful as the light guided my way.";
+const runDreamAnalysis = vi.fn(async () => ({
+  analysis: analysisFixture,
+  usage: { inputTokens: 900, outputTokens: 260 },
+}));
 
-// Mock the enhanced OpenAI response with arguments structure
-const mockEnhancedOpenAIResponse = {
-  status: 200,
-  ok: true,
-  json: vi.fn().mockResolvedValue({
-    choices: [
-      {
-        message: {
-          content: JSON.stringify({
-            topicSentence: "Your dream reflects a spiritual journey of renewal and guidance.",
-            supportingPoints: [
-              "The water symbolizes spiritual cleansing and regeneration (John 7:38).",
-              "The path represents divine guidance through life's challenges (Psalm 23:4).",
-              "The light signifies God's truth illuminating your way (John 8:12)."
-            ],
-            conclusionSentence: "Consider how God might be inviting you to experience spiritual renewal in your current circumstances.",
-            analysis: "Your dream reflects a spiritual journey of renewal and guidance. The water symbolizes spiritual cleansing and regeneration (John 7:38). The path represents divine guidance through life's challenges (Psalm 23:4). The light signifies God's truth illuminating your way (John 8:12). Consider how God might be inviting you to experience spiritual renewal in your current circumstances.",
-            arguments: [
-              {
-                sentences: [
-                  "The water symbolizes spiritual cleansing and regeneration.",
-                  "This represents the living water Christ offers to believers."
-                ],
-                citation: "John 7:38",
-                citationText: "Whoever believes in me, as Scripture has said, rivers of living water will flow from within them."
-              },
-              {
-                sentences: [
-                  "The path represents divine guidance through life's challenges.",
-                  "God provides direction and protection along your journey."
-                ],
-                citation: "Psalm 23:4",
-                citationText: "Even though I walk through the darkest valley, I will fear no evil, for you are with me; your rod and your staff, they comfort me."
-              },
-              {
-                sentences: [
-                  "The light signifies God's truth illuminating your way.",
-                  "Christ's presence brings clarity and direction to your life."
-                ],
-                citation: "John 8:12",
-                citationText: "When Jesus spoke again to the people, he said, 'I am the light of the world. Whoever follows me will never walk in darkness, but will have the light of life.'"
-              }
-            ]
-          })
-        }
-      }
-    ]
-  })
-};
+vi.mock('@/lib/dreamAnalysis', () => ({
+  runDreamAnalysis: (...args: unknown[]) => runDreamAnalysis(...(args as [])),
+}));
 
-// Mock the fetch function
-global.fetch = vi.fn();
+// The handler authenticates first; without this createClient() reaches Next's
+// real cookies() and throws "`cookies` was called outside a request scope".
+const getUser = vi.fn(async () => ({
+  data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+  error: null,
+}));
+
+vi.mock('@/utils/supabase/server', () => ({
+  createClient: vi.fn(async () => ({
+    auth: { getUser: (...a: unknown[]) => getUser(...(a as [])) },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(async () => ({ data: { is_admin: false }, error: null })),
+    })),
+  })),
+}));
+
+vi.mock('@/utils/supabase/admin', () => ({
+  getAdminClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+      single: vi.fn(async () => ({ data: null, error: null })),
+    })),
+  })),
+}));
+
+const checkDreamSubmissionRateLimit = vi.fn(async () => ({
+  allowed: true,
+  limit: 20,
+  retryAfterSeconds: null,
+}));
+
+vi.mock('@/lib/rateLimit', () => ({
+  checkDreamSubmissionRateLimit: (...a: unknown[]) =>
+    checkDreamSubmissionRateLimit(...(a as [])),
+}));
+
+const sampleDream =
+  'I was walking beside a clear river on a sunlit path, and the light guided my way.';
+
+function post(body: unknown) {
+  return new Request('http://localhost:3000/api/openai-analysis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: typeof body === 'string' ? body : JSON.stringify(body),
+  });
+}
+
+async function callRoute(body: unknown) {
+  const { POST } = await import('../../app/api/openai-analysis/route');
+  return POST(post(body));
+}
+
+function lastJsonCall() {
+  const calls = (NextResponse.json as any).mock.calls;
+  return calls[calls.length - 1];
+}
 
 describe('OpenAI Analysis API', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
-    vi.mock('next/server', () => ({
-      NextResponse: {
-        json: vi.fn((data) => ({
-          ...data,
-          headers: new Map()
-        }))
-      }
-    }));
+    // Note: clearAllMocks, not resetAllMocks. reset strips implementations as
+    // well as call history, which left createClient returning undefined and
+    // every case after the first failing on "Cannot read properties of
+    // undefined (reading 'auth')".
+    vi.clearAllMocks();
   });
 
-  it('should process OpenAI response correctly', async () => {
-    // Mock the fetch implementation for this test
-    (global.fetch as any).mockResolvedValueOnce(mockOpenAIResponse);
+  it('returns the analysis at the top level with usage alongside it', async () => {
+    await callRoute({ dream: sampleDream });
 
-    // Import the POST handler (in a real test, you'd need to handle dynamic imports)
-    // This is a simplified example to show the structure - actual implementation would vary
-    const { POST } = await import('../../app/api/openai-analysis/route');
-    
-    // Create a mock request with the dream content
-    const request = new Request('http://localhost:3000/api/openai-analysis', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ dream: sampleDream }),
-    });
-
-    // Call the handler
-    const response = await POST(request);
-    
-    // Check that NextResponse.json was called
-    expect(NextResponse.json).toHaveBeenCalled();
-    
-    // Verify the response structure (in real test, you'd extract the response data)
-    const responseCall = (NextResponse.json as any).mock.calls[0][0];
-    expect(responseCall).toHaveProperty('topicSentence');
-    expect(responseCall).toHaveProperty('supportingPoints');
-    expect(responseCall).toHaveProperty('conclusionSentence');
-    expect(responseCall).toHaveProperty('analysis');
+    const [payload] = lastJsonCall();
+    expect(payload).toMatchObject(analysisFixture);
+    // Older consumers read analysis fields off the root, so they must stay
+    // there; token counts ride along under a separate key.
+    expect(payload._usage).toEqual({ inputTokens: 900, outputTokens: 260 });
   });
 
-  it('should handle the enhanced response with arguments structure', async () => {
-    // Mock the fetch implementation for this test
-    (global.fetch as any).mockResolvedValueOnce(mockEnhancedOpenAIResponse);
+  it('passes the dream through to the analyzer', async () => {
+    await callRoute({ dream: sampleDream, topic: 'guidance' });
 
-    // Import the POST handler
-    const { POST } = await import('../../app/api/openai-analysis/route');
-    
-    // Create a mock request with the dream content
-    const request = new Request('http://localhost:3000/api/openai-analysis', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ dream: sampleDream }),
-    });
-
-    // Call the handler
-    const response = await POST(request);
-    
-    // Check that NextResponse.json was called
-    expect(NextResponse.json).toHaveBeenCalled();
-    
-    // The response should now include the arguments array with citation data
-    const responseCall = (NextResponse.json as any).mock.calls[0][0];
-    
-    // When you update the API to include arguments, this test would verify that structure
-    // This assertion would pass after your implementation:
-    // expect(responseCall).toHaveProperty('arguments');
-    // expect(responseCall.arguments).toBeInstanceOf(Array);
-    // expect(responseCall.arguments[0]).toHaveProperty('sentences');
-    // expect(responseCall.arguments[0]).toHaveProperty('citation');
-    // expect(responseCall.arguments[0]).toHaveProperty('citationText');
+    expect(runDreamAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ dream: sampleDream, topic: 'guidance' }),
+    );
   });
 
-  it('should handle errors from OpenAI API', async () => {
-    // Mock a failed API response
-    (global.fetch as any).mockRejectedValueOnce(new Error('API error'));
+  it('rejects an unauthenticated request before doing any work', async () => {
+    getUser.mockResolvedValueOnce({ data: { user: null }, error: null } as never);
 
-    // Import the POST handler
-    const { POST } = await import('../../app/api/openai-analysis/route');
-    
-    // Create a mock request
-    const request = new Request('http://localhost:3000/api/openai-analysis', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ dream: sampleDream }),
-    });
+    await callRoute({ dream: sampleDream });
 
-    // Call the handler
-    const response = await POST(request);
-    
-    // Check that NextResponse.json was called with an error response
-    expect(NextResponse.json).toHaveBeenCalled();
-    
-    // Verify that we return an error response
-    const responseCall = (NextResponse.json as any).mock.calls[0];
-    expect(responseCall[0]).toHaveProperty('error');
-    expect(responseCall[1]).toHaveProperty('status', 500);
+    const [payload, init] = lastJsonCall();
+    expect(payload).toHaveProperty('error', 'Unauthorized');
+    expect(init).toMatchObject({ status: 401 });
+    expect(runDreamAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('rejects a request with no dream text', async () => {
+    await callRoute({ topic: 'guidance' });
+
+    const [payload, init] = lastJsonCall();
+    expect(payload).toHaveProperty('error', 'Dream content is required');
+    expect(init).toMatchObject({ status: 400 });
+    expect(runDreamAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('rejects a dream longer than the character cap', async () => {
+    await callRoute({ dream: 'x'.repeat(10_001) });
+
+    const [payload, init] = lastJsonCall();
+    expect(payload.error).toMatch(/exceeds 10000 characters/);
+    expect(init).toMatchObject({ status: 400 });
+    expect(runDreamAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed body', async () => {
+    await callRoute('{ not json');
+
+    const [payload, init] = lastJsonCall();
+    expect(payload).toHaveProperty('error', 'Invalid JSON');
+    expect(init).toMatchObject({ status: 400 });
+  });
+
+  it('refuses when the shared daily limit is spent', async () => {
+    checkDreamSubmissionRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      limit: 20,
+      retryAfterSeconds: 3600,
+    } as never);
+
+    await callRoute({ dream: sampleDream });
+
+    const [payload, init] = lastJsonCall();
+    expect(payload).toHaveProperty('error', 'Daily analysis limit reached');
+    expect(init).toMatchObject({ status: 429 });
+    expect(runDreamAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('clamps a free account to shallow even when it asks for profound', async () => {
+    await callRoute({ dream: sampleDream, analysisDepth: 'profound' });
+
+    // The mocked subscription lookup returns nothing, so the plan is free.
+    expect(runDreamAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ analysisDepth: 'shallow' }),
+    );
+  });
+
+  it('still answers with a reading when the analyzer falls back', async () => {
+    // runDreamAnalysis swallows API failures and hands back FALLBACK_ANALYSIS
+    // with null usage rather than throwing — the caller gets something usable
+    // instead of an error. The previous version of this file asserted a 500
+    // here, which the route has no code path to produce.
+    runDreamAnalysis.mockResolvedValueOnce({
+      analysis: analysisFixture,
+      usage: { inputTokens: null, outputTokens: null },
+    } as never);
+
+    await callRoute({ dream: sampleDream });
+
+    const [payload, init] = lastJsonCall();
+    expect(payload).toMatchObject(analysisFixture);
+    expect(payload._usage).toEqual({ inputTokens: null, outputTokens: null });
+    expect(init).toBeUndefined();
   });
 });

@@ -33,54 +33,53 @@ import ShareDreamButton from "@/components/ShareDreamButton";
 import { AiDisclosure } from "@/components/brand/AiDisclosure";
 import { track } from "@/lib/analytics";
 
-// Import UI components with error handling
-let Card: any, CardContent: any, CardHeader: any, CardTitle: any;
-try {
-  const cardModule = require("@/components/ui/card");
-  Card = cardModule.Card;
-  CardContent = cardModule.CardContent;
-  CardHeader = cardModule.CardHeader;
-  CardTitle = cardModule.CardTitle;
-} catch (e) {
-  console.error("Failed to load card components:", e);
-  // Fallback implementations
-  Card = ({ className = "", children, ...props }: any) => (
-    <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`} {...props}>{children}</div>
-  );
-  CardHeader = ({ className = "", children, ...props }: any) => (
-    <div className={`flex flex-col space-y-1.5 p-6 ${className}`} {...props}>{children}</div>
-  );
-  CardContent = ({ className = "", children, ...props }: any) => (
-    <div className={`p-6 pt-0 ${className}`} {...props}>{children}</div>
-  );
-  CardTitle = ({ className = "", children, ...props }: any) => (
-    <h3 className={`text-lg font-semibold leading-none tracking-tight ${className}`} {...props}>{children}</h3>
-  );
-}
+// These were nine try/catch require() blocks, each falling back to an inline
+// unstyled copy of the component when the require threw. In the app the
+// fallbacks never ran; under vitest they always did, because require() cannot
+// resolve the "@" alias — so tests rendered lookalike markup instead of the
+// real components and every run printed nine MODULE_NOT_FOUND traces. With
+// static imports a missing or renamed export fails the build, which is what
+// you want, instead of silently degrading the UI at runtime.
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+// Popover (not Tooltip) backs the scripture chips: Radix Tooltip never opens on
+// touch, which left verse text unreachable on mobile.
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-// Import badge component with error handling
-let Badge: any;
-try {
-  const badgeModule = require("@/components/ui/badge");
-  Badge = badgeModule.Badge;
-} catch (e) {
-  console.error("Failed to load badge component:", e);
-  Badge = ({ className = "", children, variant = "default", ...props }: any) => (
-    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`} {...props}>{children}</div>
-  );
-}
 
-// Import button component with error handling
-let Button: any;
-try {
-  const buttonModule = require("@/components/ui/button");
-  Button = buttonModule.Button;
-} catch (e) {
-  console.error("Failed to load button component:", e);
-  Button = ({ className = "", children, variant = "default", size = "default", ...props }: any) => (
-    <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background ${className}`} {...props}>{children}</button>
-  );
-}
 
 // Dev-only logger (2026-06-09 audit: 46 console.log calls in render/format
 // paths shipped to production — including per-text-part logging on every
@@ -180,119 +179,11 @@ const MessageSquare = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Import dialog components with error handling
-let Dialog: any, DialogContent: any, DialogHeader: any, DialogTitle: any, DialogTrigger: any, DialogDescription: any, DialogFooter: any;
-try {
-  const dialogModule = require("@/components/ui/dialog");
-  Dialog = dialogModule.Dialog;
-  DialogContent = dialogModule.DialogContent;
-  DialogHeader = dialogModule.DialogHeader;
-  DialogTitle = dialogModule.DialogTitle;
-  DialogTrigger = dialogModule.DialogTrigger;
-  DialogDescription = dialogModule.DialogDescription;
-  DialogFooter = dialogModule.DialogFooter;
-} catch (e) {
-  console.error("Failed to load dialog components:", e);
-  // Simple fallback implementations
-  Dialog = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  DialogContent = ({ children, ...props }: any) => <div className="fixed inset-0 z-50 flex items-center justify-center" {...props}>{children}</div>;
-  DialogHeader = ({ children, ...props }: any) => <div className="flex flex-col space-y-2 text-center sm:text-left" {...props}>{children}</div>;
-  DialogTitle = ({ children, ...props }: any) => <h2 className="text-lg font-semibold leading-none tracking-tight" {...props}>{children}</h2>;
-  DialogTrigger = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  DialogDescription = ({ children, ...props }: any) => <p className="text-sm text-muted-foreground" {...props}>{children}</p>;
-  DialogFooter = ({ children, ...props }: any) => <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2" {...props}>{children}</div>;
-}
 
-// Import tabs components with error handling
-let Tabs: any, TabsContent: any, TabsList: any, TabsTrigger: any;
-try {
-  const tabsModule = require("@/components/ui/tabs");
-  Tabs = tabsModule.Tabs;
-  TabsContent = tabsModule.TabsContent;
-  TabsList = tabsModule.TabsList;
-  TabsTrigger = tabsModule.TabsTrigger;
-} catch (e) {
-  console.error("Failed to load tabs components:", e);
-  // Simple fallback implementations
-  Tabs = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  TabsList = ({ children, ...props }: any) => <div className="inline-flex h-10 items-center justify-center rounded-full bg-muted p-1 text-muted-foreground" {...props}>{children}</div>;
-  TabsTrigger = ({ children, ...props }: any) => <button className="inline-flex items-center justify-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm" {...props}>{children}</button>;
-  TabsContent = ({ children, ...props }: any) => <div className="mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" {...props}>{children}</div>;
-}
 
-// Import tooltip components with error handling
-let Tooltip: any, TooltipContent: any, TooltipProvider: any, TooltipTrigger: any;
-try {
-  const tooltipModule = require("@/components/ui/tooltip");
-  Tooltip = tooltipModule.Tooltip;
-  TooltipContent = tooltipModule.TooltipContent;
-  TooltipProvider = tooltipModule.TooltipProvider;
-  TooltipTrigger = tooltipModule.TooltipTrigger;
-} catch (e) {
-  console.error("Failed to load tooltip components:", e);
-  // Simple fallback implementations
-  Tooltip = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  TooltipContent = ({ children, ...props }: any) => <div className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2" {...props}>{children}</div>;
-  TooltipProvider = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  TooltipTrigger = ({ children, asChild, ...props }: any) => <div {...props}>{children}</div>;
-}
 
-// Import popover components with error handling. Used for the scripture chips
-// instead of Tooltip — Radix Tooltip never opens on touch, so verse text was
-// unreachable on mobile. Follows the same defensive require pattern as above.
-let Popover: any, PopoverContent: any, PopoverTrigger: any;
-try {
-  const popoverModule = require("@/components/ui/popover");
-  Popover = popoverModule.Popover;
-  PopoverContent = popoverModule.PopoverContent;
-  PopoverTrigger = popoverModule.PopoverTrigger;
-} catch (e) {
-  console.error("Failed to load popover components:", e);
-  Popover = ({ children, ...props }: any) => <span {...props}>{children}</span>;
-  PopoverContent = ({ children, ...props }: any) => <div className="z-50 rounded-md border bg-popover p-4 text-popover-foreground shadow-md" {...props}>{children}</div>;
-  PopoverTrigger = ({ children, asChild, ...props }: any) => <span {...props}>{children}</span>;
-}
 
-// Import skeleton component with error handling
-let Skeleton: any;
-try {
-  const skeletonModule = require("@/components/ui/skeleton");
-  Skeleton = skeletonModule.Skeleton;
-} catch (e) {
-  console.error("Failed to load skeleton component:", e);
-  Skeleton = ({ className = "", ...props }: any) => (
-    <div className={`animate-pulse rounded-md bg-muted ${className}`} {...props} />
-  );
-}
 
-// Import alert dialog components with error handling
-let AlertDialog: any, AlertDialogAction: any, AlertDialogCancel: any, AlertDialogContent: any, 
-    AlertDialogDescription: any, AlertDialogFooter: any, AlertDialogHeader: any, 
-    AlertDialogTitle: any, AlertDialogTrigger: any;
-try {
-  const alertDialogModule = require("@/components/ui/alert-dialog");
-  AlertDialog = alertDialogModule.AlertDialog;
-  AlertDialogAction = alertDialogModule.AlertDialogAction;
-  AlertDialogCancel = alertDialogModule.AlertDialogCancel;
-  AlertDialogContent = alertDialogModule.AlertDialogContent;
-  AlertDialogDescription = alertDialogModule.AlertDialogDescription;
-  AlertDialogFooter = alertDialogModule.AlertDialogFooter;
-  AlertDialogHeader = alertDialogModule.AlertDialogHeader;
-  AlertDialogTitle = alertDialogModule.AlertDialogTitle;
-  AlertDialogTrigger = alertDialogModule.AlertDialogTrigger;
-} catch (e) {
-  console.error("Failed to load alert dialog components:", e);
-  // Simple fallback implementations
-  AlertDialog = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  AlertDialogContent = ({ children, ...props }: any) => <div className="fixed inset-0 z-50 flex items-center justify-center" {...props}>{children}</div>;
-  AlertDialogHeader = ({ children, ...props }: any) => <div className="flex flex-col space-y-2 text-center sm:text-left" {...props}>{children}</div>;
-  AlertDialogFooter = ({ children, ...props }: any) => <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2" {...props}>{children}</div>;
-  AlertDialogTitle = ({ children, ...props }: any) => <h2 className="text-lg font-semibold leading-none tracking-tight" {...props}>{children}</h2>;
-  AlertDialogDescription = ({ children, ...props }: any) => <p className="text-sm text-muted-foreground" {...props}>{children}</p>;
-  AlertDialogAction = ({ children, ...props }: any) => <button className="inline-flex h-10 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" {...props}>{children}</button>;
-  AlertDialogCancel = ({ children, ...props }: any) => <button className="mt-2 inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:mt-0" {...props}>{children}</button>;
-  AlertDialogTrigger = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-}
 
 // Helper function to highlight text matches for multiple keywords
 function highlightText(text: string, searchTerms: string | string[]): React.ReactNode {
