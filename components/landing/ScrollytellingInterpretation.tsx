@@ -557,8 +557,25 @@ export default function ScrollytellingInterpretation() {
               >
                 Interpret your own dream
               </Link>
-              <div className="mt-2.5 text-center text-[12.5px] text-muted-foreground dark:text-[rgba(238,235,252,0.6)]">
-                Free to start &middot; no card required
+              {/* Risk-reducers, as two chips rather than one grey sentence.
+                  Placement is unchanged and deliberate — directly beneath the
+                  CTA is where this belongs, answering the hesitation the
+                  button just provoked. What changed is legibility: this was
+                  12.5px muted, which the eye files as legal fine print and
+                  skips. Two short checkmarked chunks scan in a glance where a
+                  sentence has to be read. Kept at 13px/subtle-tint rather
+                  than made loud, because an oversized reassurance competes
+                  with the button and starts to read as protesting too much. */}
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                {["Free to start", "No card required"].map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-violet-050 px-2.5 py-1 text-[13px] font-medium text-primary dark:bg-[rgba(179,155,255,0.13)]"
+                  >
+                    <span aria-hidden>&#10003;</span>
+                    {t}
+                  </span>
+                ))}
               </div>
             </div>
           </div>

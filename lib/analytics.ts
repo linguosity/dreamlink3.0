@@ -107,7 +107,8 @@ export type ClientAnalyticsEvent =
   | "interpretation_feedback"
   | "landing_demo_step_viewed"
   | "verse_tooltip_opened"
-  | "demo_style_swiped";
+  | "demo_style_swiped"
+  | "landing_depth_compare";
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 

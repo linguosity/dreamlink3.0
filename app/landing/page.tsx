@@ -23,6 +23,7 @@ import NewsletterForm from "@/components/NewsletterForm";
 import SocialProof from "@/components/SocialProof";
 import RecentPosts from "@/components/RecentPosts";
 import ScrollytellingInterpretation from "@/components/landing/ScrollytellingInterpretation";
+import DepthComparison from "@/components/landing/DepthComparison";
 import { CookiePreferencesLink } from "@/components/CookieConsent";
 import { getTestimonials, getUserCount } from "@/lib/testimonials";
 
@@ -230,6 +231,14 @@ export default async function LandingPage() {
       {/* ── Sample Interpretation (scrollytelling demo) ───────────── */}
       <ScrollytellingInterpretation />
 
+      {/* ── Depth comparison ───────────────────────────────────────
+          Deliberately AFTER the scrolly section and outside it: that
+          section drives its card from scroll position, and a click-control
+          on a scroll-driven card overwrites the visitor's choice on the
+          next scroll event. Reuses the same demo dream so the comparison
+          lands against something already read. */}
+      <DepthComparison />
+
       {/* ── Features ───────────────────────────────────────────────── */}
       <section
         id="features"
@@ -296,8 +305,11 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {/* Discovery (free) */}
-            <div className="flex flex-col rounded-2xl border border-border bg-card p-7 sm:p-8">
+            {/* Discovery (free) — whole card is clickable, see the stretched
+                link on its CTA below. `group` drives the hover lift; the lift
+                is honest here precisely BECAUSE the card is a link target.
+                Journey deliberately gets neither, since it has no CTA. */}
+            <div className="group relative flex flex-col rounded-2xl border border-border bg-card p-7 transition-[box-shadow,transform,border-color] duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                 Discovery
               </p>
@@ -329,16 +341,26 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
+              {/* Stretched link: after:inset-0 makes the whole card the hit
+                  area while keeping exactly ONE interactive element per card.
+                  Wrapping the card in a <Link> instead would nest this link
+                  inside that one — invalid HTML, and screen readers would
+                  announce two overlapping links for one destination. */}
               <Link
                 href="/sign-up"
-                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-base font-semibold transition-colors focus-ring"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-base font-semibold transition-colors focus-ring after:absolute after:inset-0 after:rounded-2xl after:content-['']"
               >
                 Start Free
               </Link>
             </div>
 
-            {/* Insight (Night card, most popular) */}
-            <div className="relative overflow-hidden flex flex-col rounded-2xl border border-navy-800 bg-navy-900 p-7 sm:p-8">
+            {/* Insight (Night card, most popular) — carries a PERMANENT
+                shadow, not just a hover one. Recommended-tier emphasis has to
+                land before anyone moves a mouse, and on touch there is no
+                hover at all; hover-only elevation would leave the whole
+                recommendation invisible to phone visitors. Hover then lifts
+                it further, same as Discovery. */}
+            <div className="group relative overflow-hidden flex flex-col rounded-2xl border border-navy-800 bg-navy-900 p-7 shadow-xl shadow-navy-900/25 transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-2xl motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-8">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-light">
                   Insight
@@ -375,9 +397,10 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
+              {/* Stretched link — see the note on Discovery's CTA. */}
               <Link
                 href="/sign-up"
-                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-violet-light hover:bg-mist text-navy-900 text-base font-semibold transition-colors focus-ring"
+                className="mt-auto inline-flex items-center justify-center h-12 px-6 rounded-full bg-violet-light hover:bg-mist text-navy-900 text-base font-semibold transition-colors focus-ring after:absolute after:inset-0 after:rounded-2xl after:content-['']"
               >
                 Upgrade to Insight
               </Link>
