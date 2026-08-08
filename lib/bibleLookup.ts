@@ -143,6 +143,26 @@ const SHORT_ALIASES: Record<string, string> = {
   heb: "Hebrews", jas: "James", rev: "Revelation",
 };
 
+function resolveBook(cleaned: string): string | null {
+  for (const b of CANONICAL_BOOKS) {
+    if (b.toLowerCase() === cleaned) return b;
+  }
+  if (FULL_ALIASES[cleaned]) return FULL_ALIASES[cleaned];
+  if (SHORT_ALIASES[cleaned]) return SHORT_ALIASES[cleaned];
+  return null;
+}
+
+// Roman numerals only ever got paired with full book names ("ii timothy") and
+// abbreviations only with digits ("2 tim"), so anything combining the two fell
+// through both maps — including "II Tim. 1:7", the example normalizeCitation's
+// own docstring promises resolves to "2 Timothy 1:7". It returned not_found,
+// which silently costs the verse text rather than erroring.
+//
+// Rewriting a leading roman numeral to its digit and retrying covers every
+// such combination at once, so the maps don't need a cartesian product of
+// numeral form x abbreviation.
+const ROMAN_PREFIX: Record<string, string> = { i: "1", ii: "2", iii: "3" };
+
 function normalizeBook(rawBook: string): string | null {
   const cleaned = rawBook
     .toLowerCase()
@@ -150,11 +170,18 @@ function normalizeBook(rawBook: string): string | null {
     .replace(/\s+/g, " ")
     .trim();
 
-  for (const b of CANONICAL_BOOKS) {
-    if (b.toLowerCase() === cleaned) return b;
+  const direct = resolveBook(cleaned);
+  if (direct) return direct;
+
+  const romanMatch = cleaned.match(/^(i{1,3})\s+(.+)$/);
+  if (romanMatch) {
+    const [, numeral, rest] = romanMatch;
+    const digit = ROMAN_PREFIX[numeral];
+    if (digit) {
+      return resolveBook(`${digit} ${rest}`) ?? resolveBook(`${digit}${rest}`);
+    }
   }
-  if (FULL_ALIASES[cleaned]) return FULL_ALIASES[cleaned];
-  if (SHORT_ALIASES[cleaned]) return SHORT_ALIASES[cleaned];
+
   return null;
 }
 
