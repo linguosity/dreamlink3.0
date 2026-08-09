@@ -42,6 +42,17 @@ const MAX_POLL_DELAY_MS = 4000;
 const IMAGE_WIDTH = Number(process.env.DREAM_IMAGE_WIDTH) || 1024;
 const IMAGE_HEIGHT = Number(process.env.DREAM_IMAGE_HEIGHT) || 1024;
 
+// Blog covers are landscape, not square.
+//
+// cover_image_url is rendered into the OpenGraph tags and the
+// summary_large_image Twitter card in app/blog/[slug]/page.tsx. Those cards
+// are roughly 1.91:1 — a square image gets centre-cropped, which reliably
+// eats the composition. 1216×640 is 1.9:1 and, at 0.78 MP, sits under the
+// first megapixel FLUX charges a flat rate for: the better shape costs no
+// more than the square, and marginally less.
+const COVER_IMAGE_WIDTH = Number(process.env.BLOG_COVER_WIDTH) || 1216;
+const COVER_IMAGE_HEIGHT = Number(process.env.BLOG_COVER_HEIGHT) || 640;
+
 /**
  * Builds a FLUX.2 [klein] image prompt following BFL's prompting guide:
  *   Subject → Setting → Details → Lighting → Atmosphere
@@ -114,17 +125,40 @@ export async function createDreamImageSignedUrl(
   return data.signedUrl;
 }
 
+interface GenerateAndStoreOptions {
+  /** Full FLUX prompt. */
+  prompt: string;
+  /** Supabase Storage bucket to upload into. */
+  bucket: string;
+  /** Object path within the bucket, minus the file extension. */
+  pathPrefix: string;
+  width: number;
+  height: number;
+  /** Omit for a fresh image each run; pass one to make regeneration stable. */
+  seed?: number;
+  /**
+   * How the returned URL is formed. "signed" suits private buckets holding
+   * personal content; "public" suits published content whose URL is handed to
+   * unauthenticated fetchers such as OpenGraph scrapers.
+   */
+  urlMode: 'signed' | 'public';
+  /** Prefix for the log lines, so dream and cover runs are tellable apart. */
+  label: string;
+}
+
 /**
- * Generates a dream image via BFL API, downloads it, uploads to Supabase
- * Storage, and returns a long-lived signed URL (bucket is private).
+ * Shared BFL submit → poll → download → upload → URL pipeline.
  *
- * Uses the service-role key so it can bypass RLS for storage uploads.
- * This is safe because this function only runs server-side.
+ * Extracted from generateAndStoreDreamImage when article covers needed the
+ * same flow with a different bucket, shape and URL mode. The dream path
+ * behaves exactly as before — it now just passes its choices in explicitly
+ * rather than reading them from module constants.
  */
-export async function generateAndStoreDreamImage(
-  dreamId: string,
-  prompt: string
+async function generateAndStore(
+  options: GenerateAndStoreOptions
 ): Promise<string | null> {
+  const { prompt, bucket, pathPrefix, width, height, seed, urlMode, label } = options;
+
   const bflApiKey = process.env.BFL_API_KEY;
   if (!bflApiKey) {
     console.log('⚠️ BFL_API_KEY not set — skipping image generation');
@@ -141,7 +175,7 @@ export async function generateAndStoreDreamImage(
   // Admin client bypasses RLS for storage uploads
   const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
-  console.log('🎨 Submitting dream image generation to FLUX.2 [klein] 9B...');
+  console.log(`🎨 Submitting ${label} generation to FLUX.2 [klein] 9B...`);
   console.log(`🎨 Full prompt: ${prompt}`);
 
   // ── Step 1: Submit generation request ──────────────────────────────────────
@@ -154,8 +188,9 @@ export async function generateAndStoreDreamImage(
     },
     body: JSON.stringify({
       prompt,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
+      width,
+      height,
+      ...(seed !== undefined ? { seed } : {}),
     }),
   });
 
@@ -189,7 +224,6 @@ export async function generateAndStoreDreamImage(
 
     if (!pollRes.ok) {
       console.log(`🎨 Poll returned ${pollRes.status}, retrying...`);
-      // Increase delay with exponential backoff, capped at MAX_POLL_DELAY_MS
       currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
       continue;
     }
@@ -210,12 +244,12 @@ export async function generateAndStoreDreamImage(
       const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
       const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
       const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-      const fileName = `${dreamId}/dream-image.${ext}`;
+      const fileName = `${pathPrefix}.${ext}`;
 
       // ── Step 4: Upload to Supabase Storage ────────────────────────────────
-      console.log(`🎨 Uploading to Supabase Storage: dream-images/${fileName}`);
+      console.log(`🎨 Uploading to Supabase Storage: ${bucket}/${fileName}`);
       const { error: uploadError } = await adminSupabase.storage
-        .from('dream-images')
+        .from(bucket)
         .upload(fileName, imageBuffer, {
           contentType,
           upsert: true,
@@ -225,16 +259,25 @@ export async function generateAndStoreDreamImage(
         throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
-      // ── Step 5: Return long-lived signed URL ──────────────────────────────
-      // The bucket is private (migration 20260609000001). The signed URL is
-      // the capability: shareable by link, but the bucket can't be browsed
+      // ── Step 5: Return the read URL ───────────────────────────────────────
+      if (urlMode === 'public') {
+        const { data } = adminSupabase.storage.from(bucket).getPublicUrl(fileName);
+        if (!data?.publicUrl) {
+          throw new Error('Failed to resolve public URL for stored image');
+        }
+        console.log(`🎨 Stored successfully: ${bucket}/${fileName}`);
+        return data.publicUrl;
+      }
+
+      // The dream bucket is private (migration 20260609000001). The signed URL
+      // is the capability: shareable by link, but the bucket can't be browsed
       // and objects can't be fetched without the token.
       const signed = await createDreamImageSignedUrl(adminSupabase, fileName);
       if (!signed) {
         throw new Error('Failed to create signed URL for stored image');
       }
 
-      console.log(`🎨 Dream image stored successfully: dream-images/${fileName}`);
+      console.log(`🎨 Stored successfully: ${bucket}/${fileName}`);
       return signed;
     }
 
@@ -242,9 +285,60 @@ export async function generateAndStoreDreamImage(
       throw new Error(`BFL generation failed: ${JSON.stringify(pollData)}`);
     }
 
-    // Increase delay with exponential backoff, capped at MAX_POLL_DELAY_MS
     currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
   }
 
   throw new Error(`BFL image generation timed out after ${TIMEOUT_MS / 1000} seconds`);
+}
+
+/**
+ * Generates a dream image via BFL API, downloads it, uploads to Supabase
+ * Storage, and returns a long-lived signed URL (bucket is private).
+ *
+ * Uses the service-role key so it can bypass RLS for storage uploads.
+ * This is safe because this function only runs server-side.
+ */
+export async function generateAndStoreDreamImage(
+  dreamId: string,
+  prompt: string
+): Promise<string | null> {
+  return generateAndStore({
+    prompt,
+    bucket: 'dream-images',
+    pathPrefix: `${dreamId}/dream-image`,
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+    urlMode: 'signed',
+    label: 'dream image',
+  });
+}
+
+/**
+ * Generates a cover image for a blog post and returns a PUBLIC URL.
+ *
+ * Public rather than signed because cover_image_url is rendered into the
+ * OpenGraph and Twitter card tags in app/blog/[slug]/page.tsx — the fetchers
+ * that matter are Facebook, LinkedIn, X and Google, none of which
+ * authenticate. See migration 20260809000001.
+ *
+ * Landscape rather than square because those cards render summary_large_image,
+ * which crops a 1:1 image badly. FLUX bills a flat rate for the first
+ * megapixel and 1216×640 is 0.78 MP, so the better shape costs the same as the
+ * square it replaces.
+ */
+export async function generateAndStoreBlogCover(
+  slug: string,
+  prompt: string,
+  seed?: number
+): Promise<string | null> {
+  return generateAndStore({
+    prompt,
+    bucket: 'blog-covers',
+    pathPrefix: `${slug}/cover`,
+    width: COVER_IMAGE_WIDTH,
+    height: COVER_IMAGE_HEIGHT,
+    seed,
+    urlMode: 'public',
+    label: 'blog cover',
+  });
 }

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PenLine, Plus } from "lucide-react";
 import { LocalDateTime } from "@/components/LocalDateTime";
 import { ImportPosts } from "./_components/import-posts";
+import { GenerateCovers } from "./_components/generate-covers";
 import type { BlogPost } from "@/lib/blog";
 
 export const metadata = { title: "Blog — DreamRiver Admin" };
@@ -15,7 +16,7 @@ export default async function AdminBlogPage() {
   const { data } = await supabase
     .from("blog_posts")
     .select(
-      "id, slug, title, excerpt, status, author_name, published_at, scheduled_for, updated_at"
+      "id, slug, title, excerpt, status, author_name, published_at, scheduled_for, updated_at, cover_image_url"
     )
     .order("updated_at", { ascending: false });
 
@@ -29,6 +30,7 @@ export default async function AdminBlogPage() {
     | "author_name"
     | "published_at"
     | "scheduled_for"
+    | "cover_image_url"
     | "updated_at"
   >[];
 
@@ -51,6 +53,12 @@ export default async function AdminBlogPage() {
 
       {/* Batch import (.md files with front-matter) + per-file results. */}
       <ImportPosts />
+
+      {/* Covers are generated after import rather than during it — see the
+          note in generate-covers.tsx. */}
+      <GenerateCovers
+        missingCount={posts.filter((p) => !p.cover_image_url).length}
+      />
 
       {posts.length === 0 ? (
         <Card>
