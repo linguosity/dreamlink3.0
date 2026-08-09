@@ -12,12 +12,14 @@ test.describe('Landing Page', () => {
   test('renders brand name and CTA', async ({ page }) => {
     await page.goto('/landing');
 
-    // Brand link in the SiteHeader. The Wordmark composes "DreamRiver"
-    // from multiple decorative <span>s but the parent <span> has
-    // aria-label="DreamRiver", so the wrapping <a> exposes accessible
-    // name "DreamRiver" at every viewport.
+    // Brand link in the SiteHeader. The <a> carries
+    // aria-label="DreamRiver — home", which wins over the name derived from
+    // its contents — so an anchored /^dreamriver$/i matched nothing and this
+    // test failed on every browser. Matching the start of the name keeps the
+    // assertion meaningful without pinning the exact suffix, which exists to
+    // distinguish this link from other DreamRiver links for screen readers.
     await expect(
-      page.getByRole('link', { name: /^dreamriver$/i }).first(),
+      page.getByRole('link', { name: /^dreamriver/i }).first(),
     ).toBeVisible();
 
     // Has a primary call-to-action that points at sign-up. We accept

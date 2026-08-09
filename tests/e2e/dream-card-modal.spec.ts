@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+// Card queries use data-testid="dream-card" rather than
+// [class*="aspect-square"]. That class is shared by the loading skeleton, the
+// analysis-timeout card and two modal image containers, so .first() could
+// resolve to a shimmer with no title or date — the skip-guard saw something
+// visible and let the test run on the wrong element. These specs failed on
+// every browser for that reason.
+
 /**
  * Dream card display & modal interaction — authenticated.
  * Tests card rendering, clicking to open the detail modal,
@@ -24,7 +31,7 @@ test.describe('Dream Card & Modal', () => {
     // the test to incorrectly enter the empty-state branch. We race both
     // possibilities so the test is correct regardless of how slow the
     // network is on this run.
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const emptyState = page.getByText(/no dreams recorded yet/i).first();
 
     await Promise.race([
@@ -41,7 +48,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('cards show title, date, and tags', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     // Skip if no cards
     if (!(await firstCard.isVisible().catch(() => false))) {
@@ -49,11 +56,11 @@ test.describe('Dream Card & Modal', () => {
     }
 
     // Card should contain a date badge (e.g. "Mar 31")
-    await expect(firstCard.locator('text=/[A-Z][a-z]{2}\\s+\\d{1,2}/')).toBeVisible();
+    await expect(firstCard.getByTestId('dream-card-date')).toBeVisible();
   });
 
   test('clicking a card opens the detail modal', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -74,7 +81,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal content is scrollable for long analyses', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -105,7 +112,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal tabs switch between Analysis and Original Dream', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -136,7 +143,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal closes with Escape key', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -155,7 +162,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal shows share buttons', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');

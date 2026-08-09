@@ -1365,6 +1365,12 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           "overflow-hidden transition-all aspect-square cursor-pointer hover:shadow-lg hover:scale-[1.01] will-change-transform focus-visible:ring-2 focus-visible:ring-ring relative flex flex-col group",
           searchTerms.length > 0 && "ring-1 ring-primary"
         )}
+        // Stable hook for e2e. The class selector the specs used,
+        // [class*="aspect-square"], also matches the loading skeleton, the
+        // analysis-timeout card and two modal image containers — so .first()
+        // could resolve to a shimmer with no title or date, which is exactly
+        // how those specs were failing.
+        data-testid="dream-card"
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
@@ -1525,7 +1531,9 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                   </button>
                 )}
                 <CalendarIcon className="h-3 w-3 mr-1" />
-                <span className="whitespace-nowrap">{formattedDate}</span>
+                <span className="whitespace-nowrap" data-testid="dream-card-date">
+                  {formattedDate}
+                </span>
               </div>
             </div>
           </CardHeader>

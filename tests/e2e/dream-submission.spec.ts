@@ -87,7 +87,7 @@ test.describe('Dream Submission', () => {
     await page.waitForTimeout(2_000); // Give router.refresh() time
 
     // The dream gallery should have at least one card
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     await expect(cards.first()).toBeVisible({ timeout: 15_000 });
   });
 

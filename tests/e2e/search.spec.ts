@@ -40,7 +40,7 @@ test.describe('Search', () => {
 
   test('typing in search filters dream cards', async ({ page }) => {
     // Count initial cards
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const initialCount = await cards.count();
 
     if (initialCount < 2) {
@@ -76,7 +76,7 @@ test.describe('Search', () => {
   });
 
   test('clearing search restores all cards', async ({ page }) => {
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const initialCount = await cards.count();
 
     if (initialCount === 0) {

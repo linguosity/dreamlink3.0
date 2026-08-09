@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+// Card queries use data-testid="dream-card" rather than
+// [class*="aspect-square"]. That class is shared by the loading skeleton, the
+// analysis-timeout card and two modal image containers, so .first() could
+// resolve to a shimmer with no title or date — the skip-guard saw something
+// visible and let the test run on the wrong element. These specs failed on
+// every browser for that reason.
+
 /**
  * Responsive layout tests.
  *
@@ -49,7 +56,7 @@ test.describe('Responsive Layout', () => {
     const viewport = page.viewportSize();
     if (!viewport) return;
 
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const cardCount = await cards.count();
 
     if (cardCount === 0) {
@@ -58,7 +65,7 @@ test.describe('Responsive Layout', () => {
 
     // Get the grid container
     const grid = page.locator('[class*="grid"]').filter({
-      has: page.locator('[class*="aspect-square"]'),
+      has: page.getByTestId('dream-card'),
     }).first();
 
     const gridBox = await grid.boundingBox();
@@ -82,7 +89,7 @@ test.describe('Responsive Layout', () => {
   });
 
   test('modal is usable at current viewport', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');

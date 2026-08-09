@@ -93,3 +93,21 @@ describe('DreamCard Component', () => {
     });
   });
 });
+// The e2e specs select cards by data-testid="dream-card" rather than by the
+// aspect-square class, because that class is shared by the loading skeleton,
+// the analysis-timeout card and two modal image containers. These assertions
+// keep that contract honest: only the real card carries the hook, so a
+// skeleton can never satisfy a card query again.
+describe('DreamCard e2e hooks', () => {
+  it('marks the rendered card with the dream-card test id', () => {
+    render(<DreamCard dream={sampleDream} />);
+    expect(screen.getByTestId('dream-card')).toBeInTheDocument();
+    expect(screen.getByTestId('dream-card-date')).toBeInTheDocument();
+  });
+
+  it('does not put the card hook on the loading skeleton', () => {
+    render(<DreamCard dream={sampleDream} loading />);
+    expect(screen.queryByTestId('dream-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('dream-card-date')).not.toBeInTheDocument();
+  });
+});
