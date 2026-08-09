@@ -38,6 +38,7 @@ import {
   List,
   PenLine,
   Quote,
+  Sparkles,
   Redo2,
   Trash2,
   Undo2,
@@ -47,6 +48,7 @@ import {
   setPostStatusAction,
   schedulePostAction,
   deletePostAction,
+  generateCoverAction,
   type BlogPostInput,
 } from "../actions";
 import type { BlogPost } from "@/lib/blog";
@@ -104,6 +106,10 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
   const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
   const [content, setContent] = useState(post?.content_md ?? "");
   const [cover, setCover] = useState(post?.cover_image_url ?? "");
+  // Separate from isPending: image generation takes tens of seconds, and
+  // sharing the save spinner would make the whole form look stuck.
+  const [coverGenerating, setCoverGenerating] = useState(false);
+  const [coverScene, setCoverScene] = useState<string | null>(null);
   const [author, setAuthor] = useState(post?.author_name ?? "Justin Brewer");
   const [tags, setTags] = useState((post?.tags ?? []).join(", "));
   const [seoTitle, setSeoTitle] = useState(post?.seo_title ?? "");
@@ -345,6 +351,50 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
       else toast.success("Saved");
       router.refresh();
     });
+  }
+
+  // Generation reads the post from the database, so an unsaved draft has to be
+  // saved first — otherwise the cover would be drawn from the previous version
+  // of the article, which is the kind of bug nobody thinks to look for. save()
+  // already normalizes the slug server-side, and the slug is the image seed.
+  function generateCover() {
+    if (!title.trim()) {
+      toast.error("Give the post a title first — the cover is drawn from it.");
+      return;
+    }
+
+    const run = async (id: string) => {
+      setCoverGenerating(true);
+      try {
+        const res = await generateCoverAction(id);
+        if ("error" in res) {
+          toast.error(res.error);
+          return;
+        }
+        setCover(res.coverImageUrl);
+        setCoverScene(res.scene);
+        // Keep the dirty-check honest: the cover just changed server-side, so
+        // record it as saved rather than leaving the form looking unsaved.
+        savedSnapRef.current = JSON.stringify({
+          ...fields,
+          cover: res.coverImageUrl,
+        });
+        toast.success(
+          res.usedFallbackScene
+            ? "Cover generated, but the scene fell back to the house default — try again for something specific to this post."
+            : "Cover generated"
+        );
+        router.refresh();
+      } finally {
+        setCoverGenerating(false);
+      }
+    };
+
+    if (postId && !dirty) {
+      void run(postId);
+      return;
+    }
+    save(run);
   }
 
   function publishToggle() {
@@ -762,15 +812,69 @@ export function PostEditor({ post }: { post: BlogPost | null }) {
               </div>
               <div>
                 <Label htmlFor="post-cover" className="text-xs">
-                  Cover image URL (optional)
+                  Cover image
                 </Label>
-                <Input
-                  id="post-cover"
-                  value={cover}
-                  onChange={(e) => setCover(e.target.value)}
-                  placeholder="https://…"
-                  className="mt-1"
-                />
+                {/* The field stays editable. Generation is an offer, not a
+                    replacement — pasting a real photograph should always beat
+                    an illustration, and the author is the one who knows. */}
+                <div className="mt-1 flex gap-2">
+                  <Input
+                    id="post-cover"
+                    value={cover}
+                    onChange={(e) => setCover(e.target.value)}
+                    placeholder="https://… or generate one"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateCover}
+                    disabled={coverGenerating || isPending}
+                    title={
+                      cover
+                        ? "Replace this cover with a newly generated one"
+                        : "Generate a cover from the article"
+                    }
+                  >
+                    <Sparkles
+                      className={`h-4 w-4 ${coverGenerating ? "animate-pulse" : ""}`}
+                    />
+                    <span className="ml-2">
+                      {coverGenerating
+                        ? "Drawing…"
+                        : cover
+                          ? "Regenerate"
+                          : "Generate"}
+                    </span>
+                  </Button>
+                </div>
+
+                {cover ? (
+                  <div className="mt-2 overflow-hidden rounded-md border">
+                    {/* Plain img, not next/image: these are freshly generated
+                        URLs on a bucket that would need a remotePatterns entry,
+                        and this is an admin-only preview where optimization
+                        buys nothing. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={cover}
+                      alt="Cover preview"
+                      className="aspect-[1.9/1] w-full bg-muted object-cover"
+                    />
+                  </div>
+                ) : null}
+
+                {coverScene ? (
+                  <p className="mt-2 text-xs italic text-muted-foreground">
+                    Drawn from: {coverScene}
+                  </p>
+                ) : null}
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Generated covers are landscape and share one house style, so
+                  posts look like a set. Saving happens first — the image is
+                  drawn from the saved article.
+                </p>
               </div>
               <div>
                 <Label htmlFor="post-slug" className="text-xs">

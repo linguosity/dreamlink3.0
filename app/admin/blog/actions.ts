@@ -12,6 +12,9 @@ import {
   planStartError,
   type ImportPlan,
 } from "./_lib/import-plan";
+import { extractCoverScene } from "@/lib/blogCoverScene";
+import { buildBlogCoverPrompt, seedFromSlug } from "@/schema/blogCover";
+import { generateAndStoreBlogCover } from "@/utils/imageGeneration";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -487,6 +490,149 @@ export async function importPostsAction(
       revalidatePath("/admin/blog");
     }
     return { results };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+// ── Cover image generation ──────────────────────────────────────────
+//
+// Deliberately a separate action rather than part of savePostAction: a
+// generation is a BFL submit plus polling, tens of seconds in the worst case,
+// and nobody should be unable to save a typo fix because an image service is
+// slow. It also means a cover can be regenerated without touching the post.
+
+export interface GenerateCoverResult {
+  ok: true;
+  coverImageUrl: string;
+  /** The visual scene the image was drawn from, surfaced so an odd-looking
+   *  cover is diagnosable without reading server logs. */
+  scene: string;
+  /** True when scene extraction failed and the house fallback was used. */
+  usedFallbackScene: boolean;
+}
+
+/**
+ * Generates (or regenerates) the cover for one post and persists the URL.
+ *
+ * Seeded on the slug, so re-running this on an unedited post returns the same
+ * image rather than silently reshuffling art on something already published.
+ * Editing the article changes the extracted scene, which changes the prompt,
+ * which produces something new — which is the behaviour you want.
+ */
+export async function generateCoverAction(
+  postId: string
+): Promise<GenerateCoverResult | { error: string }> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("slug, title, excerpt, content_md")
+      .eq("id", postId)
+      .single();
+    if (error) return { error: error.message };
+
+    const post = data as {
+      slug: string;
+      title: string;
+      excerpt: string | null;
+      content_md: string | null;
+    } | null;
+    if (!post) return { error: "Post not found" };
+
+    const { scene, fallback } = await extractCoverScene({
+      title: post.title,
+      excerpt: post.excerpt,
+      contentMd: post.content_md,
+    });
+
+    const url = await generateAndStoreBlogCover(
+      post.slug,
+      buildBlogCoverPrompt(scene),
+      seedFromSlug(post.slug)
+    );
+    if (!url) {
+      // generateAndStoreBlogCover returns null (rather than throwing) when
+      // BFL_API_KEY or the service-role key is missing — a configuration
+      // problem, not a failure of this post.
+      return {
+        error:
+          "Image generation is not configured on this environment (BFL_API_KEY or Supabase service role key missing).",
+      };
+    }
+
+    const { error: saveError } = await supabase
+      .from("blog_posts")
+      .update({ cover_image_url: url })
+      .eq("id", postId);
+    if (saveError) return { error: saveError.message };
+
+    revalidateBlog(post.slug);
+    return { ok: true, coverImageUrl: url, scene, usedFallbackScene: fallback };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export interface BulkCoverResult {
+  ok: true;
+  generated: { id: string; slug: string; title: string }[];
+  failed: { slug: string; title: string; reason: string }[];
+  /** Posts left untouched because the run hit its cap — reported rather than
+   *  silently dropped, so "done" never overstates what happened. */
+  remaining: number;
+}
+
+/**
+ * Generates covers for posts that do not have one.
+ *
+ * This is what an import run should be followed by. Generation is NOT done
+ * inline during import on purpose: each image is a submit plus polling, so
+ * eight articles in one request would sit far past any sensible server action
+ * timeout, and a slow image service would take the whole import down with it.
+ *
+ * Capped per invocation for the same reason. The cap is a wall-clock budget,
+ * not a judgement about how many posts deserve covers — run it again for the
+ * rest, which `remaining` tells you about.
+ */
+export async function generateMissingCoversAction(
+  limit = 5
+): Promise<BulkCoverResult | { error: string }> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("id, slug, title")
+      .is("cover_image_url", null)
+      .order("created_at", { ascending: true });
+    if (error) return { error: error.message };
+
+    const missing = (data ?? []) as { id: string; slug: string; title: string }[];
+    const batch = missing.slice(0, limit);
+
+    const generated: BulkCoverResult["generated"] = [];
+    const failed: BulkCoverResult["failed"] = [];
+
+    // Sequential, not parallel: BFL is rate-limited per key, and a burst of
+    // concurrent submits is the reliable way to get 429s on a run that would
+    // have succeeded slowly.
+    for (const post of batch) {
+      const result = await generateCoverAction(post.id);
+      if ("error" in result) {
+        failed.push({ slug: post.slug, title: post.title, reason: result.error });
+      } else {
+        generated.push(post);
+      }
+    }
+
+    return {
+      ok: true,
+      generated,
+      failed,
+      remaining: Math.max(0, missing.length - batch.length),
+    };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Unknown error" };
   }
