@@ -67,4 +67,26 @@ test.describe('Landing Page', () => {
     // Should redirect to landing or sign-in
     await expect(page).toHaveURL(/landing|sign-in/);
   });
+
+  // Moved here from responsive.spec.ts, which ran against the signed-in
+  // gallery — a route that renders no footer at all (app/layout.tsx gates it
+  // on `isAuthPage`). /landing is the route that actually has one.
+  test('footer exposes the marketing nav and copyright', async ({ page }) => {
+    await page.goto('/landing');
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    // The footer nav is a labelled landmark, so this survives copy changes
+    // inside the columns.
+    const footerNav = page.getByRole('navigation', { name: /footer/i });
+    await expect(footerNav).toBeVisible({ timeout: 5_000 });
+
+    // Column headings, asserted by their heading role rather than loose text
+    // so a stray mention elsewhere on the page can't satisfy them.
+    for (const column of [/^product$/i, /^support$/i, /^legal$/i]) {
+      await expect(footerNav.getByRole('heading', { name: column })).toBeVisible();
+    }
+
+    await expect(page.getByText(/all rights reserved/i).first()).toBeVisible();
+  });
 });

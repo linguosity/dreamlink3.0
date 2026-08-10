@@ -127,15 +127,13 @@ test.describe('Responsive Layout', () => {
     await expect(modal).not.toBeVisible({ timeout: 3_000 });
   });
 
-  test('footer is visible when scrolled down', async ({ page }) => {
-    // Scroll to the bottom of the page
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
-    // Footer content should be visible
-    await expect(page.getByText(/quick links/i).first()).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText(/all rights reserved/i).first()).toBeVisible();
-  });
+  // NOTE: there is no footer test here on purpose. These specs run against `/`
+  // (the signed-in gallery), and app/layout.tsx renders its <footer> only when
+  // `isAuthPage` — so the gallery has no footer to assert at any viewport. The
+  // test that used to live here looked for "quick links", a heading that
+  // exists nowhere in the repo; the marketing footer on /landing uses
+  // Product / Support / Legal. Footer coverage now lives in landing.spec.ts,
+  // against the route that actually has one.
 
   test('no horizontal overflow at any viewport', async ({ page }) => {
     // Check that the page doesn't have horizontal scrollbar

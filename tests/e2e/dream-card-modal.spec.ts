@@ -169,7 +169,14 @@ test.describe('Dream Card & Modal', () => {
     await expect(modal).not.toBeVisible({ timeout: 3_000 });
   });
 
-  test('modal shows share buttons', async ({ page }) => {
+  // Sharing is a consent dialog, not a row of social links. This test used to
+  // assert `a[href*="facebook"], a[href*="twitter"], a[href*="telegram"]` and
+  // failed on every browser because those anchors were deliberately removed —
+  // see the note in components/ShareDreamButton.tsx: the per-channel links come
+  // back only once their formatting is designed. A dream is private by default
+  // and sharing mints a scoped, revocable link, so the meaningful assertion is
+  // that the choice is presented before any link exists.
+  test('modal offers scoped link sharing, off by default', async ({ page }) => {
     const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
@@ -181,11 +188,41 @@ test.describe('Dream Card & Modal', () => {
     const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
-    // Share section should be present
-    await expect(modal.getByText(/share/i).first()).toBeVisible();
+    // The share control is wrapped in a one-shot coach mark
+    // (components/feature-hint.tsx). Whether it's showing depends on
+    // profile.dismissed_hints for the test account — state this suite doesn't
+    // own — so clear it if present rather than letting it decide the run.
+    const dismissHint = page.getByRole('button', { name: /dismiss hint/i }).first();
+    if (await dismissHint.isVisible().catch(() => false)) {
+      await dismissHint.click();
+    }
 
-    // Should have social share links
-    const shareLinks = modal.locator('a[href*="facebook"], a[href*="twitter"], a[href*="telegram"]');
-    expect(await shareLinks.count()).toBeGreaterThan(0);
+    const shareButton = modal.getByRole('button', { name: /share this dream/i });
+    await expect(shareButton).toBeVisible();
+
+    await shareButton.click();
+
+    // Radix AlertDialog — role="alertdialog", so this can't collide with the
+    // detail Dialog or the scripture Popover the way getByRole('dialog') did.
+    const consent = page.getByRole('alertdialog');
+    await expect(consent).toBeVisible({ timeout: 3_000 });
+
+    // The scope choice is the substance of the dialog: the user decides what
+    // the link reveals before one is created.
+    await expect(
+      consent.getByRole('button', { name: /summary & analysis only/i }),
+    ).toBeVisible();
+    await expect(
+      consent.getByRole('button', { name: /full dream/i }),
+    ).toBeVisible();
+    await expect(
+      consent.getByRole('button', { name: /create share link/i }),
+    ).toBeVisible();
+
+    // Deliberately does NOT create the link. Doing so would mint a real
+    // public URL for the test account's dream on every CI run, and nothing
+    // in this suite revokes it.
+    await consent.getByRole('button', { name: /^cancel$/i }).click();
+    await expect(consent).not.toBeVisible({ timeout: 3_000 });
   });
 });
