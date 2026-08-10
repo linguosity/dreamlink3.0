@@ -111,3 +111,16 @@ describe('DreamCard e2e hooks', () => {
     expect(screen.queryByTestId('dream-card-date')).not.toBeInTheDocument();
   });
 });
+
+// The e2e specs open the dream modal by data-testid rather than
+// getByRole('dialog'), because Radix gives both the detail Dialog and the
+// scripture-verse Popover that role — the query matched two elements and every
+// modal assertion failed on a strict-mode violation. This pins the hook so the
+// specs cannot silently regress to an ambiguous selector.
+describe('DreamCard modal hooks', () => {
+  it('exposes the detail modal under a distinct test id', async () => {
+    render(<DreamCard dream={sampleDream} />);
+    fireEvent.click(screen.getByTestId('dream-card'));
+    expect(await screen.findByTestId('dream-modal')).toBeInTheDocument();
+  });
+});

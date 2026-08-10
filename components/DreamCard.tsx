@@ -1669,7 +1669,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
       {/* Detail Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
+        <DialogContent
+          data-testid="dream-modal"
+          className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8"
+        >
           {/* Split header: title/date/tags on the left, artwork on the right.
               Previously the square artwork was full-bleed above everything —
               on a 600px dialog that is a ~600px image, so the entire viewport
@@ -2075,7 +2078,10 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           is actually seen at full size. Nested outside the detail Dialog so
           closing it doesn't close the dream. */}
       <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
-        <DialogContent className="sm:max-w-[min(90vw,900px)] p-0 overflow-hidden bg-transparent border-0 shadow-none">
+        <DialogContent
+            data-testid="dream-image-modal"
+            className="sm:max-w-[min(90vw,900px)] p-0 overflow-hidden bg-transparent border-0 shadow-none"
+          >
           <DialogTitle className="sr-only">
             Full-size artwork for “{dream.title}”
           </DialogTitle>

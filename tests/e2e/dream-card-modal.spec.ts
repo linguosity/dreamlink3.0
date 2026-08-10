@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 
+// The dream modal is queried by data-testid, not getByRole('dialog'). Radix
+// renders BOTH the detail Dialog and the scripture-verse Popover with
+// role="dialog", so the role matched two elements and every modal assertion
+// died on "strict mode violation: resolved to 2 elements". The popover is
+// deliberate — Radix Tooltip never opens on touch, which left verse text
+// unreachable on mobile (see the note in components/DreamCard.tsx) — so the
+// tests accommodate it rather than the component losing it.
+
 // Card queries use data-testid="dream-card" rather than
 // [class*="aspect-square"]. That class is shared by the loading skeleton, the
 // analysis-timeout card and two modal image containers, so .first() could
@@ -70,7 +78,7 @@ test.describe('Dream Card & Modal', () => {
     await firstCard.click();
 
     // Modal should appear with dialog role
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Modal should have a title
@@ -89,7 +97,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // The DialogContent itself is the scrollable container — `max-h-[85vh]
@@ -120,7 +128,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Click "Original Dream" tab
@@ -151,7 +159,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Press Escape
@@ -170,7 +178,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Share section should be present
