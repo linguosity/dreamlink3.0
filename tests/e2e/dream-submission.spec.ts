@@ -52,6 +52,19 @@ test.describe('Dream Submission', () => {
     await expect(page.getByText(/adding more details/i).first()).toBeVisible({ timeout: 3_000 });
   });
 
+  // REQUIRES A PAID TEST ACCOUNT. This test writes a real dream, which spends
+  // a real credit. On the free plan that budget is 3 credits for the lifetime
+  // of the account — not 3 per month (see the docstring on
+  // checkMonthlyCredits in lib/monthlyCredits.ts, which is the authority; the
+  // "Free = 3/month" line in that file's header comment is stale). Once those
+  // three are gone the API answers 402 out_of_credits, CompactDreamInput opens
+  // the paywall instead of firing a toast, and this test fails forever with a
+  // bare "element(s) not found" that says nothing about why.
+  //
+  // The fix is account state, not test code: TEST_USER_EMAIL must have an
+  // active `visionary` (30/month) or `prophet` row in `subscriptions`. If this
+  // starts failing again with no toast, check that row before suspecting the
+  // submission pipeline.
   test('submits a dream and shows toast + card', async ({ page }) => {
     const textarea = page.locator('#dream-input').first();
     const dreamText =
@@ -87,7 +100,7 @@ test.describe('Dream Submission', () => {
     await page.waitForTimeout(2_000); // Give router.refresh() time
 
     // The dream gallery should have at least one card
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     await expect(cards.first()).toBeVisible({ timeout: 15_000 });
   });
 

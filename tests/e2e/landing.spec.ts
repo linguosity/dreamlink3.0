@@ -12,12 +12,14 @@ test.describe('Landing Page', () => {
   test('renders brand name and CTA', async ({ page }) => {
     await page.goto('/landing');
 
-    // Brand link in the SiteHeader. The Wordmark composes "DreamRiver"
-    // from multiple decorative <span>s but the parent <span> has
-    // aria-label="DreamRiver", so the wrapping <a> exposes accessible
-    // name "DreamRiver" at every viewport.
+    // Brand link in the SiteHeader. The <a> carries
+    // aria-label="DreamRiver — home", which wins over the name derived from
+    // its contents — so an anchored /^dreamriver$/i matched nothing and this
+    // test failed on every browser. Matching the start of the name keeps the
+    // assertion meaningful without pinning the exact suffix, which exists to
+    // distinguish this link from other DreamRiver links for screen readers.
     await expect(
-      page.getByRole('link', { name: /^dreamriver$/i }).first(),
+      page.getByRole('link', { name: /^dreamriver/i }).first(),
     ).toBeVisible();
 
     // Has a primary call-to-action that points at sign-up. We accept
@@ -64,5 +66,27 @@ test.describe('Landing Page', () => {
 
     // Should redirect to landing or sign-in
     await expect(page).toHaveURL(/landing|sign-in/);
+  });
+
+  // Moved here from responsive.spec.ts, which ran against the signed-in
+  // gallery — a route that renders no footer at all (app/layout.tsx gates it
+  // on `isAuthPage`). /landing is the route that actually has one.
+  test('footer exposes the marketing nav and copyright', async ({ page }) => {
+    await page.goto('/landing');
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    // The footer nav is a labelled landmark, so this survives copy changes
+    // inside the columns.
+    const footerNav = page.getByRole('navigation', { name: /footer/i });
+    await expect(footerNav).toBeVisible({ timeout: 5_000 });
+
+    // Column headings, asserted by their heading role rather than loose text
+    // so a stray mention elsewhere on the page can't satisfy them.
+    for (const column of [/^product$/i, /^support$/i, /^legal$/i]) {
+      await expect(footerNav.getByRole('heading', { name: column })).toBeVisible();
+    }
+
+    await expect(page.getByText(/all rights reserved/i).first()).toBeVisible();
   });
 });

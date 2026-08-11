@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+// The dream modal is queried by data-testid, not getByRole('dialog'). Radix
+// renders BOTH the detail Dialog and the scripture-verse Popover with
+// role="dialog", so the role matched two elements and every modal assertion
+// died on "strict mode violation: resolved to 2 elements". The popover is
+// deliberate — Radix Tooltip never opens on touch, which left verse text
+// unreachable on mobile (see the note in components/DreamCard.tsx) — so the
+// tests accommodate it rather than the component losing it.
+
+// Card queries use data-testid="dream-card" rather than
+// [class*="aspect-square"]. That class is shared by the loading skeleton, the
+// analysis-timeout card and two modal image containers, so .first() could
+// resolve to a shimmer with no title or date — the skip-guard saw something
+// visible and let the test run on the wrong element. These specs failed on
+// every browser for that reason.
+
 /**
  * Dream card display & modal interaction — authenticated.
  * Tests card rendering, clicking to open the detail modal,
@@ -24,7 +39,7 @@ test.describe('Dream Card & Modal', () => {
     // the test to incorrectly enter the empty-state branch. We race both
     // possibilities so the test is correct regardless of how slow the
     // network is on this run.
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const emptyState = page.getByText(/no dreams recorded yet/i).first();
 
     await Promise.race([
@@ -41,7 +56,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('cards show title, date, and tags', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     // Skip if no cards
     if (!(await firstCard.isVisible().catch(() => false))) {
@@ -49,11 +64,11 @@ test.describe('Dream Card & Modal', () => {
     }
 
     // Card should contain a date badge (e.g. "Mar 31")
-    await expect(firstCard.locator('text=/[A-Z][a-z]{2}\\s+\\d{1,2}/')).toBeVisible();
+    await expect(firstCard.getByTestId('dream-card-date')).toBeVisible();
   });
 
   test('clicking a card opens the detail modal', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -63,7 +78,7 @@ test.describe('Dream Card & Modal', () => {
     await firstCard.click();
 
     // Modal should appear with dialog role
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Modal should have a title
@@ -74,7 +89,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal content is scrollable for long analyses', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -82,7 +97,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // The DialogContent itself is the scrollable container — `max-h-[85vh]
@@ -105,7 +120,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal tabs switch between Analysis and Original Dream', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -113,7 +128,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Click "Original Dream" tab
@@ -136,7 +151,7 @@ test.describe('Dream Card & Modal', () => {
   });
 
   test('modal closes with Escape key', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -144,7 +159,7 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Press Escape
@@ -154,8 +169,15 @@ test.describe('Dream Card & Modal', () => {
     await expect(modal).not.toBeVisible({ timeout: 3_000 });
   });
 
-  test('modal shows share buttons', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+  // Sharing is a consent dialog, not a row of social links. This test used to
+  // assert `a[href*="facebook"], a[href*="twitter"], a[href*="telegram"]` and
+  // failed on every browser because those anchors were deliberately removed —
+  // see the note in components/ShareDreamButton.tsx: the per-channel links come
+  // back only once their formatting is designed. A dream is private by default
+  // and sharing mints a scoped, revocable link, so the meaningful assertion is
+  // that the choice is presented before any link exists.
+  test('modal offers scoped link sharing, off by default', async ({ page }) => {
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -163,14 +185,44 @@ test.describe('Dream Card & Modal', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
-    // Share section should be present
-    await expect(modal.getByText(/share/i).first()).toBeVisible();
+    // The share control is wrapped in a one-shot coach mark
+    // (components/feature-hint.tsx). Whether it's showing depends on
+    // profile.dismissed_hints for the test account — state this suite doesn't
+    // own — so clear it if present rather than letting it decide the run.
+    const dismissHint = page.getByRole('button', { name: /dismiss hint/i }).first();
+    if (await dismissHint.isVisible().catch(() => false)) {
+      await dismissHint.click();
+    }
 
-    // Should have social share links
-    const shareLinks = modal.locator('a[href*="facebook"], a[href*="twitter"], a[href*="telegram"]');
-    expect(await shareLinks.count()).toBeGreaterThan(0);
+    const shareButton = modal.getByRole('button', { name: /share this dream/i });
+    await expect(shareButton).toBeVisible();
+
+    await shareButton.click();
+
+    // Radix AlertDialog — role="alertdialog", so this can't collide with the
+    // detail Dialog or the scripture Popover the way getByRole('dialog') did.
+    const consent = page.getByRole('alertdialog');
+    await expect(consent).toBeVisible({ timeout: 3_000 });
+
+    // The scope choice is the substance of the dialog: the user decides what
+    // the link reveals before one is created.
+    await expect(
+      consent.getByRole('button', { name: /summary & analysis only/i }),
+    ).toBeVisible();
+    await expect(
+      consent.getByRole('button', { name: /full dream/i }),
+    ).toBeVisible();
+    await expect(
+      consent.getByRole('button', { name: /create share link/i }),
+    ).toBeVisible();
+
+    // Deliberately does NOT create the link. Doing so would mint a real
+    // public URL for the test account's dream on every CI run, and nothing
+    // in this suite revokes it.
+    await consent.getByRole('button', { name: /^cancel$/i }).click();
+    await expect(consent).not.toBeVisible({ timeout: 3_000 });
   });
 });

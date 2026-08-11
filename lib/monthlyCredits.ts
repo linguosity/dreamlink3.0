@@ -1,13 +1,17 @@
 // lib/monthlyCredits.ts
 //
-// Per-tier MONTHLY credit enforcement + a global daily spend circuit breaker.
+// Per-tier credit enforcement + a global daily spend circuit breaker.
 //
 // Why this exists:
 //   lib/rateLimit.ts caps a single user at N dreams/24h, but that does NOT
-//   implement tier credits (Free = 3/month) and does NOT stop a scripted
-//   multi-account attack from each burning 3 free credits. This module adds:
-//     1. checkMonthlyCredits(userId, plan) — calendar-month cap per the plan
-//        (Free=3, Visionary=50, Prophet=unlimited w/ fair-use ceiling).
+//   implement tier credits and does NOT stop a scripted multi-account attack
+//   from each burning 3 free credits. This module adds:
+//     1. checkMonthlyCredits(userId, plan) — per-plan cap. Free is LIFETIME
+//        (3, granted once at signup, never refreshed); paid tiers reset each
+//        calendar month. Caps come from PLAN_CAPABILITIES in lib/tierConfig.ts
+//        — Visionary 30, Prophet unlimited w/ a 300 fair-use ceiling — so
+//        don't restate the numbers anywhere else. The docstring on
+//        checkMonthlyCredits below is the authority on the windowing.
 //     2. checkGlobalDailyDreamCap() — a hard ceiling on total dreams created
 //        across ALL users in a day, so a signup-flood can't drain the budget.
 //

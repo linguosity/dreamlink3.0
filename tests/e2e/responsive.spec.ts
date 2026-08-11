@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+// The dream modal is queried by data-testid, not getByRole('dialog'). Radix
+// renders BOTH the detail Dialog and the scripture-verse Popover with
+// role="dialog", so the role matched two elements and every modal assertion
+// died on "strict mode violation: resolved to 2 elements". The popover is
+// deliberate — Radix Tooltip never opens on touch, which left verse text
+// unreachable on mobile (see the note in components/DreamCard.tsx) — so the
+// tests accommodate it rather than the component losing it.
+
+// Card queries use data-testid="dream-card" rather than
+// [class*="aspect-square"]. That class is shared by the loading skeleton, the
+// analysis-timeout card and two modal image containers, so .first() could
+// resolve to a shimmer with no title or date — the skip-guard saw something
+// visible and let the test run on the wrong element. These specs failed on
+// every browser for that reason.
+
 /**
  * Responsive layout tests.
  *
@@ -49,7 +64,7 @@ test.describe('Responsive Layout', () => {
     const viewport = page.viewportSize();
     if (!viewport) return;
 
-    const cards = page.locator('[class*="aspect-square"]');
+    const cards = page.getByTestId('dream-card');
     const cardCount = await cards.count();
 
     if (cardCount === 0) {
@@ -58,7 +73,7 @@ test.describe('Responsive Layout', () => {
 
     // Get the grid container
     const grid = page.locator('[class*="grid"]').filter({
-      has: page.locator('[class*="aspect-square"]'),
+      has: page.getByTestId('dream-card'),
     }).first();
 
     const gridBox = await grid.boundingBox();
@@ -82,7 +97,7 @@ test.describe('Responsive Layout', () => {
   });
 
   test('modal is usable at current viewport', async ({ page }) => {
-    const firstCard = page.locator('[class*="aspect-square"]').first();
+    const firstCard = page.getByTestId('dream-card').first();
 
     if (!(await firstCard.isVisible().catch(() => false))) {
       test.skip(true, 'No dream cards available');
@@ -90,7 +105,7 @@ test.describe('Responsive Layout', () => {
 
     await firstCard.click();
 
-    const modal = page.getByRole('dialog');
+    const modal = page.getByTestId('dream-modal');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     // Modal should not overflow the viewport
@@ -112,15 +127,13 @@ test.describe('Responsive Layout', () => {
     await expect(modal).not.toBeVisible({ timeout: 3_000 });
   });
 
-  test('footer is visible when scrolled down', async ({ page }) => {
-    // Scroll to the bottom of the page
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
-
-    // Footer content should be visible
-    await expect(page.getByText(/quick links/i).first()).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText(/all rights reserved/i).first()).toBeVisible();
-  });
+  // NOTE: there is no footer test here on purpose. These specs run against `/`
+  // (the signed-in gallery), and app/layout.tsx renders its <footer> only when
+  // `isAuthPage` — so the gallery has no footer to assert at any viewport. The
+  // test that used to live here looked for "quick links", a heading that
+  // exists nowhere in the repo; the marketing footer on /landing uses
+  // Product / Support / Legal. Footer coverage now lives in landing.spec.ts,
+  // against the route that actually has one.
 
   test('no horizontal overflow at any viewport', async ({ page }) => {
     // Check that the page doesn't have horizontal scrollbar
