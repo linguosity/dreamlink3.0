@@ -595,9 +595,20 @@ export interface BulkCoverResult {
  * Capped per invocation for the same reason. The cap is a wall-clock budget,
  * not a judgement about how many posts deserve covers — run it again for the
  * rest, which `remaining` tells you about.
+ *
+ * The cap is 1, and that number is arithmetic rather than taste: the invoking
+ * page allows maxDuration = 60 (the Vercel Hobby ceiling) and one image is
+ * budgeted at TIMEOUT_MS = 50_000, so a second image cannot fit in the worst
+ * case. The previous default of 5 could never complete — the function was
+ * killed every time, which is why this feature appeared to do nothing.
+ *
+ * A typical generation finishes well under 50s, so 2 would *usually* work.
+ * "Usually" is how you lose an evening to an intermittent bug, so it stays at
+ * 1. Doing genuine batches needs a background job that survives the request,
+ * not a bigger number here.
  */
 export async function generateMissingCoversAction(
-  limit = 5
+  limit = 1
 ): Promise<BulkCoverResult | { error: string }> {
   try {
     const { supabase } = await requireAdmin();

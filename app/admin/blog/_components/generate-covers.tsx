@@ -60,6 +60,23 @@ export function GenerateCovers({ missingCount }: { missingCount: number }) {
         toast.success(message);
       }
       router.refresh();
+    } catch (err) {
+      // The action itself returns {error} rather than throwing, so reaching
+      // here means the request never completed — the function was killed, the
+      // network dropped, or the deploy changed under us. Without this branch
+      // the promise rejected into nothing: no toast, spinner just stops, and
+      // the page keeps showing a stale count. That reads as "the button does
+      // nothing", which is exactly how this went unnoticed.
+      //
+      // router.refresh() regardless: covers are persisted per post as each one
+      // finishes, so a run that died partway through still did real work, and
+      // the count on screen should reflect it.
+      console.error("[GenerateCovers] request failed:", err);
+      toast.error("Cover generation didn't finish", {
+        description:
+          "Any covers completed before it stopped were saved. Reload to see the current count, then run it again.",
+      });
+      router.refresh();
     } finally {
       setRunning(false);
     }
@@ -74,8 +91,8 @@ export function GenerateCovers({ missingCount }: { missingCount: number }) {
             cover image
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Generates one per article in the shared house style. Runs a few at a
-            time — press again for the rest.
+            Generates one per article in the shared house style. One per press —
+            each image takes up to a minute, so press again for the rest.
           </p>
         </div>
         <Button onClick={run} disabled={running} variant="outline">
