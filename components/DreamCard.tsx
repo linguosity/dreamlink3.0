@@ -726,55 +726,69 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
 
     debugLog('Starting image polling for dream:', dream.id);
     let pollCount = 0;
-    const maxPolls = 12; // 60 seconds (12 * 5s)
+    // 90 seconds (18 * 5s). Arithmetic, not taste: /api/dream-image declares
+    // maxDuration = 60, so an image not written within ~60s of the request
+    // never will be — the function is already dead. The extra 30s absorbs the
+    // gap between firing the request and polling starting, plus read lag.
+    //
+    // The old 12 (60s) sat *below* the server's own worst case:
+    // utils/imageGeneration.ts budgets TIMEOUT_MS = 50_000 for BFL alone,
+    // before cold start, downloading the image, uploading to Storage, signing
+    // the URL and writing the row. A slow but entirely successful generation
+    // therefore showed "Image unavailable" until the user reloaded.
+    const maxPolls = 18;
 
     const interval = setInterval(async () => {
+      pollCount++;
+      debugLog(`Image polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
+
+      let found = false;
       try {
-        pollCount++;
-        debugLog(`Image polling attempt ${pollCount}/${maxPolls} for dream ${dream.id}`);
-
-        if (pollCount >= maxPolls) {
-          debugLog('Max image polling attempts reached');
-          setIsPollingCardImage(false);
-          setImageError(true);
-          clearInterval(interval);
-          return;
-        }
-
-        // Check if we already have an image URL
         if (cardImageUrl) {
           debugLog('Image URL already available, stopping poll');
-          setIsPollingCardImage(false);
-          clearInterval(interval);
-          return;
-        }
+          found = true;
+        } else {
+          const response = await fetch(`/api/dream-entries?id=${dream.id}`, {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+            }
+          });
 
-        const response = await fetch(`/api/dream-entries?id=${dream.id}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-          }
-        });
-
-        if (!response.ok) {
-          console.error(`Image poll error: ${response.status}`);
-          return;
-        }
-
-        const data = await response.json();
-        if (data && data.dreams && data.dreams.length > 0) {
-          const updatedDream = data.dreams[0];
-          if (updatedDream.image_url) {
-            debugLog('Dream image detected via polling, updating state');
-            setCardImageUrl(updatedDream.image_url);
-            setDream(updatedDream);
-            setIsPollingCardImage(false);
-            setImageError(false);
-            clearInterval(interval);
+          if (response.ok) {
+            const data = await response.json();
+            const updatedDream = data?.dreams?.[0];
+            if (updatedDream?.image_url) {
+              debugLog('Dream image detected via polling, updating state');
+              setCardImageUrl(updatedDream.image_url);
+              setDream(updatedDream);
+              setImageError(false);
+              found = true;
+            }
+          } else {
+            console.error(`Image poll error: ${response.status}`);
           }
         }
       } catch (err) {
         console.error('Error polling for dream image:', err);
+      }
+
+      if (found) {
+        setIsPollingCardImage(false);
+        clearInterval(interval);
+        return;
+      }
+
+      // Give up only after the final attempt has actually looked. The previous
+      // order returned on `pollCount >= maxPolls` *before* fetching, so the
+      // last tick never checked — the card declared failure without asking one
+      // more time. Running this after the catch also means a flaky network
+      // can't leave the interval polling forever.
+      if (pollCount >= maxPolls) {
+        debugLog('Max image polling attempts reached');
+        setIsPollingCardImage(false);
+        setImageError(true);
+        clearInterval(interval);
       }
     }, 5000);
 
