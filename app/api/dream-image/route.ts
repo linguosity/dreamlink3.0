@@ -32,13 +32,34 @@ export const maxDuration = 60; // Vercel function timeout
 // test mode) generation is admin-only; non-admins can only generate when the
 // dream has no image yet (the client fires this exactly once per new dream).
 
-const bodySchema = z.object({
+// `nullish`, not `optional`. These values come from `dream_entries` columns
+// that are genuinely nullable, and both callers forward them straight through
+// — so `null` arrives on the wire constantly. `z.string().optional()` accepts
+// `string | undefined` and REJECTS `null`, which made this whole route answer
+// 400 "Invalid request body" and never generate anything:
+//
+//   * CompactDreamInput sends `comparisonGroupId: result.comparisonGroupId ?? null`,
+//     i.e. literal null on every ordinary (non-matrix) submission — so every
+//     new dream failed here, before a single BFL call.
+//   * DreamCard's retry sends title / summary / topicSentence straight off the
+//     row, so any dream with a null column failed too — including, with lovely
+//     irony, the retry button offered when an image is missing.
+//
+// Nothing downstream cares about the distinction: the empty-string defaults
+// feed prompt building, and `comparisonGroupId` is only ever tested for
+// truthiness. So accept null and normalise it here rather than making every
+// caller remember to strip nulls.
+export const bodySchema = z.object({
   dreamId: z.string().uuid(),
-  title: z.string().max(500).optional().default(""),
-  summary: z.string().max(4000).optional().default(""),
-  topicSentence: z.string().max(2000).optional().default(""),
+  title: z.string().max(500).nullish().transform((v) => v ?? ""),
+  summary: z.string().max(4000).nullish().transform((v) => v ?? ""),
+  topicSentence: z.string().max(2000).nullish().transform((v) => v ?? ""),
   aesthetic: z.unknown().optional(),
-  comparisonGroupId: z.string().uuid().optional(),
+  comparisonGroupId: z
+    .string()
+    .uuid()
+    .nullish()
+    .transform((v) => v ?? undefined),
 });
 
 export async function POST(request: NextRequest) {

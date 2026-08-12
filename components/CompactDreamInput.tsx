@@ -245,7 +245,21 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               comparisonGroupId,
             }),
             keepalive: true,
-          }).catch((err) => console.error("Image generation request failed:", err));
+          })
+            .then(async (res) => {
+              // fetch only rejects on network failure — an HTTP 400 resolves
+              // normally. Without this check the route could answer "Invalid
+              // request body" on every single submission and nothing anywhere
+              // would say so. That is exactly what it was doing.
+              if (!res.ok) {
+                const detail = await res.text().catch(() => "");
+                console.error(
+                  `Image generation rejected (${res.status}) for dream ${entry.id}:`,
+                  detail,
+                );
+              }
+            })
+            .catch((err) => console.error("Image generation request failed:", err));
         }
 
         // Notify the grid for each entry so any optimistic placeholder can
