@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, KeyboardEvent as ReactKeyboardEvent } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
 import UserAvatar from "./UserAvatar";
@@ -13,6 +14,18 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
 export default function Navbar() {
+  // The admin console ships its own chrome — AdminSidebar renders the brand
+  // lockup, the nav and the build badge — so this navbar would duplicate it,
+  // and its dream search box belongs to pages that have dreams.
+  //
+  // This lives here rather than in app/layout.tsx on purpose. Gating it there
+  // used the server-rendered pathname, and the root layout survives client-side
+  // navigation: the value decided on an admin page persisted afterwards and the
+  // entire app lost its header until a hard reload. usePathname re-evaluates on
+  // every navigation, so leaving /admin brings the navbar straight back.
+  const pathname = usePathname() ?? "";
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+
   const {
     currentInput,
     setCurrentInput,
@@ -79,7 +92,11 @@ export default function Navbar() {
       removeLastKeyword();
     }
   };
-  
+
+  // After every hook, never before — bailing earlier would change the hook
+  // order between admin and non-admin routes.
+  if (isAdminRoute) return null;
+
   return (
     <nav className="sticky top-0 z-50 border-b bg-background px-3 py-3 sm:px-4 sm:py-4">
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3">
