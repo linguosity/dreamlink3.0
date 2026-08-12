@@ -11,6 +11,17 @@ import type { BlogPost } from "@/lib/blog";
 
 export const metadata = { title: "Blog — DreamRiver Admin" };
 
+// Server Actions inherit the maxDuration of the page segment that invokes
+// them, and this page invokes cover generation. utils/imageGeneration.ts
+// budgets TIMEOUT_MS = 50_000 for one BFL image, which does not fit inside the
+// platform default — so generateMissingCoversAction was killed mid-run and the
+// browser got a rejected promise with nothing to show. 60 is the Vercel Hobby
+// ceiling and matches every other image-generating route in the app.
+//
+// This cannot live in actions.ts: a "use server" file may only export async
+// functions.
+export const maxDuration = 60;
+
 export default async function AdminBlogPage() {
   const supabase = await createClient();
   const { data } = await supabase
