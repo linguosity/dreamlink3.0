@@ -9,11 +9,51 @@
  *   - Everything else (API calls, cross-origin requests such as Supabase
  *     signed URLs, non-GET requests) is left untouched.
  *
- * Bump CACHE_VERSION to invalidate all caches on the next deploy.
+ * Cache naming is tied to the deployed build, NOT to a constant someone has
+ * to remember to edit. The previous version used `CACHE_VERSION = 1` with a
+ * comment asking a human to bump it on every deploy; it was never bumped, so
+ * every non-hashed asset — brand icons, fonts, textures, the manifest — was
+ * pinned cache-first, forever, with no invalidation path. Files under
+ * /_next/static/ were fine (their names are content-hashed, so a new build
+ * simply requests new URLs), but the cache also never evicted the old ones,
+ * and an offline navigation could still resurrect an old HTML shell pointing
+ * at them.
+ *
+ * The build already writes /version.json on every deploy (scripts/update-
+ * version.js), so the worker reads that at install and names its cache after
+ * it. New deploy, new cache name, old caches dropped on activate. No constant
+ * to maintain, and the "New version available" toast now tells the truth
+ * instead of promising a refresh the worker would quietly undo.
  */
 
-const CACHE_VERSION = 1;
-const STATIC_CACHE = `dreamriver-static-v${CACHE_VERSION}`;
+const CACHE_PREFIX = "dreamriver-static-";
+const FALLBACK_VERSION = "unversioned";
+
+// Resolved once per worker lifetime. Every cache open awaits this, so a
+// request that arrives mid-install still lands in the right bucket.
+let cacheNamePromise = null;
+
+function resolveCacheName() {
+  if (cacheNamePromise) return cacheNamePromise;
+  cacheNamePromise = (async () => {
+    try {
+      // no-store, and never through our own fetch handler: reading the
+      // version from a cached copy of the version file is a loop that would
+      // pin the worker to the first build it ever saw.
+      const res = await fetch("/version.json", { cache: "no-store" });
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data && typeof data.version === "string" && data.version) {
+          return CACHE_PREFIX + data.version;
+        }
+      }
+    } catch {
+      // Offline at install, or version.json unreachable. Fall through.
+    }
+    return CACHE_PREFIX + FALLBACK_VERSION;
+  })();
+  return cacheNamePromise;
+}
 
 const STATIC_PREFIXES = [
   "/_next/static/",
@@ -48,7 +88,10 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-self.addEventListener("install", () => {
+self.addEventListener("install", (event) => {
+  // Resolve the build version during install so the first fetch after
+  // activation already knows which cache it belongs to.
+  event.waitUntil(resolveCacheName());
   // Activate the new worker immediately instead of waiting for old tabs.
   self.skipWaiting();
 });
@@ -56,11 +99,14 @@ self.addEventListener("install", () => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // Drop caches from previous CACHE_VERSIONs.
+      // Drop every cache from a previous build. This is what makes a deploy
+      // actually reach the user rather than being shadowed by whatever the
+      // worker cached the first time it ran.
+      const current = await resolveCacheName();
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((key) => key.startsWith("dreamriver-") && key !== STATIC_CACHE)
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== current)
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
@@ -76,7 +122,7 @@ function isStaticAsset(url) {
 }
 
 async function cacheFirst(request) {
-  const cache = await caches.open(STATIC_CACHE);
+  const cache = await caches.open(await resolveCacheName());
   const cached = await cache.match(request);
   if (cached) return cached;
 
