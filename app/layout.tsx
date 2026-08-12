@@ -172,13 +172,14 @@ export default async function RootLayout({
     pathname.includes("/forgot-password");
   const isLandingPage = pathname.includes("/landing");
   const isOnboardingPage = pathname.includes("/onboarding");
-  // The admin console ships its own chrome — AdminSidebar renders the brand
-  // lockup, the nav and the build badge (app/admin/_components/sidebar.tsx).
-  // Rendering the consumer Navbar on top of it repeats the logo + "DreamRiver"
-  // block twice on every admin screen, and offers a dream search bar on pages
-  // that have no dreams. startsWith, not includes: a blog slug containing
-  // "admin" must not lose its navbar.
-  const isAdminPage = pathname.startsWith("/admin");
+  // NOTE: admin routes are NOT gated here. Hiding the Navbar for /admin from
+  // this server-rendered pathname looked right and was wrong: the root layout
+  // survives client-side navigation, so the value computed on an admin page
+  // stuck around afterwards and the whole app lost its header until a hard
+  // reload — including the settings page you land on after leaving admin, which
+  // left no way back. FeedbackWidget already carries a comment saying exactly
+  // this. Navbar now hides itself via usePathname, which re-evaluates on every
+  // navigation.
 
   return (
     <html
@@ -206,11 +207,7 @@ export default async function RootLayout({
                   <EnvVarWarning />
                 </div>
               </div>
-            ) : !isAuthPage &&
-              !isLandingPage &&
-              !isOnboardingPage &&
-              !isAdminPage &&
-              user ? (
+            ) : !isAuthPage && !isLandingPage && !isOnboardingPage && user ? (
               <Navbar />
             ) : null}
 
