@@ -22,6 +22,7 @@ import { createClient } from "@/utils/supabase/server";
 import { FormMessage, Message } from "@/components/form-message";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import AuthNavigation from "@/components/AuthNavigation";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default async function AuthLayout({
   children,
@@ -78,41 +79,59 @@ export default async function AuthLayout({
       : searchParams.success;
   }
 
-  // Otherwise render the normal auth UI
+  // Otherwise render the normal auth UI.
+  //
+  // The outer wrapper and the footer used to be rendered by app/layout.tsx,
+  // which worked out "is this an auth page?" from the server-rendered
+  // pathname. This route group *is* the answer to that question, so the
+  // chrome belongs here — no pathname, nothing to go stale.
   return (
-    <div className="min-h-screen w-full relative">
-      {/* Semi-transparent overlay so water background shows through */}
-      <div className="fixed inset-0 -z-[5] bg-background/60 backdrop-blur-[2px]" />
+    <main className="min-h-screen flex flex-col animate-fade-in">
+      <div id="main-content" className="flex-1">
+        <div className="min-h-screen w-full relative">
+          {/* Semi-transparent overlay so water background shows through */}
+          <div className="fixed inset-0 -z-[5] bg-background/60 backdrop-blur-[2px]" />
 
-      <div className="flex items-center justify-center min-h-screen w-full">
-        {/* space-y-5 (was 8): every vertical px here competes with the form
-            for above-the-fold space on small laptops/phones. */}
-        <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 py-6 space-y-5">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              AI-Powered Biblical Dream Interpretation
-            </p>
-          </div>
-          
-          {/* Navigation */}
-          <div className="w-full max-w-md">
-            <AuthNavigation variant="compact" />
-          </div>
-          
-          {/* Messages */}
-          {(message.error || message.success) && (
-            <div className="w-full max-w-md">
-              <FormMessage message={message as Message} />
+          <div className="flex items-center justify-center min-h-screen w-full">
+            {/* space-y-5 (was 8): every vertical px here competes with the form
+                for above-the-fold space on small laptops/phones. */}
+            <div className="flex flex-col items-center max-w-2xl w-full mx-auto px-5 py-6 space-y-5">
+              {/* Header */}
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  AI-Powered Biblical Dream Interpretation
+                </p>
+              </div>
+
+              {/* Navigation */}
+              <div className="w-full max-w-md">
+                <AuthNavigation variant="compact" />
+              </div>
+
+              {/* Messages */}
+              {(message.error || message.success) && (
+                <div className="w-full max-w-md">
+                  <FormMessage message={message as Message} />
+                </div>
+              )}
+
+              {/* Content */}
+              <div className="w-full max-w-md">
+                {children}
+              </div>
             </div>
-          )}
-          
-          {/* Content */}
-          <div className="w-full max-w-md">
-            {children}
           </div>
         </div>
       </div>
-    </div>
+
+      <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
+        <p className="text-muted-foreground">
+          © {new Date().getFullYear()} DreamRiver. All rights reserved.
+        </p>
+        <div className="flex items-center gap-4">
+          <ThemeSwitcher />
+        </div>
+      </footer>
+    </main>
   );
 }

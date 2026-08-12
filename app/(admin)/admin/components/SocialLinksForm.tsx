@@ -8,7 +8,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { saveSocialLinksAction } from "@/app/admin/actions";
+import { saveSocialLinksAction } from "../actions";
 import { SOCIAL_PLATFORMS, isValidSocialUrl } from "@/lib/siteSettings";
 
 const PLACEHOLDERS: Record<string, string> = {
