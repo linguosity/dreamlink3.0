@@ -1,36 +1,32 @@
 // app/layout.tsx
 //
-// Technical explanation:
-// Main layout component for the Next.js application. It sets up the HTML
-// structure, includes global styles, fonts, and providers. It also handles
-// basic user authentication logic and renders the Navbar and Footer.
+// The document shell, and nothing else: <html>, <body>, the font variables,
+// global metadata, and the providers every route needs.
 //
-// Analogy:
-// It's like the blueprint of a house, defining the overall structure, where
-// the rooms (pages) will go, and common elements like the foundation (HTML
-// structure), a security system (auth), and shared utilities (providers,
-// global styles).
+// It deliberately owns no chrome. Which header a page gets is decided by the
+// route group it lives in:
+//
+//   app/(app)/         signed-in app shell — Navbar, feedback bubble
+//   app/(auth-pages)/  the sign-in lobby — centred card, footer, no navbar
+//   app/(fullscreen)/  landing and onboarding — pages that own the viewport
+//   app/(admin)/       the admin console — sidebar, no consumer navbar
+//
+// That split is the whole point. Deciding it here instead was tried twice and
+// broke both times, because this layout is NOT re-rendered on client-side
+// navigation: any pathname it reads goes stale the moment you navigate. PR #35
+// hid the navbar on /admin from the server-rendered x-pathname and the entire
+// app lost its header until a hard reload — including the settings page you
+// land on after leaving admin, which left no visible way back. #38 reverted it.
+// A layout that never asks "which page am I on?" has nothing to go stale.
 
 import { Metadata, Viewport } from "next";
-import { Suspense } from "react";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Jost, Newsreader, Quicksand } from "next/font/google";
-import { createClient } from "@/utils/supabase/server";
-import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import "./globals.css";
 import { Providers } from './providers';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import { VersionChecker } from '@/components/VersionChecker';
 import CookieConsent from '@/components/CookieConsent';
-import FeedbackWidget from '@/components/FeedbackWidget';
-import { HintsProvider } from '@/lib/hints/dismissed-context';
-import { HINT_IDS, type HintId } from '@/lib/hints/types';
 
 // Determine the base URL for metadata and redirects.
 // VERCEL_URL is the raw deployment host (…vercel.app), NOT the custom domain,
@@ -124,63 +120,11 @@ const quicksand = Quicksand({
   weight: ["500"],
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let user = null;
-  let dismissedHints: HintId[] = [];
-
-  try {
-    const supabase = await createClient();
-    const { data, error: userError } = await supabase.auth.getUser();
-
-    if (userError) {
-      if (userError.message.includes("User from sub claim")) {
-        // kick into our sign-out handler, with a message
-        const msg = encodeURIComponent("Session expired. Please sign in again.");
-        redirect(`/api/auth/signout?redirect_to=/sign-in?error=${msg}`);
-      }
-      else if (userError.message !== "Auth session missing!") {
-        console.error("Error fetching user:", userError.message);
-      }
-    } else if (data.user) {
-      user = data.user;
-      const { data: profileRow } = await supabase
-        .from("profile")
-        .select("dismissed_hints")
-        .eq("user_id", user.id)
-        .single();
-      const raw = (profileRow?.dismissed_hints as string[] | null) ?? [];
-      dismissedHints = raw.filter((id): id is HintId =>
-        (HINT_IDS as readonly string[]).includes(id),
-      );
-    }
-  } catch (err: unknown) {
-    // re-throw Next.js redirects so they become real HTTP 3xxs
-    if (isRedirectError(err)) throw err;
-    console.error("Unexpected auth error in layout:", err);
-  }
-
-  // Determine if the current path is an auth‐related page or landing page
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const isAuthPage =
-    pathname.includes("/sign-in") ||
-    pathname.includes("/sign-up") ||
-    pathname.includes("/forgot-password");
-  const isLandingPage = pathname.includes("/landing");
-  const isOnboardingPage = pathname.includes("/onboarding");
-  // NOTE: admin routes are NOT gated here. Hiding the Navbar for /admin from
-  // this server-rendered pathname looked right and was wrong: the root layout
-  // survives client-side navigation, so the value computed on an admin page
-  // stuck around afterwards and the whole app lost its header until a hard
-  // reload — including the settings page you land on after leaving admin, which
-  // left no way back. FeedbackWidget already carries a comment saying exactly
-  // this. Navbar now hides itself via usePathname, which re-evaluates on every
-  // navigation.
-
   return (
     <html
       lang="en"
@@ -189,66 +133,24 @@ export default async function RootLayout({
     >
       <body className="text-foreground">
         <Providers>
-          <HintsProvider initialDismissed={dismissedHints}>
           <ServiceWorkerRegistration />
           <VersionChecker />
-          {/* Skip-to-content link for keyboard/screen-reader users */}
+          {/* Skip-to-content link for keyboard/screen-reader users. Every
+              route group renders an #main-content target for it. */}
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           >
             Skip to content
           </a>
-          <main className="min-h-screen flex flex-col animate-fade-in">
-            {/* Env‐var warning or Navbar */}
-            {!hasEnvVars ? (
-              <div className="w-full flex justify-center border-b h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 text-sm">
-                  <EnvVarWarning />
-                </div>
-              </div>
-            ) : !isAuthPage && !isLandingPage && !isOnboardingPage && user ? (
-              <Navbar />
-            ) : null}
 
-            {/* Main content */}
-            <div
-              id="main-content"
-              className={
-                `flex-1 ` +
-                (!user && !isAuthPage && !isLandingPage ? "flex items-center justify-center" : "")
-              }
-            >
-              <Suspense fallback={null}>
-                {children}
-              </Suspense>
-            </div>
+          {children}
 
-            {/* Global toast container */}
-            <Toaster />
+          {/* Global toast container */}
+          <Toaster />
 
-            {/* Cookie consent banner */}
-            <CookieConsent />
-
-            {/* Floating feedback bubble — signed-in users only; the widget
-                additionally hides itself on public/marketing routes via
-                usePathname (the root layout survives client navigations, so
-                the server-side pathname here would go stale). */}
-            {user && <FeedbackWidget />}
-
-            {/* Footer only on auth pages (landing page has its own footer) */}
-            {isAuthPage && (
-              <footer className="w-full flex items-center justify-between border-t p-4 text-xs">
-                <p className="text-muted-foreground">
-                  © {new Date().getFullYear()} DreamRiver. All rights reserved.
-                </p>
-                <div className="flex items-center gap-4">
-                  <ThemeSwitcher />
-                </div>
-              </footer>
-            )}
-          </main>
-          </HintsProvider>
+          {/* Cookie consent banner */}
+          <CookieConsent />
         </Providers>
       </body>
     </html>

@@ -13,7 +13,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { saveAnalyticsDigestAction } from "@/app/admin/actions";
+import { saveAnalyticsDigestAction } from "../actions";
 import {
   DIGEST_CADENCES,
   DIGEST_CADENCE_LABELS,

@@ -8,7 +8,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { saveTestimonialsAction } from "@/app/admin/actions";
+import { saveTestimonialsAction } from "../actions";
 import { type Testimonial, USER_COUNT_DISPLAY_THRESHOLD } from "@/lib/testimonials";
 
 export function TestimonialsCard({
