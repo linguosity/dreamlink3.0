@@ -17,6 +17,10 @@ const BFL_ENDPOINT = "https://api.bfl.ai/v1/flux-2-klein-9b";
 const WIDTH = 512;
 const HEIGHT = 512;
 const TIMEOUT_MS = 45_000;
+// Per-request bounds — TIMEOUT_MS is only checked between loop iterations,
+// so it cannot rescue a single socket that never answers.
+const SUBMIT_TIMEOUT_MS = 15_000;
+const POLL_TIMEOUT_MS = 8_000;
 
 export async function POST() {
   // ── Auth: admin only ──────────────────────────────────────────
@@ -50,6 +54,7 @@ export async function POST() {
     // ── Submit ──────────────────────────────────────────────────
     const submitRes = await fetch(BFL_ENDPOINT, {
       method: "POST",
+      signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
       headers: { accept: "application/json", "x-key": key, "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt:
@@ -88,9 +93,15 @@ export async function POST() {
       await new Promise((r) => setTimeout(r, delay));
       delay = Math.min(delay * 1.5, 4000);
 
-      const pollRes = await fetch(pollingUrl, {
-        headers: { accept: "application/json", "x-key": key },
-      });
+      let pollRes: Response;
+      try {
+        pollRes = await fetch(pollingUrl, {
+          signal: AbortSignal.timeout(POLL_TIMEOUT_MS),
+          headers: { accept: "application/json", "x-key": key },
+        });
+      } catch {
+        continue;
+      }
       if (!pollRes.ok) continue;
       const poll = await pollRes.json();
 

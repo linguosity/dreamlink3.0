@@ -40,6 +40,20 @@ import {
 } from "@/lib/emails/templates";
 import { buildUnsubscribeUrl } from "@/lib/emails/unsubscribe";
 
+// Resend's client exposes no timeout option, so bound the promise instead.
+// Rejects rather than resolving, so the existing catch releases the
+// notification_log claim and the next trigger can retry.
+const RESEND_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms),
+    ),
+  ]);
+}
+
 export type LifecycleEmailType =
   | "welcome"
   | "credits_exhausted"
@@ -112,14 +126,22 @@ async function sendLifecycleEmail(args: {
       return "skipped";
     }
 
-    const { error: sendError } = await getResend().emails.send({
-      from: getEmailFrom(),
-      to,
-      replyTo: getSupportEmail(),
-      subject: content.subject,
-      html: content.html,
-      text: content.text,
-    });
+    // Bounded: the Resend client takes no timeout option, and an unbounded
+    // send can outlive the calling route's own budget — turning a slow email
+    // into a killed function. The claim above is released in the catch, so a
+    // timed-out send is retried on the next trigger rather than lost.
+    const { error: sendError } = await withTimeout(
+      getResend().emails.send({
+        from: getEmailFrom(),
+        to,
+        replyTo: getSupportEmail(),
+        subject: content.subject,
+        html: content.html,
+        text: content.text,
+      }),
+      RESEND_TIMEOUT_MS,
+      `${type} email send`,
+    );
     if (sendError) {
       throw new Error(sendError.message || "Resend send failed");
     }

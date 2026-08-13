@@ -29,6 +29,11 @@ export function getStripe(): Stripe {
   stripeInstance = new Stripe(key, {
     apiVersion: "2026-02-25.clover",
     typescript: true,
+    // The SDK's defaults (80s timeout, 2 network retries) can outlive the
+    // route's own `maxDuration = 60`, so a Stripe brownout turns into a
+    // function kill rather than a handled error we can show the user.
+    timeout: 20_000,
+    maxNetworkRetries: 1,
   });
 
   return stripeInstance;
