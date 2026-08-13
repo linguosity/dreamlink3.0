@@ -20,7 +20,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, NextRequest, after } from "next/server";
 import crypto from 'crypto';
 import { dreamEntryCreateSchema } from "@/schema/dreamEntry";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
@@ -427,23 +427,31 @@ export async function POST(request: Request) {
         // First-party operational analytics, captured regardless of cookie
         // consent — NOTE(Justin): confirm this stance in the privacy policy
         // (see lib/analytics-server.ts).
-        await captureServerEvent(user.id, "credits_exhausted", {
-          plan: profileCtx.plan,
-          used: credits.used,
-          limit: credits.limit,
-        });
+        //
+        // Both of these used to be awaited before the 402 below, so the
+        // upgrade dialog could not render until PostHog *and* Resend had each
+        // replied. Neither result is used. after() runs them once the response
+        // is already on its way — which is what the comment at the top of
+        // lib/emails/send.ts wanted, written before this API existed.
+        after(async () => {
+          await captureServerEvent(user.id, "credits_exhausted", {
+            plan: profileCtx.plan,
+            used: credits.used,
+            limit: credits.limit,
+          });
 
-        // Lifecycle email — free credits are lifetime and never refresh, so
-        // this fires once ever per user (notification_log dedupe key "once").
-        // No-ops without RESEND_API_KEY and never throws; the catch is
-        // belt-and-braces so email can never break the 402 response.
-        try {
-          if (user.email) {
-            await sendCreditsExhaustedEmail(user.id, user.email);
+          // Lifecycle email — free credits are lifetime and never refresh, so
+          // this fires once ever per user (notification_log dedupe key "once").
+          // No-ops without RESEND_API_KEY and never throws; the catch is
+          // belt-and-braces.
+          try {
+            if (user.email) {
+              await sendCreditsExhaustedEmail(user.id, user.email);
+            }
+          } catch (err) {
+            console.error("[dream-entries] credits_exhausted email failed (non-fatal):", err);
           }
-        } catch (err) {
-          console.error("[dream-entries] credits_exhausted email failed (non-fatal):", err);
-        }
+        });
       }
       return NextResponse.json(
         {
@@ -559,10 +567,16 @@ export async function POST(request: Request) {
       // First-party operational analytics, captured regardless of cookie
       // consent — NOTE(Justin): confirm this stance in the privacy policy
       // (see lib/analytics-server.ts).
-      await captureServerEvent(user.id, "first_dream_submitted", {
-        plan: profileCtx.plan,
-        dream_id: primary.id,
-      });
+      //
+      // after(), not await: this fires on a user's first ever dream — the one
+      // request where they have already waited out a full model call — and
+      // nothing below reads the result.
+      after(() =>
+        captureServerEvent(user.id, "first_dream_submitted", {
+          plan: profileCtx.plan,
+          dream_id: primary.id,
+        }),
+      );
     }
 
     return NextResponse.json({

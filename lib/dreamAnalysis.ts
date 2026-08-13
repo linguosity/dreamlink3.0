@@ -1,9 +1,11 @@
 // lib/dreamAnalysis.ts
 //
-// Shared dream-analysis function extracted from app/api/openai-analysis/route.ts.
-// Both that route handler and the matrix flow in dream-entries/route.ts call this
-// directly. Going through `openAiHandler(new NextRequest(...))` for parallel
-// fan-out caused output corruption (multiple concurrent invocations interleaved
+// Shared dream-analysis function, originally extracted from the
+// /api/openai-analysis route handler (deleted — it had no callers left, and
+// its `runtime = "edge"` could not have completed a deep or profound analysis
+// anyway). The matrix flow in dream-entries/route.ts calls this directly.
+// Going through `openAiHandler(new NextRequest(...))` for parallel fan-out
+// caused output corruption (multiple concurrent invocations interleaved
 // somewhere — likely Next.js's request lifecycle around synthetic NextRequests),
 // so the import is now plumbed as a plain async function with no Request/Response
 // glue.

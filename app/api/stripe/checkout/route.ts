@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getStripe, PLAN_PRICES } from "@/lib/stripe";
 import { captureServerEvent } from "@/lib/analytics-server";
@@ -99,11 +99,16 @@ export async function POST(request: NextRequest) {
     // consent — NOTE(Justin): confirm this stance in the privacy policy
     // (see lib/analytics-server.ts). priceKey is e.g. "visionary_monthly".
     const [plan, interval] = String(priceKey).split("_");
-    await captureServerEvent(user.id, "checkout_started", {
-      price_key: String(priceKey),
-      plan: plan ?? null,
-      interval: interval ?? null,
-    });
+    // after(), not await: the Stripe session already exists by this point and
+    // the user is waiting to be sent to it. An analytics write should not hold
+    // a payment redirect.
+    after(() =>
+      captureServerEvent(user.id, "checkout_started", {
+        price_key: String(priceKey),
+        plan: plan ?? null,
+        interval: interval ?? null,
+      }),
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

@@ -13,7 +13,7 @@
 // destination or main city square.
 
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getComingSoonEnabled, isAllowedAdminEmail } from "@/lib/siteSettings";
 import { sendWelcomeEmail } from "@/lib/emails/send";
 
@@ -100,11 +100,17 @@ export async function GET(request: Request) {
     // guarantees email can never break the login redirect.
     const authedUser = exchange?.user ?? null;
     if (authedUser?.email) {
-      try {
-        await sendWelcomeEmail(authedUser.id, authedUser.email);
-      } catch (err) {
-        console.error("[auth/callback] welcome email failed (non-fatal):", err);
-      }
+      // after(), not await: every OAuth sign-in and every email-verification
+      // link converges here, and awaiting Resend held the redirect — so the
+      // user sat on a blank page after clicking "Sign in with Google" while we
+      // sent them an email they had not opened yet.
+      after(async () => {
+        try {
+          await sendWelcomeEmail(authedUser.id, authedUser.email!);
+        } catch (err) {
+          console.error("[auth/callback] welcome email failed (non-fatal):", err);
+        }
+      });
     }
   }
 

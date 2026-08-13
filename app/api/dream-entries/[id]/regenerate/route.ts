@@ -29,7 +29,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { decryptDreamRow } from "@/lib/crypto";
 import { checkDreamSubmissionRateLimit } from "@/lib/rateLimit";
 import { checkMonthlyCredits, checkGlobalDailyDreamCap } from "@/lib/monthlyCredits";
@@ -224,11 +224,15 @@ export async function POST(
     );
   }
 
-  await captureServerEvent(user.id, "interpretation_regenerated", {
-    dream_id: id,
-    plan,
-    depth,
-  });
+  // after(), not await: "Read again" has already cost the user a full model
+  // call; the analytics write should not extend it.
+  after(() =>
+    captureServerEvent(user.id, "interpretation_regenerated", {
+      dream_id: id,
+      plan,
+      depth,
+    }),
+  );
 
   // Return the refreshed row so the client can swap the reading in without a
   // full reload. Read through the user-scoped client, so what comes back is

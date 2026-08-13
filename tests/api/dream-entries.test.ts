@@ -53,20 +53,6 @@ vi.mock('@/utils/supabase/server', () => ({
   }))
 }));
 
-// Mock the OpenAI analysis function
-vi.mock('../../app/api/openai-analysis/route', () => ({
-  POST: vi.fn().mockImplementation(() => {
-    return NextResponse.json({
-      topicSentence: "Your dream reflects a spiritual journey.",
-      supportingPoints: [
-        "The river symbolizes life's journey (Psalm 23:4).",
-        "The light represents divine revelation (John 8:12)."
-      ],
-      conclusionSentence: "Consider how God is guiding you.",
-      analysis: "Full analysis text..."
-    });
-  })
-}));
 
 // The handler runs three gates before it does any work — email verification,
 // monthly credits, and a per-user daily rate limit — each in its own module and
@@ -153,7 +139,11 @@ vi.mock('next/server', () => ({
       ...data,
       headers: new Map()
     }))
-  }
+  },
+  // The route defers its analytics write with after(). A no-op here is the
+  // honest stand-in: these tests assert what the caller gets back, and after()
+  // by definition runs once that response is already on its way.
+  after: vi.fn()
 }));
 
 describe('Dream Entries API', () => {
