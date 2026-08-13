@@ -244,10 +244,13 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     maxWords: 600,
     pointMinWords: 40,
     pointMaxWords: 80,
-    // Composed tier: the core call returns topic + 3 points + conclusion +
-    // tags + refs and a one-line analysis placeholder — roughly 250 words of
-    // prose. Was 4500, sized for the 600-word analysis it no longer writes.
-    maxOutputTokens: 2000,
+    // Left at the pre-composition ceiling on purpose. This is a CEILING, not
+    // a target — you are billed for tokens generated, not for headroom — so
+    // lowering it saves nothing and buys a failure mode: if the model ignores
+    // the "leave analysis short" instruction even occasionally, a tighter cap
+    // truncates the JSON mid-structure and the whole parse fails. Trimming
+    // this to 2000 was tried and the E2E dream submission stopped completing.
+    maxOutputTokens: 4500,
   },
   [AnalysisDepth.PROFOUND]: {
     points: 4,
@@ -256,9 +259,8 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     maxWords: 1100,
     pointMinWords: 30,
     pointMaxWords: 60,
-    // Composed tier — see the note on DEEP. Was 8000, sized for an 1100-word
-    // analysis the core call no longer writes.
-    maxOutputTokens: 2400,
+    // Ceiling, not a target — see the note on DEEP.
+    maxOutputTokens: 8000,
   },
 };
 
