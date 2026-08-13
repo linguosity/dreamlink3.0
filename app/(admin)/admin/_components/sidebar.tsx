@@ -10,6 +10,7 @@ import {
   Wand2,
   Server,
   PenLine,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { BrandIcon } from "@/components/brand/BrandIcon";
@@ -22,6 +23,7 @@ const ADMIN_NAV: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/admin/blog", label: "Blog", Icon: PenLine },
   { href: "/admin/prompts", label: "Prompts", Icon: Wand2 },
   { href: "/admin/system", label: "System", Icon: Server },
+  { href: "/admin/stack", label: "Stack", Icon: Layers },
 ];
 
 export function AdminSidebar({
