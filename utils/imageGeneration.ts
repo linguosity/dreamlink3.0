@@ -20,6 +20,18 @@ const BFL_ENDPOINT = 'https://api.bfl.ai/v1/flux-2-klein-9b';
 // download + Supabase upload + DB writes.
 const TIMEOUT_MS = 50_000;
 
+// Per-request bounds.
+//
+// TIMEOUT_MS above is the *loop* budget, and the `while` condition is only
+// evaluated between iterations — so a single socket that never answers hangs
+// straight past it and burns the whole 60s function, having already been
+// billed for the image. These cap each individual request instead. Sized to
+// sit comfortably inside the loop budget: a poll returns a few bytes of JSON
+// and should never need 8s, while submit and download move real payload.
+const SUBMIT_TIMEOUT_MS = 15_000;
+const POLL_TIMEOUT_MS = 8_000;
+const DOWNLOAD_TIMEOUT_MS = 15_000;
+
 // Exponential backoff polling config
 const INITIAL_POLL_DELAY_MS = 500;
 const BACKOFF_MULTIPLIER = 1.3;
@@ -181,6 +193,7 @@ async function generateAndStore(
   // ── Step 1: Submit generation request ──────────────────────────────────────
   const submitRes = await fetch(BFL_ENDPOINT, {
     method: 'POST',
+    signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
     headers: {
       'accept': 'application/json',
       'x-key': bflApiKey,
@@ -215,12 +228,24 @@ async function generateAndStore(
   while (Date.now() - startTime < TIMEOUT_MS) {
     await new Promise(resolve => setTimeout(resolve, currentDelay));
 
-    const pollRes = await fetch(pollingUrl, {
-      headers: {
-        'accept': 'application/json',
-        'x-key': bflApiKey,
-      },
-    });
+    // A hung or slow poll is not fatal — treat it exactly like a non-OK
+    // response and let the loop budget govern the total. Aborting the whole
+    // generation because one poll stalled would throw away work BFL has
+    // already been paid for.
+    let pollRes: Response;
+    try {
+      pollRes = await fetch(pollingUrl, {
+        signal: AbortSignal.timeout(POLL_TIMEOUT_MS),
+        headers: {
+          'accept': 'application/json',
+          'x-key': bflApiKey,
+        },
+      });
+    } catch (err) {
+      console.log(`🎨 Poll request failed (${(err as Error).name}), retrying...`);
+      currentDelay = Math.min(currentDelay * BACKOFF_MULTIPLIER, MAX_POLL_DELAY_MS);
+      continue;
+    }
 
     if (!pollRes.ok) {
       console.log(`🎨 Poll returned ${pollRes.status}, retrying...`);
@@ -236,7 +261,9 @@ async function generateAndStore(
 
       // ── Step 3: Download image ─────────────────────────────────────────────
       console.log('🎨 Downloading generated image...');
-      const imgRes = await fetch(signedUrl);
+      const imgRes = await fetch(signedUrl, {
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+      });
       if (!imgRes.ok) {
         throw new Error(`Failed to download image from BFL (${imgRes.status})`);
       }

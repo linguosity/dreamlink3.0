@@ -19,7 +19,12 @@
 // who agree; this is the kitchen's order log — the restaurant has to keep it
 // to run the business, but it should still say so on the menu.
 
-import { PostHog } from "posthog-node";
+import { PostHog, type PostHogOptions } from "posthog-node";
+
+// Bound on a single analytics write. Every caller treats a failed capture
+// as non-fatal, so waiting longer than this buys nothing and risks eating
+// the calling function's duration budget.
+const POSTHOG_TIMEOUT_MS = 5_000;
 
 export type ServerAnalyticsEvent =
   | "first_dream_submitted"
@@ -46,6 +51,15 @@ function getClient(): PostHog | null {
       // background, so send every event as its own request immediately.
       flushAt: 1,
       flushInterval: 0,
+      // posthog-node 5.x exposes no `requestTimeout`, but it does let us
+      // supply the fetch it uses — so bound it here. Without this, an
+      // analytics write inherits the platform default and can outlive the
+      // calling route's own budget. 5s is generous for a single event.
+      fetch: (url, options) =>
+        fetch(url, {
+          ...(options as RequestInit),
+          signal: AbortSignal.timeout(POSTHOG_TIMEOUT_MS),
+        }) as unknown as ReturnType<NonNullable<PostHogOptions["fetch"]>>,
     });
   }
   return client;

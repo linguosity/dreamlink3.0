@@ -94,7 +94,15 @@ export async function proxy(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/api/public') ||
-    request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|json)$/)
+    // Same extension set as `isStatic` above. These previously diverged:
+    // this list omitted xml, txt, webmanifest, woff2 and html, so
+    // /sitemap.xml, /robots.txt, /site.webmanifest and /browser-update.html
+    // each ran a full Supabase session refresh they have no use for — and,
+    // with coming-soon mode on, were then redirected to /coming-soon. That
+    // sent Googlebot's sitemap and robots requests to a splash page.
+    request.nextUrl.pathname.match(
+      /\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|otf|woff2?|ttf|map|txt|xml|json|html|webmanifest)$/,
+    )
   ) {
     return NextResponse.next()
   }
