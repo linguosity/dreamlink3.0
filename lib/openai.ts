@@ -244,7 +244,10 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     maxWords: 600,
     pointMinWords: 40,
     pointMaxWords: 80,
-    maxOutputTokens: 4500,
+    // Composed tier: the core call returns topic + 3 points + conclusion +
+    // tags + refs and a one-line analysis placeholder — roughly 250 words of
+    // prose. Was 4500, sized for the 600-word analysis it no longer writes.
+    maxOutputTokens: 2000,
   },
   [AnalysisDepth.PROFOUND]: {
     points: 4,
@@ -253,7 +256,9 @@ export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
     maxWords: 1100,
     pointMinWords: 30,
     pointMaxWords: 60,
-    maxOutputTokens: 8000,
+    // Composed tier — see the note on DEEP. Was 8000, sized for an 1100-word
+    // analysis the core call no longer writes.
+    maxOutputTokens: 2400,
   },
 };
 
@@ -265,7 +270,15 @@ export function getDepthSpec(depth: string): DepthSpec {
 
 // Tier schema builder: arity is enforced structurally (.length), length is
 // pushed through .describe() so it lands in the JSON schema the model sees.
-function buildTierSchema(spec: DepthSpec) {
+//
+// `composed` matters more than it looks. Deep and profound rebuild `analysis`
+// server-side from topicSentence + supportingPoints + the separately generated
+// section texts + conclusionSentence (composeAnalysis in lib/dreamAnalysis.ts),
+// and the value the model returned is discarded. Asking those tiers for
+// 400-1100 mandatory words meant paying for — and waiting on — prose nothing
+// ever read: roughly 6-9s on deep and 12-16s on profound, serial, on every
+// paid submission. They now get a one-line placeholder instead.
+function buildTierSchema(spec: DepthSpec, composed: boolean) {
   return z.object({
     ...baseShape,
     supportingPoints: z
@@ -275,9 +288,13 @@ function buildTierSchema(spec: DepthSpec) {
         ),
       )
       .length(spec.points),
-    analysis: z.string().describe(
-      `Full analysis prose combining topic sentence, supporting points, conclusion, and any depth-tier extras (e.g. Dream Symbols, Three Lenses, Prayer prompts). LENGTH REQUIREMENT: ${spec.minWords}-${spec.maxWords} words. This range is mandatory — do not stop short of ${spec.minWords} words and do not exceed ${spec.maxWords}.`,
-    ),
+    analysis: composed
+      ? z.string().describe(
+          "IGNORED — do not write the analysis here. The application assembles the final prose from topicSentence, supportingPoints, conclusionSentence and separately generated sections, and discards this field. Return a single short sentence (under 15 words) restating the dream's theme. Writing more is wasted.",
+        )
+      : z.string().describe(
+          `Full analysis prose combining topic sentence, supporting points, conclusion, and any depth-tier extras (e.g. Dream Symbols, Three Lenses, Prayer prompts). LENGTH REQUIREMENT: ${spec.minWords}-${spec.maxWords} words. This range is mandatory — do not stop short of ${spec.minWords} words and do not exceed ${spec.maxWords}.`,
+        ),
     biblicalReferences: z.array(BiblicalReferenceSchema).length(spec.points),
     tags: z
       .array(
@@ -293,18 +310,23 @@ function buildTierSchema(spec: DepthSpec) {
 }
 
 // Shallow: minimum-viable analysis. 2 supporting points, 2 tags, 150-250 words.
+// Single-call — its `analysis` IS the output, so it keeps the length mandate.
 export const ShallowDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.SHALLOW],
+  false,
 );
 
-// Deep: balanced analysis. 3 supporting points, 3 tags, 400-600 words.
+// Deep: balanced analysis. 3 supporting points, 3 tags. Composed server-side —
+// the 400-600 word target is met by construction, not by the core call.
 export const DeepDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.DEEP],
+  true,
 );
 
-// Profound: layered analysis. 4 supporting points, 3 tags, 800-1100 words.
+// Profound: layered analysis. 4 supporting points, 3 tags. Composed server-side.
 export const ProfoundDreamAnalysisSchema = buildTierSchema(
   DEPTH_SPECS[AnalysisDepth.PROFOUND],
+  true,
 );
 
 // Default export keeps backward compatibility with code that imported
