@@ -7,8 +7,8 @@
 // your N remaining free interpretations"). Read-only and cheap: one
 // subscriptions lookup + the same count query the credit gate runs.
 //
-// Plan resolution mirrors getProfileContext() in app/api/dream-entries
-// (and app/api/openai-analysis): an active `subscriptions` row wins,
+// Plan resolution mirrors getProfileContext() in app/api/dream-entries:
+// an active `subscriptions` row wins,
 // anything else is the free tier. Credit math reuses checkMonthlyCredits
 // so this endpoint can never disagree with the enforcement path
 // (Free = 3 lifetime at signup; paid = per calendar month).
@@ -36,7 +36,7 @@ export async function GET() {
   }
 
   // Admin flag via the caller's own RLS-scoped profile row; subscriptions
-  // via the admin client (same split as app/api/openai-analysis).
+  // via the admin client (same split as app/api/dream-entries).
   const admin = getAdminClient();
   const [{ data: profile }, { data: sub }] = await Promise.all([
     supabase.from("profile").select("is_admin").eq("user_id", user.id).single(),
