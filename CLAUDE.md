@@ -1,22 +1,66 @@
 # Role and Goal
 You are an expert full-stack developer specializing in Next.js 16, React 19, Supabase, and AI integrations. Your goal is to build a highly performant, secure, and accessible application tailored for dream analysis and biblical citation.
 
+# Working Practice — announce every shipped change
+
+**After every update, send an email to Justin (justinbrewer@kingdomheirsflag.org)
+with Brandon (brandon@linguosity.ai) CC'd.** Not only for large changes — every
+shipped change.
+
+- **Plain English.** Justin runs the legal and entity side and does not read the
+  code. Write for someone who will never open the repo: "the sign-in page used to
+  sit blank for a moment", not "the async layout starved its loading boundary".
+- **Screenshots wherever there is something to see.** A new page, a changed
+  layout, a fixed visual bug — show it. Skip only when the change is genuinely
+  invisible, like a timeout or a database index.
+- Cover what changed, why it mattered, and anything the change asks *of him*.
+- Batch a session's PRs into one email rather than sending four — but never end a
+  session with shipped work and no email.
+
+Send via Resend from the verified `send.dreamriver.io` domain.
+
 # Core Tech Stack
-- **Frontend:** Next.js 16 (App Router only), React 19
-- **Styling & UI:** Tailwind CSS 3.4 (using HSL variables), shadcn/ui (Radix primitives), Framer Motion, Geist font, Lucide icons, Sonner (toasts), next-themes (dark mode)
-- **Backend/API:** Node.js serverless functions, Edge Runtime (specifically for OpenAI routes)
-- **Database & Auth:** Supabase PostgreSQL (RLS strictly enforced), `@supabase/ssr` for cookie-based sessions
-- **AI Services:** OpenAI `gpt-4.1-mini` via Responses API + Zod structured output (see AI section below), `FLUX.2 klein 9B` (async image generation)
-- **Testing:** Vitest, Testing Library, jsdom
+
+**The live version of this list is `/admin/stack`**, which reads its version
+numbers from `package.json` at build time. Prefer it. This block is a summary
+and, being hand-written, is the thing that goes stale — as it had: it named
+`gpt-4.1-mini` months after we moved off it, Tailwind 3.4 when we were on 4.x,
+and the Geist font when we use three different faces.
+
+- **Frontend:** Next.js 16 (App Router only), React 19, Node 24
+- **Styling & UI:** Tailwind CSS 4 (HSL variables), shadcn/ui (Radix primitives), Framer Motion, Lucide icons, Sonner (toasts), next-themes (dark mode)
+- **Type:** Jost (UI/display), Newsreader (editorial — dreams, interpretations, blog), Quicksand (wordmark only, never a UI face)
+- **Backend/API:** Node.js serverless functions. **Not Edge** — see the runtime rule below.
+- **Database & Auth:** Supabase PostgreSQL (RLS strictly enforced), `@supabase/ssr` for cookie-based sessions, Supabase Storage for dream images
+- **AI Services:** OpenAI Responses API + Zod structured output, model chosen per depth tier by `getModelForDepth()` (`lib/openai.ts`) — never hardcode a model name in a doc, it will be wrong. OpenRouter as cross-provider failover. `FLUX.2 [klein] 9B` (Black Forest Labs) for async image generation.
+- **Scripture:** local KJV bundle indexed at boot (`lib/bibleLookup.ts`) + the `bible_citations` table. There is no verse API.
+- **Payments / Email / Analytics:** Stripe, Resend (`send.dreamriver.io`), PostHog. Sentry is wrapped into the build but **never initialised** — errors go to the server log only.
+- **Testing:** Vitest + Testing Library (unit), Playwright (E2E, cross-browser on every PR)
 - **Deployment:** Vercel (60s function timeout), domain: dreamriver.io
 
 # Architecture & File Structure
 - Adhere strictly to the `docs/full-stack-overview.md` architecture.
+- **Route groups own the page chrome. No layout may ask "which page am I on?"**
+  `app/(app)/` renders the Navbar, `app/(auth-pages)/` the sign-in lobby,
+  `app/(fullscreen)/` nothing, `app/(admin)/` the sidebar. `app/layout.tsx` is
+  `<html>`, `<body>`, fonts and providers only. Gating chrome by pathname in the
+  root layout was tried in #35 and reverted in #38 — the root layout is not
+  re-rendered on client navigation, so any pathname it reads goes stale and the
+  whole app loses its header until a hard reload. See #41.
+- **`app/(admin)/layout.tsx` must stay synchronous.** A segment's `loading.tsx`
+  cannot paint until that segment's own layout resolves, so an async layout
+  starves its own loading boundary — that cost a measured 3.6s of frozen UI on
+  every navigation into /admin. Anything that awaits belongs *below*
+  `app/(admin)/loading.tsx`.
 - **Frontend:** Use lowercase with kebab-case for directories and files. Group features together.
 - **Backend:**
   - Use Server Actions for authentication flows.
   - Use Middleware for session refreshing and route protection.
-  - APIs handling OpenAI must use the Edge Runtime.
+  - **AI routes run on Node, not Edge.** This rule used to say the opposite, and
+    it produced `/api/openai-analysis` — a route with `runtime = "edge"` that
+    returned a non-streamed JSON body and therefore could never have completed a
+    deep or profound analysis. It was deleted in #43. A dream analysis takes
+    5-25s and needs `maxDuration = 60`, which Edge does not offer.
 - **State & UI:** Implement dark mode via `next-themes`. Trigger notifications using `Sonner`. Apply animations via `Framer Motion` without blocking the main thread.
 
 # Next.js 16 & React 19 Best Practices
