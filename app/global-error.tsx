@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { Jost, Newsreader } from "next/font/google";
+import localFont from "next/font/local";
 
 // global-error REPLACES the root layout, which means it inherits nothing from
 // it — including the stylesheet. The previous version styled itself with
@@ -16,18 +16,27 @@ import "./globals.css";
 // to, and that element lived in the root layout. Loading the two text faces
 // here keeps the brand intact on the worst screen in the product. Quicksand is
 // deliberately omitted — it is wordmark-only, and there is no wordmark here.
-const jost = Jost({
-  subsets: ["latin"],
+// Self-hosted, same as the root layout — see the note there. This file
+// mattered most for that fix: a build that dies fetching fonts takes the
+// error screen down with it, so the one page that exists for when everything
+// else has failed would have been the first casualty.
+const jost = localFont({
+  src: [
+    { path: "./fonts/jost-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jost-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/jost-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-jost",
-  weight: ["400", "500", "600"],
 });
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
+const newsreader = localFont({
+  src: [
+    { path: "./fonts/newsreader-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/newsreader-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-newsreader",
-  weight: ["400", "500"],
 });
 
 /**

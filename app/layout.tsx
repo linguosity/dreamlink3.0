@@ -20,7 +20,7 @@
 // A layout that never asks "which page am I on?" has nothing to go stale.
 
 import { Metadata, Viewport } from "next";
-import { Jost, Newsreader, Quicksand } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { Providers } from './providers';
@@ -95,29 +95,48 @@ export const viewport: Viewport = {
 //   Quicksand  — wordmark only, never a UI face.
 // All three expose CSS variables consumed by --font-sans / --font-serif /
 // --font-logo in globals.css.
-const jost = Jost({
-  subsets: ["latin"],
+// Self-hosted from app/fonts rather than fetched from Google at build time.
+//
+// next/font/google downloads the files during `next build`, which makes every
+// deploy depend on fonts.googleapis.com being reachable. On 2026-08-13 it was
+// not: a production deploy failed outright, and two local builds failed the
+// same way an hour later — all three with `module-not-found` on the generated
+// Newsreader CSS, nothing to do with the code being deployed. Vendoring the
+// woff2 files removes the network from the build entirely.
+//
+// Files are the latin subsets from the @fontsource packages (the same Google
+// originals, SIL Open Font License). Only the weights actually used are
+// committed — adding a weight means adding a file here.
+const jost = localFont({
+  src: [
+    { path: "./fonts/jost-latin-300-normal.woff2", weight: "300", style: "normal" },
+    { path: "./fonts/jost-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jost-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/jost-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-jost",
-  weight: ["300", "400", "500", "600"],
 });
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
+const newsreader = localFont({
+  src: [
+    { path: "./fonts/newsreader-latin-300-normal.woff2", weight: "300", style: "normal" },
+    { path: "./fonts/newsreader-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/newsreader-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-newsreader",
-  weight: ["300", "400", "500"],
-  style: ["normal"],
 });
 
 // Wordmark-only face — "DreamRiver" is always set in Quicksand 500, never
 // italic. Loaded as a CSS variable so the .wordmark class in globals.css
 // (and <DrLogo/>) can pick it up.
-const quicksand = Quicksand({
-  subsets: ["latin"],
+const quicksand = localFont({
+  src: [
+    { path: "./fonts/quicksand-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-quicksand",
-  weight: ["500"],
 });
 
 export default function RootLayout({
