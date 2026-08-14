@@ -1323,7 +1323,43 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     );
   }
 
-  // Render loading skeleton if in loading state
+  // Loading state has two distinct looks.
+  //
+  // While prose is streaming, the card IS the reading forming — a clean text
+  // surface, no shimmer and no skeleton bars, so nothing hides or competes
+  // with the words appearing. Only before the first token (or when there is no
+  // stream at all, e.g. "Read again") do we show the image-style shimmer.
+  if (isLoading && streamingText) {
+    return (
+      <Card className="overflow-hidden transition-all aspect-square relative flex flex-col bg-card">
+        <CardHeader className="p-3 pb-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary/80">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            Reading forming
+          </div>
+        </CardHeader>
+        <CardContent className="p-3 pt-0 flex-1 min-h-0">
+          {/* Newest text pinned to the bottom and auto-scrolled, so the words
+              being written right now are always the ones in view. */}
+          <div
+            ref={(el) => {
+              if (el) el.scrollTop = el.scrollHeight;
+            }}
+            className="h-full overflow-y-auto"
+          >
+            <p className="font-serif text-[13px] leading-relaxed text-foreground whitespace-pre-wrap">
+              {streamingText}
+              <span
+                aria-hidden="true"
+                className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+              />
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isLoading) {
     return (
       <Card className="overflow-hidden transition-all aspect-square relative">
@@ -1343,45 +1379,22 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           </CardHeader>
 
           <CardContent className="p-3 pt-1 space-y-2 flex-1 flex flex-col justify-end">
-            {streamingText ? (
-              // Live reading — the model's prose as it arrives, forming in the
-              // card it will become. Anchored to the bottom and scrolled to the
-              // newest line so the latest words are always visible as text
-              // grows past the card. The blinking caret marks it as live.
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-end">
-                <p
-                  ref={(el) => {
-                    if (el) el.scrollTop = el.scrollHeight;
-                  }}
-                  className="font-serif text-[13px] leading-relaxed text-foreground/90 max-h-full overflow-y-auto whitespace-pre-wrap"
-                >
-                  {streamingText}
-                  <span
-                    aria-hidden="true"
-                    className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
-                  />
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Summary Skeleton */}
-                <div className="space-y-1.5">
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-[85%]" />
-                </div>
+            {/* Summary Skeleton */}
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-[85%]" />
+            </div>
 
-                {/* Tags Skeleton */}
-                <div className="flex flex-wrap gap-1">
-                  <Skeleton className="h-4 w-16 rounded-full" />
-                  <Skeleton className="h-4 w-20 rounded-full" />
-                  <Skeleton className="h-4 w-14 rounded-full" />
-                </div>
+            {/* Tags Skeleton */}
+            <div className="flex flex-wrap gap-1">
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-4 w-20 rounded-full" />
+              <Skeleton className="h-4 w-14 rounded-full" />
+            </div>
 
-                <p className="text-xs text-muted-foreground text-center animate-pulse">
-                  Analyzing your dream...
-                </p>
-              </>
-            )}
+            <p className="text-xs text-muted-foreground text-center animate-pulse">
+              Analyzing your dream...
+            </p>
           </CardContent>
         </div>
       </Card>
