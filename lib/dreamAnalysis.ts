@@ -38,6 +38,9 @@ const DEBUG = process.env.NODE_ENV === "development";
 
 // ── Prompt cache (in-memory, 5-min TTL) ────────────────────────────
 interface PromptData {
+  /** Row version. Used in the prompt cache key so publishing a new prompt
+   *  rotates the cache instead of colliding with the old prefix. */
+  version: number | null;
   system_message: string;
   main_instructions: string;
   format_instructions: string;
@@ -75,7 +78,7 @@ async function getActivePrompt(): Promise<PromptData | null> {
     const { data, error } = await supabase
       .from("dream_prompts")
       .select(
-        "system_message, main_instructions, format_instructions, forbidden_phrases, reading_level_radiant_clarity, reading_level_celestial_insight, reading_level_prophetic_wisdom, reading_level_divine_revelation, depth_shallow, depth_deep, depth_profound",
+        "version, system_message, main_instructions, format_instructions, forbidden_phrases, reading_level_radiant_clarity, reading_level_celestial_insight, reading_level_prophetic_wisdom, reading_level_divine_revelation, depth_shallow, depth_deep, depth_profound",
       )
       .eq("is_active", true)
       .single();
@@ -208,6 +211,20 @@ function getDepthInstructions(
 }
 
 // ── Model fallback + length enforcement helpers ────────────────────
+
+/**
+ * Spreadable prompt_cache_key.
+ *
+ * ⚠️ Cast for the same reason as the one in modelTuning: the pinned SDK
+ * (openai 4.104.0) predates prompt_cache_key on the Responses API, so it is
+ * not in the request types. The SDK forwards the body object as given, so the
+ * field is still transmitted — spreading a Record also sidesteps TypeScript's
+ * excess-property check, which only applies to direct object literals. Drop it
+ * with the v4 -> v7 upgrade.
+ */
+function promptCacheKeyOption(key: string): Record<string, unknown> {
+  return { prompt_cache_key: key } as Record<string, unknown>;
+}
 
 /** Per-attempt request timeout. Keeps a failed model from eating the whole
  *  Vercel budget before the next model in the chain gets a chance. */
@@ -496,6 +513,20 @@ export async function runDreamAnalysis(
       effectiveDepth === AnalysisDepth.PROFOUND;
     const depthInstructions = getDepthInstructions(effectiveDepth, dbPrompt);
 
+    // Routes requests that share a prompt prefix to the same cache.
+    //
+    // GPT-5.6+ needs this to match reliably — without it, whether you get a
+    // cache hit depends on which machine the request lands on. Keyed on
+    // exactly what changes the prefix and nothing that doesn't: prompt
+    // version, reading level, depth. Publishing a new prompt row rotates the
+    // key automatically, which is the correct behaviour — a new prompt IS a
+    // new prefix.
+    //
+    // The dream text is deliberately excluded. It is the variable part, it now
+    // sits at the very end of the prompt, and keying on it would give every
+    // request a unique key and defeat the entire point.
+    const promptCacheKey = `dr-p${dbPrompt?.version ?? "fallback"}-${effectiveReadingLevel}-${effectiveDepth}`;
+
     // The depth instructions come from the database (dream_prompts.depth_deep
     // / depth_profound) and still tell the model to write "Dream Symbols" and
     // "How this might apply" inline — written before the two-phase compose
@@ -516,15 +547,28 @@ IMPORTANT — OUTPUT SCOPE: Return ONLY topicSentence, supportingPoints, conclus
       dbPrompt?.system_message ||
       "You are a biblical dream interpreter who provides concise analysis with scripture references.";
 
+    // ── Prompt order is load-bearing for caching ──────────────────────
+    //
+    // OpenAI caches on an exact prefix match: static content must come first,
+    // variable content last, or everything after the first difference is
+    // reprocessed every call. This prompt used to put the dream text in the
+    // MIDDLE — right after main_instructions — which stranded roughly 1,085
+    // tokens of unchanging instruction (format_instructions, the six rules,
+    // reading level, depth) behind it, where they could never be cached.
+    //
+    // Now: instructions, then the per-request variables, then the dream. The
+    // reading-level and depth blocks are semi-static — twelve combinations
+    // total — so they sit late but still ahead of the dream, and each
+    // combination caches on its own prefix.
+    //
+    // Note this is a cost win far more than a latency win: input tokens are
+    // mostly prefill-parallel, and OpenAI's own guidance is that halving input
+    // moves latency 1-5%. Cached input bills at 0.1x.
     const userPrompt = dbPrompt
       ? `${dbPrompt.main_instructions}
 
-Analyze the following dream:
-"${dream}"
-
 ${dbPrompt.format_instructions}
 
-- Focus analysis on theme: ${topic || "general spiritual meaning"}
 - NEVER start with ${forbiddenPhrases}
 - Begin directly with the spiritual theme or insight without introductory phrases
 - For each supporting point, include exactly one Bible citation in the supportingPoints prose (e.g., "(Genesis 1:1)" or "(1 Peter 5:8)"). Use full canonical book names — '1 Peter', not 'Peter'; 'Psalms', not 'Psalm'.
@@ -533,6 +577,11 @@ ${dbPrompt.format_instructions}
 
 ${readingLevelInstructions}
 ${depthInstructions}${composedOverride}
+
+- Focus analysis on theme: ${topic || "general spiritual meaning"}
+
+Analyze the following dream:
+"${dream}"
 `
       : `
 You are a dream interpreter specializing in Christian biblical interpretation.
@@ -636,6 +685,7 @@ ${depthInstructions}${composedOverride}
           input: messages,
           ...modelTuning(target.model),
           ...serviceTierOption(),
+          ...promptCacheKeyOption(promptCacheKey),
           max_output_tokens: spec.maxOutputTokens,
           text: {
             format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
@@ -683,6 +733,9 @@ ${depthInstructions}${composedOverride}
           input: messages,
           ...modelTuning(target.model),
           ...serviceTierOption(),
+          // Sections have their own system message and prompt shape, so they
+          // form a separate prefix from the core call and get their own key.
+          ...promptCacheKeyOption(`${promptCacheKey}-section`),
           max_output_tokens: SECTION_MAX_OUTPUT_TOKENS,
         },
         requestOptions,
