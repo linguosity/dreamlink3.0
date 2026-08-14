@@ -354,6 +354,11 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [imageExpanded, setImageExpanded] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
+  useEffect(() => {
+    console.log(`[stream] DreamCard MOUNT id=${initialDream.id}`);
+    return () => console.log(`[stream] DreamCard UNMOUNT id=${initialDream.id}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [activeTab, setActiveTab] = useState("analysis");
   const [modalHeight, setModalHeight] = useState<number | null>(null);
   const analysisContentRef = useRef<HTMLDivElement>(null);

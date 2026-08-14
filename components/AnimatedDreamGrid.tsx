@@ -161,6 +161,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   useEffect(() => {
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
+      console.log(`[stream] grid: dream-submitting → pendingDream id=${detail?.id}`);
       setPendingDream({
         id: detail.id,
         original_text: detail.original_text,
@@ -172,6 +173,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamAnalyzed(e: Event) {
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail?.analysis) {
+        console.log(`[stream] grid: dream-analyzed → analyzedDream id=${detail.id}, streamingText cleared`);
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
         setStreamingText(null); // real content supersedes the live stream
       }
@@ -186,9 +188,13 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       setStreamingText(null);
     }
 
+    let sawFirstStream = false;
     function handleDreamStreaming(e: Event) {
       const detail = (e as CustomEvent).detail;
-      if (typeof detail?.text === 'string') setStreamingText(detail.text);
+      if (typeof detail?.text === 'string') {
+        if (!sawFirstStream) { sawFirstStream = true; console.log('[stream] grid: first streaming text → streamingText set'); }
+        setStreamingText(detail.text);
+      }
     }
 
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
@@ -325,6 +331,11 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   const showPlaceholder = pendingDream !== null && !analyzedIdInGrid;
   const placeholderKey =
     analyzedDream?.id ?? pendingDream?.id ?? 'placeholder';
+  // Render-time log (not a hook — this sits after early returns): each distinct
+  // key value that prints marks a card the grid is (re)mounting.
+  if (showPlaceholder) {
+    console.log(`[stream] grid render: placeholder key = ${placeholderKey}, streamingText=${streamingText ? streamingText.length + ' chars' : 'none'}, loading=${analyzedDream === null}`);
+  }
 
   const placeholderDream: Dream | null = pendingDream
     ? analyzedDream
