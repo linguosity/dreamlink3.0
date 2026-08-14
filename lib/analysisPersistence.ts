@@ -55,6 +55,11 @@ export interface AnalyzeAndPersistArgs {
    *  asked to replace, which is the one outcome "Read again" must never
    *  produce. */
   bypassCache?: boolean;
+  /** Streams decoded analysis prose as the model writes it. Threaded through
+   *  to runDreamAnalysis untouched. Note the in-memory cache path emits
+   *  nothing — a cache hit produces the reading instantly, so there is
+   *  nothing to stream. */
+  onDelta?: (field: string, text: string) => void;
   /** Replace this dream's existing bible_citations rows instead of appending.
    *  Re-generation sets this; a fresh dream has none to replace. */
   replaceCitations?: boolean;
@@ -80,6 +85,7 @@ export async function analyzeAndPersist({
   readingLevel,
   bypassCache = false,
   replaceCitations = false,
+  onDelta,
 }: AnalyzeAndPersistArgs): Promise<AnalyzeAndPersistResult> {
   // `runDreamAnalysis` returns { analysis, usage }. We cache only the
   // analysis — token usage describes a specific API call, so a cache hit
@@ -103,6 +109,7 @@ export async function analyzeAndPersist({
       // with a synthetic NextRequest broke under parallel fan-out because
       // multiple concurrent invocations corrupted each other's output.
       const { analysis: fresh, usage } = await runDreamAnalysis({
+        onDelta,
         dream: dreamText,
         topic: "dream interpretation",
         readingLevel,

@@ -41,6 +41,10 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   // null until /api/credits answers; the cost line renders nothing (inside a
   // fixed-height slot) until then, so late data never shifts the layout.
   const [credits, setCredits] = useState<CreditsInfo | null>(null);
+  // Live text of the reading while it streams from the server. null = no
+  // stream in flight; "" = stream open but no prose yet.
+  const [liveReading, setLiveReading] = useState<string | null>(null);
+  const lastDeltaField = useRef<string | null>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
@@ -149,13 +153,68 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         body: JSON.stringify({
           dream_text: dreamText,
           reading_level: userReadingLevel.current,
+          // Ask for the streaming response. The server only streams for
+          // single-combo submissions; test-mode fan-out answers with plain
+          // JSON, which the content-type check below routes correctly.
+          stream: true,
         }),
       });
 
+      const isStream =
+        response.ok &&
+        (response.headers.get("content-type") ?? "").includes("ndjson") &&
+        response.body != null;
+
+      let result;
+      if (isStream) {
+        // NDJSON: one JSON event per line. Deltas paint the live-reading
+        // panel; "done" carries the exact payload the JSON path returns, so
+        // everything below this block is shared between both transports.
+        setLiveReading("");
+        lastDeltaField.current = null;
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let lineBuf = "";
+        let payload: unknown = null;
+        let streamError: string | null = null;
+        const handleEvent = (evt: { type?: string; field?: string; text?: string; payload?: unknown; error?: string }) => {
+          if (evt.type === "delta" && typeof evt.text === "string") {
+            const field = String(evt.field ?? "");
+            setLiveReading((prev) => {
+              const sep =
+                prev && lastDeltaField.current !== field ? "\n\n" : "";
+              lastDeltaField.current = field;
+              return (prev ?? "") + sep + evt.text;
+            });
+          } else if (evt.type === "done") {
+            payload = evt.payload;
+          } else if (evt.type === "error") {
+            streamError = evt.error || "Analysis failed";
+          }
+        };
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          lineBuf += decoder.decode(value, { stream: true });
+          let nl;
+          while ((nl = lineBuf.indexOf("\n")) !== -1) {
+            const line = lineBuf.slice(0, nl).trim();
+            lineBuf = lineBuf.slice(nl + 1);
+            if (!line) continue;
+            try {
+              handleEvent(JSON.parse(line));
+            } catch {
+              // A malformed line is dropped; the stream carries on.
+            }
+          }
+        }
+        if (streamError) throw new Error(streamError);
+        if (!payload) throw new Error("Stream ended without a result");
+        result = payload;
+      } else {
       // Get the response text first to ensure we can see the error even if it's not valid JSON
       const responseText = await response.text();
 
-      let result;
       try {
         result = JSON.parse(responseText);
       } catch (parseError) {
@@ -195,6 +254,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         throw new Error(result.error || "Failed to submit dream");
       }
+      } // end JSON (non-stream) path
 
       if (result.id) {
         toast.success("Dream recorded! Analysis on its way…");
@@ -297,6 +357,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       window.dispatchEvent(new CustomEvent("dreamriver:dream-failed"));
       return false;
     } finally {
+      setLiveReading(null);
+      lastDeltaField.current = null;
       setIsSubmitting(false);
     }
   };
@@ -424,6 +486,26 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
           </span>
         </div>
       </form>
+
+      {/* Live reading — prose streamed from the model while the analysis is
+          still being generated. Serif to match the reading it becomes. */}
+      {liveReading !== null && liveReading.length > 0 && (
+        <div
+          aria-live="polite"
+          className="mt-3 rounded-xl border border-border bg-card/60 p-4 text-sm leading-relaxed animate-fade-in"
+        >
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Your reading is forming…
+          </div>
+          <p className="whitespace-pre-wrap font-serif">
+            {liveReading}
+            <span
+              aria-hidden="true"
+              className="ml-0.5 inline-block h-4 w-[7px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+            />
+          </p>
+        </div>
+      )}
 
       {/* Gentle hint for short dreams */}
       {hasContent && dream.trim().length < 20 && !tipDismissed && (

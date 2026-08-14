@@ -127,6 +127,9 @@ interface AnalyzeOneArgs {
   baseTitle: string;
   combo: MatrixCombo;
   comparisonGroupId: string | null;
+  /** Streaming hooks — set only on the single-combo streaming path. */
+  onAccepted?: (dreamId: string) => void;
+  onDelta?: (field: string, text: string) => void;
 }
 
 interface AnalyzeOneResult {
@@ -144,6 +147,8 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     baseTitle,
     combo,
     comparisonGroupId,
+    onAccepted,
+    onDelta,
   } = args;
 
   // 1. Insert the row up-front so the client can render an optimistic
@@ -167,6 +172,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     return { id: null, analysis: null, combo };
   }
   const dreamId: string = dreamData.id;
+  onAccepted?.(dreamId);
 
   // 2. Run the analysis and write it onto the row. Shared with the
   //    "Read again" route (lib/analysisPersistence) so both paths produce
@@ -177,6 +183,7 @@ async function analyzeOneCombo(args: AnalyzeOneArgs): Promise<AnalyzeOneResult> 
     dreamText,
     depth: combo.depth,
     readingLevel: combo.readingLevel,
+    onDelta,
   });
 
   return { id: dreamId, analysis: analysisResult, combo };
@@ -502,6 +509,11 @@ export async function POST(request: Request) {
   try {
     // Parse and validate request body with Zod
     const body = await request.json();
+    // Streaming opt-in, read before schema validation so the schema needn't
+    // know about a transport concern. Only honored for single-combo
+    // submissions — admin test-mode fan-out stays on the JSON path, and the
+    // client detects which it got from the response content-type.
+    const wantsStream = body?.stream === true;
     const parsed = dreamEntryCreateSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -534,6 +546,91 @@ export async function POST(request: Request) {
       .from("dream_entries")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id);
+
+    // ── Streaming path (single combo only) ────────────────────────────
+    //
+    // Returns an NDJSON response whose body starts immediately: an
+    // "accepted" event when the row exists, "delta" events carrying decoded
+    // prose as the model writes it, then "done" with the exact payload the
+    // JSON path would have returned (or "error"). The guards above have all
+    // passed by this point, so their JSON error responses are unaffected.
+    //
+    // The first-dream analytics event is fire-and-forget here rather than
+    // after(): after() must be scheduled during the handler's own scope, and
+    // this work runs detached after the Response has been returned. The
+    // capture is bounded by the 5s PostHog timeout, and the function stays
+    // alive while the stream is open, so it has time to land.
+    if (wantsStream && matrix.length === 1) {
+      const encoder = new TextEncoder();
+      const ndjson = new TransformStream<Uint8Array, Uint8Array>();
+      const writer = ndjson.writable.getWriter();
+      const send = (obj: unknown) =>
+        writer.write(encoder.encode(JSON.stringify(obj) + "\n")).catch(() => {
+          // Client went away mid-stream; analysis + persistence continue.
+        });
+
+      void (async () => {
+        try {
+          const r = await analyzeOneCombo({
+            adminSupabase,
+            userId: user.id,
+            encryptedText,
+            dreamText: dream_text,
+            baseTitle,
+            combo: matrix[0],
+            comparisonGroupId,
+            onAccepted: (dreamId) =>
+              send({ type: "accepted", id: dreamId, comparisonGroupId }),
+            onDelta: (field, text) => send({ type: "delta", field, text }),
+          });
+          if (!r.id) {
+            await send({ type: "error", error: "Failed to save dream entry" });
+          } else {
+            if ((priorEntryCount ?? 0) === 0) {
+              captureServerEvent(user.id, "first_dream_submitted", {
+                plan: profileCtx.plan,
+                dream_id: r.id,
+              }).catch(() => {});
+            }
+            await send({
+              type: "done",
+              payload: {
+                success: true,
+                message: "Dream recorded and analyzed",
+                id: r.id,
+                analysis: r.analysis,
+                comparisonGroupId,
+                entries: [
+                  {
+                    id: r.id,
+                    analysis: r.analysis,
+                    analysis_depth: r.combo.depth,
+                    reading_level_used: r.combo.readingLevel,
+                    image_aesthetic_used: r.combo.aesthetic,
+                  },
+                ],
+              },
+            });
+          }
+        } catch (err) {
+          console.error("[dream-entries] streaming pipeline error:", err);
+          await send({ type: "error", error: "An unexpected error occurred" });
+        } finally {
+          writer.close().catch(() => {});
+        }
+      })();
+
+      return new Response(ndjson.readable, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-store",
+          // Defensive: tells any buffering proxy in the path not to hold
+          // chunks back, which would turn streaming back into waiting.
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
 
     // Run each combo end-to-end in parallel: insert row → call OpenAI → update.
     // Bounded by the slowest call (~15s), well within the 60s function timeout.

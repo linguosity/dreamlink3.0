@@ -32,6 +32,7 @@ import {
   type BiblicalReference,
 } from "@/lib/openai";
 import { captureError } from "@/lib/sentry";
+import { createJsonFieldStreamer } from "@/lib/streamJson";
 import { ReadingLevel, AnalysisDepth } from "@/schema/profile";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -451,6 +452,12 @@ export interface DreamAnalysisArgs {
   topic?: string;
   readingLevel?: string;
   analysisDepth?: string;
+  /** When set, the core call streams and emits decoded prose deltas as the
+   *  model writes them. Purely additive: the return value is identical, and
+   *  a throwing handler is swallowed rather than allowed to kill an analysis.
+   *  Composed tiers stream topicSentence + supportingPoints (their `analysis`
+   *  field is a placeholder); shallow streams `analysis`, which IS its prose. */
+  onDelta?: (field: string, text: string) => void;
 }
 
 /**
@@ -485,7 +492,7 @@ export interface DreamAnalysisResult {
 export async function runDreamAnalysis(
   args: DreamAnalysisArgs,
 ): Promise<DreamAnalysisResult> {
-  const { dream, topic, readingLevel, analysisDepth } = args;
+  const { dream, topic, readingLevel, analysisDepth, onDelta } = args;
 
   if (!dream) {
     return { analysis: FALLBACK_ANALYSIS, usage: { inputTokens: null, outputTokens: null } };
@@ -679,18 +686,66 @@ ${depthInstructions}${composedOverride}
         return completion.choices[0]?.message?.parsed ?? null;
       }
 
-      const response = await target.client.responses.parse(
-        {
-          model: target.model,
-          input: messages,
-          ...modelTuning(target.model),
-          ...serviceTierOption(),
-          ...promptCacheKeyOption(promptCacheKey),
-          max_output_tokens: spec.maxOutputTokens,
-          text: {
-            format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
-          },
+      const requestBody = {
+        model: target.model,
+        input: messages,
+        ...modelTuning(target.model),
+        ...serviceTierOption(),
+        ...promptCacheKeyOption(promptCacheKey),
+        max_output_tokens: spec.maxOutputTokens,
+        text: {
+          format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
         },
+      };
+
+      // Streaming path. Only the first attempt streams — a length-correction
+      // retry re-generates prose the client has already displayed, so it runs
+      // silently and only the final parsed result changes.
+      if (onDelta && !extraInstruction) {
+        const streamFields = isComposedTier
+          ? ["topicSentence", "supportingPoints", "conclusionSentence"]
+          : ["analysis"];
+        const streamer = createJsonFieldStreamer(streamFields, (d) => {
+          try {
+            onDelta(d.field, d.text);
+          } catch {
+            // A broken UI wire must never kill an analysis mid-generation.
+          }
+        });
+        // ⚠️ Same SDK-vintage cast family as serviceTierOption above:
+        // responses.stream exists at runtime on openai 4.104 but its typings
+        // predate our extra body fields. Goes away with the v4 -> v7 upgrade.
+        const stream = (target.client.responses as unknown as {
+          stream: (body: unknown, opts?: unknown) => AsyncIterable<{ type?: string; delta?: string }> & {
+            finalResponse: () => Promise<{
+              usage?: unknown;
+              output_text?: string;
+              output_parsed?: DreamAnalysis | null;
+            }>;
+          };
+        }).stream(requestBody, requestOptions);
+
+        for await (const event of stream) {
+          if (event?.type === "response.output_text.delta" && typeof event.delta === "string") {
+            streamer.push(event.delta);
+          }
+        }
+        const final = await stream.finalResponse();
+        addUsage(final.usage as Parameters<typeof addUsage>[0]);
+        if (final.output_parsed) return final.output_parsed;
+        // Some SDK builds don't populate output_parsed on the stream helper —
+        // fall back to parsing the accumulated text through the same schema.
+        try {
+          return schemaForDepth.parse(
+            JSON.parse(final.output_text ?? ""),
+          ) as DreamAnalysis;
+        } catch {
+          return null;
+        }
+      }
+
+      const response = await target.client.responses.parse(
+        requestBody as Parameters<typeof target.client.responses.parse>[0],
         requestOptions,
       );
       addUsage(response.usage);
