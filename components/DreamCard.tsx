@@ -354,6 +354,17 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [imageExpanded, setImageExpanded] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
+  // Keep the internal loading flag in sync with the `loading` prop. It is
+  // seeded once at mount, so without this it never follows the prop: the
+  // streaming placeholder mounts loading=true, and when analysis finishes the
+  // parent flips loading=false, but the card kept isLoading=true and fell back
+  // to the "Analyzing your dream..." skeleton beside the finished card. (A
+  // remount used to re-seed the flag and hide this; the stable placeholder key
+  // removed that accident.) The image-poll effect below still sets isLoading
+  // true on its own for cards whose artwork is still generating.
+  useEffect(() => {
+    setIsLoading(initialLoading || false);
+  }, [initialLoading]);
   useEffect(() => {
     console.log(`[stream] DreamCard MOUNT id=${initialDream.id}`);
     return () => console.log(`[stream] DreamCard UNMOUNT id=${initialDream.id}`);
