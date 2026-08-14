@@ -146,6 +146,11 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     ? searchedDreams
     : dreams;
 
+  // Live analysis prose streamed from the server while the placeholder card
+  // is up (feat/streaming-analysis). Rendered inside that card so the reading
+  // forms where it will live. Cleared when real content or a failure arrives.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
+
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
 
@@ -168,6 +173,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail?.analysis) {
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
+        setStreamingText(null); // real content supersedes the live stream
       }
     }
 
@@ -177,15 +183,23 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamFailed() {
       setPendingDream(null);
       setAnalyzedDream(null);
+      setStreamingText(null);
+    }
+
+    function handleDreamStreaming(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.text === 'string') setStreamingText(detail.text);
     }
 
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
     window.addEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
     window.addEventListener('dreamriver:dream-failed', handleDreamFailed);
+    window.addEventListener('dreamriver:dream-streaming', handleDreamStreaming);
     return () => {
       window.removeEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
       window.removeEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
       window.removeEventListener('dreamriver:dream-failed', handleDreamFailed);
+      window.removeEventListener('dreamriver:dream-streaming', handleDreamStreaming);
     };
   }, []);
 
@@ -476,6 +490,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           <DreamCard
             dream={placeholderDream}
             loading={analyzedDream === null}
+            streamingText={streamingText ?? undefined}
             isAdmin={isAdmin}
           />
         </motion.div>

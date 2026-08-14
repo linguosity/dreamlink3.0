@@ -295,6 +295,10 @@ type DreamEntryProps = {
   empty?: boolean;
   loading?: boolean;
   searchTerms?: string[];
+  /** Analysis prose as it streams in, before the row is persisted. When set
+   *  on a loading card, it renders in place of the summary skeleton so the
+   *  reading forms inside the card it will become — not in a panel elsewhere. */
+  streamingText?: string;
   /** Server-driven flag — gates the cost footer at the bottom of the card. */
   isAdmin?: boolean;
   dream: {
@@ -342,7 +346,7 @@ const BIBLE_VERSES: Record<string, string> = {
   "1 Kings 6:19": "And the oracle he prepared in the house within, to set there the ark of the covenant of the LORD."
 };
 
-export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false }: DreamEntryProps) {
+export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false, streamingText }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   // Lightbox for the header artwork — the header render is small by design,
   // so this is where the 1024² generation actually gets seen at size.
@@ -1339,22 +1343,45 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           </CardHeader>
 
           <CardContent className="p-3 pt-1 space-y-2 flex-1 flex flex-col justify-end">
-            {/* Summary Skeleton */}
-            <div className="space-y-1.5">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-[85%]" />
-            </div>
+            {streamingText ? (
+              // Live reading — the model's prose as it arrives, forming in the
+              // card it will become. Anchored to the bottom and scrolled to the
+              // newest line so the latest words are always visible as text
+              // grows past the card. The blinking caret marks it as live.
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-end">
+                <p
+                  ref={(el) => {
+                    if (el) el.scrollTop = el.scrollHeight;
+                  }}
+                  className="font-serif text-[13px] leading-relaxed text-foreground/90 max-h-full overflow-y-auto whitespace-pre-wrap"
+                >
+                  {streamingText}
+                  <span
+                    aria-hidden="true"
+                    className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                  />
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Summary Skeleton */}
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-[85%]" />
+                </div>
 
-            {/* Tags Skeleton */}
-            <div className="flex flex-wrap gap-1">
-              <Skeleton className="h-4 w-16 rounded-full" />
-              <Skeleton className="h-4 w-20 rounded-full" />
-              <Skeleton className="h-4 w-14 rounded-full" />
-            </div>
+                {/* Tags Skeleton */}
+                <div className="flex flex-wrap gap-1">
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                  <Skeleton className="h-4 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-14 rounded-full" />
+                </div>
 
-            <p className="text-xs text-muted-foreground text-center animate-pulse">
-              Analyzing your dream...
-            </p>
+                <p className="text-xs text-muted-foreground text-center animate-pulse">
+                  Analyzing your dream...
+                </p>
+              </>
+            )}
           </CardContent>
         </div>
       </Card>

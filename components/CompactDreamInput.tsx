@@ -43,8 +43,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   const [credits, setCredits] = useState<CreditsInfo | null>(null);
   // Live text of the reading while it streams from the server. null = no
   // stream in flight; "" = stream open but no prose yet.
-  const [liveReading, setLiveReading] = useState<string | null>(null);
-  const lastDeltaField = useRef<string | null>(null);
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
@@ -167,25 +165,31 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
       let result;
       if (isStream) {
-        // NDJSON: one JSON event per line. Deltas paint the live-reading
-        // panel; "done" carries the exact payload the JSON path returns, so
-        // everything below this block is shared between both transports.
-        setLiveReading("");
-        lastDeltaField.current = null;
+        // NDJSON: one JSON event per line. Delta text is broadcast to the
+        // grid, which paints it INSIDE the placeholder card so the reading
+        // forms where it will live. "done" carries the exact payload the JSON
+        // path returns, so everything below this block is shared between both
+        // transports.
         const reader = response.body!.getReader();
         const decoder = new TextDecoder();
         let lineBuf = "";
         let payload: unknown = null;
         let streamError: string | null = null;
+        // Accumulate here rather than in React state: the composer no longer
+        // renders the text, it just relays it to the grid via a DOM event.
+        let streamAcc = "";
+        let streamField: string | null = null;
         const handleEvent = (evt: { type?: string; field?: string; text?: string; payload?: unknown; error?: string }) => {
           if (evt.type === "delta" && typeof evt.text === "string") {
             const field = String(evt.field ?? "");
-            setLiveReading((prev) => {
-              const sep =
-                prev && lastDeltaField.current !== field ? "\n\n" : "";
-              lastDeltaField.current = field;
-              return (prev ?? "") + sep + evt.text;
-            });
+            const sep = streamAcc && streamField !== field ? "\n\n" : "";
+            streamField = field;
+            streamAcc += sep + evt.text;
+            window.dispatchEvent(
+              new CustomEvent("dreamriver:dream-streaming", {
+                detail: { text: streamAcc },
+              }),
+            );
           } else if (evt.type === "done") {
             payload = evt.payload;
           } else if (evt.type === "error") {
@@ -357,8 +361,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       window.dispatchEvent(new CustomEvent("dreamriver:dream-failed"));
       return false;
     } finally {
-      setLiveReading(null);
-      lastDeltaField.current = null;
       setIsSubmitting(false);
     }
   };
@@ -486,26 +488,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
           </span>
         </div>
       </form>
-
-      {/* Live reading — prose streamed from the model while the analysis is
-          still being generated. Serif to match the reading it becomes. */}
-      {liveReading !== null && liveReading.length > 0 && (
-        <div
-          aria-live="polite"
-          className="mt-3 rounded-xl border border-border bg-card/60 p-4 text-sm leading-relaxed animate-fade-in"
-        >
-          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Your reading is forming…
-          </div>
-          <p className="whitespace-pre-wrap font-serif">
-            {liveReading}
-            <span
-              aria-hidden="true"
-              className="ml-0.5 inline-block h-4 w-[7px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
-            />
-          </p>
-        </div>
-      )}
 
       {/* Gentle hint for short dreams */}
       {hasContent && dream.trim().length < 20 && !tipDismissed && (
