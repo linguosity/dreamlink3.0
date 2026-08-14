@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
@@ -156,12 +156,19 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
 
   // Track analyzed dream data that arrived before the server refresh
   const [analyzedDream, setAnalyzedDream] = useState<{id: string; analysis: any} | null>(null);
+  // Latch the analyzed dream id in a ref so the "has the real row landed?"
+  // check survives analyzedDream being cleared by the 300ms handoff timer
+  // below. Deriving that check from analyzedDream state let the placeholder
+  // resurrect the instant the timer nulled it, leaving a duplicate
+  // "Analysis pending" card sitting next to the finished one.
+  const analyzedIdRef = useRef<string | null>(null);
 
   // Listen for dream submission events to show a placeholder card instantly
   useEffect(() => {
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
       console.log(`[stream] grid: dream-submitting → pendingDream id=${detail?.id}`);
+      analyzedIdRef.current = null; // new submission forgets any prior analyzed id
       setPendingDream({
         id: detail.id,
         original_text: detail.original_text,
@@ -174,6 +181,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail?.analysis) {
         console.log(`[stream] grid: dream-analyzed → analyzedDream id=${detail.id}, streamingText cleared`);
+        analyzedIdRef.current = detail.id;
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
         setStreamingText(null); // real content supersedes the live stream
       }
@@ -183,6 +191,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     // real card, so drop the optimistic placeholder instead of leaving it
     // spinning forever behind the error/upsell UI.
     function handleDreamFailed() {
+      analyzedIdRef.current = null;
       setPendingDream(null);
       setAnalyzedDream(null);
       setStreamingText(null);
@@ -213,12 +222,15 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // analyzed dream id) actually appears in the server-rendered list. Clearing
   // based on `dreams.length > 0` races against Supabase read propagation and
   // causes a visible gap between placeholder and real card.
+  // Based on the latched ref, NOT analyzedDream state: once the real server
+  // row lands this stays true, so the placeholder hides and never comes back.
   const analyzedIdInGrid =
-    analyzedDream !== null && dreams.some((d) => d.id === analyzedDream.id);
-
+    analyzedIdRef.current !== null &&
+    dreams.some((d) => d.id === analyzedIdRef.current);
   useEffect(() => {
     if (pendingDream && analyzedIdInGrid) {
       const timer = setTimeout(() => {
+        analyzedIdRef.current = null;
         setPendingDream(null);
         setAnalyzedDream(null);
       }, 300);
