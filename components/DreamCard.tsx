@@ -41,6 +41,7 @@ import { track } from "@/lib/analytics";
 // static imports a missing or renamed export fails the build, which is what
 // you want, instead of silently degrading the UI at runtime.
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -1332,30 +1333,55 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   if (isLoading && streamingText) {
     return (
       <Card className="overflow-hidden transition-all aspect-square relative flex flex-col bg-card">
-        <CardHeader className="p-3 pb-1.5 flex-shrink-0">
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary/80">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Reading forming
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 pt-0 flex-1 min-h-0">
-          {/* Newest text pinned to the bottom and auto-scrolled, so the words
-              being written right now are always the ones in view. */}
-          <div
-            ref={(el) => {
-              if (el) el.scrollTop = el.scrollHeight;
-            }}
-            className="h-full overflow-y-auto"
-          >
-            <p className="font-serif text-[13px] leading-relaxed text-foreground whitespace-pre-wrap">
-              {streamingText}
-              <span
-                aria-hidden="true"
-                className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
-              />
-            </p>
-          </div>
-        </CardContent>
+        {/* Logo watermark instead of a skeleton: the card already looks like
+            the card it will be, and the mark is faint enough to read prose
+            over. It fades out when the real image fades in on the finished
+            card. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.05] dark:opacity-[0.07]">
+          <BrandIcon size={190} alt="" />
+        </div>
+
+        <div className="relative flex flex-col h-full">
+          <CardHeader className="p-3 pb-1.5 flex-shrink-0">
+            <div className="flex justify-between items-start gap-2">
+              <CardTitle className="font-serif text-lg leading-tight flex-1 min-w-0">
+                <div className="break-words line-clamp-2">
+                  {dream.title || (
+                    <span className="text-muted-foreground italic font-normal">
+                      Interpreting your dream…
+                    </span>
+                  )}
+                </div>
+              </CardTitle>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
+                {/* Star is inert until the row is saved — shown for layout
+                    parity with the finished card, dimmed to read as pending. */}
+                <StarIcon className="h-3.5 w-3.5 opacity-30" />
+                <CalendarIcon className="h-3 w-3 mr-1" />
+                <span className="whitespace-nowrap">{formattedDate}</span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-3 pt-0 flex-1 min-h-0">
+            {/* Newest text pinned to the bottom and auto-scrolled, so the words
+                being written right now are always the ones in view. */}
+            <div
+              ref={(el) => {
+                if (el) el.scrollTop = el.scrollHeight;
+              }}
+              className="h-full overflow-y-auto"
+            >
+              <p className="font-serif text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                {streamingText}
+                <span
+                  aria-hidden="true"
+                  className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                />
+              </p>
+            </div>
+          </CardContent>
+        </div>
       </Card>
     );
   }

@@ -702,9 +702,18 @@ ${depthInstructions}${composedOverride}
       // retry re-generates prose the client has already displayed, so it runs
       // silently and only the final parsed result changes.
       if (onDelta && !extraInstruction) {
-        const streamFields = isComposedTier
-          ? ["topicSentence", "supportingPoints", "conclusionSentence"]
-          : ["analysis"];
+        // Stream every prose field, in the order the schema emits them, so
+        // text appears from the first token rather than after the model has
+        // silently written the earlier fields. topicSentence is first in the
+        // schema, so the reader sees words almost immediately on every tier.
+        // (On composed tiers `analysis` is a one-line placeholder and simply
+        // contributes nothing visible; on shallow it is the full prose.)
+        const streamFields = [
+          "topicSentence",
+          "supportingPoints",
+          "conclusionSentence",
+          "analysis",
+        ];
         const streamer = createJsonFieldStreamer(streamFields, (d) => {
           try {
             onDelta(d.field, d.text);
