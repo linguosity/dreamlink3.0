@@ -23,6 +23,7 @@ import {
   getOpenRouterClient,
   getModelForDepth,
   modelTuning,
+  serviceTierOption,
   OPENAI_FALLBACK_MODELS,
   OPENROUTER_MODEL,
   getDreamAnalysisSchemaForDepth,
@@ -634,6 +635,7 @@ ${depthInstructions}${composedOverride}
           model: target.model,
           input: messages,
           ...modelTuning(target.model),
+          ...serviceTierOption(),
           max_output_tokens: spec.maxOutputTokens,
           text: {
             format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
@@ -680,6 +682,7 @@ ${depthInstructions}${composedOverride}
           model: target.model,
           input: messages,
           ...modelTuning(target.model),
+          ...serviceTierOption(),
           max_output_tokens: SECTION_MAX_OUTPUT_TOKENS,
         },
         requestOptions,

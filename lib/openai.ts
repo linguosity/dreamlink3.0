@@ -227,6 +227,44 @@ export interface DepthSpec {
   maxOutputTokens: number;
 }
 
+/**
+ * OpenAI service tier for the user-facing analysis calls.
+ *
+ * "fast" (formerly "priority") buys up to ~2.5x faster and more consistent
+ * latency at exactly 2x the token price — $0.40/$2.40 per M in/out on
+ * gpt-5.6-luna against $0.20/$1.20 standard. On a deep reading that is a
+ * couple of tenths of a cent; image generation dominates unit cost by an
+ * order of magnitude either way.
+ *
+ * Env-gated rather than hardcoded so the trade can be flipped, measured and
+ * reverted without a deploy. Unset = standard, so this ships dark.
+ * Valid values: "fast" | "priority" | "default" | "flex".
+ */
+export function getServiceTier(): "fast" | "priority" | "default" | "flex" | undefined {
+  const raw = process.env.OPENAI_SERVICE_TIER?.trim().toLowerCase();
+  if (raw === "fast" || raw === "priority" || raw === "default" || raw === "flex") {
+    return raw;
+  }
+  return undefined;
+}
+
+/**
+ * Spreadable service-tier option for a request body.
+ *
+ * ⚠️ Cast required, same reason as modelTuning above: the pinned SDK
+ * (openai 4.104.0) predates `service_tier` on the Responses API, so it is not
+ * in the request types. The SDK forwards the body object as given, so the
+ * field is still transmitted — this only silences the compiler. Drop the cast
+ * with the v4 -> v7 upgrade.
+ *
+ * Returns {} when unset, so the spread is a no-op and the call is byte-identical
+ * to today's. That is what makes this safe to ship dark.
+ */
+export function serviceTierOption(): Record<string, unknown> {
+  const tier = getServiceTier();
+  return tier ? ({ service_tier: tier } as Record<string, unknown>) : {};
+}
+
 export const DEPTH_SPECS: Record<AnalysisDepth, DepthSpec> = {
   [AnalysisDepth.SHALLOW]: {
     points: 2,
