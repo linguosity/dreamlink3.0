@@ -330,7 +330,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // flickering out and back.
   const showPlaceholder = pendingDream !== null && !analyzedIdInGrid;
   const placeholderKey =
-    analyzedDream?.id ?? pendingDream?.id ?? 'placeholder';
+    pendingDream?.id ?? analyzedDream?.id ?? 'placeholder';
   // Render-time log (not a hook — this sits after early returns): each distinct
   // key value that prints marks a card the grid is (re)mounting.
   if (showPlaceholder) {
