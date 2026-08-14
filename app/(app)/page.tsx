@@ -187,6 +187,34 @@ export default async function MainPage() {
   const thread = selectSymbolThread(dreams);
   const hasRail = Boolean(thread) || posts.length > 0;
 
+  // Admin reminder that test mode is on, so a submission that was meant to be
+  // ordinary can't quietly fan out into N cards.
+  //
+  // This was a full-width alert-weight banner at the top of the dashboard.
+  // Test mode can stay on for days, and a persistent setting doesn't earn
+  // alert styling on every load — so it's a single line now, sitting directly
+  // above the composer where the decision actually gets made. The matrix size
+  // is the part that matters and it survives; the sentence about aesthetic
+  // deduping moved to Settings, next to the toggle that causes it.
+  const testModePill = showTestModeBanner ? (
+    <div
+      role="status"
+      className="mb-3 inline-flex items-center gap-2 rounded-full border border-warning/40 bg-warning/10 pl-2.5 pr-1.5 py-1 text-xs"
+    >
+      <span aria-hidden="true">🧪</span>
+      <span className="font-medium text-foreground">Test mode</span>
+      <span className="text-muted-foreground">
+        · {adminTestModeMatrixSize} cards per submission
+      </span>
+      <Link
+        href="/settings"
+        className="ml-0.5 rounded-full px-1.5 py-0.5 font-medium text-foreground/80 underline underline-offset-2 hover:no-underline hover:bg-warning/20 transition-colors"
+      >
+        Disable
+      </Link>
+    </div>
+  ) : null;
+
   const greeting = (
     <header>
       <div className="font-mono text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
@@ -220,32 +248,6 @@ export default async function MainPage() {
         {/* Visually hidden H1 for SEO and screen readers */}
         <h1 className="sr-only">DreamRiver Dream Journal</h1>
 
-        {/* Admin reminder: test mode is on. Surfaced here so an admin can't
-            accidentally fan out a submission they thought was a normal one. */}
-        {showTestModeBanner && (
-          <div
-            role="status"
-            className="rounded-xl border-2 border-warning/50 bg-warning/10 px-4 py-3 flex items-start gap-3"
-          >
-            <span aria-hidden="true" className="text-lg">🧪</span>
-            <div className="flex-1 text-sm">
-              <div className="font-medium text-foreground">
-                Test mode is on
-              </div>
-              <div className="text-muted-foreground">
-                Each dream submission will generate{" "}
-                <strong>{adminTestModeMatrixSize} cards</strong> across your
-                comparison matrix. Image generation is deduped by aesthetic.
-              </div>
-            </div>
-            <Link
-              href="/settings"
-              className="text-xs font-medium text-foreground underline underline-offset-2 hover:no-underline whitespace-nowrap"
-            >
-              Disable
-            </Link>
-          </div>
-        )}
 
         {hasRail ? (
           /* Editorial spread — one shared grid. Greeting + composer span
@@ -260,6 +262,7 @@ export default async function MainPage() {
               <>
                 {greeting}
                 <div className="mt-8">
+                  {testModePill}
                   <CompactDreamInput userId={user.id} />
                 </div>
               </>
@@ -286,6 +289,7 @@ export default async function MainPage() {
 
             {/* Dream Input */}
             <div>
+              {testModePill}
               <CompactDreamInput userId={user.id} />
             </div>
 

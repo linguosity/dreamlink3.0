@@ -23,6 +23,7 @@ import {
   getOpenRouterClient,
   getModelForDepth,
   modelTuning,
+  serviceTierOption,
   OPENAI_FALLBACK_MODELS,
   OPENROUTER_MODEL,
   getDreamAnalysisSchemaForDepth,
@@ -495,6 +496,18 @@ export async function runDreamAnalysis(
       effectiveDepth === AnalysisDepth.PROFOUND;
     const depthInstructions = getDepthInstructions(effectiveDepth, dbPrompt);
 
+    // The depth instructions come from the database (dream_prompts.depth_deep
+    // / depth_profound) and still tell the model to write "Dream Symbols" and
+    // "How this might apply" inline — written before the two-phase compose
+    // existed. Those sections are now separate completions, so obeying that
+    // instruction is pure waste. Overriding it here rather than in the DB
+    // keeps the two architectures from disagreeing at runtime, and means this
+    // fix does not depend on a prompt migration landing first.
+    const composedOverride = isComposedTier
+      ? `
+IMPORTANT — OUTPUT SCOPE: Return ONLY topicSentence, supportingPoints, conclusionSentence, biblicalReferences and tags. Do NOT write any named sections (Dream Symbols, How this might apply, Three Lenses, Prayer prompts, or similar) anywhere in your output — the application generates each of those separately and will discard anything you write for them. Leave "analysis" as a single short sentence.`
+      : "";
+
     const forbiddenPhrases = dbPrompt?.forbidden_phrases?.length
       ? dbPrompt.forbidden_phrases.map((p) => `"${p}"`).join(", ")
       : '"This dream is about", "Your dream is about", "This dream symbolizes", "This dream represents"';
@@ -519,7 +532,7 @@ ${dbPrompt.format_instructions}
 - Tags: each tag must name something CONCRETE from this specific dream — a symbol, place, action, emotion, or biblical motif actually present in the dream or analysis (e.g. 'flood waters', 'lost teeth', 'childhood home', 'wilderness season'). Lowercase noun phrases, 1-2 words. Never generic labels like 'faith', 'spirituality', 'dreams', 'spiritual journey', or 'divine guidance'.
 
 ${readingLevelInstructions}
-${depthInstructions}
+${depthInstructions}${composedOverride}
 `
       : `
 You are a dream interpreter specializing in Christian biblical interpretation.
@@ -547,7 +560,7 @@ Additional instruction:
 - The biblicalReferences array must contain one entry per supporting point, in the same order. Provide the citation string plus a short "theme" phrase (2-4 words, e.g. "crossing waters") naming why THAT specific verse was matched — not the dream's overall theme, the reason for that one citation. Do not include verse text; the application retrieves it from a canonical KJV source.
 
 ${readingLevelInstructions}
-${depthInstructions}
+${depthInstructions}${composedOverride}
 `;
 
     const client = getOpenAIClient();
@@ -622,6 +635,7 @@ ${depthInstructions}
           model: target.model,
           input: messages,
           ...modelTuning(target.model),
+          ...serviceTierOption(),
           max_output_tokens: spec.maxOutputTokens,
           text: {
             format: zodTextFormat(schemaForDepth, "DreamAnalysis"),
@@ -668,6 +682,7 @@ ${depthInstructions}
           model: target.model,
           input: messages,
           ...modelTuning(target.model),
+          ...serviceTierOption(),
           max_output_tokens: SECTION_MAX_OUTPUT_TOKENS,
         },
         requestOptions,
@@ -836,15 +851,16 @@ ${depthInstructions}
           generateSection(activeTarget, section, coreResult),
         ),
       );
-      if (outcomes.some((o) => o.text !== null)) {
-        parsed = {
-          ...coreResult,
-          analysis: composeAnalysis(coreResult, outcomes),
-        };
-      }
-      // else: every section failed even after retries (warnings already
-      // captured per section) — keep the core call's own analysis prose,
-      // which the schema still points at the tier's word range.
+      // Compose either way. When every section failed this yields topic +
+      // supporting points + conclusion, which is a shorter but complete
+      // reading. It used to fall back to the core call's own analysis prose —
+      // but composed tiers no longer ask the model for that prose, so
+      // coreResult.analysis is now a one-line placeholder and would render as
+      // a stub. Failures are already captured per section.
+      parsed = {
+        ...coreResult,
+        analysis: composeAnalysis(coreResult, outcomes),
+      };
     } else {
       // ── Length enforcement (single corrective retry — shallow only) ──
       // max_output_tokens only caps length; it can't force a minimum, and
