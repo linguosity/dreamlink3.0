@@ -482,9 +482,10 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   );
 
   const cardItems = (
-    <AnimatePresence initial={false}>
-      {/* Optimistic placeholder — stays visible through analysis and
-          disappears only once the real server row lands in the grid.
+    <>
+      {/* Optimistic placeholder — rendered OUTSIDE AnimatePresence so React
+          unmounts it the moment the real card lands. Left inside AnimatePresence
+          it was orphaned in the DOM, leaving a duplicate card by the real one.
           For matrix submissions we still show one placeholder; the
           remaining rows arrive via router.refresh. */}
       {showPlaceholder && placeholderDream && (
@@ -507,6 +508,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           />
         </motion.div>
       )}
+      <AnimatePresence initial={false}>
       {renderOrder.map((item) =>
         item.type === 'standalone' ? (
           <motion.div
@@ -548,7 +550,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           </motion.div>
         ),
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 
   // ── Wrap (rail) mode ──────────────────────────────────────────
