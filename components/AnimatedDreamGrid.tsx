@@ -490,10 +490,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       {showPlaceholder && placeholderDream && (
         <motion.div
           key={placeholderKey}
-          layout
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0 } }}
           transition={{
             type: 'tween',
             duration: 0.3,
