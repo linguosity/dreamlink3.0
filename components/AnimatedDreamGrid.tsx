@@ -612,6 +612,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         ) : (
           cardItems
         )}
+
+        <StreamingReaderModal reader={reader} onClose={() => setReader(null)} />
       </div>
     );
   }
