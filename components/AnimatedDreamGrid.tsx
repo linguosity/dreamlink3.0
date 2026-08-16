@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
 import { useDreamSearch } from '@/hooks/use-dream-search';
-import { Search, Calendar } from 'lucide-react';
+import { Search, Calendar, Puzzle, Book, Trash2, Share2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { AiDisclosure } from '@/components/brand/AiDisclosure';
 import Image from 'next/image';
 
 // Notes (2026-06-09 audit, H7/M6):
@@ -158,7 +160,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // full analysis body writing itself in, then stays open (done:true) for the
   // reader to close. Lives at the grid level so the placeholder -> real-card
   // handoff never dismisses it.
-  const [reader, setReader] = useState<{ title: string; body: string; done: boolean; dreamId: string | null; tags: string[] } | null>(null);
+  const [reader, setReader] = useState<{ title: string; body: string; done: boolean; dreamId: string | null; tags: string[]; originalText: string; bibleRefs: { citation: string; theme: string }[] } | null>(null);
 
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
@@ -177,7 +179,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
       analyzedIdRef.current = null; // new submission forgets any prior analyzed id
-      setReader({ title: '', body: '', done: false, dreamId: null, tags: [] }); // open the reading pop-up now
+      setReader({ title: '', body: '', done: false, dreamId: null, tags: [], originalText: detail.original_text ?? '', bibleRefs: [] }); // open the reading pop-up now
       setPendingDream({
         id: detail.id,
         original_text: detail.original_text,
@@ -198,6 +200,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
               done: true,
               dreamId: detail.id,
               tags: Array.isArray(detail.analysis?.tags) ? detail.analysis.tags : r.tags,
+              bibleRefs: Array.isArray(detail.analysis?.biblicalReferences) ? detail.analysis.biblicalReferences : r.bibleRefs,
               // Settle to the final full analysis (composed prose on deep tiers).
               body: (typeof detail.analysis?.analysis === 'string' && detail.analysis.analysis) || r.body,
             }
@@ -223,7 +226,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       setStreamingText(body || null);
       setReader((r) => (r
         ? { ...r, title, body }
-        : { title, body, done: false, dreamId: null, tags: [] }));
+        : { title, body, done: false, dreamId: null, tags: [], originalText: '', bibleRefs: [] }));
     }
 
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
@@ -672,6 +675,8 @@ function StreamingReaderModal({
     done: boolean;
     dreamId: string | null;
     tags: string[];
+    originalText: string;
+    bibleRefs: { citation: string; theme: string }[];
   } | null;
   onClose: () => void;
 }) {
@@ -736,19 +741,24 @@ function StreamingReaderModal({
         <DialogDescription className="sr-only">
           Your dream interpretation, appearing as it is written.
         </DialogDescription>
-        {/* Same split header as the saved-card detail view: title/date/tags on
-            the left, square artwork (skeleton until it generates) on the right. */}
+
+        {/* Split header — identical to the saved-card detail view: title/date/
+            tags on the left, square artwork (skeleton until it generates) on
+            the right. */}
         <div className="flex flex-col-reverse sm:grid sm:grid-cols-[minmax(0,1fr)_38%] gap-3 sm:gap-4 items-start">
           <div className="min-w-0 w-full">
-            <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight pr-2">
-              {reader?.title ? (
-                reader.title
-              ) : (
-                <span className="text-muted-foreground italic font-normal">
-                  Interpreting your dream…
-                </span>
-              )}
-            </DialogTitle>
+            <div className="flex items-start justify-between gap-2">
+              <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight">
+                {reader?.title ? (
+                  reader.title
+                ) : (
+                  <span className="text-muted-foreground italic font-normal">
+                    Interpreting your dream…
+                  </span>
+                )}
+              </DialogTitle>
+              <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit shrink-0">esc</span>
+            </div>
             <div className="flex items-center text-xs text-muted-foreground mt-1.5">
               <Calendar className="h-3 w-3 mr-1 shrink-0" />
               {dateLabel}
@@ -780,29 +790,122 @@ function StreamingReaderModal({
           </div>
         </div>
 
-        <div ref={bodyRef} className="mt-2 max-w-[65ch]">
-          <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
-            {reader?.body}
-            {reader && !reader.done && (
-              <span
-                aria-hidden="true"
-                className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
-              />
-            )}
-          </p>
-        </div>
+        {/* Tabs — same shell as the detail view. The reading writes itself into
+            the Analysis tab; Original Dream shows exactly what was submitted. */}
+        <Tabs defaultValue="analysis" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="analysis" className="flex items-center gap-1 data-[state=active]:shadow-sm">
+              <Puzzle className="h-3 w-3" />Analysis
+            </TabsTrigger>
+            <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
+          </TabsList>
 
-        <div className="mt-4 flex items-center justify-between border-t pt-3">
-          <span className="text-xs text-muted-foreground">
-            {reader && !reader.done ? 'Interpreting…' : 'Interpretation complete'}
-          </span>
+          <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
+            <div>
+              {/* AI disclosure — above the reading, exactly as the detail view. */}
+              <AiDisclosure
+                verseCount={reader && reader.bibleRefs.length > 0 ? reader.bibleRefs.length : undefined}
+                className="mb-4 max-w-[65ch]"
+              />
+              <div ref={bodyRef} className="max-w-[65ch]">
+                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                  {reader?.body}
+                  {reader && !reader.done && (
+                    <span
+                      aria-hidden="true"
+                      className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                    />
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Feedback + Read again — same layout as the saved card. Inert
+                while the reading is being written; the saved card behind the
+                pop-up carries the working controls once you close it. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t pt-3.5">
+              <span className="text-xs text-muted-foreground">
+                Did this reading feel meaningful?
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled
+                  className="rounded-full border border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className="rounded-full border border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+                >
+                  Not really
+                </button>
+              </div>
+              <button
+                type="button"
+                disabled
+                className="ml-auto rounded-full border border-input px-3 py-1 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+              >
+                Read again · 1 credit
+              </button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="original" className="space-y-4 p-1 min-h-0">
+            <div className="text-sm whitespace-pre-wrap max-w-[65ch]">
+              {reader?.originalText}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Share row — matches the detail view's position. */}
+        <div className="flex justify-end items-center mb-4">
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition"
+            disabled
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-50"
           >
-            {reader?.done ? 'Done' : 'Close'}
+            <Share2 className="h-3.5 w-3.5" />
+            Share
           </button>
+        </div>
+
+        {/* Footer: scripture + delete — same structure as the saved card. */}
+        <div className="pt-4 border-t space-y-3">
+          {reader && reader.bibleRefs.length > 0 && (
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                Scripture
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {reader.bibleRefs.map((ref, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] bg-mist text-primary border-mist-2"
+                  >
+                    <Book className="h-2 w-2" />
+                    {ref.citation}
+                    {ref.theme && (
+                      <span className="font-normal opacity-75">· {ref.theme}</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-destructive disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
