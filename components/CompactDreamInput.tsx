@@ -177,19 +177,26 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         let streamError: string | null = null;
         // Accumulate here rather than in React state: the composer no longer
         // renders the text, it just relays it to the grid via a DOM event.
-        let streamAcc = "";
+        let titleAcc = "";
+        let bodyAcc = "";
         let streamField: string | null = null;
         const handleEvent = (evt: { type?: string; field?: string; text?: string; payload?: unknown; error?: string }) => {
           if (evt.type === "accepted") {
             // server accepted - the real dream id is available on evt.id
           } else if (evt.type === "delta" && typeof evt.text === "string") {
             const field = String(evt.field ?? "");
-            const sep = streamAcc && streamField !== field ? "\n\n" : "";
-            streamField = field;
-            streamAcc += sep + evt.text;
+            if (field === "dreamTitle") {
+              // Title streams first (schema-ordered) and drives the pop-up header.
+              titleAcc += evt.text;
+            } else {
+              // Everything else is the analysis body the reader watches appear.
+              const sep = bodyAcc && streamField !== field ? "\n\n" : "";
+              streamField = field;
+              bodyAcc += sep + evt.text;
+            }
             window.dispatchEvent(
               new CustomEvent("dreamriver:dream-streaming", {
-                detail: { text: streamAcc },
+                detail: { title: titleAcc, body: bodyAcc },
               }),
             );
           } else if (evt.type === "done") {

@@ -181,6 +181,12 @@ export const BiblicalReferenceSchema = z.object({
 // Base shape shared across all depth tiers. Field names stay the same so
 // the persistence layer and UI components do not need to change.
 const baseShape = {
+  // dreamTitle is intentionally FIRST so the model emits it before the prose:
+  // the streaming reader shows the real title at the top of the pop-up while
+  // the analysis body writes itself in beneath it.
+  dreamTitle: z.string().describe(
+    "Memorable 3-6 word title capturing the dream's essence, e.g. 'Walking on Sacred Waters'.",
+  ),
   topicSentence: z.string().describe(
     "Opening sentence capturing the main spiritual theme — never start with 'This dream is about' or similar.",
   ),
@@ -195,9 +201,6 @@ const baseShape = {
   ),
   personalizedSummary: z.string().describe(
     "One vivid sentence addressing the dreamer directly about their dream's significance.",
-  ),
-  dreamTitle: z.string().describe(
-    "Memorable 3-6 word title capturing the dream's essence, e.g. 'Walking on Sacred Waters'.",
   ),
   biblicalReferences: z.array(BiblicalReferenceSchema).describe(
     "Bible references — one per supporting point, in the same order. Citations only; verse text is hydrated server-side.",

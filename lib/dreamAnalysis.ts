@@ -709,6 +709,7 @@ ${depthInstructions}${composedOverride}
         // (On composed tiers `analysis` is a one-line placeholder and simply
         // contributes nothing visible; on shallow it is the full prose.)
         const streamFields = [
+          "dreamTitle",
           "topicSentence",
           "supportingPoints",
           "conclusionSentence",
