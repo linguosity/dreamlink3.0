@@ -708,13 +708,15 @@ ${depthInstructions}${composedOverride}
         // schema, so the reader sees words almost immediately on every tier.
         // (On composed tiers `analysis` is a one-line placeholder and simply
         // contributes nothing visible; on shallow it is the full prose.)
-        const streamFields = [
-          "dreamTitle",
-          "topicSentence",
-          "supportingPoints",
-          "conclusionSentence",
-          "analysis",
-        ];
+        // Stream exactly ONE representation so the reader never sees the same
+        // interpretation twice. Shallow's `analysis` IS the full prose, so
+        // stream that. Composed tiers (deep/profound) leave `analysis` a
+        // one-line placeholder and assemble the real prose server-side from
+        // these pieces, so stream the pieces. Either way the client settles to
+        // the final full analysis on done.
+        const streamFields = isComposedTier
+          ? ["dreamTitle", "topicSentence", "supportingPoints", "conclusionSentence"]
+          : ["dreamTitle", "analysis"];
         const streamer = createJsonFieldStreamer(streamFields, (d) => {
           try {
             onDelta(d.field, d.text);

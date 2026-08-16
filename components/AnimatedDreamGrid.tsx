@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
 import { useDreamSearch } from '@/hooks/use-dream-search';
-import { Search } from 'lucide-react';
+import { Search, Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 // Notes (2026-06-09 audit, H7/M6):
 // - framer-motion was previously pulled in via `require()` inside try/catch,
@@ -156,7 +158,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // full analysis body writing itself in, then stays open (done:true) for the
   // reader to close. Lives at the grid level so the placeholder -> real-card
   // handoff never dismisses it.
-  const [reader, setReader] = useState<{ title: string; body: string; done: boolean } | null>(null);
+  const [reader, setReader] = useState<{ title: string; body: string; done: boolean; dreamId: string | null; tags: string[] } | null>(null);
 
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
@@ -175,7 +177,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
       analyzedIdRef.current = null; // new submission forgets any prior analyzed id
-      setReader({ title: '', body: '', done: false }); // open the reading pop-up now
+      setReader({ title: '', body: '', done: false, dreamId: null, tags: [] }); // open the reading pop-up now
       setPendingDream({
         id: detail.id,
         original_text: detail.original_text,
@@ -190,7 +192,16 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         analyzedIdRef.current = detail.id;
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
         setStreamingText(null); // real content supersedes the live stream
-        setReader((r) => (r ? { ...r, done: true } : r)); // keep pop-up open, mark finished
+        setReader((r) => (r
+          ? {
+              ...r,
+              done: true,
+              dreamId: detail.id,
+              tags: Array.isArray(detail.analysis?.tags) ? detail.analysis.tags : r.tags,
+              // Settle to the final full analysis (composed prose on deep tiers).
+              body: (typeof detail.analysis?.analysis === 'string' && detail.analysis.analysis) || r.body,
+            }
+          : r));
       }
     }
 
@@ -210,7 +221,9 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       const body = detail?.body ?? '';
       const title = detail?.title ?? '';
       setStreamingText(body || null);
-      setReader((r) => ({ title, body, done: r?.done ?? false }));
+      setReader((r) => (r
+        ? { ...r, title, body }
+        : { title, body, done: false, dreamId: null, tags: [] }));
     }
 
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
@@ -645,48 +658,140 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   );
 }
 
-// The auto-opening reading pop-up. Renders the title (streamed first) and the
-// analysis body writing itself in, with a blinking cursor until done. Kept as a
+// The auto-opening reading pop-up. Mirrors the saved-card detail view: square
+// artwork (skeleton until it generates, then it fades in) + title + date + tags
+// on the header, and the full analysis writing itself in below. Kept as a
 // grid-level sibling so it survives the placeholder -> real-card handoff.
 function StreamingReaderModal({
   reader,
   onClose,
 }: {
-  reader: { title: string; body: string; done: boolean } | null;
+  reader: {
+    title: string;
+    body: string;
+    done: boolean;
+    dreamId: string | null;
+    tags: string[];
+  } | null;
   onClose: () => void;
 }) {
   const open = reader !== null;
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  // Autoscroll the reading as it writes itself in.
   useEffect(() => {
     const el = bodyRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [reader?.body]);
+
+  // Forget the artwork when the pop-up closes so the next reading starts clean.
+  useEffect(() => {
+    if (!open) setImageUrl(null);
+  }, [open]);
+
+  // Poll for the artwork once the dream row exists and fade it into the
+  // skeleton's spot the moment it lands, matching the saved card.
+  const dreamId = reader?.dreamId ?? null;
+  useEffect(() => {
+    if (!dreamId || imageUrl) return;
+    let cancelled = false;
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries += 1;
+      if (tries > 45) {
+        clearInterval(iv);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/dream-entries?id=${dreamId}`, {
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const url = data?.dreams?.[0]?.image_url;
+        if (url && !cancelled) {
+          setImageUrl(url);
+          clearInterval(iv);
+        }
+      } catch {
+        // transient network error - keep polling
+      }
+    }, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, [dreamId, imageUrl]);
+
+  const dateLabel = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="sm:max-w-2xl w-[92vw] max-h-[82vh] flex flex-col gap-0">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
         <DialogDescription className="sr-only">
           Your dream interpretation, appearing as it is written.
         </DialogDescription>
-        <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight pr-8">
-          {reader?.title ? (
-            reader.title
-          ) : (
-            <span className="text-muted-foreground italic font-normal">
-              Interpreting your dream…
-            </span>
-          )}
-        </DialogTitle>
-        <div ref={bodyRef} className="mt-3 flex-1 min-h-0 overflow-y-auto">
-          <p className="font-serif text-[15px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        {/* Same split header as the saved-card detail view: title/date/tags on
+            the left, square artwork (skeleton until it generates) on the right. */}
+        <div className="flex flex-col-reverse sm:grid sm:grid-cols-[minmax(0,1fr)_38%] gap-3 sm:gap-4 items-start">
+          <div className="min-w-0 w-full">
+            <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight pr-2">
+              {reader?.title ? (
+                reader.title
+              ) : (
+                <span className="text-muted-foreground italic font-normal">
+                  Interpreting your dream…
+                </span>
+              )}
+            </DialogTitle>
+            <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+              <Calendar className="h-3 w-3 mr-1 shrink-0" />
+              {dateLabel}
+            </div>
+            {reader && reader.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {reader.tags.map((tag, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs capitalize">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt="Dream artwork"
+                fill
+                className="object-cover animate-in fade-in duration-700"
+                sizes="(max-width: 640px) 100vw, 230px"
+                unoptimized
+              />
+            ) : (
+              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+            )}
+          </div>
+        </div>
+
+        <div ref={bodyRef} className="mt-2 max-w-[65ch]">
+          <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
             {reader?.body}
             {reader && !reader.done && (
               <span
                 aria-hidden="true"
-                className="ml-0.5 inline-block h-4 w-[7px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
               />
             )}
           </p>
         </div>
+
         <div className="mt-4 flex items-center justify-between border-t pt-3">
           <span className="text-xs text-muted-foreground">
             {reader && !reader.done ? 'Interpreting…' : 'Interpretation complete'}
