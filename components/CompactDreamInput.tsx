@@ -131,7 +131,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
     // Optimistically show a placeholder card in the grid immediately
     if (retryCount === 0) {
       const placeholderId = `pending-${Date.now()}`;
-      console.log(`[stream] 1. Enter → dispatch dream-submitting id=${placeholderId}`);
       window.dispatchEvent(
         new CustomEvent("dreamriver:dream-submitting", {
           detail: {
@@ -163,7 +162,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         response.ok &&
         (response.headers.get("content-type") ?? "").includes("ndjson") &&
         response.body != null;
-      console.log(`[stream] 2. response received, streaming=${isStream}, status=${response.status}`);
 
       let result;
       if (isStream) {
@@ -181,14 +179,11 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         // renders the text, it just relays it to the grid via a DOM event.
         let streamAcc = "";
         let streamField: string | null = null;
-        let deltaCount = 0;
         const handleEvent = (evt: { type?: string; field?: string; text?: string; payload?: unknown; error?: string }) => {
           if (evt.type === "accepted") {
-            console.log(`[stream] 3. server accepted, real id=${(evt as { id?: string }).id}`);
+            // server accepted - the real dream id is available on evt.id
           } else if (evt.type === "delta" && typeof evt.text === "string") {
             const field = String(evt.field ?? "");
-            if (deltaCount === 0) console.log(`[stream] 4. FIRST delta (field=${field})`);
-            deltaCount += 1;
             const sep = streamAcc && streamField !== field ? "\n\n" : "";
             streamField = field;
             streamAcc += sep + evt.text;
@@ -198,7 +193,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
               }),
             );
           } else if (evt.type === "done") {
-            console.log(`[stream] 5. done received after ${deltaCount} deltas (${streamAcc.length} chars)`);
             payload = evt.payload;
           } else if (evt.type === "error") {
             streamError = evt.error || "Analysis failed";
@@ -269,7 +263,6 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
       } // end JSON (non-stream) path
 
       if (result.id) {
-        console.log(`[stream] 6. dispatch dream-analyzed real id=${result.id} → grid will set analyzedDream + clear streamingText (KEY CHANGES HERE)`);
         toast.success("Dream recorded! Analysis on its way…");
 
         localStorage.removeItem('loadingDreamId');

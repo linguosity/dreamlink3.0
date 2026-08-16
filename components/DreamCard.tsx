@@ -365,11 +365,6 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   useEffect(() => {
     setIsLoading(initialLoading || false);
   }, [initialLoading]);
-  useEffect(() => {
-    console.log(`[stream] DreamCard MOUNT id=${initialDream.id}`);
-    return () => console.log(`[stream] DreamCard UNMOUNT id=${initialDream.id}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [activeTab, setActiveTab] = useState("analysis");
   const [modalHeight, setModalHeight] = useState<number | null>(null);
   const analysisContentRef = useRef<HTMLDivElement>(null);

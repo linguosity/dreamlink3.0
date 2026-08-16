@@ -167,7 +167,6 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   useEffect(() => {
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
-      console.log(`[stream] grid: dream-submitting → pendingDream id=${detail?.id}`);
       analyzedIdRef.current = null; // new submission forgets any prior analyzed id
       setPendingDream({
         id: detail.id,
@@ -180,7 +179,6 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamAnalyzed(e: Event) {
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail?.analysis) {
-        console.log(`[stream] grid: dream-analyzed → analyzedDream id=${detail.id}, streamingText cleared`);
         analyzedIdRef.current = detail.id;
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
         setStreamingText(null); // real content supersedes the live stream
@@ -197,11 +195,9 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       setStreamingText(null);
     }
 
-    let sawFirstStream = false;
     function handleDreamStreaming(e: Event) {
       const detail = (e as CustomEvent).detail;
       if (typeof detail?.text === 'string') {
-        if (!sawFirstStream) { sawFirstStream = true; console.log('[stream] grid: first streaming text → streamingText set'); }
         setStreamingText(detail.text);
       }
     }
@@ -343,11 +339,6 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   const showPlaceholder = pendingDream !== null && !analyzedIdInGrid;
   const placeholderKey =
     pendingDream?.id ?? analyzedDream?.id ?? 'placeholder';
-  // Render-time log (not a hook — this sits after early returns): each distinct
-  // key value that prints marks a card the grid is (re)mounting.
-  if (showPlaceholder) {
-    console.log(`[stream] grid render: placeholder key = ${placeholderKey}, streamingText=${streamingText ? streamingText.length + ' chars' : 'none'}, loading=${analyzedDream === null}`);
-  }
 
   const placeholderDream: Dream | null = pendingDream
     ? analyzedDream
@@ -502,7 +493,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           layout
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
+          exit={{ opacity: 0, transition: { duration: 0 } }}
           transition={{
             type: 'tween',
             duration: 0.3,
@@ -523,7 +514,10 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           <motion.div
             key={item.dream.id}
             layout
-            initial={{ opacity: 0, scale: 0.8 }}
+            // The card that replaces the optimistic placeholder appears in
+            // place with no entrance pop; the placeholder exits instantly, so
+            // the streamed card simply becomes the finished card - no crossfade.
+            initial={analyzedIdRef.current === item.dream.id ? false : { opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
