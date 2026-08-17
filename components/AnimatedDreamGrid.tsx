@@ -813,14 +813,26 @@ function StreamingReaderModal({
                   // first token hasn't landed yet. Bouncing dots read as
                   // "coming" without the skeleton's "empty template" feel.
                   <div
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                    className="flex items-center gap-3 text-sm text-muted-foreground"
                     role="status"
                     aria-live="polite"
                   >
-                    <span className="flex gap-1" aria-hidden="true">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce" />
+                    {/* A gentle river current scrolling sideways — a seamless
+                        loop: the SVG is 2x the window and slides one full
+                        wavelength period (-50%) before repeating. */}
+                    <span className="relative h-5 w-[140px] shrink-0 overflow-hidden" aria-hidden="true">
+                      <svg
+                        className="absolute left-0 top-0 h-5 w-[280px] animate-river text-primary/80"
+                        viewBox="0 0 280 20"
+                        preserveAspectRatio="none"
+                        fill="none"
+                      >
+                        <path
+                          d="M0 10 Q 17 2 35 10 T 70 10 T 105 10 T 140 10 T 175 10 T 210 10 T 245 10 T 280 10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                      </svg>
                     </span>
                     Reading your dream…
                   </div>
