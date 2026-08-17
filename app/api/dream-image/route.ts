@@ -218,7 +218,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ imageUrl: null });
   } catch (err) {
-    console.error("Dream image generation failed:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    // A real billing state is not a transient failure — log it unmistakably
+    // and hand back a distinct code/status so it can't hide behind a 500.
+    if (msg.startsWith("BFL_OUT_OF_CREDITS")) {
+      console.error("🎨 Dream image generation BLOCKED — BFL out of credits:", msg);
+      return NextResponse.json(
+        { error: "Image credits exhausted", code: "out_of_image_credits" },
+        { status: 402 }
+      );
+    }
+    console.error("Dream image generation failed:", msg);
     return NextResponse.json(
       { error: "Image generation failed" },
       { status: 500 }

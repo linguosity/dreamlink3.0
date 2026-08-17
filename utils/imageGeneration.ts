@@ -37,6 +37,13 @@ const INITIAL_POLL_DELAY_MS = 500;
 const BACKOFF_MULTIPLIER = 1.3;
 const MAX_POLL_DELAY_MS = 4000;
 
+// Submit-step retry policy. The submit call (not the poll loop) had no retry,
+// so a single transient 429/5xx/timeout became a broken image even though a
+// re-send would have succeeded. Two extra attempts with linear backoff let a
+// blip self-heal. 402 (out of credits) is a billing state, never retried.
+const SUBMIT_MAX_ATTEMPTS = 3;
+const SUBMIT_RETRY_BASE_MS = 800;
+
 // Square 1024×1024 (raised from 512 on 2026-07-31).
 //
 // FLUX.2 [klein] bills a FLAT RATE FOR THE FIRST MEGAPIXEL, then adds per
@@ -190,31 +197,79 @@ async function generateAndStore(
   console.log(`🎨 Submitting ${label} generation to FLUX.2 [klein] 9B...`);
   console.log(`🎨 Full prompt: ${prompt}`);
 
-  // ── Step 1: Submit generation request ──────────────────────────────────────
-  const submitRes = await fetch(BFL_ENDPOINT, {
-    method: 'POST',
-    signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
-    headers: {
-      'accept': 'application/json',
-      'x-key': bflApiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt,
-      width,
-      height,
-      ...(seed !== undefined ? { seed } : {}),
-    }),
-  });
+  // ── Step 1: Submit generation request (retry on transient failures) ─────────
+  let submitData: { polling_url?: string; id?: string } | null = null;
+  let lastSubmitErr = '';
+  for (let attempt = 1; attempt <= SUBMIT_MAX_ATTEMPTS; attempt++) {
+    let submitRes: Response;
+    try {
+      submitRes = await fetch(BFL_ENDPOINT, {
+        method: 'POST',
+        signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
+        headers: {
+          'accept': 'application/json',
+          'x-key': bflApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          width,
+          height,
+          ...(seed !== undefined ? { seed } : {}),
+        }),
+      });
+    } catch (err) {
+      // Network error or SUBMIT_TIMEOUT_MS abort — transient, worth a retry.
+      lastSubmitErr = `network/timeout (${(err as Error).name})`;
+      console.warn(
+        `🎨 BFL submit attempt ${attempt}/${SUBMIT_MAX_ATTEMPTS} for ${label} failed: ${lastSubmitErr}`,
+      );
+      if (attempt < SUBMIT_MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, SUBMIT_RETRY_BASE_MS * attempt));
+        continue;
+      }
+      throw new Error(`BFL submit failed after ${SUBMIT_MAX_ATTEMPTS} attempts: ${lastSubmitErr}`);
+    }
 
-  if (!submitRes.ok) {
-    const errText = await submitRes.text();
-    throw new Error(`BFL submit failed (${submitRes.status}): ${errText}`);
+    if (submitRes.ok) {
+      submitData = await submitRes.json();
+      break;
+    }
+
+    // Non-OK: read the body once so the REAL reason lands in the logs instead
+    // of collapsing into a generic 500 at the client.
+    const errText = await submitRes.text().catch(() => '');
+    const status = submitRes.status;
+
+    // 402 is a billing state, not a blip — retrying never helps, and it must be
+    // unmistakable in the logs so a genuine out-of-credits case is never
+    // mistaken for a transient hiccup.
+    if (status === 402) {
+      console.error(`🎨 BFL OUT OF CREDITS (402) for ${label}: ${errText}`);
+      throw new Error(`BFL_OUT_OF_CREDITS: ${errText}`);
+    }
+
+    lastSubmitErr = `HTTP ${status}: ${errText}`;
+    console.warn(
+      `🎨 BFL submit attempt ${attempt}/${SUBMIT_MAX_ATTEMPTS} for ${label} returned ${lastSubmitErr}`,
+    );
+
+    // 429 (rate limit) and 5xx are transient — back off and retry. Other 4xx
+    // (400/403/422…) are our fault or a hard reject; retrying won't help.
+    const transient = status === 429 || status >= 500;
+    if (transient && attempt < SUBMIT_MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, SUBMIT_RETRY_BASE_MS * attempt));
+      continue;
+    }
+    throw new Error(`BFL submit failed (${status}): ${errText}`);
   }
 
-  const submitData = await submitRes.json();
-  const pollingUrl: string = submitData.polling_url;
-  const requestId: string = submitData.id;
+  if (!submitData) {
+    throw new Error(`BFL submit failed: no data after ${SUBMIT_MAX_ATTEMPTS} attempts (${lastSubmitErr})`);
+  }
+
+  const pollingUrl = submitData.polling_url;
+  const requestId = submitData.id;
 
   if (!pollingUrl) {
     throw new Error('BFL response missing polling_url');
