@@ -260,7 +260,7 @@ function highlightTextLegacy(text: string, searchTerm: string): React.ReactNode 
 function DreamImageShimmer() {
   return (
     <div className="relative w-full h-40 bg-muted overflow-hidden">
-      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
     </div>
   );
 }
@@ -1404,7 +1404,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         {/* Flat resting surface; only the travelling sweep is a gradient.
             See DreamImageShimmer above. */}
         <div className="absolute inset-0 bg-muted overflow-hidden">
-          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 dark:via-white/5 to-transparent" />
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
         </div>
 
         <div className="relative flex flex-col h-full">
@@ -1512,7 +1512,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           // flashes on the swap. Label lifted from white/60 (2.9:1 on navy,
           // a contrast failure) to white/80.
           <div className="absolute inset-0 bg-navy-900 overflow-hidden">
-            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex items-center gap-2 text-white/80 text-xs">
                 <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">

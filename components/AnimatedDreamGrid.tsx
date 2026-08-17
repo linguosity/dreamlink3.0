@@ -785,7 +785,7 @@ function StreamingReaderModal({
                 unoptimized
               />
             ) : (
-              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
             )}
           </div>
         </div>
