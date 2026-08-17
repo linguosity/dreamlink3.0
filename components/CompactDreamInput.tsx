@@ -41,6 +41,8 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
   // null until /api/credits answers; the cost line renders nothing (inside a
   // fixed-height slot) until then, so late data never shifts the layout.
   const [credits, setCredits] = useState<CreditsInfo | null>(null);
+  // Live text of the reading while it streams from the server. null = no
+  // stream in flight; "" = stream open but no prose yet.
   const userAesthetic = useRef<string>(ImageAesthetic.PHOTOREALISTIC_VISION);
   const userReadingLevel = useRef<string>(ReadingLevel.CELESTIAL_INSIGHT);
   const router = useRouter();
@@ -149,13 +151,83 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
         body: JSON.stringify({
           dream_text: dreamText,
           reading_level: userReadingLevel.current,
+          // Ask for the streaming response. The server only streams for
+          // single-combo submissions; test-mode fan-out answers with plain
+          // JSON, which the content-type check below routes correctly.
+          stream: true,
         }),
       });
 
+      const isStream =
+        response.ok &&
+        (response.headers.get("content-type") ?? "").includes("ndjson") &&
+        response.body != null;
+
+      let result;
+      if (isStream) {
+        // NDJSON: one JSON event per line. Delta text is broadcast to the
+        // grid, which paints it INSIDE the placeholder card so the reading
+        // forms where it will live. "done" carries the exact payload the JSON
+        // path returns, so everything below this block is shared between both
+        // transports.
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let lineBuf = "";
+        let payload: unknown = null;
+        let streamError: string | null = null;
+        // Accumulate here rather than in React state: the composer no longer
+        // renders the text, it just relays it to the grid via a DOM event.
+        let titleAcc = "";
+        let bodyAcc = "";
+        let streamField: string | null = null;
+        const handleEvent = (evt: { type?: string; field?: string; text?: string; payload?: unknown; error?: string }) => {
+          if (evt.type === "accepted") {
+            // server accepted - the real dream id is available on evt.id
+          } else if (evt.type === "delta" && typeof evt.text === "string") {
+            const field = String(evt.field ?? "");
+            if (field === "dreamTitle") {
+              // Title streams first (schema-ordered) and drives the pop-up header.
+              titleAcc += evt.text;
+            } else {
+              // Everything else is the analysis body the reader watches appear.
+              const sep = bodyAcc && streamField !== field ? "\n\n" : "";
+              streamField = field;
+              bodyAcc += sep + evt.text;
+            }
+            window.dispatchEvent(
+              new CustomEvent("dreamriver:dream-streaming", {
+                detail: { title: titleAcc, body: bodyAcc },
+              }),
+            );
+          } else if (evt.type === "done") {
+            payload = evt.payload;
+          } else if (evt.type === "error") {
+            streamError = evt.error || "Analysis failed";
+          }
+        };
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          lineBuf += decoder.decode(value, { stream: true });
+          let nl;
+          while ((nl = lineBuf.indexOf("\n")) !== -1) {
+            const line = lineBuf.slice(0, nl).trim();
+            lineBuf = lineBuf.slice(nl + 1);
+            if (!line) continue;
+            try {
+              handleEvent(JSON.parse(line));
+            } catch {
+              // A malformed line is dropped; the stream carries on.
+            }
+          }
+        }
+        if (streamError) throw new Error(streamError);
+        if (!payload) throw new Error("Stream ended without a result");
+        result = payload;
+      } else {
       // Get the response text first to ensure we can see the error even if it's not valid JSON
       const responseText = await response.text();
 
-      let result;
       try {
         result = JSON.parse(responseText);
       } catch (parseError) {
@@ -195,6 +267,7 @@ export default function CompactDreamInput({ userId }: CompactDreamInputProps) {
 
         throw new Error(result.error || "Failed to submit dream");
       }
+      } // end JSON (non-stream) path
 
       if (result.id) {
         toast.success("Dream recorded! Analysis on its way…");

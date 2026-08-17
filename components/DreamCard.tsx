@@ -41,6 +41,7 @@ import { track } from "@/lib/analytics";
 // static imports a missing or renamed export fails the build, which is what
 // you want, instead of silently degrading the UI at runtime.
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -259,7 +260,7 @@ function highlightTextLegacy(text: string, searchTerm: string): React.ReactNode 
 function DreamImageShimmer() {
   return (
     <div className="relative w-full h-40 bg-muted overflow-hidden">
-      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent" />
+      <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
     </div>
   );
 }
@@ -295,6 +296,10 @@ type DreamEntryProps = {
   empty?: boolean;
   loading?: boolean;
   searchTerms?: string[];
+  /** Analysis prose as it streams in, before the row is persisted. When set
+   *  on a loading card, it renders in place of the summary skeleton so the
+   *  reading forms inside the card it will become — not in a panel elsewhere. */
+  streamingText?: string;
   /** Server-driven flag — gates the cost footer at the bottom of the card. */
   isAdmin?: boolean;
   dream: {
@@ -342,13 +347,24 @@ const BIBLE_VERSES: Record<string, string> = {
   "1 Kings 6:19": "And the oracle he prepared in the house within, to set there the ark of the covenant of the LORD."
 };
 
-export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false }: DreamEntryProps) {
+export default function DreamCard({ empty, loading: initialLoading, dream: initialDream, searchTerms = [], isAdmin = false, streamingText }: DreamEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   // Lightbox for the header artwork — the header render is small by design,
   // so this is where the 1024² generation actually gets seen at size.
   const [imageExpanded, setImageExpanded] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(initialLoading || false);
+  // Keep the internal loading flag in sync with the `loading` prop. It is
+  // seeded once at mount, so without this it never follows the prop: the
+  // streaming placeholder mounts loading=true, and when analysis finishes the
+  // parent flips loading=false, but the card kept isLoading=true and fell back
+  // to the "Analyzing your dream..." skeleton beside the finished card. (A
+  // remount used to re-seed the flag and hide this; the stable placeholder key
+  // removed that accident.) The image-poll effect below still sets isLoading
+  // true on its own for cards whose artwork is still generating.
+  useEffect(() => {
+    setIsLoading(initialLoading || false);
+  }, [initialLoading]);
   const [activeTab, setActiveTab] = useState("analysis");
   const [modalHeight, setModalHeight] = useState<number | null>(null);
   const analysisContentRef = useRef<HTMLDivElement>(null);
@@ -1319,7 +1335,68 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
     );
   }
 
-  // Render loading skeleton if in loading state
+  // Loading state has two distinct looks.
+  //
+  // While prose is streaming, the card IS the reading forming — a clean text
+  // surface, no shimmer and no skeleton bars, so nothing hides or competes
+  // with the words appearing. Only before the first token (or when there is no
+  // stream at all, e.g. "Read again") do we show the image-style shimmer.
+  if (isLoading && streamingText) {
+    return (
+      <Card className="overflow-hidden transition-all aspect-square relative flex flex-col bg-card">
+        {/* Logo watermark instead of a skeleton: the card already looks like
+            the card it will be, and the mark is faint enough to read prose
+            over. It fades out when the real image fades in on the finished
+            card. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.05] dark:opacity-[0.07]">
+          <BrandIcon size={190} alt="" />
+        </div>
+
+        <div className="relative flex flex-col h-full">
+          <CardHeader className="p-3 pb-1.5 flex-shrink-0">
+            <div className="flex justify-between items-start gap-2">
+              <CardTitle className="font-serif text-lg leading-tight flex-1 min-w-0">
+                <div className="break-words line-clamp-2">
+                  {dream.title || (
+                    <span className="text-muted-foreground italic font-normal">
+                      Interpreting your dream…
+                    </span>
+                  )}
+                </div>
+              </CardTitle>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
+                {/* Star is inert until the row is saved — shown for layout
+                    parity with the finished card, dimmed to read as pending. */}
+                <StarIcon className="h-3.5 w-3.5 opacity-30" />
+                <CalendarIcon className="h-3 w-3 mr-1" />
+                <span className="whitespace-nowrap">{formattedDate}</span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-3 pt-0 flex-1 min-h-0">
+            {/* Newest text pinned to the bottom and auto-scrolled, so the words
+                being written right now are always the ones in view. */}
+            <div
+              ref={(el) => {
+                if (el) el.scrollTop = el.scrollHeight;
+              }}
+              className="h-full overflow-y-auto"
+            >
+              <p className="font-serif text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                {streamingText}
+                <span
+                  aria-hidden="true"
+                  className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                />
+              </p>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+    );
+  }
+
   if (isLoading) {
     return (
       <Card className="overflow-hidden transition-all aspect-square relative">
@@ -1327,7 +1404,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
         {/* Flat resting surface; only the travelling sweep is a gradient.
             See DreamImageShimmer above. */}
         <div className="absolute inset-0 bg-muted overflow-hidden">
-          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 dark:via-white/5 to-transparent" />
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
         </div>
 
         <div className="relative flex flex-col h-full">
@@ -1435,7 +1512,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
           // flashes on the swap. Label lifted from white/60 (2.9:1 on navy,
           // a contrast failure) to white/80.
           <div className="absolute inset-0 bg-navy-900 overflow-hidden">
-            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex items-center gap-2 text-white/80 text-xs">
                 <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">

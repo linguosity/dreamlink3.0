@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
 import { useDreamSearch } from '@/hooks/use-dream-search';
-import { Search } from 'lucide-react';
+import { Search, Calendar, Puzzle, Book, Trash2, Share2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { AiDisclosure } from '@/components/brand/AiDisclosure';
+import Image from 'next/image';
 
 // Notes (2026-06-09 audit, H7/M6):
 // - framer-motion was previously pulled in via `require()` inside try/catch,
@@ -146,16 +151,35 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     ? searchedDreams
     : dreams;
 
+  // Live analysis prose streamed from the server while the placeholder card
+  // is up (feat/streaming-analysis). Rendered inside that card so the reading
+  // forms where it will live. Cleared when real content or a failure arrives.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
+
+  // The auto-opening "reading" pop-up: opens on submit and shows the title +
+  // full analysis body writing itself in, then stays open (done:true) for the
+  // reader to close. Lives at the grid level so the placeholder -> real-card
+  // handoff never dismisses it.
+  const [reader, setReader] = useState<{ title: string; body: string; done: boolean; dreamId: string | null; tags: string[]; originalText: string; bibleRefs: { citation: string; theme: string }[] } | null>(null);
+
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
 
   // Track analyzed dream data that arrived before the server refresh
   const [analyzedDream, setAnalyzedDream] = useState<{id: string; analysis: any} | null>(null);
+  // Latch the analyzed dream id in a ref so the "has the real row landed?"
+  // check survives analyzedDream being cleared by the 300ms handoff timer
+  // below. Deriving that check from analyzedDream state let the placeholder
+  // resurrect the instant the timer nulled it, leaving a duplicate
+  // "Analysis pending" card sitting next to the finished one.
+  const analyzedIdRef = useRef<string | null>(null);
 
   // Listen for dream submission events to show a placeholder card instantly
   useEffect(() => {
     function handleDreamSubmitting(e: Event) {
       const detail = (e as CustomEvent).detail;
+      analyzedIdRef.current = null; // new submission forgets any prior analyzed id
+      setReader({ title: '', body: '', done: false, dreamId: null, tags: [], originalText: detail.original_text ?? '', bibleRefs: [] }); // open the reading pop-up now
       setPendingDream({
         id: detail.id,
         original_text: detail.original_text,
@@ -167,7 +191,20 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     function handleDreamAnalyzed(e: Event) {
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail?.analysis) {
+        analyzedIdRef.current = detail.id;
         setAnalyzedDream({ id: detail.id, analysis: detail.analysis });
+        setStreamingText(null); // real content supersedes the live stream
+        setReader((r) => (r
+          ? {
+              ...r,
+              done: true,
+              dreamId: detail.id,
+              tags: Array.isArray(detail.analysis?.tags) ? detail.analysis.tags : r.tags,
+              bibleRefs: Array.isArray(detail.analysis?.biblicalReferences) ? detail.analysis.biblicalReferences : r.bibleRefs,
+              // Settle to the final full analysis (composed prose on deep tiers).
+              body: (typeof detail.analysis?.analysis === 'string' && detail.analysis.analysis) || r.body,
+            }
+          : r));
       }
     }
 
@@ -175,17 +212,32 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
     // real card, so drop the optimistic placeholder instead of leaving it
     // spinning forever behind the error/upsell UI.
     function handleDreamFailed() {
+      analyzedIdRef.current = null;
       setPendingDream(null);
       setAnalyzedDream(null);
+      setStreamingText(null);
+      setReader(null); // tear down the reading pop-up on failure
+    }
+
+    function handleDreamStreaming(e: Event) {
+      const detail = (e as CustomEvent).detail as { title?: string; body?: string };
+      const body = detail?.body ?? '';
+      const title = detail?.title ?? '';
+      setStreamingText(body || null);
+      setReader((r) => (r
+        ? { ...r, title, body }
+        : { title, body, done: false, dreamId: null, tags: [], originalText: '', bibleRefs: [] }));
     }
 
     window.addEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
     window.addEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
     window.addEventListener('dreamriver:dream-failed', handleDreamFailed);
+    window.addEventListener('dreamriver:dream-streaming', handleDreamStreaming);
     return () => {
       window.removeEventListener('dreamriver:dream-submitting', handleDreamSubmitting);
       window.removeEventListener('dreamriver:dream-analyzed', handleDreamAnalyzed);
       window.removeEventListener('dreamriver:dream-failed', handleDreamFailed);
+      window.removeEventListener('dreamriver:dream-streaming', handleDreamStreaming);
     };
   }, []);
 
@@ -193,12 +245,15 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // analyzed dream id) actually appears in the server-rendered list. Clearing
   // based on `dreams.length > 0` races against Supabase read propagation and
   // causes a visible gap between placeholder and real card.
+  // Based on the latched ref, NOT analyzedDream state: once the real server
+  // row lands this stays true, so the placeholder hides and never comes back.
   const analyzedIdInGrid =
-    analyzedDream !== null && dreams.some((d) => d.id === analyzedDream.id);
-
+    analyzedIdRef.current !== null &&
+    dreams.some((d) => d.id === analyzedIdRef.current);
   useEffect(() => {
     if (pendingDream && analyzedIdInGrid) {
       const timer = setTimeout(() => {
+        analyzedIdRef.current = null;
         setPendingDream(null);
         setAnalyzedDream(null);
       }, 300);
@@ -310,7 +365,7 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // flickering out and back.
   const showPlaceholder = pendingDream !== null && !analyzedIdInGrid;
   const placeholderKey =
-    analyzedDream?.id ?? pendingDream?.id ?? 'placeholder';
+    pendingDream?.id ?? analyzedDream?.id ?? 'placeholder';
 
   const placeholderDream: Dream | null = pendingDream
     ? analyzedDream
@@ -454,18 +509,17 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   );
 
   const cardItems = (
-    <AnimatePresence initial={false}>
-      {/* Optimistic placeholder — stays visible through analysis and
-          disappears only once the real server row lands in the grid.
+    <>
+      {/* Optimistic placeholder — rendered OUTSIDE AnimatePresence so React
+          unmounts it the moment the real card lands. Left inside AnimatePresence
+          it was orphaned in the DOM, leaving a duplicate card by the real one.
           For matrix submissions we still show one placeholder; the
           remaining rows arrive via router.refresh. */}
       {showPlaceholder && placeholderDream && (
         <motion.div
           key={placeholderKey}
-          layout
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
           transition={{
             type: 'tween',
             duration: 0.3,
@@ -476,16 +530,21 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           <DreamCard
             dream={placeholderDream}
             loading={analyzedDream === null}
+            streamingText={streamingText ?? undefined}
             isAdmin={isAdmin}
           />
         </motion.div>
       )}
+      <AnimatePresence initial={false}>
       {renderOrder.map((item) =>
         item.type === 'standalone' ? (
           <motion.div
             key={item.dream.id}
             layout
-            initial={{ opacity: 0, scale: 0.8 }}
+            // The card that replaces the optimistic placeholder appears in
+            // place with no entrance pop; the placeholder exits instantly, so
+            // the streamed card simply becomes the finished card - no crossfade.
+            initial={analyzedIdRef.current === item.dream.id ? false : { opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
@@ -518,7 +577,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
           </motion.div>
         ),
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 
   // ── Wrap (rail) mode ──────────────────────────────────────────
@@ -568,6 +628,8 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
         ) : (
           cardItems
         )}
+
+        <StreamingReaderModal reader={reader} onClose={() => setReader(null)} />
       </div>
     );
   }
@@ -593,7 +655,290 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
       {cardItems}
     </div>
       )}
+
+      <StreamingReaderModal reader={reader} onClose={() => setReader(null)} />
     </div>
+  );
+}
+
+// The auto-opening reading pop-up. Mirrors the saved-card detail view: square
+// artwork (skeleton until it generates, then it fades in) + title + date + tags
+// on the header, and the full analysis writing itself in below. Kept as a
+// grid-level sibling so it survives the placeholder -> real-card handoff.
+function StreamingReaderModal({
+  reader,
+  onClose,
+}: {
+  reader: {
+    title: string;
+    body: string;
+    done: boolean;
+    dreamId: string | null;
+    tags: string[];
+    originalText: string;
+    bibleRefs: { citation: string; theme: string }[];
+  } | null;
+  onClose: () => void;
+}) {
+  const open = reader !== null;
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  // Autoscroll the reading as it writes itself in.
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [reader?.body]);
+
+  // Forget the artwork when the pop-up closes so the next reading starts clean.
+  useEffect(() => {
+    if (!open) setImageUrl(null);
+  }, [open]);
+
+  // Poll for the artwork once the dream row exists and fade it into the
+  // skeleton's spot the moment it lands, matching the saved card.
+  const dreamId = reader?.dreamId ?? null;
+  useEffect(() => {
+    if (!dreamId || imageUrl) return;
+    let cancelled = false;
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries += 1;
+      if (tries > 45) {
+        clearInterval(iv);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/dream-entries?id=${dreamId}`, {
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const url = data?.dreams?.[0]?.image_url;
+        if (url && !cancelled) {
+          setImageUrl(url);
+          clearInterval(iv);
+        }
+      } catch {
+        // transient network error - keep polling
+      }
+    }, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, [dreamId, imageUrl]);
+
+  const dateLabel = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto pb-8">
+        <DialogDescription className="sr-only">
+          Your dream interpretation, appearing as it is written.
+        </DialogDescription>
+
+        {/* Split header — identical to the saved-card detail view: title/date/
+            tags on the left, square artwork (skeleton until it generates) on
+            the right. */}
+        <div className="flex flex-col-reverse sm:grid sm:grid-cols-[minmax(0,1fr)_38%] gap-3 sm:gap-4 items-start">
+          <div className="min-w-0 w-full">
+            <div className="flex items-start justify-between gap-2">
+              <DialogTitle className="font-serif text-2xl sm:text-3xl leading-[1.15] tracking-tight">
+                {reader?.title ? (
+                  reader.title
+                ) : (
+                  <span className="text-muted-foreground italic font-normal">
+                    Interpreting your dream…
+                  </span>
+                )}
+              </DialogTitle>
+              <span className="text-[10px] text-muted-foreground border border-muted-foreground rounded px-1.5 py-0.5 whitespace-nowrap flex items-center h-fit shrink-0">esc</span>
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+              <Calendar className="h-3 w-3 mr-1 shrink-0" />
+              {dateLabel}
+            </div>
+            {reader && reader.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {reader.tags.map((tag, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs capitalize">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt="Dream artwork"
+                fill
+                className="object-cover animate-in fade-in duration-700"
+                sizes="(max-width: 640px) 100vw, 230px"
+                unoptimized
+              />
+            ) : (
+              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/70 dark:via-white/25 to-transparent" />
+            )}
+          </div>
+        </div>
+
+        {/* Tabs — same shell as the detail view. The reading writes itself into
+            the Analysis tab; Original Dream shows exactly what was submitted. */}
+        <Tabs defaultValue="analysis" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="analysis" className="flex items-center gap-1 data-[state=active]:shadow-sm">
+              <Puzzle className="h-3 w-3" />Analysis
+            </TabsTrigger>
+            <TabsTrigger value="original" className="data-[state=active]:shadow-sm">Original Dream</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analysis" className="space-y-4 p-1 min-h-0">
+            <div>
+              {/* AI disclosure — above the reading, exactly as the detail view. */}
+              <AiDisclosure
+                verseCount={reader && reader.bibleRefs.length > 0 ? reader.bibleRefs.length : undefined}
+                className="mb-4 max-w-[65ch]"
+              />
+              <div ref={bodyRef} className="max-w-[65ch]">
+                {reader && !reader.done && !reader.body ? (
+                  // Pre-stream "thinking" beat: the pop-up is open but the
+                  // first token hasn't landed yet. Bouncing dots read as
+                  // "coming" without the skeleton's "empty template" feel.
+                  <div
+                    className="flex items-center gap-3 text-sm text-muted-foreground"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {/* A gentle river current scrolling sideways — a seamless
+                        loop: the SVG is 2x the window and slides one full
+                        wavelength period (-50%) before repeating. */}
+                    <span className="relative h-5 w-[140px] shrink-0 overflow-hidden" aria-hidden="true">
+                      <svg
+                        className="absolute left-0 top-0 h-5 w-[280px] animate-river text-primary/80"
+                        viewBox="0 0 280 20"
+                        preserveAspectRatio="none"
+                        fill="none"
+                      >
+                        <path
+                          d="M0 10 Q 17 2 35 10 T 70 10 T 105 10 T 140 10 T 175 10 T 210 10 T 245 10 T 280 10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                    </span>
+                    Reading your dream…
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                    {reader?.body}
+                    {reader && !reader.done && (
+                      <span
+                        aria-hidden="true"
+                        className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                      />
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Feedback + Read again — same layout as the saved card. Inert
+                while the reading is being written; the saved card behind the
+                pop-up carries the working controls once you close it. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t pt-3.5">
+              <span className="text-xs text-muted-foreground">
+                Did this reading feel meaningful?
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled
+                  className="rounded-full border border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className="rounded-full border border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+                >
+                  Not really
+                </button>
+              </div>
+              <button
+                type="button"
+                disabled
+                className="ml-auto rounded-full border border-input px-3 py-1 text-xs font-medium text-muted-foreground transition-colors disabled:opacity-50"
+              >
+                Read again · 1 credit
+              </button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="original" className="space-y-4 p-1 min-h-0">
+            <div className="text-sm whitespace-pre-wrap max-w-[65ch]">
+              {reader?.originalText}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Share row — matches the detail view's position. */}
+        <div className="flex justify-end items-center mb-4">
+          <button
+            type="button"
+            disabled
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-50"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Share
+          </button>
+        </div>
+
+        {/* Footer: scripture + delete — same structure as the saved card. */}
+        <div className="pt-4 border-t space-y-3">
+          {reader && reader.bibleRefs.length > 0 && (
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                Scripture
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {reader.bibleRefs.map((ref, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold min-h-[24px] bg-mist text-primary border-mist-2"
+                  >
+                    <Book className="h-2 w-2" />
+                    {ref.citation}
+                    {ref.theme && (
+                      <span className="font-normal opacity-75">· {ref.theme}</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium text-destructive disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
