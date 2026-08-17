@@ -808,15 +808,33 @@ function StreamingReaderModal({
                 className="mb-4 max-w-[65ch]"
               />
               <div ref={bodyRef} className="max-w-[65ch]">
-                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                  {reader?.body}
-                  {reader && !reader.done && (
-                    <span
-                      aria-hidden="true"
-                      className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
-                    />
-                  )}
-                </p>
+                {reader && !reader.done && !reader.body ? (
+                  // Pre-stream "thinking" beat: the pop-up is open but the
+                  // first token hasn't landed yet. Bouncing dots read as
+                  // "coming" without the skeleton's "empty template" feel.
+                  <div
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <span className="flex gap-1" aria-hidden="true">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce" />
+                    </span>
+                    Reading your dream…
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                    {reader?.body}
+                    {reader && !reader.done && (
+                      <span
+                        aria-hidden="true"
+                        className="ml-0.5 inline-block h-3.5 w-[6px] animate-pulse rounded-[1px] bg-primary/70 align-text-bottom"
+                      />
+                    )}
+                  </p>
+                )}
               </div>
             </div>
 
