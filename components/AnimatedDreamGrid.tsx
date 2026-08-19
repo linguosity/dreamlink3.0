@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import DreamCard from './DreamCard';
 import { useSearch } from '@/context/search-context';
@@ -37,6 +38,7 @@ interface Dream {
   tags?: string[];
   bible_refs?: string[];
   created_at?: string;
+  image_url?: string | null;
   // Owner-only "favorite" flag, surfaced via the Starred gallery filter.
   is_starred?: boolean;
   // Comparison-group metadata (set on rows produced by admin test mode).
@@ -161,6 +163,42 @@ export default function AnimatedDreamGrid({ dreams, maxRowItems = 3, isAdmin = f
   // reader to close. Lives at the grid level so the placeholder -> real-card
   // handoff never dismisses it.
   const [reader, setReader] = useState<{ title: string; body: string; done: boolean; dreamId: string | null; tags: string[]; originalText: string; bibleRefs: { citation: string; theme: string }[] } | null>(null);
+
+  const router = useRouter();
+  // One-shot per mount: heal a bounded number of missing-artwork cards when the
+  // journal loads. Capped so a large backlog heals gradually across visits
+  // rather than firing dozens of paid generations at once; the endpoint itself
+  // caps per-dream attempts and serializes concurrent triggers, so this is
+  // safe even if a card also triggers its own manual generation.
+  const didImageSweep = useRef(false);
+  useEffect(() => {
+    if (didImageSweep.current) return;
+    const MAX_PER_LOAD = 3;
+    const missing = dreams
+      .filter((d) => !d.image_url && !String(d.id).startsWith('pending-'))
+      .slice(0, MAX_PER_LOAD);
+    if (missing.length === 0) return;
+    didImageSweep.current = true;
+
+    let cancelled = false;
+    (async () => {
+      let healed = 0;
+      for (let i = 0; i < missing.length; i++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch(`/api/dream-entries/${missing[i].id}/image`, { method: 'POST' });
+          const data = await res.json().catch(() => ({}));
+          if (data?.status === 'success' && data?.imageUrl) healed++;
+        } catch {
+          // Ignore — a later visit gets another chance.
+        }
+        // Stagger to stay well under the image provider's concurrency limit.
+        if (i < missing.length - 1) await new Promise((r) => setTimeout(r, 2500));
+      }
+      if (!cancelled && healed > 0) router.refresh();
+    })();
+    return () => { cancelled = true; };
+  }, [dreams, router]);
 
   // Optimistic placeholder card shown immediately on submission
   const [pendingDream, setPendingDream] = useState<Dream | null>(null);
