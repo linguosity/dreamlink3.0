@@ -392,6 +392,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [isMounted, setIsMounted] = useState(false);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(initialDream.image_url || null);
   const [imageError, setImageError] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   // Poll for image if: no image yet AND (card is loading OR dream was created within the last 2 minutes)
   // We poll for any recent dream regardless of whether dream_summary is populated,
   // because the server render may happen before DB writes fully propagate.
@@ -401,6 +402,34 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
   const [isPollingCardImage, setIsPollingCardImage] = useState(
     !initialDream.image_url && (initialLoading || isRecentDream)
   );
+
+  // Manual "Generate artwork" — the owner explicitly asks to (re)create a
+  // missing image. Overrides the automatic attempt cap on the endpoint. The
+  // endpoint awaits generation and returns the URL, so on success we drop it
+  // straight in; otherwise we fall back to the existing image poll.
+  const handleGenerateImage = async () => {
+    setIsGeneratingImage(true);
+    try {
+      const res = await fetch(`/api/dream-entries/${initialDream.id}/image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manual: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.imageUrl) {
+        setCardImageUrl(data.imageUrl);
+        router.refresh();
+      } else {
+        // Claimed elsewhere, still working, or a soft failure — let the poll
+        // surface the image if a retry lands, and re-enable the button.
+        setIsPollingCardImage(true);
+      }
+    } catch {
+      // Network hiccup — leave the button available to try again.
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   // Ensure client-side hydration
   useEffect(() => {
@@ -1815,7 +1844,7 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                 )}
               </div>
 
-              {(cardImageUrl || isPollingCardImage) && (
+              {(cardImageUrl || isPollingCardImage) ? (
                 <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted">
                   {cardImageUrl ? (
                     // Click to expand: the header render is only ~215px, and
@@ -1848,7 +1877,24 @@ export default function DreamCard({ empty, loading: initialLoading, dream: initi
                     <DreamImageShimmer />
                   )}
                 </div>
-              )}
+              ) : hasInterpretation && !empty && !dream.id.startsWith('pending-') ? (
+                // Artwork never generated (a transient blip at creation). Give
+                // the owner a one-tap way to (re)create it — the endpoint's
+                // manual path overrides the automatic attempt cap.
+                <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-muted flex flex-col items-center justify-center gap-2 p-3 text-center">
+                  <span className="text-[11px] text-muted-foreground leading-snug">
+                    Artwork didn’t generate for this dream.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleGenerateImage}
+                    disabled={isGeneratingImage}
+                    className="rounded-full border border-input px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {isGeneratingImage ? 'Generating…' : 'Generate artwork'}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </DialogHeader>
           
