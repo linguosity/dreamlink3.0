@@ -5,9 +5,11 @@
 // newsletter signup funnel, recent payments, and 30-day AI spend so revenue
 // can be read against cost.
 //
-// NOTE: subscriptions/payments stay empty until the Stripe webhook fixes land
-// (docs/stripe-fix-spec.md). The panels are wired to the real tables and
-// populate automatically once they do. payments.amount is Stripe cents.
+// NOTE: the Stripe webhook fixes (docs/stripe-fix-spec.md) landed in migration
+// 20260621000002 plus the webhook-handler rewrite, so these panels populate
+// from the real tables as subscriptions and payments arrive. The banner below
+// only warns when STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET are actually unset.
+// payments.amount is Stripe cents.
 
 import { getAdminClient } from "@/utils/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,8 +200,8 @@ export default async function RevenuePage() {
                   {!m.webhookConfigured && (
                     <>Missing <code className="text-xs bg-muted px-1 py-0.5 rounded">STRIPE_WEBHOOK_SECRET</code>. </>
                   )}
-                  Subscription and payment data stays empty until the webhook
-                  writes succeed (see docs/stripe-fix-spec.md).
+                  Subscription and payment data stays empty until that value
+                  is set.
                 </p>
               </div>
             </div>
@@ -320,8 +322,8 @@ export default async function RevenuePage() {
         <CardContent>
           {m.recentPayments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No payments recorded yet. This table populates once the Stripe
-              webhook fixes land (docs/stripe-fix-spec.md).
+              No payments recorded yet — this table fills in automatically as
+              customers subscribe.
             </p>
           ) : (
             <div className="overflow-x-auto">
