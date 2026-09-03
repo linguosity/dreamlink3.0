@@ -81,7 +81,9 @@ export function parseBrief(md, week) {
   // Waiting on: `- B: item · item · item`
   sort = 0;
   for (const line of section(md, "Waiting on").split("\n")) {
-    const m = line.match(/^-\s+(B\/J|B\+J|Either|B|J)\s*:\s*(.+)$/);
+    // Briefs write the owner bold ("- **B:** …"); tolerate optional ** around
+    // it — without this, every Waiting-on line silently failed to parse.
+    const m = line.match(/^-\s+\**(B\/J|B\+J|Either|B|J)\s*:?\**\s*:?\s*(.+)$/);
     if (!m) continue;
     const owner = normalizeOwner(m[1]);
     for (const item of m[2].split("·")) {
