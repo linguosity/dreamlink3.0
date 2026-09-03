@@ -11,7 +11,7 @@ below was created on 2026-07-02 in the DreamRiver Technologies LLC sandbox.
 | `STRIPE_PRICE_VISIONARY_YEARLY` | $99.99/yr | `price_1TolruFMiyoPHYT4uEyuDLi3` |
 | `STRIPE_PRICE_PROPHET_MONTHLY` | $19.99/mo | `price_1TolsKFMiyoPHYT40EfgdxL9` |
 | `STRIPE_PRICE_PROPHET_YEARLY` | $179.99/yr | `price_1TolsbFMiyoPHYT4GNTASwXx` |
-| `STRIPE_PRICE_LIFETIME` | $399 one-time | _create a one-time test price and paste it_ |
+| `STRIPE_PRICE_LIFETIME` | $399 one-time | `price_1UBOLoFMiyoPHYT42bEsRt1H` (created 2026-09-03) |
 
 ## One-time setup (local)
 
@@ -71,3 +71,9 @@ session in Dashboard → Tax → Overview. New sessions should appear under
 "With tax turned on", with tax collected only for registered jurisdictions.
 Existing subscriptions created before this change are NOT retroactively
 taxed — only sessions created after deploy are.
+
+Sandbox note (2026-09-03): the sandbox has its own Tax config, separate from
+live. It had no registrations and a generic default tax code, so it could
+never show a tax amount. An Arizona registration was added and the default
+code set to `txcd_10103001` (SaaS – Personal Use) to mirror live. Verified:
+AZ $12.99 → $0.90 tax; AZ $399 → $27.53 tax; OR/NY → $0 (not registered).
