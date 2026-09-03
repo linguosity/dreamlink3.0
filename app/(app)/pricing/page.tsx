@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Check, ArrowLeft } from "lucide-react";
+import { Check, ArrowLeft, Sparkles } from "lucide-react";
 import AuthNavigation from "@/components/AuthNavigation";
 import { toast } from "sonner";
 
@@ -92,6 +92,24 @@ const plans: Plan[] = [
   },
 ];
 
+// Founder's Lifetime — one payment, Insight tier forever. The charge itself
+// comes from the Stripe price behind STRIPE_PRICE_LIFETIME; this copy must
+// match it. What the tier unlocks is LIFETIME_GRANTS_PLAN in lib/tierConfig.
+const LIFETIME = {
+  name: "Founder's Lifetime",
+  price: "$399",
+  priceKey: "lifetime",
+  description:
+    "Pay once, keep Insight for life. No renewals, no price increases — ever.",
+  features: [
+    "Everything in Insight, forever",
+    "30 AI dream analyses every month",
+    "One payment — never billed again",
+    "Directly supports DreamRiver's launch",
+  ],
+  cta: "Become a Founder",
+};
+
 // Yearly savings vs. paying month-to-month, rounded to a whole percent.
 function yearlySavingsPct(monthly: number, yearly: number): number {
   if (!monthly || !yearly) return 0;
@@ -112,8 +130,11 @@ export default function PricingPage() {
 
   async function startCheckout(plan: Plan) {
     if (!plan.priceBase) return;
-    const priceKey = `${plan.priceBase}_${billing}`;
-    setLoadingPlan(plan.name);
+    await startCheckoutWithKey(`${plan.priceBase}_${billing}`, plan.name);
+  }
+
+  async function startCheckoutWithKey(priceKey: string, label: string) {
+    setLoadingPlan(label);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -287,6 +308,50 @@ export default function PricingPage() {
               </Card>
             );
           })}
+        </div>
+
+        {/* Founder's Lifetime */}
+        <div className="mt-12 max-w-6xl mx-auto">
+          <Card className="relative overflow-hidden p-6 md:p-8 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
+            <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h3 className="text-2xl font-bold">{LIFETIME.name}</h3>
+                  <Badge variant="outline" className="border-primary/40 text-primary">
+                    Limited
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  {LIFETIME.description}
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                  {LIFETIME.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0 mt-1" />
+                      <span className="text-sm leading-relaxed">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="md:w-56 text-center md:text-right">
+                <div className="mb-1">
+                  <span className="text-4xl font-bold">{LIFETIME.price}</span>
+                  <span className="text-muted-foreground"> once</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Plus applicable tax · ≈ 4 years of Insight
+                </p>
+                <Button
+                  onClick={() => startCheckoutWithKey(LIFETIME.priceKey, LIFETIME.name)}
+                  disabled={loadingPlan === LIFETIME.name}
+                  className="w-full py-3 text-base font-medium whitespace-normal h-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl"
+                >
+                  {loadingPlan === LIFETIME.name ? "Redirecting…" : LIFETIME.cta}
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* FAQ Section */}

@@ -11,6 +11,7 @@ below was created on 2026-07-02 in the DreamRiver Technologies LLC sandbox.
 | `STRIPE_PRICE_VISIONARY_YEARLY` | $99.99/yr | `price_1TolruFMiyoPHYT4uEyuDLi3` |
 | `STRIPE_PRICE_PROPHET_MONTHLY` | $19.99/mo | `price_1TolsKFMiyoPHYT40EfgdxL9` |
 | `STRIPE_PRICE_PROPHET_YEARLY` | $179.99/yr | `price_1TolsbFMiyoPHYT4GNTASwXx` |
+| `STRIPE_PRICE_LIFETIME` | $399 one-time | _create a one-time test price and paste it_ |
 
 ## One-time setup (local)
 
@@ -54,3 +55,19 @@ Then on http://localhost:3000/pricing:
 
 Real card on dreamriver.io → verify webhook 200 in Workbench → Webhooks →
 dreamriver-production → Event deliveries → then cancel + refund in dashboard.
+
+## Stripe Tax (added 2026-09-03)
+
+Every Checkout Session is created with `automatic_tax: { enabled: true }` —
+subscriptions and the one-time Founder's Lifetime purchase alike. Returning
+customers also get `customer_update: { address: "auto" }` so the address
+collected at checkout is saved to the Customer and used for the tax
+calculation. Rates and the product tax code (SaaS – Personal Use) live in the
+Stripe Dashboard → Tax; nothing is hardcoded in the app.
+
+To verify in the sandbox: complete a checkout with a US address in a state
+where DreamRiver is registered (Arizona) and one where it isn't, then open the
+session in Dashboard → Tax → Overview. New sessions should appear under
+"With tax turned on", with tax collected only for registered jurisdictions.
+Existing subscriptions created before this change are NOT retroactively
+taxed — only sessions created after deploy are.

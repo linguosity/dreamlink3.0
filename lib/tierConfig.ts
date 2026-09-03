@@ -77,6 +77,23 @@ export const PLAN_CAPABILITIES: Record<SubscriptionPlan, PlanCapabilities> = {
 };
 
 /**
+ * Which plan a Founder's Lifetime purchase ($399 once, decided 2026-09-03)
+ * unlocks — forever, no renewals. Insight for now because Journey is still
+ * "coming soon"; flip this one line to change what founders get. A lifetime
+ * purchase is stored as an ACTIVE `subscriptions` row with this plan and a
+ * NULL stripe_subscription_id, so every existing plan gate just works.
+ */
+export const LIFETIME_GRANTS_PLAN: SubscriptionPlan = "visionary";
+
+/** True when a subscriptions row came from a one-time lifetime purchase. */
+export function isLifetimeRow(row: {
+  status?: string | null;
+  stripe_subscription_id?: string | null;
+} | null | undefined): boolean {
+  return !!row && row.status === "active" && !row.stripe_subscription_id;
+}
+
+/**
  * Effective hard monthly cap for a plan: the granted credits, or the
  * fair-use ceiling when the plan is "unlimited". Used by the credit gate.
  */

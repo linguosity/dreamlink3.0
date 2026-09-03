@@ -62,7 +62,14 @@ const PLANS: Array<{
   },
 ];
 
-export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
+export function PlanSection({
+  plan,
+  isLifetime = false,
+}: {
+  plan: SubscriptionPlan;
+  /** Founder's Lifetime — paid once, never renews. */
+  isLifetime?: boolean;
+}) {
   const [portalLoading, setPortalLoading] = useState(false);
 
   async function openBillingPortal() {
@@ -108,7 +115,7 @@ export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
                 <div className="font-serif text-[22px] capitalize">{p.name}</div>
                 {isCurrent && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-                    Current
+                    {isLifetime ? "Founder's Lifetime" : "Current"}
                   </span>
                 )}
               </div>
@@ -155,7 +162,9 @@ export function PlanSection({ plan }: { plan: SubscriptionPlan }) {
         ) : (
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <p className="text-[13px] text-muted-foreground">
-              Update your card, view invoices, or cancel in the Stripe customer portal.
+              {isLifetime
+                ? "Founder's Lifetime — paid once, nothing renews. Download your invoice from the Stripe customer portal."
+                : "Update your card, view invoices, or cancel in the Stripe customer portal."}
             </p>
             <Button
               variant="outline"

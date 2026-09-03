@@ -31,6 +31,7 @@ import {
   type TestModeState,
 } from "./_components/sections/analysis-section";
 import { ImageStyleSection } from "./_components/sections/image-style-section";
+import { isLifetimeRow } from "@/lib/tierConfig";
 import { PlanSection } from "./_components/sections/plan-section";
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -70,6 +71,8 @@ export default function SettingsPage() {
     AnalysisDepth.SHALLOW,
   );
   const [plan, setPlan] = useState<SubscriptionPlan>("free");
+  // Founder's Lifetime: active row with no Stripe subscription behind it.
+  const [isLifetime, setIsLifetime] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [testMode, setTestMode] = useState<TestModeState>(DEFAULT_TEST_MODE);
   const [showTestModeConfirm, setShowTestModeConfirm] = useState(false);
@@ -91,7 +94,7 @@ export default function SettingsPage() {
             .single(),
           supabase
             .from("subscriptions")
-            .select("plan, status")
+            .select("plan, status, stripe_subscription_id")
             .eq("user_id", user.id)
             .eq("status", "active")
             .order("created_at", { ascending: false })
@@ -128,6 +131,7 @@ export default function SettingsPage() {
             ? sub.plan
             : "free";
         setPlan(resolvedPlan);
+        setIsLifetime(isLifetimeRow(sub));
         setDreamCount(dreamCountRes.count ?? 0);
       } catch (error) {
         console.error("Error fetching settings data:", error);
@@ -331,7 +335,7 @@ export default function SettingsPage() {
           />
         );
       case "plan":
-        return <PlanSection plan={plan} />;
+        return <PlanSection plan={plan} isLifetime={isLifetime} />;
     }
   })();
 
