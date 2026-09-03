@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, stripePriceToPlan } from "@/lib/stripe";
+import { LIFETIME_GRANTS_PLAN } from "@/lib/tierConfig";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { captureServerEvent } from "@/lib/analytics-server";
 import {
@@ -89,7 +90,64 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
-        if (!userId || !session.subscription) break;
+        if (!userId) break;
+
+        // ---- Founder's Lifetime (one-time, mode: "payment") ----------------
+        // No Subscription object exists, so grant access straight from the
+        // session: an ACTIVE subscriptions row with the lifetime plan and a
+        // NULL stripe_subscription_id (see isLifetimeRow in lib/tierConfig).
+        // No invoice.payment_succeeded follows a one-time Checkout payment,
+        // so the payments row is written here too.
+        if (session.mode === "payment") {
+          if (session.metadata?.purchase !== "lifetime") break;
+          // Async payment methods can complete with payment_status "unpaid";
+          // we only accept cards, but never grant on an unpaid session.
+          if (session.payment_status !== "paid") break;
+
+          const customerId =
+            typeof session.customer === "string"
+              ? session.customer
+              : session.customer?.id ?? null;
+          const paymentIntentId =
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent?.id ?? session.id;
+
+          const { error: lifetimeError } = await admin
+            .from("subscriptions")
+            .upsert(
+              {
+                user_id: userId,
+                stripe_subscription_id: null,
+                stripe_customer_id: customerId,
+                status: "active",
+                plan: LIFETIME_GRANTS_PLAN,
+                current_period_end: null,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+          if (lifetimeError)
+            throw new Error(`lifetime subscriptions upsert: ${lifetimeError.message}`);
+
+          const { error: payError } = await admin.from("payments").insert({
+            user_id: userId,
+            stripe_payment_id: paymentIntentId,
+            amount: session.amount_total ?? 0,
+            currency: session.currency ?? "usd",
+            status: "succeeded",
+            created_at: new Date().toISOString(),
+          });
+          if (payError) throw new Error(`payment insert (lifetime): ${payError.message}`);
+
+          await captureServerEvent(userId, "subscribed", {
+            plan: LIFETIME_GRANTS_PLAN,
+            interval: "lifetime",
+          });
+          break;
+        }
+
+        if (!session.subscription) break;
 
         const stripe = getStripe();
         const subscription = await stripe.subscriptions.retrieve(

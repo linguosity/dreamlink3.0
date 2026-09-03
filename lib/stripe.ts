@@ -51,6 +51,17 @@ export const PLAN_PRICES: Record<string, string> = {
 };
 
 /**
+ * Founder's Lifetime — a ONE-TIME Stripe price (not recurring). Kept out of
+ * PLAN_PRICES on purpose: that map is "subscription priceKey → price" and
+ * stripePriceToPlan() derives the plan from the key's prefix, which would
+ * mis-read "lifetime". The tier a lifetime purchase unlocks lives in
+ * LIFETIME_GRANTS_PLAN (lib/tierConfig.ts).
+ */
+export const LIFETIME_PRICE_KEY = "lifetime";
+export const LIFETIME_PRICE_ID =
+  process.env.STRIPE_PRICE_LIFETIME || "price_REPLACE_ME";
+
+/**
  * Map Stripe price IDs back to DreamRiver plan names.
  */
 export function stripePriceToPlan(priceId: string): string {

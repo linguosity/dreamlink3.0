@@ -21,11 +21,11 @@ export async function POST(request: NextRequest) {
     // Get the user's Stripe subscription to find the customer
     const { data: subscription } = await supabase
       .from("subscriptions")
-      .select("stripe_subscription_id")
+      .select("stripe_subscription_id, stripe_customer_id")
       .eq("user_id", user.id)
       .single();
 
-    if (!subscription?.stripe_subscription_id) {
+    if (!subscription?.stripe_subscription_id && !subscription?.stripe_customer_id) {
       return NextResponse.json(
         { error: "No active subscription found" },
         { status: 404 }
@@ -34,14 +34,25 @@ export async function POST(request: NextRequest) {
 
     const stripe = getStripe();
 
-    // Retrieve the subscription to get the customer ID
-    const stripeSub = await stripe.subscriptions.retrieve(
-      subscription.stripe_subscription_id
-    );
-    const customerId =
-      typeof stripeSub.customer === "string"
-        ? stripeSub.customer
-        : stripeSub.customer.id;
+    // Founder's Lifetime rows have no subscription, only a customer — the
+    // portal still works for them (invoice download, card on file).
+    let customerId = subscription.stripe_customer_id as string | null;
+    if (!customerId && subscription.stripe_subscription_id) {
+      // Retrieve the subscription to get the customer ID
+      const stripeSub = await stripe.subscriptions.retrieve(
+        subscription.stripe_subscription_id
+      );
+      customerId =
+        typeof stripeSub.customer === "string"
+          ? stripeSub.customer
+          : stripeSub.customer.id;
+    }
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "No billing account found" },
+        { status: 404 }
+      );
+    }
 
     // VERCEL_URL is the deployment host (…vercel.app), not dreamriver.io —
     // the portal must return customers to the domain their session lives on.
