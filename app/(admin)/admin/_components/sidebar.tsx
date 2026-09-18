@@ -11,6 +11,7 @@ import {
   Server,
   PenLine,
   Layers,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { BrandIcon } from "@/components/brand/BrandIcon";
@@ -19,6 +20,7 @@ const ADMIN_NAV: Array<{ href: string; label: string; Icon: LucideIcon }> = [
   { href: "/admin", label: "Overview", Icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", Icon: Users },
   { href: "/admin/dreams", label: "Dreams", Icon: Droplet },
+  { href: "/admin/trends", label: "Trends", Icon: TrendingUp },
   { href: "/admin/revenue", label: "Revenue", Icon: DollarSign },
   { href: "/admin/blog", label: "Blog", Icon: PenLine },
   { href: "/admin/prompts", label: "Prompts", Icon: Wand2 },
