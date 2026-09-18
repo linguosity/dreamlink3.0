@@ -458,6 +458,40 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Philosophy / About (condensed from /about) ─────────────── */}
+      <section
+        id="about"
+        className="scroll-mt-20 py-20 sm:py-24 bg-card/60 backdrop-blur-sm"
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            Our philosophy
+          </p>
+          <h2 className="text-balance text-[clamp(2rem,4vw,3rem)] text-foreground mt-3 mb-6">
+            Your dreams are more than isolated moments.
+          </h2>
+          <p className="text-muted-foreground leading-relaxed text-lg">
+            Most dream tools stop at &ldquo;what does this dream mean?&rdquo;
+            DreamRiver asks a better question: what can you learn when you look
+            at your dreams together, over time? Recurring symbols, emotions,
+            and themes become meaningful in the context of your own history —
+            not a one-size-fits-all dream dictionary.
+          </p>
+          <p className="text-muted-foreground leading-relaxed mt-4">
+            Insights are offered as possibilities for reflection, never
+            predictions — reflection and discernment, not divination. And your
+            journal stays private: your dreams are yours.
+          </p>
+          <Link
+            href="/about"
+            className="inline-flex items-center gap-1.5 mt-8 text-primary font-medium
+                       underline underline-offset-4 hover:text-primary-hover focus-ring rounded"
+          >
+            Read the full story
+          </Link>
+        </div>
+      </section>
+
       {/* ── FAQ ────────────────────────────────────────────────────── */}
       <section id="faq" className="scroll-mt-20 py-20 sm:py-24 bg-background">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
