@@ -15,6 +15,7 @@ import {
   readingTimeMinutes,
   SITE_URL,
 } from "@/lib/blog";
+import { bodyWordCount, extractFaq, faqPageJsonLd } from "@/lib/blogSchema";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -84,6 +85,9 @@ export default async function BlogPostPage({ params }: Props) {
   // COALESCE(published_at, scheduled_for) — the public date for scheduled
   // posts that went live lazily without a publish click.
   const publicDate = effectivePublishedAt(post);
+  // FAQ section (### Q / answer blocks) → FAQPage JSON-LD. Empty for posts
+  // without one; drafts never emit schema (same guard as the Article node).
+  const faqItems = extractFaq(post.content_md);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -99,6 +103,7 @@ export default async function BlogPostPage({ params }: Props) {
       url: SITE_URL,
     },
     mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
+    wordCount: bodyWordCount(post.content_md),
   };
 
   return (
@@ -108,6 +113,16 @@ export default async function BlogPostPage({ params }: Props) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      ) : null}
+      {!isDraftPreview && faqItems.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              faqPageJsonLd(faqItems, `${SITE_URL}/blog/${post.slug}`)
+            ),
+          }}
         />
       ) : null}
 

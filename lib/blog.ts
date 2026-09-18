@@ -18,8 +18,11 @@ export interface BlogPost {
   updated_at: string;
 }
 
-/** Canonical site origin for SEO surfaces (sitemap, OG, JSON-LD). */
-export const SITE_URL = "https://dreamriver.io";
+/** Canonical site origin for SEO surfaces (sitemap, OG, JSON-LD).
+ * The apex 307-redirects to www (verified 2026-09-19), so www IS the
+ * canonical host — pointing canonicals at the apex made every SEO URL
+ * resolve through a redirect. */
+export const SITE_URL = "https://www.dreamriver.io";
 
 /**
  * PostgREST `.or()` filter mirroring the blog_posts public-read RLS policy:
