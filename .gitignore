@@ -53,3 +53,6 @@ next-env.d.ts
 # version control.
 .claude/
 supabase/.temp/
+
+# Sentry build plugin token — never commit
+.env.sentry-build-plugin
